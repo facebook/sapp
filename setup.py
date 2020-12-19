@@ -10,14 +10,12 @@ from setuptools import find_packages, setup
 
 
 def _requirements():
-    with open("requirements.json") as json_file:
-        data = json.load(json_file)
-        return data["sapp"]
+    return Path("requirements.txt").read_text()
 
 
 setup(
     name="fb-sapp",
-    version="0.2.7",
+    version="0.2.8",
     description="Static Analysis Post-Processor for processing taint analysis results.",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
