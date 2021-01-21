@@ -107,7 +107,6 @@ class FakeObjectGenerator:
             type_interval_lower=5,
             type_interval_upper=7,
             preserves_type_context=False,
-            migrated_id=None,
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
@@ -150,7 +149,6 @@ class FakeObjectGenerator:
             type_interval_lower=5,
             type_interval_upper=7,
             preserves_type_context=False,
-            migrated_id=None,
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
