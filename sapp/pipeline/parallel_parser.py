@@ -5,9 +5,9 @@
 
 import logging
 from multiprocessing import Pool
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, List, Tuple, Type
 
-from ..analysis_output import AnalysisOutput
+from ..analysis_output import AnalysisOutput, Metadata
 from .base_parser import BaseParser
 
 
@@ -18,12 +18,12 @@ logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
 # We are going to call this per process, so we need to pass in and return
 # serializable data. And as a single arg, as far as I can tell. Which is why the
 # args type looks so silly.
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def parse(args):
-    (base_parser, repo_dir, metadata), path = args
+def parse(
+    args: Tuple[Tuple[Type[BaseParser], List[str], Metadata], str]
+) -> List[Dict[str, Any]]:
+    (base_parser, repo_dirs, metadata), path = args
 
-    parser = base_parser(repo_dir)
+    parser = base_parser(repo_dirs)
     parser.initialize(metadata)
 
     with open(path) as handle:
@@ -31,19 +31,16 @@ def parse(args):
 
 
 class ParallelParser(BaseParser):
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, parser_class, repo_dir=None) -> None:
-        super().__init__(repo_dir)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.parser = parser_class
+    def __init__(self, parser_class: Type[BaseParser], repo_dirs: List[str]) -> None:
+        super().__init__(repo_dirs)
+        self.parser: Type[BaseParser] = parser_class
 
     def parse(self, input: AnalysisOutput) -> Iterable[Dict[str, Any]]:
         log.info("Parsing in parallel")
         files = list(input.file_names())
 
         # Pair up the arguments with each file.
-        args = zip([(self.parser, self.repo_dir, input.metadata)] * len(files), files)
+        args = zip([(self.parser, self.repo_dirs, input.metadata)] * len(files), files)
 
         with Pool(processes=None) as pool:
             for f in pool.imap_unordered(parse, args):

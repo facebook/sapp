@@ -71,7 +71,7 @@ class Parser(BaseParser):
     def _parse_v1(self, handle: IO[str]) -> Iterable[Dict[str, Any]]:
         data = json.load(handle)
         config = data["config"]
-        self.repo_dir = config["repo"]
+        self.repo_dirs = [config["repo"]]
         results = data["results"]
         return results
 
@@ -229,24 +229,22 @@ class Parser(BaseParser):
             code=issue["code"],
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _extract_filename(self, complete_filename):
-        repo_dir = self.repo_dir
-        if repo_dir is None:
+    def _extract_filename(self, complete_filename: str) -> str:
+        repo_dirs = self.repo_dirs
+        if not repo_dirs:
             return complete_filename
         if not complete_filename.startswith("/"):
             # already relative
             return complete_filename
-        if not complete_filename.startswith(repo_dir):
-            raise errors.AIException(
-                "Expected filename ({}) to start with repo_dir ({}). "
-                "Check the --repo-dir option.".format(complete_filename, repo_dir)
-            )
-        repo_dir = repo_dir.rstrip("/")
-        if repo_dir == "":
-            return complete_filename
-        return complete_filename[len(repo_dir) + 1 :]
+        for repo_dir in repo_dirs:
+            repo_dir = repo_dir.rstrip("/")
+            if repo_dir != "" and complete_filename.startswith(repo_dir):
+                return complete_filename[len(repo_dir) + 1 :]
+
+        raise errors.AIException(
+            "Expected filename ({}) to start with repo_dir ({}). "
+            "Check the --repo-dir option.".format(complete_filename, repo_dirs)
+        )
 
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.

@@ -20,7 +20,8 @@ METADATA_GLOB = "*metadata.json"
 # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
 class Metadata(NamedTuple):
     analysis_root: str
-    repo_root: Optional[str] = None
+    # Used to relativize paths in the results
+    repo_roots: List[str] = []
     repository_name: Optional[str] = None
     tool: Optional[str] = None
     analysis_tool_version: Optional[str] = None
@@ -31,9 +32,18 @@ class Metadata(NamedTuple):
     # pyre-ignore: we don't have a shape for rules yet.
     rules: Dict[int, Any] = {}
 
-    @property
-    def root(self) -> str:
-        return self.repo_root or self.analysis_root
+    def merge(self, o: "Metadata") -> "Metadata":
+        return Metadata(
+            analysis_root=self.analysis_root,
+            repo_roots=self.repo_roots + o.repo_roots,
+            repository_name=self.repository_name or o.repository_name,
+            tool=self.tool or o.tool,
+            analysis_tool_version=self.analysis_tool_version or o.analysis_tool_version,
+            commit_hash=self.commit_hash or o.commit_hash,
+            job_instance=self.job_instance or o.job_instance,
+            project=self.project or o.project,
+            rules={**self.rules, **o.rules},
+        )
 
 
 class AnalysisOutputError(Exception):
@@ -41,16 +51,14 @@ class AnalysisOutputError(Exception):
 
 
 class AnalysisOutput(object):
-    """Represents one of various ways the analysis output can be specified.
+    """Represents analysis output.
 
-    Use "filename_specs" to represent a list of any:
-      A file name, a file handle, or a sharded file pattern
-
-    Use "filename_glob" to specify a set of filename patterns instead. This
-    assumes the output lives in the given directory. Avoid patterns like '*'
-    which will include the metadata.json file in the directory.
-
-    Note that "filename_specs" has precedence over "filename_glob".
+    Possible ways to define, in order of high to low precedence:
+    - file_handle: Direct IO object for a single file, useful for testing.
+    - filename_specs: List of file names or sharded file patterns.
+    - filename_glob and directory: All the files matching the glob in the given directory.
+      Avoid patterns like '*', which will include extra, non-analysis files
+      in the directory such as the metadata.json.
 
     Access to the output is provided via generators that provide file handles
     to the diagnostics json (issues), or the summary json (pre and post).
@@ -83,6 +91,13 @@ class AnalysisOutput(object):
         return f"AnalysisOutput({repr(self.filename_specs)})"
 
     @classmethod
+    def from_strs(cls, identifiers: List[str]) -> "AnalysisOutput":
+        if len(identifiers) > 1:
+            return cls.from_directories(identifiers)
+        else:
+            return cls.from_str(identifiers[0])
+
+    @classmethod
     def from_str(cls, identifier: str) -> "AnalysisOutput":
         if os.path.isdir(identifier):
             return cls.from_directory(identifier)
@@ -96,21 +111,66 @@ class AnalysisOutput(object):
             raise AnalysisOutputError(f"Unrecognized identifier `{identifier}`")
 
     @classmethod
+    def from_directories(cls, directories: List[str]) -> "AnalysisOutput":
+        """
+        Aggregates several analysis output directories (each of which may themselves be sharded)
+        into one AnalysisOutput object. Used for distributed runs of Zoncolan.
+
+        Only supports `filename_spec` in the metadata.json to declare analysis output;
+        `filename_glob` and legacy `filenames` are not supported.
+
+        Metadata is naively merged.
+        """
+
+        main_metadata = None
+        filename_specs = []
+
+        for directory in directories:
+            if not os.path.isdir(directory):
+                raise AnalysisOutputError(f"`{directory}` is not a directory")
+            metadata = {}
+            for file in glob(os.path.join(directory, METADATA_GLOB)):
+                with open(file) as f:
+                    metadata.update(json.load(f))
+
+            if "filename_spec" in metadata:
+                filename_specs.append(
+                    os.path.join(directory, os.path.basename(metadata["filename_spec"]))
+                )
+
+            repo_root = metadata.get("repo_root")
+            analysis_root = metadata["root"]
+            rules = {rule["code"]: rule for rule in metadata.get("rules", [])}
+            this_metadata = Metadata(
+                analysis_tool_version=metadata["version"],
+                commit_hash=metadata.get("commit"),
+                analysis_root=analysis_root,
+                repo_roots=[repo_root],
+                job_instance=metadata.get("job_instance"),
+                tool=metadata.get("tool"),
+                repository_name=metadata.get("repository_name"),
+                project=metadata.get("project"),
+                rules=rules,
+            )
+            if not main_metadata:
+                main_metadata = this_metadata
+            else:
+                main_metadata = main_metadata.merge(this_metadata)
+        return cls(
+            filename_specs=filename_specs,
+            metadata=main_metadata,
+        )
+
+    @classmethod
     def from_directory(cls, directory: str) -> "AnalysisOutput":
         metadata = {}
         for file in glob(os.path.join(directory, METADATA_GLOB)):
             with open(file) as f:
                 metadata.update(json.load(f))
 
-        # Note: filename_specs takes precedence over filename_glob.
         filename_specs = []
         filename_glob = None
-        if "filename_specs" in metadata:
-            filename_specs = [
-                os.path.join(directory, os.path.basename(spec))
-                for spec in metadata["filename_specs"]
-            ]
-        elif "filename_spec" in metadata:
+        if "filename_spec" in metadata:
             filename_specs = [
                 os.path.join(directory, os.path.basename(metadata["filename_spec"]))
             ]
@@ -141,7 +201,7 @@ class AnalysisOutput(object):
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
                 analysis_root=analysis_root,
-                repo_root=repo_root,
+                repo_roots=[repo_root],
                 job_instance=metadata.get("job_instance"),
                 tool=metadata.get("tool"),
                 repository_name=metadata.get("repository_name"),
@@ -164,8 +224,7 @@ class AnalysisOutput(object):
 
     def file_handles(self) -> Iterable[IO[str]]:
         """Generates all file handles represented by the analysis.
-        Callee owns file handle and closes it when the next is yielded or the
-        generator ends.
+        This method manages closing the handles, no cleanup by the caller is needed.
         """
         if self.file_handle:
             # pyre-fixme[7]: Expected `Iterable[IO[str]]` but got

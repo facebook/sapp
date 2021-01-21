@@ -82,8 +82,12 @@ class BaseParser(PipelineStep[InputFiles, DictEntries]):
     for the Processor.
     """
 
-    def __init__(self, repo_dir=None):
-        self.repo_dir = os.path.realpath(repo_dir) if repo_dir else None
+    def __init__(self, repo_dirs: Optional[List[str]] = None):
+        """
+        repo_dirs: Possible absolute paths analyzed during the run. This is used to relativize
+        paths in the input. These paths are NOT guaranteed to exist on the current machine disk!
+        """
+        self.repo_dirs = repo_dirs or []
         self.version = None
 
     def get_version(self):
