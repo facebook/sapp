@@ -113,7 +113,9 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
             if meta_run_identifier is not None:
                 session.add(
                     MetaRunToRunAssoc(
-                        meta_run_id=meta_run_identifier, run_id=self.summary["run"].id
+                        meta_run_id=meta_run_identifier,
+                        run_id=self.summary["run"].id,
+                        run_label=self.summary.get("meta_run_child_label", None),
                     )
                 )
             session.commit()

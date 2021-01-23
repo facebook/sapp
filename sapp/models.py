@@ -901,6 +901,12 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):  # noqa
         uselist=False,
     )
 
+    run_label = Column(
+        String(length=1024),
+        nullable=True,
+        doc="Optional label associated with a child run (eg. Buck target)",
+    )
+
     @classmethod
     def merge(cls, session, items):
         return cls._merge_assocs(session, items, cls.meta_run_id, cls.run_id)
