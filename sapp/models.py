@@ -636,10 +636,6 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):  # noqa
         BIGINT(unsigned=True), nullable=True, doc="FBID for EntZoncolanFeedback"
     )
 
-    json: Column[Optional[str]] = Column(
-        types.TEXT, doc="Raw JSON of original issue", nullable=True
-    )
-
     @classmethod
     def _take(cls, n, iterable):
         "Return first n items of the iterable as a list"
