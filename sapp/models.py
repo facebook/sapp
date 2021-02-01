@@ -1307,6 +1307,27 @@ class WarningCodeProperties(Base):  # noqa
     )
 
 
+class RunOrigin(Base, PrepareMixin, RecordMixin):  # noqa
+    """This table associates runs with metadata concerning how the run was built, which we
+    call run origins. An example of run origins is Buck targets."""
+
+    __tablename__ = "run_origins"
+
+    id = Column(BIGDBIDType, nullable=False, primary_key=True)
+    run_id = Column(BIGDBIDType, nullable=False, index=True)
+    origin = Column(String(length=255), nullable=False)
+
+    run = relationship(
+        "Run",
+        primaryjoin=("RunOrigin.run_id == foreign(Run.id)"),
+        uselist=False,
+    )
+
+    @classmethod
+    def merge(cls, session, items):
+        return cls._merge_by_key(session, items, cls.run_id)
+
+
 class PrimaryKey(Base, PrimaryKeyBase):
     pass
 
