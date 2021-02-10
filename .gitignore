@@ -1,5 +1,6 @@
 # Compiled python modules.
 *.pyc
+.pyre
 
 # Setuptools distribution folder.
 /dist/
