@@ -2,7 +2,7 @@ click
 click-log
 flask
 flask_graphql
-graphene
+graphene==2.1.3
 graphene_sqlalchemy
 ipython
 munch
@@ -11,5 +11,6 @@ SQLAlchemy
 ujson
 xxhash
 prompt-toolkit
-typing_extensions
-pyre_extensions
+traitlets
+typing-extensions
+pyre-extensions

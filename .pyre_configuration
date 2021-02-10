@@ -1,0 +1,30 @@
+{
+  "ignore_all_errors": [
+    "setup.py",
+    "stubs"
+  ],
+  "source_directories": [
+    "."
+  ],
+  "search_path": [
+    {"site-package": "click" },
+    {"site-package": "click_log" },
+    {"site-package": "flask" },
+    {"site-package": "flask_graphql" },
+    {"site-package": "graphql" },
+    {"site-package": "graphene" },
+    {"site-package": "graphene_sqlalchemy" },
+    {"site-package": "IPython" },
+    {"site-package": "munch" },
+    {"site-package": "pygments" },
+    {"site-package": "ujson" },
+    {"site-package": "xxhash" },
+    {"site-package": "prompt_toolkit" },
+    {"site-package": "traitlets" },
+    {"site-package": "typing_extensions" },
+    {"site-package": "pyre_extensions" },
+    "stubs"
+  ],
+  "strict": true,
+  "version": "0.0.101610712576"
+}
