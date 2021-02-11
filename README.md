@@ -1,5 +1,6 @@
 ![lint](https://github.com/facebook/sapp/workflows/lint/badge.svg)
 ![tests](https://github.com/facebook/sapp/workflows/tests/badge.svg)
+![pyre](https://github.com/facebook/sapp/workflows/pyre/badge.svg)
 
 # SAPP
 SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of Pysa and makes them explorable both through a command line interface and a web UI.
