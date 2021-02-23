@@ -1,8 +1,4 @@
 {
-  "ignore_all_errors": [
-    "setup.py",
-    "stubs"
-  ],
   "search_path": [
     {
       "site-package": "click"
@@ -55,7 +51,7 @@
     "stubs"
   ],
   "source_directories": [
-    "."
+    {"root": ".", "subdirectory": "sapp" }
   ],
   "strict": true,
   "version": "0.0.101613477419"

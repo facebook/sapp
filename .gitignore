@@ -1,6 +1,7 @@
 # Compiled python modules.
 *.pyc
 .pyre
+.watchmanconfig
 
 # Setuptools distribution folder.
 /dist/
