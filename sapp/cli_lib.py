@@ -134,15 +134,7 @@ def explore(ctx: Context, ipython_args):
 @option(
     "--previous-issue-handles",
     type=Path(exists=True),
-    help=(
-        "file containing list of issue handles to compare INPUT_FILE to "
-        "(preferred over --previous-input)"
-    ),
-)
-@option(
-    "--previous-input",
-    type=Path(exists=True),
-    help="static analysis output to compare INPUT_FILE to",
+    help=("file containing list of issue handles to compare INPUT_FILE to"),
 )
 @option(
     "--linemap",
@@ -171,8 +163,6 @@ def analyze(
     # pyre-fixme[2]: Parameter must be annotated.
     previous_issue_handles,
     # pyre-fixme[2]: Parameter must be annotated.
-    previous_input,
-    # pyre-fixme[2]: Parameter must be annotated.
     linemap,
     # pyre-fixme[2]: Parameter must be annotated.
     store_unused_models,
@@ -197,11 +187,9 @@ def analyze(
         summary_blob["previous_issue_handles"] = AnalysisOutput.from_file(
             previous_issue_handles
         )
-    elif previous_input:
-        previous_input = AnalysisOutput.from_file(previous_input)
 
     # Construct pipeline
-    input_files = (AnalysisOutput.from_file(input_file), previous_input)
+    input_files = AnalysisOutput.from_file(input_file)
     pipeline_steps = [
         ctx.parser_class(),
         CreateDatabase(ctx.database),

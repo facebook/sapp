@@ -17,7 +17,7 @@ from typing import Any, Dict, Iterable, List, NamedTuple, Set, TextIO, Tuple
 import xxhash
 
 from ..analysis_output import AnalysisOutput, Metadata
-from . import DictEntries, InputFiles, Optional, PipelineStep, Summary
+from . import DictEntries, Optional, PipelineStep, Summary
 
 
 # if these imports have the same name we get a linter error
@@ -77,7 +77,7 @@ def log_trace_keyerror_in_generator(func):
     return wrapper
 
 
-class BaseParser(PipelineStep[InputFiles, DictEntries]):
+class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     """The parser takes a json file as input, and provides a simplified output
     for the Processor.
     """
@@ -128,7 +128,6 @@ class BaseParser(PipelineStep[InputFiles, DictEntries]):
     def analysis_output_to_dict_entries(
         self,
         inputfile: AnalysisOutput,
-        previous_inputfile: Optional[AnalysisOutput],
         previous_issue_handles: Optional[AnalysisOutput],
         linemapfile: Optional[str],
     ) -> DictEntries:
@@ -161,25 +160,11 @@ class BaseParser(PipelineStep[InputFiles, DictEntries]):
             linemap = None
 
         # Save entry info from the parent analysis, if there is one.
-        # If previous issue handles file is provided, use it over
-        # previous_inputfile (contains the full JSON)
         if previous_issue_handles:
             log.info("Parsing previous issue handles")
             for f in previous_issue_handles.file_handles():
                 handles = f.read().splitlines()
-                previous_handles = set(handles)
-        elif previous_inputfile:
-            log.info("Parsing previous hh_server output")
-            for typ, master_key, e in self._analysis_output_to_parsed_types(
-                previous_inputfile
-            ):
-                if typ == ParseType.ISSUE:
-                    diff_handle = BaseParser.compute_diff_handle(
-                        e["filename"], e["line"], e["code"]
-                    )
-                    previous_handles.add(diff_handle)
-                    # Use exact handle match too in case linemap is missing.
-                    previous_handles.add(master_key)
+                previous_handles = set(filter(lambda h: not h.startswith("#"), handles))
 
         log.info("Parsing analysis output...")
         for typ, key, e in self._analysis_output_to_parsed_types(inputfile):
@@ -218,13 +203,12 @@ class BaseParser(PipelineStep[InputFiles, DictEntries]):
                 return True
         return False
 
-    def run(self, input: InputFiles, summary: Summary) -> Tuple[DictEntries, Summary]:
-        inputfile, previous_inputfile = input
-
+    def run(
+        self, input: AnalysisOutput, summary: Summary
+    ) -> Tuple[DictEntries, Summary]:
         return (
             self.analysis_output_to_dict_entries(
-                inputfile,
-                previous_inputfile,
+                input,
                 summary.get("previous_issue_handles"),
                 summary.get("old_linemap_file"),
             ),

@@ -53,11 +53,9 @@ class TestSappCli(TestCase):
             print(result.output)
             self.assertEqual(result.exit_code, 0)
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def verify_input_file(self, input_files, summary_blob):
-        inputfile, previous_input = input_files
+    def verify_input_file(self, inputfile, summary_blob) -> None:
         self.assertEqual(inputfile, "fake_analysis_output")
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -146,22 +144,13 @@ class TestSappCli(TestCase):
                 )
                 self.assertEqual(result.exit_code, 0)
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def verify_previous_issue_handles(self, input_files, summary_blob):
+    def verify_previous_issue_handles(self, input_files, summary_blob) -> None:
         self.assertEqual(summary_blob["previous_issue_handles"], "fake_analysis_output")
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def verify_previous_input(self, input_files, summary_blob):
-        inputfile, previous_input = input_files
-        self.assertEqual(previous_input, "fake_analysis_output")
-
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_previous_input(self, mock_analysis_output):
+    def test_previous_input(self, mock_analysis_output) -> None:
         with patch(PIPELINE_RUN, self.verify_previous_issue_handles):
             with isolated_fs() as path:
                 result = self.runner.invoke(
@@ -170,16 +159,7 @@ class TestSappCli(TestCase):
                         "analyze",
                         "--previous-issue-handles",
                         path,
-                        "--previous-input",
-                        path,
                         path,
                     ],
                 )
             self.assertEqual(result.exit_code, 0)
-
-        with patch(PIPELINE_RUN, self.verify_previous_input):
-            with isolated_fs() as path:
-                result = self.runner.invoke(
-                    cli, ["analyze", "--previous-input", path, path]
-                )
-                self.assertEqual(result.exit_code, 0)

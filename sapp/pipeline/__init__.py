@@ -19,7 +19,6 @@ T_in = TypeVar("T_in")
 T_out = TypeVar("T_out")
 
 Summary = Dict[str, Any]  # blob of objects that gets passed through the pipeline
-InputFiles = Tuple[AnalysisOutput, Optional[AnalysisOutput]]
 DictEntries = Dict[str, Any]
 
 
