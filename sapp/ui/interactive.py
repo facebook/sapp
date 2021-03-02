@@ -140,6 +140,7 @@ details              show additional information about the current trace frame
         database: DB,
         repository_directory: Optional[str] = None,
         parser_class: Type[BaseParser],
+        read_only: bool = False,
     ) -> None:
         self.db = database
         self.scope_vars: ScopeVariables = {
@@ -196,8 +197,11 @@ details              show additional information about the current trace frame
         # history_key on self.prompt().
         self.prompt_history: Dict[str, History] = {}
 
+        self.read_only = read_only
+
     def setup(self) -> ScopeVariables:
-        create_models(self.db)
+        if not self.read_only:
+            create_models(self.db)
         with self.db.make_session() as session:
             latest_run_id = (
                 session.query(func.max(Run.id))
