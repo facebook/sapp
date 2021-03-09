@@ -112,7 +112,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             return length
         return 0
 
-    def _generate_issue(self, run, entry, callablesCount):
+    def _generate_issue(self, run, entry, callablesCount) -> IssueInstance:
         """Insert the issue instance into a run. This includes creating (for
         new issues) or finding (for existing issues) Issue objects to associate
         with the instances.
@@ -153,7 +153,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             if name
         }
 
-        issue = Issue.Record(
+        # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
+        issue: Issue = Issue.Record(
             id=IssueDBID(),
             code=entry["code"],
             handle=handle,
@@ -178,7 +179,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         callable_record = self._get_shared_text(SharedTextKind.CALLABLE, callable)
 
-        instance = IssueInstance.Record(
+        # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
+        instance: IssueInstance = IssueInstance.Record(
             id=DBID(),
             issue_id=issue.id,
             location=self.get_location(entry),
@@ -217,6 +219,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             self.graph.add_issue_instance_shared_text_assoc(instance, feature)
 
         self.graph.add_issue_instance(instance)
+        return instance
 
     # We need to thread filename explicitly since the entry might be a callinfo.
     def _generate_tito(self, filename: str, entry, callable):
@@ -267,11 +270,15 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
     def _generate_transitive_trace_frames(
         self, run: Run, start_frame: TraceFrame, outgoing_leaf_ids: Set[int]
-    ):
+    ) -> List[TraceFrame]:
         """Generates all trace frames reachable from start_frame, provided they contain
         a leaf_id from the initial set of leaf_ids. Also applies tito transforms
         in reverse, meaning it strips off local transforms from leaf kinds when
-        necessary."""
+        necessary.
+
+        Returns the TraceFrames associated this starting frame (generated or found existing)
+        """
+        returned_frames = []
 
         kind = start_frame.kind
         queue = [(start_frame, outgoing_leaf_ids)]
@@ -279,6 +286,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             frame, outgoing_leaves = queue.pop()
             if len(outgoing_leaves) == 0:
                 continue
+
+            returned_frames.append(frame)
 
             frame_id = frame.id.local_id
             if frame_id in self.visited_frames:
@@ -308,6 +317,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                     for (frame, leaf_mapping) in next_frames
                 ]
             )
+        return returned_frames
 
     def _get_or_populate_trace_frames(
         self, kind: TraceKind, run: Run, caller_id: DBID, caller_port: str
