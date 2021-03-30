@@ -389,7 +389,7 @@ class PrimaryKeyGeneratorBase:  # pyre-ignore[13]
         # pyre-fixme[24]: Generic type `type` expects 1 type parameter, use
         #  `typing.Type` to avoid runtime subscripting errors.
         cls_pk: Optional[Type] = None
-        retries: int = 3
+        retries: int = 6
         while retries > 0:
             try:
                 cls_pk = (
