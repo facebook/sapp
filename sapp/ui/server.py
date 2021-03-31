@@ -88,4 +88,4 @@ def start_server(
     )
     if static_resources:
         application.static_folder = static_resources
-    application.run(debug=debug)
+    application.run(debug=debug, host="localhost", port=5000)
