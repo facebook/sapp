@@ -166,6 +166,25 @@ Each instance consists of a *data flow* from a particular source kind (e.g. user
 
 *Note: the data can come from different sources of the same kind and flow into different sinks of the same kind. The traces view of a single instance represents a multitude of traces, not just a single trace.*
 
+## Development Environment Setup
+Start by cloning the repo and setting up a virtual environment:
+```
+$ git clone git@github.com:facebook/sapp.git && cd sapp
+$ python3 -m venv ~/.venvs/sapp
+$ source ~/.venvs/sapp/bin/activate
+(sapp) $ pip3 install -r requirements.txt
+```
+
+Run the flask server:
+```
+(sapp) $ python3 -m sapp.cli server
+```
+
+If you make any changes to files under `sapp/ui/frontend/*`, you will need to run `npm run-script build` before running the flask server to see the changes you made reflected:
+```
+(sapp) $ cd sapp/ui/frontend && npm run-script build
+(sapp) $ python3 -m sapp.cli server --debug
+```
 
 ## FAQ
 ### Why is SAPP it's own project and not just part of Pysa?
