@@ -5,16 +5,16 @@
 # LICENSE file in the root directory of this source tree.
 
 # Script to publish package to PyPI. Note that version bump
-# in `setup.py` is manual and the script assumes you have
-# `wheel` and `twine` packages installed.
+# in `setup.py` is manual
 
 set -e
 set -x
 
 cd "$(dirname "$0")/.." || exit 1
 
-(cd sapp/ui/frontend && npm run build)
+(cd sapp/ui/frontend && npm install && npm run build)
 
 rm -rf dist
+pip install wheel twine
 python setup.py sdist bdist_wheel
 python -m twine upload dist/*
