@@ -180,7 +180,19 @@ Run the flask server:
 (sapp) $ python3 -m sapp.cli server
 ```
 
-If you make any changes to files under `sapp/ui/frontend/*`, you will need to run `npm run-script build` before running the flask server to see the changes you made reflected:
+Parse static analysis output and save to disk:
+```
+(sapp) $ python3 -m sapp.cli analyze taint-output.json
+```
+
+If you make any changes to files under `sapp/ui/frontend/*`, you will need to run `npm install` once to install dependencies and `npm run-script build` each time you make changes before running the flask server to see the changes you made reflected:
+
+Installing dependencies:
+```
+(sapp) $ cd sapp/ui/frontend && npm install
+```
+
+Build static files and run the flask server:
 ```
 (sapp) $ cd sapp/ui/frontend && npm run-script build
 (sapp) $ python3 -m sapp.cli server --debug
