@@ -12,17 +12,14 @@ from ..trace_graph import TraceGraph
 from . import DictEntries, PipelineStep, Summary
 
 
-# pyre-fixme[5]: Global expression must be annotated.
-log = logging.getLogger("sapp")
+log: logging.Logger = logging.getLogger("sapp")
 
 
-class CreateDatabase(PipelineStep[DictEntries, TraceGraph]):
+class CreateDatabase(PipelineStep[DictEntries, DictEntries]):
     def __init__(self, database: DB) -> None:
         super().__init__()
         self.database = database
 
-    def run(  # pyre-fixme[14]
-        self, input: TraceGraph, summary: Summary
-    ) -> Tuple[TraceGraph, Summary]:
+    def run(self, input: DictEntries, summary: Summary) -> Tuple[DictEntries, Summary]:
         create_models(self.database)
         return input, summary

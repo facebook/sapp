@@ -3,8 +3,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# pyre-unsafe
-
 """Abstract Parser for Zoncolan like output"""
 
 import logging
@@ -27,7 +25,7 @@ except ImportError:
     import json  # noqa
 
 
-log = logging.getLogger("sapp")
+log: logging.Logger = logging.getLogger("sapp")
 
 
 # The callable's json output can be found at the given sharded file and offset.
@@ -44,7 +42,12 @@ class ParseType(Enum):
     POSTCONDITION = "postcondition"
 
 
+# pyre-ignore[2]
+# pyre-ignore[3]
 def log_trace_keyerror(func):
+    # pyre-ignore[2]
+    # pyre-ignore[3]
+    # pyre-ignore[53]
     def wrapper(self, json, *args):
         try:
             return func(self, json, *args)
@@ -60,7 +63,12 @@ def log_trace_keyerror(func):
     return wrapper
 
 
+# pyre-ignore[2]
+# pyre-ignore[3]
 def log_trace_keyerror_in_generator(func):
+    # pyre-ignore[2]
+    # pyre-ignore[3]
+    # pyre-ignore[53]
     def wrapper(self, json, *args):
         try:
             yield from func(self, json, *args)
@@ -82,16 +90,12 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     for the Processor.
     """
 
-    def __init__(self, repo_dirs: Optional[List[str]] = None):
+    def __init__(self, repo_dirs: Optional[List[str]] = None) -> None:
         """
         repo_dirs: Possible absolute paths analyzed during the run. This is used to relativize
         paths in the input. These paths are NOT guaranteed to exist on the current machine disk!
         """
-        self.repo_dirs = repo_dirs or []
-        self.version = None
-
-    def get_version(self):
-        return self.version
+        self.repo_dirs: List[str] = repo_dirs or []
 
     def initialize(self, metadata: Optional[Metadata]) -> None:
         return
@@ -110,6 +114,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         return
         yield
 
+    # pyre-ignore[3]
     def _analysis_output_to_parsed_types(
         self, input: AnalysisOutput
     ) -> Iterable[Tuple[ParseType, Any, Dict[str, Any]]]:
@@ -182,7 +187,14 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
             "postconditions": conditions[ParseType.POSTCONDITION],
         }
 
-    def _is_existing_issue(self, linemap, old_handles, new_issue, new_handle):
+    def _is_existing_issue(
+        self,
+        linemap: Dict[str, Any],
+        old_handles: Set[str],
+        new_issue: Dict[str, Any],
+        # pyre-ignore[2]
+        new_handle,
+    ) -> bool:
         if new_handle in old_handles:
             return True
         if not linemap:
@@ -216,14 +228,16 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         )
 
     @staticmethod
-    def compute_master_handle(callable, line, start, end, code):
+    def compute_master_handle(
+        callable: str, line: int, start: int, end: int, code: int
+    ) -> str:
         key = "{callable}:{line}|{start}|{end}:{code}".format(
             callable=callable, line=line, start=start, end=end, code=code
         )
         return BaseParser.compute_handle_from_key(key)
 
     @staticmethod
-    def compute_diff_handle(filename, old_line, code):
+    def compute_diff_handle(filename: str, old_line: int, code: int) -> str:
         """Uses the absolute line and ignores the callable/character offsets.
         Used only in determining whether new issues are old issues.
         """
@@ -233,14 +247,15 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         return BaseParser.compute_handle_from_key(key)
 
     @staticmethod
-    def compute_handle_from_key(key):
+    def compute_handle_from_key(key: str) -> str:
         hash_gen = xxhash.xxh64()
+        # pyre-ignore[6]
         hash_gen.update(key)
         hash_ = hash_gen.hexdigest()
         return key[: 255 - len(hash_) - 1] + ":" + hash_
 
     @staticmethod
-    def is_supported(metadata: Metadata):
+    def is_supported(metadata: Metadata) -> bool:
         raise NotImplementedError("Subclasses should implement this!")
 
     # Instead of returning the actual json from the AnalysisOutput, we return

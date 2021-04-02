@@ -43,5 +43,6 @@ class ParallelParser(BaseParser):
         args = zip([(self.parser, self.repo_dirs, input.metadata)] * len(files), files)
 
         with Pool(processes=None) as pool:
+            # pyre-ignore[6]
             for f in pool.imap_unordered(parse, args):
                 yield from f
