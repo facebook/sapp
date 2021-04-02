@@ -9,7 +9,7 @@ import json
 import os
 from glob import glob
 from pathlib import Path
-from typing import IO, Any, Dict, Iterable, List, NamedTuple, Optional
+from typing import IO, Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 from .sharded_files import ShardedFile
 
@@ -31,6 +31,7 @@ class Metadata(NamedTuple):
     # Mapping from code to rule metadata.
     # pyre-ignore: we don't have a shape for rules yet.
     rules: Dict[int, Any] = {}
+    type_intervals: Dict[Tuple[int, int], str] = {}
 
     def merge(self, o: "Metadata") -> "Metadata":
         return Metadata(
@@ -43,6 +44,7 @@ class Metadata(NamedTuple):
             job_instance=self.job_instance or o.job_instance,
             project=self.project or o.project,
             rules={**self.rules, **o.rules},
+            type_intervals={**self.type_intervals, **o.type_intervals},
         )
 
 
@@ -151,6 +153,7 @@ class AnalysisOutput(object):
                 repository_name=metadata.get("repository_name"),
                 project=metadata.get("project"),
                 rules=rules,
+                type_intervals=cls._get_interval_dict(metadata),
             )
             if not main_metadata:
                 main_metadata = this_metadata
@@ -207,6 +210,7 @@ class AnalysisOutput(object):
                 repository_name=metadata.get("repository_name"),
                 project=metadata.get("project"),
                 rules=rules,
+                type_intervals=cls._get_interval_dict(metadata),
             ),
         )
 
@@ -262,3 +266,13 @@ class AnalysisOutput(object):
 
     def has_sharded(self) -> bool:
         return any(self._is_sharded(spec) for spec in self.filename_specs)
+
+    @classmethod
+    def _get_interval_dict(cls, metadata: Dict[str, Any]) -> Dict[Tuple[int, int], str]:
+        ret_dict = {}
+        for entry in metadata.get("intervals", []):
+            interval = entry["interval"]
+            if not interval:
+                continue
+            ret_dict[(interval["start"], interval["finish"])] = entry["type"]
+        return ret_dict
