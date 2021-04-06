@@ -10,7 +10,7 @@ import os
 import pprint
 from collections import defaultdict
 from enum import Enum
-from typing import Any, Dict, Iterable, List, NamedTuple, Set, TextIO, Tuple
+from typing import Any, Dict, Iterable, List, NamedTuple, Set, TextIO, Tuple, Union
 
 import xxhash
 
@@ -114,10 +114,9 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         return
         yield
 
-    # pyre-ignore[3]
     def _analysis_output_to_parsed_types(
         self, input: AnalysisOutput
-    ) -> Iterable[Tuple[ParseType, Any, Dict[str, Any]]]:
+    ) -> Iterable[Tuple[ParseType, Union[str, Tuple[str, str]], Dict[str, Any]]]:
         entries = self.parse(input)
 
         for e in entries:
@@ -151,7 +150,9 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
 
         issues = []
         previous_handles: Set[str] = set()
-        conditions: Dict[ParseType, Dict[str, List[Dict[str, Any]]]] = {
+        conditions: Dict[
+            ParseType, Dict[Union[str, Tuple[str, str]], List[Dict[str, Any]]]
+        ] = {
             ParseType.PRECONDITION: defaultdict(list),
             ParseType.POSTCONDITION: defaultdict(list),
         }
@@ -192,8 +193,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         linemap: Dict[str, Any],
         old_handles: Set[str],
         new_issue: Dict[str, Any],
-        # pyre-ignore[2]
-        new_handle,
+        new_handle: Union[str, Tuple[str, str]],
     ) -> bool:
         if new_handle in old_handles:
             return True
@@ -249,8 +249,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     @staticmethod
     def compute_handle_from_key(key: str) -> str:
         hash_gen = xxhash.xxh64()
-        # pyre-ignore[6]
-        hash_gen.update(key)
+        hash_gen.update(key.encode())
         hash_ = hash_gen.hexdigest()
         return key[: 255 - len(hash_) - 1] + ":" + hash_
 
