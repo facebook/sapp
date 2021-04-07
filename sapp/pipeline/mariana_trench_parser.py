@@ -25,6 +25,7 @@ from ..constant import Constant
 from .base_parser import BaseParser, ParseType
 
 try:
+    # type: ignore
     from ...facebook.lib import resources
 except Exception:
     # pyre-ignore[21]
