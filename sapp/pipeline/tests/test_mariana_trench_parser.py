@@ -136,6 +136,7 @@ class TestParser(unittest.TestCase):
                                 {"": "via-parameter-field"},
                             ],
                             "type_interval": {},
+                            "annotations": [],
                         }
                     ],
                     "postconditions": [
@@ -155,6 +156,7 @@ class TestParser(unittest.TestCase):
                             ],
                             "features": [],
                             "type_interval": {},
+                            "annotations": [],
                         }
                     ],
                     "initial_sources": {("LSource;.source:(LData;)V", "TestSource", 3)},
@@ -262,6 +264,7 @@ class TestParser(unittest.TestCase):
                             "titos": [{"line": 13, "start": 15, "end": 16}],
                             "features": [],
                             "type_interval": {},
+                            "annotations": [],
                         },
                         {
                             "callee": "LSink;.sink:(LData;)V",
@@ -276,6 +279,7 @@ class TestParser(unittest.TestCase):
                             "titos": [],
                             "features": [],
                             "type_interval": {},
+                            "annotations": [],
                         },
                     ],
                     "postconditions": [
@@ -292,6 +296,7 @@ class TestParser(unittest.TestCase):
                             "titos": [{"line": 33, "start": 35, "end": 36}],
                             "features": [],
                             "type_interval": {},
+                            "annotations": [],
                         }
                     ],
                     "initial_sources": {("LSource;.source:(LData;)V", "TestSource", 3)},

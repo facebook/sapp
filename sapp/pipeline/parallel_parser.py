@@ -5,9 +5,10 @@
 
 import logging
 from multiprocessing import Pool
-from typing import Any, Dict, Iterable, List, Tuple, Type
+from typing import Iterable, List, Tuple, Type, Union
 
 from ..analysis_output import AnalysisOutput, Metadata
+from . import ParseCondition, ParseIssue
 from .base_parser import BaseParser
 
 
@@ -20,7 +21,7 @@ logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
 # args type looks so silly.
 def parse(
     args: Tuple[Tuple[Type[BaseParser], List[str], Metadata], str]
-) -> List[Dict[str, Any]]:
+) -> List[Union[ParseCondition, ParseIssue]]:
     (base_parser, repo_dirs, metadata), path = args
 
     parser = base_parser(repo_dirs)
@@ -35,7 +36,9 @@ class ParallelParser(BaseParser):
         super().__init__(repo_dirs)
         self.parser: Type[BaseParser] = parser_class
 
-    def parse(self, input: AnalysisOutput) -> Iterable[Dict[str, Any]]:
+    def parse(
+        self, input: AnalysisOutput
+    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
         log.info("Parsing in parallel")
         files = list(input.file_names())
 

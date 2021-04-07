@@ -6,7 +6,20 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
+from enum import Enum
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    TypedDict,
+    Iterable,
+    Union,
+    Literal,
+)
 
 from ..analysis_output import AnalysisOutput
 
@@ -18,8 +31,89 @@ T = TypeVar("T")
 T_in = TypeVar("T_in")
 T_out = TypeVar("T_out")
 
+
+class ParseType(Enum):
+    ISSUE = "issue"
+    PRECONDITION = "precondition"
+    POSTCONDITION = "postcondition"
+
+
+class ParsePosition(TypedDict, total=False):
+    filename: str
+    line: int
+    start: int
+    end: int
+
+
+class ParseTypeInterval(TypedDict, total=False):
+    start: int
+    finish: int
+    preserves_type_context: bool
+
+
+ParseFeature = Dict[str, str]
+ParseLeaf = Tuple[str, int]  # (kind, distance)
+ParseIssueLeaf = Tuple[str, str, int]  # (callable, kind, distance)
+
+
+class ParseCondition(TypedDict, total=False):
+    type: Union[Literal[ParseType.PRECONDITION], Literal[ParseType.POSTCONDITION]]
+    callable: str
+    caller: str
+    caller_port: str
+    filename: str
+    callee: str
+    callee_port: str
+    callee_location: ParsePosition
+    sources: Iterable[ParseLeaf]
+    sinks: Iterable[ParseLeaf]
+    leaves: Iterable[ParseLeaf]  # specify either `leaves`, `sources` or `sinks`.
+    type_interval: ParseTypeInterval
+    features: Iterable[ParseFeature]
+    titos: Iterable[ParsePosition]
+    annotations: Iterable[Dict[str, Any]]
+
+
+class ParseIssueCondition(TypedDict):
+    callee: str
+    port: str
+    location: ParsePosition
+    leaves: Iterable[ParseLeaf]
+    titos: Iterable[ParsePosition]
+    features: Iterable[ParseFeature]
+    type_interval: ParseTypeInterval
+    annotations: Iterable[Dict[str, Any]]
+
+
+class ParseIssue(TypedDict, total=False):
+    type: Literal[ParseType.ISSUE]
+    code: int
+    message: str
+    callable: str
+    handle: str
+    filename: str
+    callable_line: int
+    line: int
+    start: int
+    end: int
+    preconditions: Iterable[ParseIssueCondition]
+    postconditions: Iterable[ParseIssueCondition]
+    initial_sources: Iterable[ParseIssueLeaf]
+    final_sinks: Iterable[ParseIssueLeaf]
+    features: Iterable[ParseFeature]
+    fix_info: Dict[str, Any]
+
+
+DictKey = Union[str, Tuple[str, str]]  # handle or (caller, caller_port)
+
+
+class DictEntries(TypedDict):
+    preconditions: Dict[DictKey, List[ParseCondition]]
+    postconditions: Dict[DictKey, List[ParseCondition]]
+    issues: Iterable[ParseIssue]
+
+
 Summary = Dict[str, Any]  # blob of objects that gets passed through the pipeline
-DictEntries = Dict[str, Any]
 
 
 # pyre-fixme[3]: Return type must be annotated.

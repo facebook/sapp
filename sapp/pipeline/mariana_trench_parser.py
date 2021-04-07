@@ -20,9 +20,10 @@ from typing import (
     Pattern,
 )
 
+from .. import pipeline as sapp
 from ..analysis_output import AnalysisOutput, Metadata
 from ..constant import Constant
-from .base_parser import BaseParser, ParseType
+from .base_parser import BaseParser
 
 try:
     # type: ignore
@@ -207,8 +208,8 @@ class Position(NamedTuple):
             path = path[1:]
         return Position(path, line, start, end)
 
-    def to_sapp(self, with_path: bool = True) -> Dict[str, Any]:
-        position: Dict[str, Any] = {
+    def to_sapp(self, with_path: bool = True) -> sapp.ParsePosition:
+        position: sapp.ParsePosition = {
             "line": self.line,
             "start": self.start,
             "end": self.end,
@@ -254,7 +255,7 @@ class LocalPositions(NamedTuple):
             [Position.from_json(position, method) for position in positions]
         )
 
-    def to_sapp(self) -> List[Dict[str, Any]]:
+    def to_sapp(self) -> List[sapp.ParsePosition]:
         return [
             position.to_sapp(with_path=False) for position in sorted(self.positions)
         ]
@@ -273,7 +274,7 @@ class Features(NamedTuple):
         }
         return Features(may_features | always_features)
 
-    def to_sapp(self) -> List[Dict[str, str]]:
+    def to_sapp(self) -> List[sapp.ParseFeature]:
         return [{"": feature} for feature in sorted(self.features)]
 
 
@@ -285,7 +286,7 @@ class Condition(NamedTuple):
     local_positions: LocalPositions
     features: Features
 
-    def to_sapp(self) -> Dict[str, Any]:
+    def to_sapp(self) -> sapp.ParseCondition:
         return {
             "callable": self.caller.method.name,
             "caller": self.caller.method.name,
@@ -301,25 +302,19 @@ class Condition(NamedTuple):
 
 
 class Precondition(Condition):
-    def to_sapp(self) -> Dict[str, Any]:
-        return dict(
-            super().to_sapp(),
-            **{
-                "type": ParseType.PRECONDITION,
-                "sinks": [(self.kind, self.distance)],
-            },
-        )
+    def to_sapp(self) -> sapp.ParseCondition:
+        condition = super().to_sapp()
+        condition["type"] = sapp.ParseType.PRECONDITION
+        condition["sinks"] = [(self.kind, self.distance)]
+        return condition
 
 
 class Postcondition(Condition):
-    def to_sapp(self) -> Dict[str, Any]:
-        return dict(
-            super().to_sapp(),
-            **{
-                "type": ParseType.POSTCONDITION,
-                "sources": [(self.kind, self.distance)],
-            },
-        )
+    def to_sapp(self) -> sapp.ParseCondition:
+        condition = super().to_sapp()
+        condition["type"] = sapp.ParseType.POSTCONDITION
+        condition["sources"] = [(self.kind, self.distance)]
+        return condition
 
 
 class IssueCondition(NamedTuple):
@@ -329,7 +324,7 @@ class IssueCondition(NamedTuple):
     local_positions: LocalPositions
     features: Features
 
-    def to_sapp(self) -> Dict[str, Any]:
+    def to_sapp(self) -> sapp.ParseIssueCondition:
         return {
             "callee": self.callee.method.name,
             "port": self.callee.port.value,
@@ -338,6 +333,7 @@ class IssueCondition(NamedTuple):
             "titos": self.local_positions.to_sapp(),
             "features": self.features.to_sapp(),
             "type_interval": {},
+            "annotations": [],
         }
 
 
@@ -346,7 +342,7 @@ class Leaf(NamedTuple):
     kind: str
     distance: int
 
-    def to_sapp(self) -> Tuple[str, str, int]:
+    def to_sapp(self) -> sapp.ParseIssueLeaf:
         return (self.method.name, self.kind, self.distance)
 
 
@@ -362,9 +358,9 @@ class Issue(NamedTuple):
     final_sinks: Set[Leaf]
     features: Features
 
-    def to_sapp(self, parser: "Parser") -> Dict[str, Any]:
+    def to_sapp(self, parser: "Parser") -> sapp.ParseIssue:
         return {
-            "type": ParseType.ISSUE,
+            "type": sapp.ParseType.ISSUE,
             "code": self.code,
             "message": self.message,
             "callable": self.callable.name,
@@ -415,13 +411,17 @@ class Parser(BaseParser):
                 self._initialized = True
 
     # pyre-fixme[14]: `parse` overrides method defined in `BaseParser` inconsistently.
-    def parse(self, output: AnalysisOutput) -> Iterable[Dict[str, Any]]:
+    def parse(
+        self, output: AnalysisOutput
+    ) -> Iterable[Union[sapp.ParseCondition, sapp.ParseIssue]]:
         self.initialize(output.metadata)
 
         for handle in output.file_handles():
             yield from self.parse_handle(handle)
 
-    def parse_handle(self, handle: IO[str]) -> Iterable[Dict[str, Any]]:
+    def parse_handle(
+        self, handle: IO[str]
+    ) -> Iterable[Union[sapp.ParseCondition, sapp.ParseIssue]]:
         for line in handle.readlines():
             if line.startswith("//"):
                 continue
@@ -432,7 +432,7 @@ class Parser(BaseParser):
             for postcondition in self._parse_postconditions(model):
                 yield postcondition.to_sapp()
 
-    def _parse_issues(self, model: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
+    def _parse_issues(self, model: Dict[str, Any]) -> Iterable[sapp.ParseIssue]:
         for issue in model.get("issues", []):
             code = issue["rule"]
             rule = self._rules[code]

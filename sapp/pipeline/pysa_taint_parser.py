@@ -7,12 +7,33 @@
 
 import logging
 from collections import defaultdict
-from typing import IO, Any, Dict, Iterable, List, Set, Optional, Tuple
+from typing import (
+    cast,
+    IO,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Set,
+    Optional,
+    Tuple,
+    Union,
+    TypedDict,
+)
 
 import ujson as json
 
 from .. import errors
 from ..analysis_output import AnalysisOutput, Metadata
+from . import (
+    ParseFeature,
+    ParsePosition,
+    ParseTypeInterval,
+    ParseCondition,
+    ParseIssueCondition,
+    ParseIssueLeaf,
+    ParseIssue,
+)
 from .base_parser import (
     BaseParser,
     EntryPosition,
@@ -24,17 +45,31 @@ from .base_parser import (
 log: logging.Logger = logging.getLogger("sapp")
 
 
+class TraceFragment(TypedDict):
+    callee: str
+    port: str
+    location: ParsePosition
+    leaves: Iterable[ParseIssueLeaf]
+    titos: Iterable[ParsePosition]
+    features: Iterable[ParseFeature]
+    type_interval: ParseTypeInterval
+
+
 class Parser(BaseParser):
     """The parser takes a json file as input, and provides a simplified output
     for the Processor.
     """
 
-    def parse(self, input: AnalysisOutput) -> Iterable[Dict[str, Any]]:
+    def parse(
+        self, input: AnalysisOutput
+    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
         for handle in input.file_handles():
             for entry in self.parse_handle(handle):
                 yield entry
 
-    def parse_handle(self, handle: IO[str]) -> Iterable[Dict[str, Any]]:
+    def parse_handle(
+        self, handle: IO[str]
+    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
         for entry in self._parse_basic(handle):
             yield from self._parse_by_type(entry)
 
@@ -112,7 +147,9 @@ class Parser(BaseParser):
         handle.seek(0)
         return version
 
-    def _parse_by_type(self, entry: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
+    def _parse_by_type(
+        self, entry: Dict[str, Any]
+    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
         if entry["kind"] == "model":
             yield from self._parse_model(entry["data"])
         elif entry["kind"] == "issue":
@@ -123,20 +160,20 @@ class Parser(BaseParser):
         return callable
 
     @log_trace_keyerror_in_generator
-    def _parse_model(self, json: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
+    def _parse_model(self, json: Dict[str, Any]) -> Iterable[ParseCondition]:
         callable = json["callable"]
         yield from self._parse_model_sources(callable, json["sources"])
         yield from self._parse_model_sinks(callable, json["sinks"])
 
     def _parse_model_sources(
         self, callable: str, source_traces: List[Dict[str, Any]]
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[ParseCondition]:
         for source_trace in source_traces:
             port = source_trace["port"]
             for fragment in self._parse_trace_fragments(
                 "source", source_trace["taint"]
             ):
-                yield {
+                condition: ParseCondition = {
                     "type": ParseType.POSTCONDITION,
                     "caller": callable,
                     "callee": fragment["callee"],
@@ -150,14 +187,15 @@ class Parser(BaseParser):
                     "type_interval": {},
                     "features": [],
                 }
+                yield condition
 
     def _parse_model_sinks(
         self, callable: str, sink_traces: List[Dict[str, Any]]
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[ParseCondition]:
         for sink_trace in sink_traces:
             port = sink_trace["port"]
             for fragment in self._parse_trace_fragments("sink", sink_trace["taint"]):
-                yield {
+                condition: ParseCondition = {
                     "type": ParseType.PRECONDITION,
                     "caller": callable,
                     "callee": fragment["callee"],
@@ -172,10 +210,11 @@ class Parser(BaseParser):
                     "type_interval": {},
                     "features": [],
                 }
+                yield condition
 
     @log_trace_keyerror_in_generator
-    def _parse_issue(self, json: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
-        issue = {}
+    def _parse_issue(self, json: Dict[str, Any]) -> Iterable[ParseIssue]:
+        issue: ParseIssue = {}
 
         issue["type"] = ParseType.ISSUE
         issue["code"] = json["code"]
@@ -205,7 +244,7 @@ class Parser(BaseParser):
 
         yield issue
 
-    def _generate_issue_master_handle(self, issue: Dict[str, Any]) -> str:
+    def _generate_issue_master_handle(self, issue: ParseIssue) -> str:
         line = issue["line"] - issue["callable_line"]
         return self.compute_master_handle(
             callable=issue["callable"],
@@ -234,7 +273,7 @@ class Parser(BaseParser):
 
     def _parse_issue_traces(
         self, traces: List[Dict[str, Any]], name: str, leaf_port: str
-    ) -> Tuple[List[Dict[str, Any]], Set[Tuple[str, str, int]], List[Dict[str, str]]]:
+    ) -> Tuple[List[ParseIssueCondition], Set[ParseIssueLeaf], List[ParseFeature]]:
         for trace in traces:
             if trace["name"] == name:
                 return self._parse_issue_trace_fragments(leaf_port, trace["roots"])
@@ -242,7 +281,7 @@ class Parser(BaseParser):
 
     def _parse_issue_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
-    ) -> Tuple[List[Dict[str, Any]], Set[Tuple[str, str, int]], List[Dict[str, str]]]:
+    ) -> Tuple[List[ParseIssueCondition], Set[ParseIssueLeaf], List[ParseFeature]]:
         fragments = []
         leaf_distances = set()
         all_features = []
@@ -251,28 +290,28 @@ class Parser(BaseParser):
             for fragment in self._parse_trace_fragment(leaf_port, trace):
                 # Stripping the leaf_detail away for areas that
                 #   only expect (leaf_kind, depth)
-                new_fragment = fragment.copy()
+                leaves = fragment["leaves"]
+                new_fragment = cast(ParseIssueCondition, fragment.copy())
                 new_fragment["leaves"] = [
-                    (kind, length) for (_, kind, length) in fragment["leaves"]
+                    (kind, length) for (_, kind, length) in leaves
                 ]
                 fragments.append(new_fragment)
                 # Leaf distances should be represented as:
                 #   (leaf_detail, leaf_kind, depth)
-                leaf_info = fragment["leaves"]
-                leaf_distances.update(leaf_info)
+                leaf_distances.update(leaves)
                 all_features.extend(fragment["features"])
 
         return (fragments, leaf_distances, all_features)
 
     def _parse_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[TraceFragment]:
         for trace in traces:
             yield from self._parse_trace_fragment(leaf_port, trace)
 
     def _parse_trace_fragment(
         self, leaf_port: str, trace: Dict[str, Any]
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[TraceFragment]:
         # For now we don't have leaf distances.
         leaves = self._parse_leaves(trace.get("leaves", []))
         if "root" in trace:
@@ -287,7 +326,7 @@ class Parser(BaseParser):
                 )
 
             for ((callee_name, port), leaves) in leaf_name_and_port_to_leaves.items():
-                yield {
+                fragment: TraceFragment = {
                     "callee": callee_name,
                     "port": port,
                     "location": self._adjust_location(trace["root"]),
@@ -296,6 +335,7 @@ class Parser(BaseParser):
                     "features": trace.get("features", []),
                     "type_interval": {},
                 }
+                yield fragment
         elif "call" in trace:
             call = trace["call"]
             location = self._adjust_location(call["position"])
@@ -305,7 +345,7 @@ class Parser(BaseParser):
             leaves = [(name, kind, length) for (name, kind, _, _) in leaves]
 
             for resolved in resolves_to:
-                yield {
+                fragment: TraceFragment = {
                     "callee": resolved,
                     "port": port,
                     "location": location,
@@ -316,9 +356,10 @@ class Parser(BaseParser):
                     "features": trace.get("features", []),
                     "type_interval": {},
                 }
+                yield fragment
 
-    def _adjust_location(self, location: Dict[str, Any]) -> Dict[str, Any]:
-        return {**location, "start": location["start"] + 1}
+    def _adjust_location(self, location: ParsePosition) -> ParsePosition:
+        return {**location, "start": location["start"] + 1}  # pyre-ignore[7]
 
     def _leaf_name(self, leaf: Dict[str, Any]) -> str:
         return leaf.get("name", None)

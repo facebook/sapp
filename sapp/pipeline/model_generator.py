@@ -8,7 +8,7 @@
 import datetime
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Iterable
 
 import ujson as json
 
@@ -29,7 +29,15 @@ from ..models import (
     TraceKind,
 )
 from ..trace_graph import LeafMapping, TraceGraph
-from . import DictEntries, PipelineStep, Summary
+from . import (
+    ParseFeature,
+    ParseCondition,
+    ParseIssue,
+    ParseIssueCondition,
+    DictEntries,
+    PipelineStep,
+    Summary,
+)
 
 
 log = logging.getLogger("sapp")
@@ -49,7 +57,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         self.summary["trace_entries"] = defaultdict(
             lambda: defaultdict(list)
-        )  # : Dict[TraceKind, Dict[Tuple[str, str], Any]]
+        )  # : Dict[TraceKind, Dict[Tuple[str, str], List[ParseCondition]]]
         self.summary["missing_traces"] = defaultdict(
             set
         )  # Dict[TraceKind, Set[Tuple[str, str]]]
@@ -74,7 +82,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         return self.graph, self.summary
 
-    def _compute_callables_count(self, iters: Dict[str, Any]):
+    def _compute_callables_count(self, iters: DictEntries):
         """Iterate over all issues and count the number of times each callable
         is seen."""
         count = dict.fromkeys([issue["callable"] for issue in iters["issues"]], 0)
@@ -102,7 +110,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         return run
 
-    def _get_minimum_trace_length(self, entries: List[Dict]) -> int:
+    def _get_minimum_trace_length(self, entries: Iterable[ParseIssueCondition]) -> int:
         length = None
         for entry in entries:
             for (_leaf, depth) in entry["leaves"]:
@@ -112,7 +120,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             return length
         return 0
 
-    def _generate_issue(self, run, entry, callablesCount) -> IssueInstance:
+    def _generate_issue(self, run, entry: ParseIssue, callablesCount) -> IssueInstance:
         """Insert the issue instance into a run. This includes creating (for
         new issues) or finding (for existing issues) Issue objects to associate
         with the instances.
@@ -235,7 +243,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             titos = titos[:200]
         return titos
 
-    def _generate_issue_traces(self, kind: TraceKind, run, issue, callinfo):
+    def _generate_issue_traces(
+        self, kind: TraceKind, run, issue: ParseIssue, callinfo: ParseIssueCondition
+    ):
         # Generates a synthetic trace frame from a forward or backward trace in callinfo
         # that represents a call edge from the issue callable to the start of a
         # a trace.
@@ -340,7 +350,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return new
 
     def _generate_trace_frame(
-        self, kind: TraceKind, run, entry
+        self, kind: TraceKind, run, entry: ParseCondition
     ) -> Tuple[TraceFrame, Set[LeafMapping]]:
         callee_location = entry["callee_location"]
         titos = self._generate_tito(entry["filename"], entry, entry["caller"])
@@ -380,7 +390,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         leaves,
         type_interval,
         annotations,
-        features: List[str],
+        features: Iterable[ParseFeature],
     ) -> Tuple[TraceFrame, Set[LeafMapping]]:
         leaf_kind = (
             SharedTextKind.SOURCE
@@ -451,7 +461,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         return trace_frame, leaf_mapping_ids
 
-    def _generate_issue_feature_contents(self, issue, feature):
+    def _generate_issue_feature_contents(
+        self, issue: Optional[ParseIssue], feature: ParseFeature
+    ):
         # Generates a synthetic feature from the extra/feature
         features = set()
         for key in feature:

@@ -9,13 +9,32 @@ import logging
 import os
 import pprint
 from collections import defaultdict
-from enum import Enum
-from typing import Any, Dict, Iterable, List, NamedTuple, Set, TextIO, Tuple, Union
+from typing import (
+    cast,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Set,
+    TextIO,
+    Tuple,
+    Union,
+)
 
 import xxhash
 
 from ..analysis_output import AnalysisOutput, Metadata
-from . import DictEntries, Optional, PipelineStep, Summary
+from . import (
+    ParseType,
+    ParseCondition,
+    ParseIssue,
+    DictKey,
+    DictEntries,
+    Optional,
+    PipelineStep,
+    Summary,
+)
 
 
 # if these imports have the same name we get a linter error
@@ -34,12 +53,6 @@ class EntryPosition(NamedTuple):
     callable: str
     shard: int
     offset: int
-
-
-class ParseType(Enum):
-    ISSUE = "issue"
-    PRECONDITION = "precondition"
-    POSTCONDITION = "postcondition"
 
 
 # pyre-ignore[2]
@@ -101,31 +114,34 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         return
 
     # @abstractmethod
-    def parse(self, input: AnalysisOutput) -> Iterable[Dict[str, Any]]:
+    def parse(
+        self, input: AnalysisOutput
+    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
         """Must return objects with a 'type': ParseType field."""
         raise NotImplementedError("Abstract method called!")
-        return
-        yield
 
     # @abstractmethod
-    def parse_handle(self, handle: TextIO) -> Iterable[Dict[str, Any]]:
+    def parse_handle(
+        self, handle: TextIO
+    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
         """Must return objects with a 'type': ParseType field."""
         raise NotImplementedError("Abstract method called!")
-        return
-        yield
 
     def _analysis_output_to_parsed_types(
         self, input: AnalysisOutput
-    ) -> Iterable[Tuple[ParseType, Union[str, Tuple[str, str]], Dict[str, Any]]]:
+    ) -> Iterable[Tuple[ParseType, DictKey, Union[ParseCondition, ParseIssue]]]:
         entries = self.parse(input)
 
         for e in entries:
             typ = e["type"]
             if typ == ParseType.ISSUE:
+                e = cast(ParseIssue, e)
                 key = e["handle"]
             elif e["type"] == ParseType.PRECONDITION:
+                e = cast(ParseCondition, e)
                 key = (e["caller"], e["caller_port"])
             elif e["type"] == ParseType.POSTCONDITION:
+                e = cast(ParseCondition, e)
                 key = (e["caller"], e["caller_port"])
             yield typ, key, e
 
@@ -148,11 +164,9 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         moved.
         """
 
-        issues = []
+        issues: List[ParseIssue] = []
         previous_handles: Set[str] = set()
-        conditions: Dict[
-            ParseType, Dict[Union[str, Tuple[str, str]], List[Dict[str, Any]]]
-        ] = {
+        conditions: Dict[ParseType, Dict[DictKey, List[ParseCondition]]] = {
             ParseType.PRECONDITION: defaultdict(list),
             ParseType.POSTCONDITION: defaultdict(list),
         }
@@ -177,9 +191,11 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
             if typ == ParseType.ISSUE:
                 # We are only interested in issues that weren't in the previous
                 # analysis.
+                e = cast(ParseIssue, e)
                 if not self._is_existing_issue(linemap, previous_handles, e, key):
                     issues.append(e)
-            else:
+            elif typ == ParseType.PRECONDITION or typ == ParseType.POSTCONDITION:
+                e = cast(ParseCondition, e)
                 conditions[typ][key].append(e)
 
         return {
@@ -192,8 +208,8 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         self,
         linemap: Dict[str, Any],
         old_handles: Set[str],
-        new_issue: Dict[str, Any],
-        new_handle: Union[str, Tuple[str, str]],
+        new_issue: ParseIssue,
+        new_handle: DictKey,
     ) -> bool:
         if new_handle in old_handles:
             return True
