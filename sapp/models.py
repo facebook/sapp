@@ -121,7 +121,7 @@ class SourceLocationType(types.TypeDecorator):
 
         if len(p) == 0:
             return None
-        return SourceLocation(*map(int, p))
+        return SourceLocation.of(*map(int, p))
 
 
 class SourceLocationsType(types.TypeDecorator):

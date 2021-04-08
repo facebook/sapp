@@ -146,10 +146,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             initial_source_kinds.update(new_source_ids)
             trace_frames.append(tf)
 
-        features = set()
-        for f in entry.features:
-            features.update(self._generate_issue_feature_contents(f))
-
         callable = entry.callable
 
         source_details = {
@@ -222,7 +218,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         for trace_frame in trace_frames:
             self.graph.add_issue_instance_trace_frame_assoc(instance, trace_frame)
 
-        for feature in features:
+        for feature in entry.features:
             feature = self._get_shared_text(SharedTextKind.FEATURE, feature)
             self.graph.add_issue_instance_shared_text_assoc(instance, feature)
 
@@ -382,7 +378,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         leaves: Iterable[ParseLeaf],
         type_interval: Optional[ParseTypeInterval],
         annotations: Iterable[ParseTraceAnnotation],
-        features: Iterable[ParseFeature],
+        features: List[str],
     ) -> Tuple[TraceFrame, Set[LeafMapping]]:
         leaf_kind = (
             SharedTextKind.SOURCE
@@ -438,10 +434,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         # using "bulk_saver.add_trace_frame_leaf_assoc()" to drop into this table
         # as documented in models.py "class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin)"
         for f in features:
-            contents = self._generate_issue_feature_contents(f)
-            for c in contents:
-                feature_record = self._get_shared_text(SharedTextKind.FEATURE, c)
-                self.graph.add_trace_frame_leaf_assoc(trace_frame, feature_record, 0)
+            feature_record = self._get_shared_text(SharedTextKind.FEATURE, f)
+            self.graph.add_trace_frame_leaf_assoc(trace_frame, feature_record, 0)
 
         self.graph.add_trace_frame(trace_frame)
         self._generate_trace_annotations(
@@ -460,11 +454,13 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 features.add(key)
         return features
 
-    def _get_interval(self, ti) -> Tuple[Optional[int], Optional[int], bool]:
-        lower = ti.get("start", None)
-        upper = ti.get("finish", None)
-        preserves_type_context = ti.get("preserves_type_context", False)
-        return (lower, upper, preserves_type_context)
+    def _get_interval(
+        self, ti: Optional[ParseTypeInterval]
+    ) -> Tuple[Optional[int], Optional[int], bool]:
+        if ti:
+            return (ti.start, ti.finish, ti.preserves_type_context)
+        else:
+            return (None, None, False)
 
     def _generate_trace_annotations(
         self,

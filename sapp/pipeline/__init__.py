@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import sys
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
 from enum import Enum
@@ -41,10 +42,13 @@ class ParseType(Enum):
 
 # NB: The TypedDict types are representative of the current state of things emitted
 # by the various parsers. They are transformed into the NamedTuple versions immediately
-# after parsing (for memory savings), before the rest of the pipeline is executed.
+# after parsing, before the rest of the pipeline is executed.
+# This is for performance reasons (we intern very common strings, and NamedTuples themselves are more memory-efficient).
 # Eventually, we should "push" this transformation downwards into the parsers and delete
 # the TypedDict versions. But it's a ton of work to do so (especially converting all the unit tests),
 # so we have two versions for now.
+# Note that when that "pushdown" occurs, there probably still needs to be code around here that does the interning,
+# as interning in the parallel parsing processes would be pointless.
 
 
 class ParsePosition(TypedDict, total=False):
@@ -54,26 +58,22 @@ class ParsePosition(TypedDict, total=False):
     end: int
 
 
-class SourceLocation(object):
+class SourceLocation(NamedTuple):
     """The location in a source file that an error occurred in
 
     If end_column is defined then we have a range, otherwise it defaults to
     begin_column and we have a single point.
     """
 
-    def __init__(
-        self, line_no: int, begin_column: int, end_column: Optional[int] = None
-    ) -> None:
-        self.line_no: int = line_no
-        self.begin_column: int = begin_column
-        self.end_column: int = end_column or self.begin_column
+    line_no: int
+    begin_column: int
+    end_column: int
 
-    def __eq__(self, other: "SourceLocation") -> bool:
-        return (
-            self.line_no == other.line_no
-            and self.begin_column == other.begin_column
-            and self.end_column == other.end_column
-        )
+    @staticmethod
+    def of(
+        line_no: int, begin_column: int, end_column: Optional[int] = None
+    ) -> "SourceLocation":
+        return SourceLocation(line_no, begin_column, end_column or begin_column)
 
     def __str__(self) -> str:
         return SourceLocation.to_string(self)
@@ -128,7 +128,7 @@ class ParseTraceAnnotation(NamedTuple):
             type_interval=j["type_interval"],
             link=j.get("link"),
             trace_key=j.get("trace_key"),
-            titos=list(map(SourceLocation.from_typed_dict, j["titos"])),
+            titos=list(map(SourceLocation.from_typed_dict, j.get("titos", []))),
             subtraces=j["subtraces"],
         )
 
@@ -136,6 +136,21 @@ class ParseTraceAnnotation(NamedTuple):
 ParseFeature = Dict[str, str]
 ParseLeaf = Tuple[str, int]  # (kind, distance)
 ParseIssueLeaf = Tuple[str, str, int]  # (callable, kind, distance)
+
+
+def flatten_features(features: Iterable[ParseFeature]) -> List[str]:
+    ret = []
+    for feature in features:
+        for key, value in feature.items():
+            if isinstance(value, str) and value:
+                ret.append(sys.intern(key + ":" + value))
+            else:
+                ret.append(sys.intern(key))
+    return ret
+
+
+def intern_leaves(leaves: Iterable[ParseLeaf]) -> List[ParseLeaf]:
+    return list(map(lambda p: (sys.intern(p[0]), p[1]), leaves))
 
 
 class ParseCondition(TypedDict, total=False):
@@ -164,9 +179,9 @@ class ParseCondition2(NamedTuple):
     callee: str
     callee_port: str
     callee_location: SourceLocation
-    leaves: Iterable[ParseLeaf]
+    leaves: List[ParseLeaf]
     type_interval: Optional[ParseTypeInterval]
-    features: Iterable[ParseFeature]
+    features: List[str]
     titos: Iterable[SourceLocation]
     annotations: Iterable[ParseTraceAnnotation]
 
@@ -176,20 +191,23 @@ class ParseCondition2(NamedTuple):
             leaves = d.get("sinks") or d["leaves"]
         else:
             leaves = d.get("sources") or d["leaves"]
+        leaves = intern_leaves(leaves)
 
         return ParseCondition2(
             type=d["type"],
             caller=d["caller"],
-            caller_port=d["caller_port"],
+            caller_port=sys.intern(d["caller_port"]),
             filename=d["filename"],
             callee=d["callee"],
-            callee_port=d["callee_port"],
+            callee_port=sys.intern(d["callee_port"]),
             callee_location=SourceLocation.from_typed_dict(d["callee_location"]),
             leaves=leaves,
             type_interval=d["type_interval"],
-            features=d["features"],
-            titos=list(map(SourceLocation.from_typed_dict, d["titos"])),
-            annotations=list(map(ParseTraceAnnotation.from_json, d["annotations"])),
+            features=flatten_features(d["features"]),
+            titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
+            annotations=list(
+                map(ParseTraceAnnotation.from_json, d.get("annotations", []))
+            ),
         )
 
 
@@ -208,9 +226,9 @@ class ParseIssueCondition2(NamedTuple):
     callee: str
     port: str
     location: SourceLocation
-    leaves: Iterable[ParseLeaf]
+    leaves: List[ParseLeaf]
     titos: Iterable[SourceLocation]
-    features: Iterable[ParseFeature]
+    features: List[str]
     type_interval: Optional[ParseTypeInterval]
     annotations: Iterable[ParseTraceAnnotation]
 
@@ -218,13 +236,15 @@ class ParseIssueCondition2(NamedTuple):
     def from_typed_dict(d: ParseIssueCondition) -> "ParseIssueCondition2":
         return ParseIssueCondition2(
             callee=d["callee"],
-            port=d["port"],
+            port=sys.intern(d["port"]),
             location=SourceLocation.from_typed_dict(d["location"]),
-            leaves=d["leaves"],
+            leaves=intern_leaves(d["leaves"]),
             titos=list(map(SourceLocation.from_typed_dict, d["titos"])),
-            features=d["features"],
+            features=flatten_features(d["features"]),
             type_interval=d["type_interval"],
-            annotations=list(map(ParseTraceAnnotation.from_json, d["annotations"])),
+            annotations=list(
+                map(ParseTraceAnnotation.from_json, d.get("annotations", []))
+            ),
         )
 
 
@@ -244,7 +264,7 @@ class ParseIssue(TypedDict, total=False):
     initial_sources: Iterable[ParseIssueLeaf]
     final_sinks: Iterable[ParseIssueLeaf]
     features: Iterable[ParseFeature]
-    fix_info: Dict[str, Any]
+    fix_info: Optional[Dict[str, Any]]
 
 
 class ParseIssue2(NamedTuple):
@@ -261,8 +281,8 @@ class ParseIssue2(NamedTuple):
     postconditions: Iterable[ParseIssueCondition2]
     initial_sources: Iterable[ParseIssueLeaf]
     final_sinks: Iterable[ParseIssueLeaf]
-    features: Iterable[ParseFeature]
-    fix_info: Dict[str, Any]
+    features: List[str]
+    fix_info: Optional[Dict[str, Any]]
 
     @staticmethod
     def from_typed_dict(d: ParseIssue) -> "ParseIssue2":
@@ -284,8 +304,8 @@ class ParseIssue2(NamedTuple):
             ),
             initial_sources=d["initial_sources"],
             final_sinks=d["final_sinks"],
-            features=d["features"],
-            fix_info=d["fix_info"],
+            features=flatten_features(d["features"]),
+            fix_info=d.get("fix_info"),
         )
 
 
