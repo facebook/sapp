@@ -6,7 +6,7 @@
 SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of Pysa and makes them explorable both through a command line interface and a web UI.
 
 ## Installation
-SAPP can be installed through [PyPI](https://pypi.org/) with `pip install fb-sapp`.
+To run SAPP, you will need [Python 3.7 or later](https://www.python.org/getit/). SAPP can be installed through [PyPI](https://pypi.org/) with `pip install fb-sapp`.
 
 ## Getting Started
 This guide assumes that you have results from a Pysa run saved in a `~/example` directory. If you are new to Pysa, you can follow [this tutorial](https://pyre-check.org/docs/pysa-running#example) to get started.
