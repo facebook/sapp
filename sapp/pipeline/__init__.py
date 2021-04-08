@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Generic,
     List,
+    NamedTuple,
     Optional,
     Tuple,
     TypeVar,
@@ -38,6 +39,14 @@ class ParseType(Enum):
     POSTCONDITION = "postcondition"
 
 
+# NB: The TypedDict types are representative of the current state of things emitted
+# by the various parsers. They are transformed into the NamedTuple versions immediately
+# after parsing (for memory savings), before the rest of the pipeline is executed.
+# Eventually, we should "push" this transformation downwards into the parsers and delete
+# the TypedDict versions. But it's a ton of work to do so (especially converting all the unit tests),
+# so we have two versions for now.
+
+
 class ParsePosition(TypedDict, total=False):
     filename: str
     line: int
@@ -45,10 +54,83 @@ class ParsePosition(TypedDict, total=False):
     end: int
 
 
-class ParseTypeInterval(TypedDict, total=False):
+class SourceLocation(object):
+    """The location in a source file that an error occurred in
+
+    If end_column is defined then we have a range, otherwise it defaults to
+    begin_column and we have a single point.
+    """
+
+    def __init__(
+        self, line_no: int, begin_column: int, end_column: Optional[int] = None
+    ) -> None:
+        self.line_no: int = line_no
+        self.begin_column: int = begin_column
+        self.end_column: int = end_column or self.begin_column
+
+    def __eq__(self, other: "SourceLocation") -> bool:
+        return (
+            self.line_no == other.line_no
+            and self.begin_column == other.begin_column
+            and self.end_column == other.end_column
+        )
+
+    def __str__(self) -> str:
+        return SourceLocation.to_string(self)
+
+    @staticmethod
+    def from_typed_dict(d: ParsePosition) -> "SourceLocation":
+        return SourceLocation(
+            d["line"],
+            d["start"],
+            d["end"],
+        )
+
+    @staticmethod
+    def from_string(location_string: str) -> "SourceLocation":
+        location_points = location_string.split("|")
+        assert len(location_points) == 3, "Invalid location string %s" % location_string
+        return SourceLocation(*map(int, location_points))
+
+    @staticmethod
+    def to_string(location: "SourceLocation") -> str:
+        return "|".join(
+            map(str, [location.line_no, location.begin_column, location.end_column])
+        )
+
+
+class ParseTypeInterval(NamedTuple):
     start: int
     finish: int
     preserves_type_context: bool
+
+
+class ParseTraceAnnotation(NamedTuple):
+    location: SourceLocation
+    kind: str
+    msg: str
+    leaf_kind: Optional[str]
+    leaf_depth: int
+    type_interval: ParseTypeInterval
+    link: Optional[str]
+    trace_key: Optional[str]
+    titos: List[SourceLocation]
+    subtraces: List[Dict[str, Any]]  # TODO figure what exactly this shape is
+
+    @staticmethod
+    def from_json(j: Dict[str, Any]) -> "ParseTraceAnnotation":
+        return ParseTraceAnnotation(
+            location=SourceLocation.from_typed_dict(j["location"]),
+            kind=j["kind"],
+            msg=j["msg"],
+            leaf_kind=j.get("leaf_kind"),
+            leaf_depth=j["leaf_depth"],
+            type_interval=j["type_interval"],
+            link=j.get("link"),
+            trace_key=j.get("trace_key"),
+            titos=list(map(SourceLocation.from_typed_dict, j["titos"])),
+            subtraces=j["subtraces"],
+        )
 
 
 ParseFeature = Dict[str, str]
@@ -68,10 +150,47 @@ class ParseCondition(TypedDict, total=False):
     sources: Iterable[ParseLeaf]
     sinks: Iterable[ParseLeaf]
     leaves: Iterable[ParseLeaf]  # specify either `leaves`, `sources` or `sinks`.
-    type_interval: ParseTypeInterval
+    type_interval: Optional[ParseTypeInterval]
     features: Iterable[ParseFeature]
     titos: Iterable[ParsePosition]
     annotations: Iterable[Dict[str, Any]]
+
+
+class ParseCondition2(NamedTuple):
+    type: Union[Literal[ParseType.PRECONDITION], Literal[ParseType.POSTCONDITION]]
+    caller: str
+    caller_port: str
+    filename: str
+    callee: str
+    callee_port: str
+    callee_location: SourceLocation
+    leaves: Iterable[ParseLeaf]
+    type_interval: Optional[ParseTypeInterval]
+    features: Iterable[ParseFeature]
+    titos: Iterable[SourceLocation]
+    annotations: Iterable[ParseTraceAnnotation]
+
+    @staticmethod
+    def from_typed_dict(d: ParseCondition) -> "ParseCondition2":
+        if d["type"] == ParseType.PRECONDITION:
+            leaves = d.get("sinks") or d["leaves"]
+        else:
+            leaves = d.get("sources") or d["leaves"]
+
+        return ParseCondition2(
+            type=d["type"],
+            caller=d["caller"],
+            caller_port=d["caller_port"],
+            filename=d["filename"],
+            callee=d["callee"],
+            callee_port=d["callee_port"],
+            callee_location=SourceLocation.from_typed_dict(d["callee_location"]),
+            leaves=leaves,
+            type_interval=d["type_interval"],
+            features=d["features"],
+            titos=list(map(SourceLocation.from_typed_dict, d["titos"])),
+            annotations=list(map(ParseTraceAnnotation.from_json, d["annotations"])),
+        )
 
 
 class ParseIssueCondition(TypedDict):
@@ -81,8 +200,32 @@ class ParseIssueCondition(TypedDict):
     leaves: Iterable[ParseLeaf]
     titos: Iterable[ParsePosition]
     features: Iterable[ParseFeature]
-    type_interval: ParseTypeInterval
+    type_interval: Optional[ParseTypeInterval]
     annotations: Iterable[Dict[str, Any]]
+
+
+class ParseIssueCondition2(NamedTuple):
+    callee: str
+    port: str
+    location: SourceLocation
+    leaves: Iterable[ParseLeaf]
+    titos: Iterable[SourceLocation]
+    features: Iterable[ParseFeature]
+    type_interval: Optional[ParseTypeInterval]
+    annotations: Iterable[ParseTraceAnnotation]
+
+    @staticmethod
+    def from_typed_dict(d: ParseIssueCondition) -> "ParseIssueCondition2":
+        return ParseIssueCondition2(
+            callee=d["callee"],
+            port=d["port"],
+            location=SourceLocation.from_typed_dict(d["location"]),
+            leaves=d["leaves"],
+            titos=list(map(SourceLocation.from_typed_dict, d["titos"])),
+            features=d["features"],
+            type_interval=d["type_interval"],
+            annotations=list(map(ParseTraceAnnotation.from_json, d["annotations"])),
+        )
 
 
 class ParseIssue(TypedDict, total=False):
@@ -104,13 +247,55 @@ class ParseIssue(TypedDict, total=False):
     fix_info: Dict[str, Any]
 
 
+class ParseIssue2(NamedTuple):
+    code: int
+    message: str
+    callable: str
+    handle: str
+    filename: str
+    callable_line: int
+    line: int
+    start: int
+    end: int
+    preconditions: Iterable[ParseIssueCondition2]
+    postconditions: Iterable[ParseIssueCondition2]
+    initial_sources: Iterable[ParseIssueLeaf]
+    final_sinks: Iterable[ParseIssueLeaf]
+    features: Iterable[ParseFeature]
+    fix_info: Dict[str, Any]
+
+    @staticmethod
+    def from_typed_dict(d: ParseIssue) -> "ParseIssue2":
+        return ParseIssue2(
+            code=d["code"],
+            message=d["message"],
+            callable=d["callable"],
+            handle=d["handle"],
+            filename=d["filename"],
+            callable_line=d["callable_line"],
+            line=d["line"],
+            start=d["start"],
+            end=d["end"],
+            preconditions=list(
+                map(ParseIssueCondition2.from_typed_dict, d["preconditions"])
+            ),
+            postconditions=list(
+                map(ParseIssueCondition2.from_typed_dict, d["postconditions"])
+            ),
+            initial_sources=d["initial_sources"],
+            final_sinks=d["final_sinks"],
+            features=d["features"],
+            fix_info=d["fix_info"],
+        )
+
+
 DictKey = Union[str, Tuple[str, str]]  # handle or (caller, caller_port)
 
 
 class DictEntries(TypedDict):
-    preconditions: Dict[DictKey, List[ParseCondition]]
-    postconditions: Dict[DictKey, List[ParseCondition]]
-    issues: Iterable[ParseIssue]
+    preconditions: Dict[DictKey, List[ParseCondition2]]
+    postconditions: Dict[DictKey, List[ParseCondition2]]
+    issues: Iterable[ParseIssue2]
 
 
 Summary = Dict[str, Any]  # blob of objects that gets passed through the pipeline

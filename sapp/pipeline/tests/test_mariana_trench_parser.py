@@ -135,7 +135,7 @@ class TestParser(unittest.TestCase):
                                 {"": "always-via-parameter-field"},
                                 {"": "via-parameter-field"},
                             ],
-                            "type_interval": {},
+                            "type_interval": None,
                             "annotations": [],
                         }
                     ],
@@ -155,7 +155,7 @@ class TestParser(unittest.TestCase):
                                 {"line": 26, "start": 28, "end": 29},
                             ],
                             "features": [],
-                            "type_interval": {},
+                            "type_interval": None,
                             "annotations": [],
                         }
                     ],
@@ -263,7 +263,7 @@ class TestParser(unittest.TestCase):
                             "leaves": [("TestSink", 2)],
                             "titos": [{"line": 13, "start": 15, "end": 16}],
                             "features": [],
-                            "type_interval": {},
+                            "type_interval": None,
                             "annotations": [],
                         },
                         {
@@ -278,7 +278,7 @@ class TestParser(unittest.TestCase):
                             "leaves": [("TestSink", 3)],
                             "titos": [],
                             "features": [],
-                            "type_interval": {},
+                            "type_interval": None,
                             "annotations": [],
                         },
                     ],
@@ -295,7 +295,7 @@ class TestParser(unittest.TestCase):
                             "leaves": [("TestSource", 3)],
                             "titos": [{"line": 33, "start": 35, "end": 36}],
                             "features": [],
-                            "type_interval": {},
+                            "type_interval": None,
                             "annotations": [],
                         }
                     ],
@@ -346,7 +346,7 @@ class TestParser(unittest.TestCase):
                     "sources": [("TestSource", 0)],
                     "caller_port": "result",
                     "callee_port": "source",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -403,7 +403,7 @@ class TestParser(unittest.TestCase):
                     "sources": [("TestSource", 1)],
                     "caller_port": "result",
                     "callee_port": "result",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -448,7 +448,7 @@ class TestParser(unittest.TestCase):
                     "sources": [("TestSource", 0)],
                     "caller_port": "result.x.y",
                     "callee_port": "source",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [{"": "via-source"}],
                 }
             ],
@@ -496,7 +496,7 @@ class TestParser(unittest.TestCase):
                     "sources": [("TestSource", 0)],
                     "caller_port": "result",
                     "callee_port": "source",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -539,7 +539,7 @@ class TestParser(unittest.TestCase):
                     "sinks": [("TestSink", 0)],
                     "caller_port": "argument(1)",
                     "callee_port": "sink",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -596,7 +596,7 @@ class TestParser(unittest.TestCase):
                     "sinks": [("TestSink", 1)],
                     "caller_port": "argument(2)",
                     "callee_port": "argument(1)",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -638,7 +638,7 @@ class TestParser(unittest.TestCase):
                     "sinks": [("TestSink", 0)],
                     "caller_port": "argument(1).x.y",
                     "callee_port": "sink",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -689,7 +689,7 @@ class TestParser(unittest.TestCase):
                     "sinks": [("TestSink", 0)],
                     "caller_port": "argument(2)",
                     "callee_port": "sink",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [{"": "via-sink"}],
                 }
             ],
@@ -756,7 +756,7 @@ class TestParser(unittest.TestCase):
                     "sinks": [("TestSink", 0)],
                     "caller_port": "argument(1)",
                     "callee_port": "sink",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -800,7 +800,7 @@ class TestParser(unittest.TestCase):
                     "sinks": [("TestSink", 0)],
                     "caller_port": "argument(1)",
                     "callee_port": "anchor:argument(1)",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -847,7 +847,7 @@ class TestParser(unittest.TestCase):
                     "sources": [("TestSource", 0)],
                     "caller_port": "result",
                     "callee_port": "anchor:result",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],
@@ -897,7 +897,7 @@ class TestParser(unittest.TestCase):
                     "sinks": [("TestSink", 1)],
                     "caller_port": "argument(2)",
                     "callee_port": "argument(1)",
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
             ],

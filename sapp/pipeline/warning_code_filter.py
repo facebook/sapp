@@ -5,16 +5,15 @@
 
 from typing import Any, Dict, Set, Tuple
 
-from . import ParseIssue, DictEntries, PipelineStep, Summary
+from . import ParseIssue2, DictEntries, PipelineStep, Summary
 
 
 class WarningCodeFilter(PipelineStep[DictEntries, DictEntries]):
-    # pyre-fixme[3]: Return type must be annotated.
-    def __init__(self, codes_to_keep: Set[int]):
+    def __init__(self, codes_to_keep: Set[int]) -> None:
         self.codes_to_keep: Set[int] = codes_to_keep
 
-    def _should_skip_issue(self, issue: ParseIssue) -> bool:
-        return issue["code"] not in self.codes_to_keep
+    def _should_skip_issue(self, issue: ParseIssue2) -> bool:
+        return issue.code not in self.codes_to_keep
 
     def run(self, input: DictEntries, summary: Summary) -> Tuple[DictEntries, Summary]:
         filtered_issues = []

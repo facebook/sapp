@@ -8,7 +8,7 @@
 import datetime
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple, Iterable
+from typing import Dict, List, Optional, Set, Tuple, Union, Iterable
 
 import ujson as json
 
@@ -31,9 +31,12 @@ from ..models import (
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
     ParseFeature,
-    ParseCondition,
-    ParseIssue,
-    ParseIssueCondition,
+    ParseCondition2,
+    ParseIssue2,
+    ParseIssueCondition2,
+    ParseLeaf,
+    ParseTraceAnnotation,
+    ParseTypeInterval,
     DictEntries,
     PipelineStep,
     Summary,
@@ -69,7 +72,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         self.summary["trace_entries"][TraceKind.precondition] = input["preconditions"]
         self.summary["trace_entries"][TraceKind.postcondition] = input["postconditions"]
-        callables = self._compute_callables_count(input)
+        callables = self._compute_callables_count(input["issues"])
 
         log.info("Generating issues and traces")
         for entry in input["issues"]:
@@ -82,14 +85,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         return self.graph, self.summary
 
-    def _compute_callables_count(self, iters: DictEntries):
+    def _compute_callables_count(self, issues: Iterable[ParseIssue2]):
         """Iterate over all issues and count the number of times each callable
         is seen."""
-        count = dict.fromkeys([issue["callable"] for issue in iters["issues"]], 0)
-        for issue in iters["issues"]:
+        count = dict.fromkeys([issue.callable for issue in issues], 0)
+        for issue in issues:
             # pyre-fixme[6]: Expected `typing_extensions.Literal[0]` for 2nd param
             #  but got `int`.
-            count[issue["callable"]] += 1
+            count[issue.callable] += 1
 
         return count
 
@@ -110,17 +113,17 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         return run
 
-    def _get_minimum_trace_length(self, entries: Iterable[ParseIssueCondition]) -> int:
+    def _get_minimum_trace_length(self, entries: Iterable[ParseIssueCondition2]) -> int:
         length = None
         for entry in entries:
-            for (_leaf, depth) in entry["leaves"]:
+            for (_leaf, depth) in entry.leaves:
                 if length is None or length > depth:
                     length = depth
         if length is not None:
             return length
         return 0
 
-    def _generate_issue(self, run, entry: ParseIssue, callablesCount) -> IssueInstance:
+    def _generate_issue(self, run, entry: ParseIssue2, callablesCount) -> IssueInstance:
         """Insert the issue instance into a run. This includes creating (for
         new issues) or finding (for existing issues) Issue objects to associate
         with the instances.
@@ -129,14 +132,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         trace_frames = []
         final_sink_kinds = set()
         initial_source_kinds = set()
-        for p in entry["preconditions"]:
+        for p in entry.preconditions:
             tf, new_sink_ids = self._generate_issue_traces(
                 TraceKind.PRECONDITION, run, entry, p
             )
             final_sink_kinds.update(new_sink_ids)
             trace_frames.append(tf)
 
-        for p in entry["postconditions"]:
+        for p in entry.postconditions:
             tf, new_source_ids = self._generate_issue_traces(
                 TraceKind.POSTCONDITION, run, entry, p
             )
@@ -144,28 +147,27 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             trace_frames.append(tf)
 
         features = set()
-        for f in entry["features"]:
-            features.update(self._generate_issue_feature_contents(entry, f))
+        for f in entry.features:
+            features.update(self._generate_issue_feature_contents(f))
 
-        callable = entry["callable"]
-        handle = self._get_issue_handle(entry)
+        callable = entry.callable
 
         source_details = {
             self._get_shared_text(SharedTextKind.SOURCE_DETAIL, name)
-            for (name, _kind, _depth) in entry["initial_sources"]
+            for (name, _kind, _depth) in entry.initial_sources
             if name
         }
         sink_details = {
             self._get_shared_text(SharedTextKind.SINK_DETAIL, name)
-            for (name, _kind, _depth) in entry["final_sinks"]
+            for (name, _kind, _depth) in entry.final_sinks
             if name
         }
 
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
         issue: Issue = Issue.Record(
             id=IssueDBID(),
-            code=entry["code"],
-            handle=handle,
+            code=entry.code,
+            handle=entry.handle,
             status=IssueStatus.UNCATEGORIZED,
             first_seen=run.date,
             run_id=run.id,
@@ -175,16 +177,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         fix_info = None
         fix_info_id = None
-        if entry.get("fix_info") is not None:
+        if entry.fix_info is not None:
             fix_info = IssueInstanceFixInfo.Record(
-                id=DBID(), fix_info=json.dumps(entry["fix_info"])
+                id=DBID(), fix_info=json.dumps(entry.fix_info)
             )
             fix_info_id = fix_info.id
 
-        message = self._get_shared_text(SharedTextKind.MESSAGE, entry["message"])
-        filename_record = self._get_shared_text(
-            SharedTextKind.FILENAME, entry["filename"]
-        )
+        message = self._get_shared_text(SharedTextKind.MESSAGE, entry.message)
+        filename_record = self._get_shared_text(SharedTextKind.FILENAME, entry.filename)
         callable_record = self._get_shared_text(SharedTextKind.CALLABLE, callable)
 
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
@@ -199,10 +199,10 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             message_id=message.id,
             rank=0,
             min_trace_length_to_sources=self._get_minimum_trace_length(
-                entry["postconditions"]
+                entry.postconditions
             ),
             min_trace_length_to_sinks=self._get_minimum_trace_length(
-                entry["preconditions"]
+                entry.preconditions
             ),
             callable_count=callablesCount[callable],
         )
@@ -230,11 +230,13 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return instance
 
     # We need to thread filename explicitly since the entry might be a callinfo.
-    def _generate_tito(self, filename: str, entry, callable):
-        titos = [
-            SourceLocation(t["line"], t["start"], t["end"])
-            for t in entry.get("titos", [])
-        ]
+    def _generate_tito(
+        self,
+        filename: str,
+        entry: Union[ParseCondition2, ParseIssueCondition2, ParseTraceAnnotation],
+        callable,
+    ):
+        titos = list(entry.titos)
         if len(titos) > 200:
             pre_key: Tuple[str, str, int] = (filename, callable, len(titos))
             if pre_key not in self.summary["big_tito"]:
@@ -244,31 +246,28 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return titos
 
     def _generate_issue_traces(
-        self, kind: TraceKind, run, issue: ParseIssue, callinfo: ParseIssueCondition
+        self, kind: TraceKind, run, issue: ParseIssue2, callinfo: ParseIssueCondition2
     ):
         # Generates a synthetic trace frame from a forward or backward trace in callinfo
         # that represents a call edge from the issue callable to the start of a
         # a trace.
         # Generate all dependencies of this frame as well.
-        caller = issue["callable"]
-        callee = callinfo["callee"]
-        callee_port = callinfo["port"]
-        titos = self._generate_tito(issue["filename"], callinfo, caller)
-        features = callinfo.get("features", [])
+        caller = issue.callable
+        titos = self._generate_tito(issue.filename, callinfo, caller)
         call_tf, leaf_mapping_ids = self._generate_raw_trace_frame(
             kind,
             run=run,
-            filename=issue["filename"],
+            filename=issue.filename,
             caller=caller,
             caller_port="root",
-            callee=callee,
-            callee_port=callee_port,
-            callee_location=callinfo["location"],
-            leaves=callinfo["leaves"],
-            type_interval=callinfo["type_interval"],
+            callee=callinfo.callee,
+            callee_port=callinfo.port,
+            callee_location=callinfo.location,
+            leaves=callinfo.leaves,
+            type_interval=callinfo.type_interval,
             titos=titos,
-            annotations=callinfo.get("annotations", []),
-            features=features,
+            annotations=callinfo.annotations,
+            features=callinfo.features,
         )
         caller_leaf_ids = set()
         callee_leaf_ids = set()
@@ -350,46 +349,39 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return new
 
     def _generate_trace_frame(
-        self, kind: TraceKind, run, entry: ParseCondition
+        self, kind: TraceKind, run, entry: ParseCondition2
     ) -> Tuple[TraceFrame, Set[LeafMapping]]:
-        callee_location = entry["callee_location"]
-        titos = self._generate_tito(entry["filename"], entry, entry["caller"])
-        leaves = entry.get("leaves", None)
-        if not leaves:
-            leaves = (
-                entry["sources"] if kind is TraceKind.POSTCONDITION else entry["sinks"]
-            )
-        features = entry.get("features", [])
+        titos = self._generate_tito(entry.filename, entry, entry.caller)
         return self._generate_raw_trace_frame(
             kind,
             run=run,
-            filename=entry["filename"],
-            caller=entry["caller"],
-            caller_port=entry["caller_port"],
-            callee=entry["callee"],
-            callee_port=entry["callee_port"],
-            callee_location=callee_location,
+            filename=entry.filename,
+            caller=entry.caller,
+            caller_port=entry.caller_port,
+            callee=entry.callee,
+            callee_port=entry.callee_port,
+            callee_location=entry.callee_location,
             titos=titos,
-            leaves=leaves,
-            type_interval=entry["type_interval"],
-            annotations=entry.get("annotations", []),
-            features=features,
+            leaves=entry.leaves,
+            type_interval=entry.type_interval,
+            annotations=entry.annotations,
+            features=entry.features,
         )
 
     def _generate_raw_trace_frame(
         self,
-        kind,
+        kind: TraceKind,
         run,
-        filename,
-        caller,
-        caller_port,
-        callee,
-        callee_port,
-        callee_location,
+        filename: str,
+        caller: str,
+        caller_port: str,
+        callee: str,
+        callee_port: str,
+        callee_location: SourceLocation,
         titos,
-        leaves,
-        type_interval,
-        annotations,
+        leaves: Iterable[ParseLeaf],
+        type_interval: Optional[ParseTypeInterval],
+        annotations: Iterable[ParseTraceAnnotation],
         features: Iterable[ParseFeature],
     ) -> Tuple[TraceFrame, Set[LeafMapping]]:
         leaf_kind = (
@@ -425,11 +417,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             caller_port=caller_port,
             callee_id=callee_record.id,
             callee_port=callee_port,
-            callee_location=SourceLocation(
-                callee_location["line"],
-                callee_location["start"],
-                callee_location["end"],
-            ),
+            callee_location=callee_location,
             filename_id=filename_record.id,
             titos=titos,
             run_id=run.id,
@@ -450,7 +438,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         # using "bulk_saver.add_trace_frame_leaf_assoc()" to drop into this table
         # as documented in models.py "class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin)"
         for f in features:
-            contents = self._generate_issue_feature_contents(None, f)
+            contents = self._generate_issue_feature_contents(f)
             for c in contents:
                 feature_record = self._get_shared_text(SharedTextKind.FEATURE, c)
                 self.graph.add_trace_frame_leaf_assoc(trace_frame, feature_record, 0)
@@ -461,9 +449,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         return trace_frame, leaf_mapping_ids
 
-    def _generate_issue_feature_contents(
-        self, issue: Optional[ParseIssue], feature: ParseFeature
-    ):
+    def _generate_issue_feature_contents(self, feature: ParseFeature):
         # Generates a synthetic feature from the extra/feature
         features = set()
         for key in feature:
@@ -481,12 +467,17 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return (lower, upper, preserves_type_context)
 
     def _generate_trace_annotations(
-        self, parent_id, parent_filename, parent_caller, annotations, run
+        self,
+        parent_id,
+        parent_filename,
+        parent_caller,
+        annotations: Iterable[ParseTraceAnnotation],
+        run,
     ) -> None:
         for annotation in annotations:
-            location = annotation["location"]
-            leaf_kind = annotation.get("leaf_kind")
-            kind = annotation["kind"]
+            location = annotation.location
+            leaf_kind = annotation.leaf_kind
+            kind = annotation.kind
             (trace_leaf_kind, trace_kind) = (
                 (SharedTextKind.SINK, TraceKind.PRECONDITION)
                 if kind == "tito_transform" or kind == "sink"
@@ -495,23 +486,20 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             annotation_record = TraceFrameAnnotation.Record(
                 id=DBID(),
                 trace_frame_id=parent_id,
-                location=SourceLocation(
-                    location["line"], location["start"], location["end"]
-                ),
+                location=location,
                 kind=kind,
-                message=annotation["msg"],
+                message=annotation.msg,
                 leaf_id=(
                     None
                     if not leaf_kind
                     else self._get_shared_text(trace_leaf_kind, leaf_kind).id
                 ),
-                link=annotation.get("link"),
-                trace_key=annotation.get("trace_key"),
+                link=annotation.link,
+                trace_key=annotation.trace_key,
             )
             self.graph.add_trace_annotation(annotation_record)
 
-            traces = annotation.get("subtraces", [])
-            for trace in traces:
+            for trace in annotation.subtraces:
                 tf = self._generate_annotation_trace(
                     trace_kind, run, parent_filename, parent_caller, trace, annotation
                 )
@@ -520,7 +508,13 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 )
 
     def _generate_annotation_trace(
-        self, trace_kind, run, parent_filename, parent_caller, trace, annotation
+        self,
+        trace_kind,
+        run,
+        parent_filename,
+        parent_caller,
+        trace,
+        annotation: ParseTraceAnnotation,
     ):
         # Generates the first-hop trace frames from the annotation and
         # all dependencies of these sub traces. If this gets called, it is
@@ -537,10 +531,10 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             "root",
             callee,
             callee_port,
-            annotation["location"],
+            annotation.location,
             titos,
-            [(annotation["leaf_kind"], annotation["leaf_depth"])],
-            annotation["type_interval"],
+            [(annotation.leaf_kind or "", annotation.leaf_depth)],
+            annotation.type_interval,
             [],  # no more annotations for a precond coming from an annotation
             [],  # no breadcrumbs / features associated with the traces for annotations
         )
@@ -549,18 +543,15 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         return call_tf
 
-    def _get_issue_handle(self, entry):
-        return entry["handle"]
-
     def _get_shared_text(self, kind: SharedTextKind, name: str) -> SharedText:
         return self.graph.get_or_add_shared_text(kind, name)
 
     @staticmethod
-    def get_location(entry, is_relative=False):
-        line = entry["line"]
+    def get_location(entry: ParseIssue2, is_relative=False):
+        line = entry.line
         if is_relative:
-            line -= entry["callable_line"]
-        return SourceLocation(line, entry["start"], entry["end"])
+            line -= entry.callable_line
+        return SourceLocation(line, entry.start, entry.end)
 
     @staticmethod
     def get_callable_location(entry):

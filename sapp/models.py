@@ -51,6 +51,7 @@ from .db_support import (
 )
 from .decorators import classproperty
 from .errors import AIException
+from .pipeline import SourceLocation
 
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -70,41 +71,6 @@ or existing Issues.  Each run is tied to Issues through IssueInstances.
 IssueInstances have per run information, like source location, while Issues have
 attributes like the status of an issue.
 """
-
-
-class SourceLocation(object):
-    """The location in a source file that an error occurred in
-
-    If end_column is defined then we have a range, otherwise it defaults to
-    begin_column and we have a single point.
-    """
-
-    def __init__(self, line_no, begin_column, end_column=None) -> None:
-        self.line_no = line_no
-        self.begin_column = begin_column
-        self.end_column = end_column or self.begin_column
-
-    def __eq__(self, other):
-        return (
-            self.line_no == other.line_no
-            and self.begin_column == other.begin_column
-            and self.end_column == other.end_column
-        )
-
-    def __str__(self):
-        return SourceLocation.to_string(self)
-
-    @staticmethod
-    def from_string(location_string) -> SourceLocation:
-        location_points = location_string.split("|")
-        assert len(location_points) == 3, "Invalid location string %s" % location_string
-        return SourceLocation(*location_points)
-
-    @staticmethod
-    def to_string(location) -> str:
-        return "|".join(
-            map(str, [location.line_no, location.begin_column, location.end_column])
-        )
 
 
 class CaseSensitiveStringType(types.TypeDecorator):

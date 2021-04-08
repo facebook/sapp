@@ -52,7 +52,7 @@ class TraceFragment(TypedDict):
     leaves: Iterable[ParseIssueLeaf]
     titos: Iterable[ParsePosition]
     features: Iterable[ParseFeature]
-    type_interval: ParseTypeInterval
+    type_interval: Optional[ParseTypeInterval]
 
 
 class Parser(BaseParser):
@@ -184,7 +184,7 @@ class Parser(BaseParser):
                     ],
                     "caller_port": port,
                     "callee_port": fragment["port"],
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
                 yield condition
@@ -207,7 +207,7 @@ class Parser(BaseParser):
                     ],
                     "caller_port": port,
                     "callee_port": fragment["port"],
-                    "type_interval": {},
+                    "type_interval": None,
                     "features": [],
                 }
                 yield condition
@@ -333,7 +333,7 @@ class Parser(BaseParser):
                     "leaves": leaves,
                     "titos": trace.get("tito", []),
                     "features": trace.get("features", []),
-                    "type_interval": {},
+                    "type_interval": None,
                 }
                 yield fragment
         elif "call" in trace:
@@ -354,7 +354,7 @@ class Parser(BaseParser):
                         self._adjust_location(tito) for tito in trace.get("tito", [])
                     ],
                     "features": trace.get("features", []),
-                    "type_interval": {},
+                    "type_interval": None,
                 }
                 yield fragment
 

@@ -28,7 +28,9 @@ from ..analysis_output import AnalysisOutput, Metadata
 from . import (
     ParseType,
     ParseCondition,
+    ParseCondition2,
     ParseIssue,
+    ParseIssue2,
     DictKey,
     DictEntries,
     Optional,
@@ -164,9 +166,9 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         moved.
         """
 
-        issues: List[ParseIssue] = []
+        issues: List[ParseIssue2] = []
         previous_handles: Set[str] = set()
-        conditions: Dict[ParseType, Dict[DictKey, List[ParseCondition]]] = {
+        conditions: Dict[ParseType, Dict[DictKey, List[ParseCondition2]]] = {
             ParseType.PRECONDITION: defaultdict(list),
             ParseType.POSTCONDITION: defaultdict(list),
         }
@@ -193,10 +195,10 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
                 # analysis.
                 e = cast(ParseIssue, e)
                 if not self._is_existing_issue(linemap, previous_handles, e, key):
-                    issues.append(e)
+                    issues.append(ParseIssue2.from_typed_dict(e))
             elif typ == ParseType.PRECONDITION or typ == ParseType.POSTCONDITION:
                 e = cast(ParseCondition, e)
-                conditions[typ][key].append(e)
+                conditions[typ][key].append(ParseCondition2.from_typed_dict(e))
 
         return {
             "issues": issues,

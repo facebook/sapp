@@ -295,7 +295,7 @@ class Condition(NamedTuple):
             "callee": self.callee.method.name,
             "callee_port": self.callee.port.value,
             "callee_location": self.callee.position.to_sapp(),
-            "type_interval": {},
+            "type_interval": None,
             "features": self.features.to_sapp(),
             "titos": self.local_positions.to_sapp(),
         }
@@ -332,7 +332,7 @@ class IssueCondition(NamedTuple):
             "leaves": [(self.kind, self.distance)],
             "titos": self.local_positions.to_sapp(),
             "features": self.features.to_sapp(),
-            "type_interval": {},
+            "type_interval": None,
             "annotations": [],
         }
 

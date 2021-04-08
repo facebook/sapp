@@ -5,7 +5,7 @@
 
 from unittest import TestCase
 
-from .. import Pipeline
+from .. import ParseIssue2, Pipeline
 from ..warning_code_filter import WarningCodeFilter
 
 
@@ -13,10 +13,33 @@ class TestWarningCodeFilter(TestCase):
     def setUp(self) -> None:
         self.warning_code_filter = WarningCodeFilter({6000})
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def test_filter_codes(self):
-        dict_entries = {"issues": [{"code": 6000}, {"code": 6001}, {"code": 6002}]}
+    @staticmethod
+    def make_fake_issue(code: int) -> ParseIssue2:
+        return ParseIssue2(
+            code,
+            "",
+            "",
+            "",
+            "",
+            0,
+            0,
+            0,
+            0,
+            [],
+            [],
+            [],
+            [],
+            [],
+            {},
+        )
+
+    def test_filter_codes(self) -> None:
+        dict_entries = {
+            "issues": list(
+                map(TestWarningCodeFilter.make_fake_issue, [6000, 6001, 6002])
+            )
+        }
         output, _ = Pipeline([self.warning_code_filter]).run(dict_entries)
 
         self.assertEqual(len(output["issues"]), 1)
-        self.assertEqual(output["issues"][0], {"code": 6000})
+        self.assertEqual(output["issues"][0].code, 6000)
