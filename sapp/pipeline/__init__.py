@@ -138,14 +138,18 @@ ParseLeaf = Tuple[str, int]  # (kind, distance)
 ParseIssueLeaf = Tuple[str, str, int]  # (callable, kind, distance)
 
 
+def flatten_feature(feature: ParseFeature) -> Iterable[str]:
+    for key, value in feature.items():
+        if isinstance(value, str) and value:
+            yield key + ":" + value
+        else:
+            yield key
+
+
 def flatten_features(features: Iterable[ParseFeature]) -> List[str]:
     ret = []
     for feature in features:
-        for key, value in feature.items():
-            if isinstance(value, str) and value:
-                ret.append(sys.intern(key + ":" + value))
-            else:
-                ret.append(sys.intern(key))
+        ret.extend(flatten_feature(feature))
     return ret
 
 
@@ -188,18 +192,35 @@ class ParseConditionTuple(NamedTuple):
         return ParseConditionTuple(
             type=d["type"],
             caller=d["caller"],
-            caller_port=sys.intern(d["caller_port"]),
+            caller_port=d["caller_port"],
             filename=d["filename"],
             callee=d["callee"],
-            callee_port=sys.intern(d["callee_port"]),
+            callee_port=d["callee_port"],
             callee_location=SourceLocation.from_typed_dict(d["callee_location"]),
-            leaves=intern_leaves(d["leaves"]),
+            leaves=list(d["leaves"]),
             type_interval=d["type_interval"],
             features=flatten_features(d.get("features", [])),
             titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
             annotations=list(
                 map(ParseTraceAnnotation.from_json, d.get("annotations", []))
             ),
+        )
+
+    def interned(self) -> "ParseConditionTuple":
+        "Return self, but with certain strings interned"
+        return ParseConditionTuple(
+            type=self.type,
+            caller=self.caller,
+            caller_port=sys.intern(self.caller_port),
+            filename=self.filename,
+            callee=self.callee,
+            callee_port=sys.intern(self.callee_port),
+            callee_location=self.callee_location,
+            leaves=intern_leaves(self.leaves),
+            type_interval=self.type_interval,
+            features=list(map(sys.intern, self.features)),
+            titos=self.titos,
+            annotations=self.annotations,
         )
 
 
@@ -228,15 +249,28 @@ class ParseIssueConditionTuple(NamedTuple):
     def from_typed_dict(d: ParseIssueCondition) -> "ParseIssueConditionTuple":
         return ParseIssueConditionTuple(
             callee=d["callee"],
-            port=sys.intern(d["port"]),
+            port=d["port"],
             location=SourceLocation.from_typed_dict(d["location"]),
-            leaves=intern_leaves(d["leaves"]),
+            leaves=list(d["leaves"]),
             titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
             features=flatten_features(d.get("features", [])),
             type_interval=d["type_interval"],
             annotations=list(
                 map(ParseTraceAnnotation.from_json, d.get("annotations", []))
             ),
+        )
+
+    def interned(self) -> "ParseIssueConditionTuple":
+        "Return self, but with certain strings interned"
+        return ParseIssueConditionTuple(
+            callee=self.callee,
+            port=sys.intern(self.port),
+            location=self.location,
+            leaves=intern_leaves(self.leaves),
+            titos=self.titos,
+            features=list(map(sys.intern, self.features)),
+            type_interval=self.type_interval,
+            annotations=self.annotations,
         )
 
 
@@ -298,6 +332,29 @@ class ParseIssueTuple(NamedTuple):
             final_sinks=d["final_sinks"],
             features=flatten_features(d["features"]),
             fix_info=d.get("fix_info"),
+        )
+
+    def interned(self) -> "ParseIssueTuple":
+        return ParseIssueTuple(
+            code=self.code,
+            message=self.message,
+            callable=self.callable,
+            handle=self.handle,
+            filename=self.filename,
+            callable_line=self.callable_line,
+            line=self.line,
+            start=self.start,
+            end=self.end,
+            preconditions=list(
+                map(ParseIssueConditionTuple.interned, self.preconditions)
+            ),
+            postconditions=list(
+                map(ParseIssueConditionTuple.interned, self.postconditions)
+            ),
+            initial_sources=self.initial_sources,
+            final_sinks=self.final_sinks,
+            features=list(map(sys.intern, self.features)),
+            fix_info=self.fix_info,
         )
 
 

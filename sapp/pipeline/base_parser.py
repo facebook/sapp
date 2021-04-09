@@ -118,33 +118,46 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     # @abstractmethod
     def parse(
         self, input: AnalysisOutput
-    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
+    ) -> Iterable[
+        Union[ParseCondition, ParseIssue, ParseConditionTuple, ParseIssueTuple]
+    ]:
         """Must return objects with a 'type': ParseType field."""
         raise NotImplementedError("Abstract method called!")
 
     # @abstractmethod
     def parse_handle(
         self, handle: TextIO
-    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
+    ) -> Iterable[
+        Union[ParseCondition, ParseIssue, ParseConditionTuple, ParseIssueTuple]
+    ]:
         """Must return objects with a 'type': ParseType field."""
         raise NotImplementedError("Abstract method called!")
 
-    def _analysis_output_to_parsed_types(
+    def _analysis_output_to_parsed_tuples(
         self, input: AnalysisOutput
-    ) -> Iterable[Tuple[ParseType, DictKey, Union[ParseCondition, ParseIssue]]]:
+    ) -> Iterable[
+        Tuple[ParseType, DictKey, Union[ParseConditionTuple, ParseIssueTuple]]
+    ]:
         entries = self.parse(input)
 
         for e in entries:
-            typ = e["type"]
-            if typ == ParseType.ISSUE:
-                e = cast(ParseIssue, e)
-                key = e["handle"]
-            elif e["type"] == ParseType.PRECONDITION:
-                e = cast(ParseCondition, e)
-                key = (e["caller"], e["caller_port"])
-            elif e["type"] == ParseType.POSTCONDITION:
-                e = cast(ParseCondition, e)
-                key = (e["caller"], e["caller_port"])
+            if isinstance(e, ParseConditionTuple):
+                typ = e.type
+                key = (e.caller, e.caller_port)
+            elif isinstance(e, ParseIssueTuple):
+                typ = ParseType.ISSUE
+                key = e.handle
+            else:
+                # legacy raw dicts
+                typ = e["type"]
+                if typ == ParseType.ISSUE:
+                    e = ParseIssueTuple.from_typed_dict(cast(ParseIssue, e))
+                    key = e.handle
+                elif typ == ParseType.PRECONDITION or typ == ParseType.POSTCONDITION:
+                    e = ParseConditionTuple.from_typed_dict(cast(ParseCondition, e))
+                    key = (e.caller, e.caller_port)
+                else:
+                    raise Exception("Unknown ParseType")
             yield typ, key, e
 
     def analysis_output_to_dict_entries(
@@ -189,16 +202,16 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
                 previous_handles = set(filter(lambda h: not h.startswith("#"), handles))
 
         log.info("Parsing analysis output...")
-        for typ, key, e in self._analysis_output_to_parsed_types(inputfile):
+        for typ, key, e in self._analysis_output_to_parsed_tuples(inputfile):
             if typ == ParseType.ISSUE:
+                e = cast(ParseIssueTuple, e)
                 # We are only interested in issues that weren't in the previous
                 # analysis.
-                e = cast(ParseIssue, e)
                 if not self._is_existing_issue(linemap, previous_handles, e, key):
-                    issues.append(ParseIssueTuple.from_typed_dict(e))
+                    issues.append(e.interned())
             elif typ == ParseType.PRECONDITION or typ == ParseType.POSTCONDITION:
-                e = cast(ParseCondition, e)
-                conditions[typ][key].append(ParseConditionTuple.from_typed_dict(e))
+                e = cast(ParseConditionTuple, e)
+                conditions[typ][key].append(e.interned())
 
         return {
             "issues": issues,
@@ -210,16 +223,16 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         self,
         linemap: Dict[str, Any],
         old_handles: Set[str],
-        new_issue: ParseIssue,
+        new_issue: ParseIssueTuple,
         new_handle: DictKey,
     ) -> bool:
         if new_handle in old_handles:
             return True
         if not linemap:
             return False
-        filename = new_issue["filename"]
+        filename = new_issue.filename
         old_map = linemap.get(filename, {})
-        old_lines = old_map.get(str(new_issue["line"]), [])
+        old_lines = old_map.get(str(new_issue.line), [])
         # Once this works, we should remove the "relative" line from the handle
         # and use the absolute one to avoid having to map both the start of the
         # method and the line in the method.
@@ -227,7 +240,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         # Consider all possible old lines
         for old_line in old_lines:
             old_handle = BaseParser.compute_diff_handle(
-                filename, old_line, new_issue["code"]
+                filename, old_line, new_issue.code
             )
             if old_handle in old_handles:
                 return True
