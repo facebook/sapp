@@ -24,12 +24,12 @@ class TestWarningCodeFilter(TestCase):
             0,
             0,
             0,
+            [],
+            [],
+            [],
+            [],
+            [],
             0,
-            [],
-            [],
-            [],
-            [],
-            [],
             {},
         )
 

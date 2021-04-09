@@ -203,7 +203,7 @@ class ParseCondition2(NamedTuple):
             callee_location=SourceLocation.from_typed_dict(d["callee_location"]),
             leaves=leaves,
             type_interval=d["type_interval"],
-            features=flatten_features(d["features"]),
+            features=flatten_features(d.get("features", [])),
             titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
             annotations=list(
                 map(ParseTraceAnnotation.from_json, d.get("annotations", []))
@@ -239,8 +239,8 @@ class ParseIssueCondition2(NamedTuple):
             port=sys.intern(d["port"]),
             location=SourceLocation.from_typed_dict(d["location"]),
             leaves=intern_leaves(d["leaves"]),
-            titos=list(map(SourceLocation.from_typed_dict, d["titos"])),
-            features=flatten_features(d["features"]),
+            titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
+            features=flatten_features(d.get("features", [])),
             type_interval=d["type_interval"],
             annotations=list(
                 map(ParseTraceAnnotation.from_json, d.get("annotations", []))
@@ -273,7 +273,6 @@ class ParseIssue2(NamedTuple):
     callable: str
     handle: str
     filename: str
-    callable_line: int
     line: int
     start: int
     end: int
@@ -282,6 +281,7 @@ class ParseIssue2(NamedTuple):
     initial_sources: Iterable[ParseIssueLeaf]
     final_sinks: Iterable[ParseIssueLeaf]
     features: List[str]
+    callable_line: Optional[int]
     fix_info: Optional[Dict[str, Any]]
 
     @staticmethod
@@ -292,7 +292,7 @@ class ParseIssue2(NamedTuple):
             callable=d["callable"],
             handle=d["handle"],
             filename=d["filename"],
-            callable_line=d["callable_line"],
+            callable_line=d.get("callable_line", None),
             line=d["line"],
             start=d["start"],
             end=d["end"],

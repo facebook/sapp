@@ -545,7 +545,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
     @staticmethod
     def get_location(entry: ParseIssue2, is_relative=False):
         line = entry.line
-        if is_relative:
+        if is_relative and entry.callable_line:
             line -= entry.callable_line
         return SourceLocation(line, entry.start, entry.end)
 
