@@ -5,7 +5,7 @@
 
 from unittest import TestCase
 
-from .. import ParseIssue2, Pipeline
+from .. import ParseIssueTuple, Pipeline
 from ..warning_code_filter import WarningCodeFilter
 
 
@@ -14,8 +14,8 @@ class TestWarningCodeFilter(TestCase):
         self.warning_code_filter = WarningCodeFilter({6000})
 
     @staticmethod
-    def make_fake_issue(code: int) -> ParseIssue2:
-        return ParseIssue2(
+    def make_fake_issue(code: int) -> ParseIssueTuple:
+        return ParseIssueTuple(
             code,
             "",
             "",

@@ -298,6 +298,7 @@ class Condition(NamedTuple):
             "type_interval": None,
             "features": self.features.to_sapp(),
             "titos": self.local_positions.to_sapp(),
+            "leaves": [(self.kind, self.distance)],
         }
 
 
@@ -305,7 +306,6 @@ class Precondition(Condition):
     def to_sapp(self) -> sapp.ParseCondition:
         condition = super().to_sapp()
         condition["type"] = sapp.ParseType.PRECONDITION
-        condition["sinks"] = [(self.kind, self.distance)]
         return condition
 
 
@@ -313,7 +313,6 @@ class Postcondition(Condition):
     def to_sapp(self) -> sapp.ParseCondition:
         condition = super().to_sapp()
         condition["type"] = sapp.ParseType.POSTCONDITION
-        condition["sources"] = [(self.kind, self.distance)]
         return condition
 
 

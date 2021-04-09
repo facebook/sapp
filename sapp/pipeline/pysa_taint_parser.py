@@ -179,7 +179,7 @@ class Parser(BaseParser):
                     "callee": fragment["callee"],
                     "callee_location": fragment["location"],
                     "filename": fragment["location"]["filename"],
-                    "sources": [
+                    "leaves": [
                         (kind, distance) for (_, kind, distance) in fragment["leaves"]
                     ],
                     "caller_port": port,
@@ -202,7 +202,7 @@ class Parser(BaseParser):
                     "callee_location": fragment["location"],
                     "filename": fragment["location"]["filename"],
                     "titos": fragment["titos"],
-                    "sinks": [
+                    "leaves": [
                         (kind, distance) for (_, kind, distance) in fragment["leaves"]
                     ],
                     "caller_port": port,

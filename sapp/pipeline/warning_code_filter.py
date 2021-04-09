@@ -5,14 +5,14 @@
 
 from typing import Any, Dict, Set, Tuple
 
-from . import ParseIssue2, DictEntries, PipelineStep, Summary
+from . import ParseIssueTuple, DictEntries, PipelineStep, Summary
 
 
 class WarningCodeFilter(PipelineStep[DictEntries, DictEntries]):
     def __init__(self, codes_to_keep: Set[int]) -> None:
         self.codes_to_keep: Set[int] = codes_to_keep
 
-    def _should_skip_issue(self, issue: ParseIssue2) -> bool:
+    def _should_skip_issue(self, issue: ParseIssueTuple) -> bool:
         return issue.code not in self.codes_to_keep
 
     def run(self, input: DictEntries, summary: Summary) -> Tuple[DictEntries, Summary]:

@@ -162,16 +162,14 @@ class ParseCondition(TypedDict, total=False):
     callee: str
     callee_port: str
     callee_location: ParsePosition
-    sources: Iterable[ParseLeaf]
-    sinks: Iterable[ParseLeaf]
-    leaves: Iterable[ParseLeaf]  # specify either `leaves`, `sources` or `sinks`.
+    leaves: Iterable[ParseLeaf]
     type_interval: Optional[ParseTypeInterval]
     features: Iterable[ParseFeature]
     titos: Iterable[ParsePosition]
     annotations: Iterable[Dict[str, Any]]
 
 
-class ParseCondition2(NamedTuple):
+class ParseConditionTuple(NamedTuple):
     type: Union[Literal[ParseType.PRECONDITION], Literal[ParseType.POSTCONDITION]]
     caller: str
     caller_port: str
@@ -186,14 +184,8 @@ class ParseCondition2(NamedTuple):
     annotations: Iterable[ParseTraceAnnotation]
 
     @staticmethod
-    def from_typed_dict(d: ParseCondition) -> "ParseCondition2":
-        if d["type"] == ParseType.PRECONDITION:
-            leaves = d.get("sinks") or d["leaves"]
-        else:
-            leaves = d.get("sources") or d["leaves"]
-        leaves = intern_leaves(leaves)
-
-        return ParseCondition2(
+    def from_typed_dict(d: ParseCondition) -> "ParseConditionTuple":
+        return ParseConditionTuple(
             type=d["type"],
             caller=d["caller"],
             caller_port=sys.intern(d["caller_port"]),
@@ -201,7 +193,7 @@ class ParseCondition2(NamedTuple):
             callee=d["callee"],
             callee_port=sys.intern(d["callee_port"]),
             callee_location=SourceLocation.from_typed_dict(d["callee_location"]),
-            leaves=leaves,
+            leaves=intern_leaves(d["leaves"]),
             type_interval=d["type_interval"],
             features=flatten_features(d.get("features", [])),
             titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
@@ -222,7 +214,7 @@ class ParseIssueCondition(TypedDict):
     annotations: Iterable[Dict[str, Any]]
 
 
-class ParseIssueCondition2(NamedTuple):
+class ParseIssueConditionTuple(NamedTuple):
     callee: str
     port: str
     location: SourceLocation
@@ -233,8 +225,8 @@ class ParseIssueCondition2(NamedTuple):
     annotations: Iterable[ParseTraceAnnotation]
 
     @staticmethod
-    def from_typed_dict(d: ParseIssueCondition) -> "ParseIssueCondition2":
-        return ParseIssueCondition2(
+    def from_typed_dict(d: ParseIssueCondition) -> "ParseIssueConditionTuple":
+        return ParseIssueConditionTuple(
             callee=d["callee"],
             port=sys.intern(d["port"]),
             location=SourceLocation.from_typed_dict(d["location"]),
@@ -267,7 +259,7 @@ class ParseIssue(TypedDict, total=False):
     fix_info: Optional[Dict[str, Any]]
 
 
-class ParseIssue2(NamedTuple):
+class ParseIssueTuple(NamedTuple):
     code: int
     message: str
     callable: str
@@ -276,8 +268,8 @@ class ParseIssue2(NamedTuple):
     line: int
     start: int
     end: int
-    preconditions: Iterable[ParseIssueCondition2]
-    postconditions: Iterable[ParseIssueCondition2]
+    preconditions: Iterable[ParseIssueConditionTuple]
+    postconditions: Iterable[ParseIssueConditionTuple]
     initial_sources: Iterable[ParseIssueLeaf]
     final_sinks: Iterable[ParseIssueLeaf]
     features: List[str]
@@ -285,8 +277,8 @@ class ParseIssue2(NamedTuple):
     fix_info: Optional[Dict[str, Any]]
 
     @staticmethod
-    def from_typed_dict(d: ParseIssue) -> "ParseIssue2":
-        return ParseIssue2(
+    def from_typed_dict(d: ParseIssue) -> "ParseIssueTuple":
+        return ParseIssueTuple(
             code=d["code"],
             message=d["message"],
             callable=d["callable"],
@@ -297,10 +289,10 @@ class ParseIssue2(NamedTuple):
             start=d["start"],
             end=d["end"],
             preconditions=list(
-                map(ParseIssueCondition2.from_typed_dict, d["preconditions"])
+                map(ParseIssueConditionTuple.from_typed_dict, d["preconditions"])
             ),
             postconditions=list(
-                map(ParseIssueCondition2.from_typed_dict, d["postconditions"])
+                map(ParseIssueConditionTuple.from_typed_dict, d["postconditions"])
             ),
             initial_sources=d["initial_sources"],
             final_sinks=d["final_sinks"],
@@ -313,9 +305,9 @@ DictKey = Union[str, Tuple[str, str]]  # handle or (caller, caller_port)
 
 
 class DictEntries(TypedDict):
-    preconditions: Dict[DictKey, List[ParseCondition2]]
-    postconditions: Dict[DictKey, List[ParseCondition2]]
-    issues: Iterable[ParseIssue2]
+    preconditions: Dict[DictKey, List[ParseConditionTuple]]
+    postconditions: Dict[DictKey, List[ParseConditionTuple]]
+    issues: Iterable[ParseIssueTuple]
 
 
 Summary = Dict[str, Any]  # blob of objects that gets passed through the pipeline
