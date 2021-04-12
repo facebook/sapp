@@ -294,5 +294,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         raise NotImplementedError("get_json_file_offset not implemented")
 
     # Given a path and an offset, return the json in mostly-raw form.
-    def get_json_from_file_offset(self, path: str, offset: int) -> Dict[str, Any]:
+    def get_json_from_file_offset(
+        self, path: str, offset: int
+    ) -> Optional[Dict[str, Any]]:
         raise NotImplementedError("get_json_from_file_offset not implemented")

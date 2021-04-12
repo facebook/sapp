@@ -40,15 +40,15 @@ class ParseType(Enum):
     POSTCONDITION = "postcondition"
 
 
-# NB: The TypedDict types are representative of the current state of things emitted
+# NB: The TypedDict types are an approximation of the legacy untyped maps emitted
 # by the various parsers. They are transformed into the NamedTuple versions immediately
 # after parsing, before the rest of the pipeline is executed.
 # This is for performance reasons (we intern very common strings, and NamedTuples themselves are more memory-efficient).
-# Eventually, we should "push" this transformation downwards into the parsers and delete
-# the TypedDict versions. But it's a ton of work to do so (especially converting all the unit tests),
-# so we have two versions for now.
-# Note that when that "pushdown" occurs, there probably still needs to be code around here that does the interning,
-# as interning in the parallel parsing processes would be pointless.
+
+# Parsers can also choose to directly return the new NamedTuple types.
+# Eventually, we should convert all the parsers to return the NamedTuple versions,
+# and delete the TypedDict versions. But it's a ton of work to do so
+# (especially converting all the unit tests), so we have two versions for now.
 
 
 class ParsePosition(TypedDict, total=False):
@@ -111,7 +111,7 @@ class ParseTraceAnnotation(NamedTuple):
     msg: str
     leaf_kind: Optional[str]
     leaf_depth: int
-    type_interval: ParseTypeInterval
+    type_interval: Optional[ParseTypeInterval]
     link: Optional[str]
     trace_key: Optional[str]
     titos: List[SourceLocation]
@@ -125,7 +125,7 @@ class ParseTraceAnnotation(NamedTuple):
             msg=j["msg"],
             leaf_kind=j.get("leaf_kind"),
             leaf_depth=j["leaf_depth"],
-            type_interval=j["type_interval"],
+            type_interval=j.get("type_interval"),
             link=j.get("link"),
             trace_key=j.get("trace_key"),
             titos=list(map(SourceLocation.from_typed_dict, j.get("titos", []))),
