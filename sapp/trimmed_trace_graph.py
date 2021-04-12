@@ -108,44 +108,28 @@ class TrimmedTraceGraph(TraceGraph):
         after traces get trimmed from the graph. This re-computes it and
         returns the min.
         """
-        source_ids = {
-            source.id.local_id
-            for source in (
-                self.get_issue_instance_shared_texts(instance_id, SharedTextKind.SOURCE)
-            )
-        }
         first_hop_tf_ids = {
             tf_id
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
             if self.get_trace_frame_from_id(tf_id).kind == TraceKind.POSTCONDITION
         }
-        return self._get_min_depth(first_hop_tf_ids, source_ids)
+        return self._get_min_depth(first_hop_tf_ids)
 
     def _get_min_depth_to_sinks(self, instance_id: int) -> int:
         """See get_min_depths_to_sources."""
-        sink_ids = {
-            sink.id.local_id
-            for sink in (
-                self.get_issue_instance_shared_texts(instance_id, SharedTextKind.SINK)
-            )
-        }
         first_hop_tf_ids = {
             tf_id
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
             if self.get_trace_frame_from_id(tf_id).kind == TraceKind.PRECONDITION
         }
-        return self._get_min_depth(first_hop_tf_ids, sink_ids)
+        return self._get_min_depth(first_hop_tf_ids)
 
-    def _get_min_depth(self, first_hop_tf_ids: Set[int], leaf_ids: Set[int]) -> int:
+    def _get_min_depth(self, first_hop_tf_ids: Set[int]) -> int:
         min_depth = None
         for tf_id in first_hop_tf_ids:
             leaf_depths = self._trace_frame_leaf_assoc[tf_id]
-            for (leaf_id, depth) in leaf_depths:
-                if (
-                    leaf_id in leaf_ids
-                    and depth is not None
-                    and (min_depth is None or depth < min_depth)
-                ):
+            for (_leaf_id, depth) in leaf_depths:
+                if depth is not None and (min_depth is None or depth < min_depth):
                     min_depth = depth
         if min_depth is not None:
             return min_depth
