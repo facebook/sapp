@@ -17,11 +17,14 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    TypedDict,
     Iterable,
     Union,
-    Literal,
 )
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict, Literal
+else:
+    from typing_extensions import TypedDict, Literal
 
 from ..analysis_output import AnalysisOutput
 

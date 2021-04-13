@@ -6,6 +6,7 @@
 """Parse Pysa/Taint output for Zoncolan processing"""
 
 import logging
+import sys
 from collections import defaultdict
 from typing import (
     cast,
@@ -18,8 +19,12 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    TypedDict,
 )
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 import ujson as json
 
