@@ -6,7 +6,7 @@
 import logging
 import os
 from functools import wraps
-from typing import Optional
+from typing import Optional, List, Callable
 
 import click
 import click_log
@@ -86,8 +86,9 @@ def common_options(func):
     return wrapper
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def default_database(ctx: click.Context, _param: Parameter, value: Optional[str]):
+def default_database(
+    ctx: click.Context, _param: Parameter, value: Optional[str]
+) -> str:
     """By default, use a database at the current dir"""
     if value:
         return value
@@ -101,9 +102,8 @@ def default_database(ctx: click.Context, _param: Parameter, value: Optional[str]
 )
 @pass_context
 @click.argument("ipython_args", nargs=-1, type=click.UNPROCESSED)
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def explore(ctx: Context, ipython_args):
+def explore(ctx: Context, ipython_args) -> None:
     scope_vars = Interactive(
         database=ctx.database,
         repository_directory=ctx.repository,
@@ -147,7 +147,6 @@ def explore(ctx: Context, ipython_args):
     help="store pre/post conditions unrelated to an issue",
 )
 @argument("input_file", type=Path(exists=True))
-# pyre-fixme[3]: Return type must be annotated.
 def analyze(
     ctx: Context,
     # pyre-fixme[2]: Parameter must be annotated.
@@ -168,7 +167,7 @@ def analyze(
     store_unused_models,
     # pyre-fixme[2]: Parameter must be annotated.
     input_file,
-):
+) -> None:
     # Store all options in the right places
     summary_blob = {
         "run_kind": run_kind,
@@ -235,5 +234,4 @@ def server(
     start_server(ctx.database, debug, static_resources, source_directory, editor_schema)
 
 
-# pyre-fixme[5]: Global expression must be annotated.
-commands = [analyze, explore, server]
+commands: List[Callable[[], None]] = [analyze, explore, server]
