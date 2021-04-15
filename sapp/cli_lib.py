@@ -25,6 +25,7 @@ from .pipeline.create_database import CreateDatabase
 from .pipeline.database_saver import DatabaseSaver
 from .pipeline.model_generator import ModelGenerator
 from .pipeline.trim_trace_graph import TrimTraceGraph
+from .ui.filters import import_filter_from_path
 from .ui.interactive import Interactive
 from .ui.server import start_server
 
@@ -234,4 +235,14 @@ def server(
     start_server(ctx.database, debug, static_resources, source_directory, editor_schema)
 
 
-commands: List[Callable[[], None]] = [analyze, explore, server]
+@click.command(help="Import filter into database")
+@pass_context
+@argument("input_filter_path", type=Path(exists=True, readable=True))
+def import_filter(
+    ctx: Context,
+    input_filter_path: str,
+) -> None:
+    import_filter_from_path(ctx.database, input_filter_path)
+
+
+commands: List[Callable[[], None]] = [analyze, explore, server, import_filter]
