@@ -5,19 +5,28 @@
 
 import io
 import unittest
-from typing import Any, Dict, Iterable
+from typing import Iterable, Union
 
 from ...analysis_output import AnalysisOutput, Metadata
+from .. import (
+    ParseConditionTuple,
+    ParseIssueConditionTuple,
+    ParseIssueTuple,
+    SourceLocation,
+)
 from ..base_parser import ParseType
 from ..mariana_trench_parser import Parser
 
 
 class TestParser(unittest.TestCase):
-    def assertParsed(self, output: str, expected: Iterable[Dict[str, Any]]) -> None:
+    def assertParsed(
+        self,
+        output: str,
+        expected: Iterable[Union[ParseConditionTuple, ParseIssueTuple]],
+    ) -> None:
         output = "".join(output.split("\n"))  # Flatten json-line.
         parser = Parser()
-        # pyre-fixme[35]: Target cannot be annotated.
-        output: AnalysisOutput = AnalysisOutput(
+        analysis_output = AnalysisOutput(
             directory="/output/directory",
             filename_specs=["models.json"],
             file_handle=io.StringIO(output),
@@ -26,8 +35,15 @@ class TestParser(unittest.TestCase):
                 rules={1: {"name": "TestRule", "description": "Test Rule Description"}},
             ),
         )
+
+        def sort_entry(e: Union[ParseConditionTuple, ParseIssueTuple]) -> str:
+            if isinstance(e, ParseConditionTuple):
+                return e.caller
+            else:
+                return e.callable
+
         self.assertEqual(
-            sorted(parser.parse(output), key=lambda entry: entry["callable"]),
+            sorted(parser.parse(analysis_output), key=sort_entry),
             expected,
         )
 
@@ -108,65 +124,71 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.ISSUE,
-                    "code": 1,
-                    "message": "TestRule: Test Rule Description",
-                    "callable": "LClass;.flow:()V",
-                    "handle": "LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
-                    "filename": "Flow.java",
-                    "callable_line": 2,
-                    "line": 10,
-                    "start": 12,
-                    "end": 13,
-                    "preconditions": [
-                        {
-                            "callee": "LSink;.sink:(LData;)V",
-                            "port": "argument(1)",
-                            "location": {
-                                "line": 10,
-                                "start": 12,
-                                "end": 13,
-                                "filename": "Flow.java",
-                            },
-                            "leaves": [("TestSink", 2)],
-                            "titos": [{"line": 13, "start": 15, "end": 16}],
-                            "features": [
-                                {"": "always-via-parameter-field"},
-                                {"": "via-parameter-field"},
+                ParseIssueTuple(
+                    code=1,
+                    message="TestRule: Test Rule Description",
+                    callable="LClass;.flow:()V",
+                    handle="LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
+                    filename="Flow.java",
+                    callable_line=2,
+                    line=10,
+                    start=12,
+                    end=13,
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSink;.sink:(LData;)V",
+                            port="argument(1)",
+                            location=SourceLocation(
+                                line_no=10,
+                                begin_column=12,
+                                end_column=13,
+                            ),
+                            leaves=[("TestSink", 2)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=13, begin_column=15, end_column=16
+                                )
                             ],
-                            "type_interval": None,
-                            "annotations": [],
-                        }
-                    ],
-                    "postconditions": [
-                        {
-                            "callee": "LSource;.source:()LData;",
-                            "port": "result",
-                            "location": {
-                                "line": 20,
-                                "start": 22,
-                                "end": 23,
-                                "filename": "Flow.java",
-                            },
-                            "leaves": [("TestSource", 3)],
-                            "titos": [
-                                {"line": 23, "start": 25, "end": 26},
-                                {"line": 26, "start": 28, "end": 29},
+                            features=[
+                                "always-via-parameter-field",
+                                "via-parameter-field",
                             ],
-                            "features": [],
-                            "type_interval": None,
-                            "annotations": [],
-                        }
+                            type_interval=None,
+                            annotations=[],
+                        )
                     ],
-                    "initial_sources": {("LSource;.source:(LData;)V", "TestSource", 3)},
-                    "final_sinks": {("LSink;.sink:(LData;)V", "TestSink", 2)},
-                    "features": [
-                        {"": "always-via-parameter-field"},
-                        {"": "via-obscure"},
-                        {"": "via-parameter-field"},
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSource;.source:()LData;",
+                            port="result",
+                            location=SourceLocation(
+                                line_no=20,
+                                begin_column=22,
+                                end_column=23,
+                            ),
+                            leaves=[("TestSource", 3)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=23, begin_column=25, end_column=26
+                                ),
+                                SourceLocation(
+                                    line_no=26, begin_column=28, end_column=29
+                                ),
+                            ],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        )
                     ],
-                }
+                    initial_sources={("LSource;.source:(LData;)V", "TestSource", 3)},
+                    final_sinks={("LSink;.sink:(LData;)V", "TestSink", 2)},
+                    features=[
+                        "always-via-parameter-field",
+                        "via-obscure",
+                        "via-parameter-field",
+                    ],
+                    fix_info=None,
+                )
             ],
         )
         self.assertParsed(
@@ -239,73 +261,78 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.ISSUE,
-                    "code": 1,
-                    "message": "TestRule: Test Rule Description",
-                    "callable": "LClass;.flow:()V",
-                    "handle": "LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
-                    "filename": "Flow.java",
-                    "callable_line": 2,
-                    "line": 10,
-                    "start": 12,
-                    "end": 13,
-                    "preconditions": [
-                        {
-                            "callee": "LSink;.sink:(LData;)V",
-                            "port": "argument(1)",
-                            "location": {
-                                "line": 10,
-                                "start": 12,
-                                "end": 13,
-                                "filename": "Flow.java",
-                            },
-                            "leaves": [("TestSink", 2)],
-                            "titos": [{"line": 13, "start": 15, "end": 16}],
-                            "features": [],
-                            "type_interval": None,
-                            "annotations": [],
-                        },
-                        {
-                            "callee": "LSink;.sink:(LData;)V",
-                            "port": "argument(1)",
-                            "location": {
-                                "line": 20,
-                                "start": 22,
-                                "end": 23,
-                                "filename": "Flow.java",
-                            },
-                            "leaves": [("TestSink", 3)],
-                            "titos": [],
-                            "features": [],
-                            "type_interval": None,
-                            "annotations": [],
-                        },
+                ParseIssueTuple(
+                    code=1,
+                    message="TestRule: Test Rule Description",
+                    callable="LClass;.flow:()V",
+                    handle="LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
+                    filename="Flow.java",
+                    callable_line=2,
+                    line=10,
+                    start=12,
+                    end=13,
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSink;.sink:(LData;)V",
+                            port="argument(1)",
+                            location=SourceLocation(
+                                line_no=10,
+                                begin_column=12,
+                                end_column=13,
+                            ),
+                            leaves=[("TestSink", 2)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=13, begin_column=15, end_column=16
+                                )
+                            ],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        ),
+                        ParseIssueConditionTuple(
+                            callee="LSink;.sink:(LData;)V",
+                            port="argument(1)",
+                            location=SourceLocation(
+                                line_no=20,
+                                begin_column=22,
+                                end_column=23,
+                            ),
+                            leaves=[("TestSink", 3)],
+                            titos=[],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        ),
                     ],
-                    "postconditions": [
-                        {
-                            "callee": "LSource;.source:()LData;",
-                            "port": "result",
-                            "location": {
-                                "line": 30,
-                                "start": 32,
-                                "end": 33,
-                                "filename": "Flow.java",
-                            },
-                            "leaves": [("TestSource", 3)],
-                            "titos": [{"line": 33, "start": 35, "end": 36}],
-                            "features": [],
-                            "type_interval": None,
-                            "annotations": [],
-                        }
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSource;.source:()LData;",
+                            port="result",
+                            location=SourceLocation(
+                                line_no=30,
+                                begin_column=32,
+                                end_column=33,
+                            ),
+                            leaves=[("TestSource", 3)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=33, begin_column=35, end_column=36
+                                )
+                            ],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        )
                     ],
-                    "initial_sources": {("LSource;.source:(LData;)V", "TestSource", 3)},
-                    "final_sinks": {
+                    initial_sources={("LSource;.source:(LData;)V", "TestSource", 3)},
+                    final_sinks={
                         ("LSink;.sink:(LData;)V", "TestSink", 2),
                         ("LSink;.other_sink:(LData;)V", "TestSink", 3),
                     },
-                    "features": [{"": "via-obscure"}, {"": "via-parameter-field"}],
-                }
+                    features=["via-obscure", "via-parameter-field"],
+                    fix_info=None,
+                )
             ],
         )
 
@@ -330,25 +357,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.POSTCONDITION,
-                    "callable": "LSource;.source:()V",
-                    "caller": "LSource;.source:()V",
-                    "callee": "leaf",
-                    "callee_location": {
-                        "line": 1,
-                        "start": 1,
-                        "end": 1,
-                        "filename": "Source.java",
-                    },
-                    "filename": "Source.java",
-                    "titos": [],
-                    "leaves": [("TestSource", 0)],
-                    "caller_port": "result",
-                    "callee_port": "source",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:()V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -384,28 +410,27 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.POSTCONDITION,
-                    "callable": "LClass;.indirect_source:()V",
-                    "caller": "LClass;.indirect_source:()V",
-                    "callee": "LSource;.source:()LData;",
-                    "callee_location": {
-                        "line": 10,
-                        "start": 12,
-                        "end": 13,
-                        "filename": "Class.java",
-                    },
-                    "filename": "Class.java",
-                    "titos": [
-                        {"line": 13, "start": 15, "end": 16},
-                        {"line": 16, "start": 18, "end": 19},
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LClass;.indirect_source:()V",
+                    callee="LSource;.source:()LData;",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Class.java",
+                    titos=[
+                        SourceLocation(line_no=13, begin_column=15, end_column=16),
+                        SourceLocation(line_no=16, begin_column=18, end_column=19),
                     ],
-                    "leaves": [("TestSource", 1)],
-                    "caller_port": "result",
-                    "callee_port": "result",
-                    "type_interval": None,
-                    "features": [],
-                }
+                    leaves=[("TestSource", 1)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -432,25 +457,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.POSTCONDITION,
-                    "callable": "LSource;.source:()V",
-                    "caller": "LSource;.source:()V",
-                    "callee": "leaf",
-                    "callee_location": {
-                        "line": 1,
-                        "start": 1,
-                        "end": 1,
-                        "filename": "Source.java",
-                    },
-                    "filename": "Source.java",
-                    "titos": [],
-                    "leaves": [("TestSource", 0)],
-                    "caller_port": "result.x.y",
-                    "callee_port": "source",
-                    "type_interval": None,
-                    "features": [{"": "via-source"}],
-                }
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:()V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result.x.y",
+                    callee_port="source",
+                    type_interval=None,
+                    features=["via-source"],
+                    annotations=[],
+                )
             ],
         )
 
@@ -480,25 +504,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.POSTCONDITION,
-                    "callable": "LSource;.source:()V",
-                    "caller": "LSource;.source:()V",
-                    "callee": "leaf",
-                    "callee_location": {
-                        "line": 2,
-                        "start": 4,
-                        "end": 5,
-                        "filename": "Source.java",
-                    },
-                    "filename": "Source.java",
-                    "titos": [],
-                    "leaves": [("TestSource", 0)],
-                    "caller_port": "result",
-                    "callee_port": "source",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:()V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=2,
+                        begin_column=4,
+                        end_column=5,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -523,25 +546,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.PRECONDITION,
-                    "callable": "LSink;.sink:(LData;)V",
-                    "caller": "LSink;.sink:(LData;)V",
-                    "callee": "leaf",
-                    "callee_location": {
-                        "line": 1,
-                        "start": 1,
-                        "end": 1,
-                        "filename": "Sink.java",
-                    },
-                    "filename": "Sink.java",
-                    "titos": [],
-                    "leaves": [("TestSink", 0)],
-                    "caller_port": "argument(1)",
-                    "callee_port": "sink",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LSink;.sink:(LData;)V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Sink.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -577,28 +599,27 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.PRECONDITION,
-                    "callable": "LClass;.indirect_sink:(LData;LData;)V",
-                    "caller": "LClass;.indirect_sink:(LData;LData;)V",
-                    "callee": "LSink;.sink:(LData;)V",
-                    "callee_location": {
-                        "line": 10,
-                        "start": 12,
-                        "end": 13,
-                        "filename": "Class.java",
-                    },
-                    "filename": "Class.java",
-                    "titos": [
-                        {"line": 13, "start": 15, "end": 16},
-                        {"line": 16, "start": 18, "end": 19},
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="LSink;.sink:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Class.java",
+                    titos=[
+                        SourceLocation(line_no=13, begin_column=15, end_column=16),
+                        SourceLocation(line_no=16, begin_column=18, end_column=19),
                     ],
-                    "leaves": [("TestSink", 1)],
-                    "caller_port": "argument(2)",
-                    "callee_port": "argument(1)",
-                    "type_interval": None,
-                    "features": [],
-                }
+                    leaves=[("TestSink", 1)],
+                    caller_port="argument(2)",
+                    callee_port="argument(1)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -622,25 +643,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.PRECONDITION,
-                    "callable": "LSink;.sink:(LData;)V",
-                    "caller": "LSink;.sink:(LData;)V",
-                    "callee": "leaf",
-                    "callee_location": {
-                        "line": 1,
-                        "start": 1,
-                        "end": 1,
-                        "filename": "Sink.java",
-                    },
-                    "filename": "Sink.java",
-                    "titos": [],
-                    "leaves": [("TestSink", 0)],
-                    "caller_port": "argument(1).x.y",
-                    "callee_port": "sink",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LSink;.sink:(LData;)V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Sink.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1).x.y",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -673,25 +693,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.PRECONDITION,
-                    "callable": "LSink;.sink:(LData;)V",
-                    "caller": "LSink;.sink:(LData;)V",
-                    "callee": "leaf",
-                    "callee_location": {
-                        "line": 2,
-                        "start": 4,
-                        "end": 5,
-                        "filename": "Sink.java",
-                    },
-                    "filename": "Sink.java",
-                    "titos": [],
-                    "leaves": [("TestSink", 0)],
-                    "caller_port": "argument(2)",
-                    "callee_port": "sink",
-                    "type_interval": None,
-                    "features": [{"": "via-sink"}],
-                }
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LSink;.sink:(LData;)V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=2,
+                        begin_column=4,
+                        end_column=5,
+                    ),
+                    filename="Sink.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(2)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=["via-sink"],
+                    annotations=[],
+                )
             ],
         )
 
@@ -740,25 +759,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.PRECONDITION,
-                    "callable": "LSink;.sink:(LData;)V[0: LAnonymous$0;, 1: LAnonymous$1;]",
-                    "caller": "LSink;.sink:(LData;)V[0: LAnonymous$0;, 1: LAnonymous$1;]",
-                    "callee": "leaf",
-                    "callee_location": {
-                        "line": 1,
-                        "start": 1,
-                        "end": 1,
-                        "filename": "Sink.java",
-                    },
-                    "filename": "Sink.java",
-                    "titos": [],
-                    "leaves": [("TestSink", 0)],
-                    "caller_port": "argument(1)",
-                    "callee_port": "sink",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LSink;.sink:(LData;)V[0: LAnonymous$0;, 1: LAnonymous$1;]",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Sink.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -784,25 +802,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.PRECONDITION,
-                    "callable": "Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
-                    "caller": "Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
-                    "callee": "SomeMutation:some_field",
-                    "callee_location": {
-                        "line": 1,
-                        "start": 1,
-                        "end": 1,
-                        "filename": "SomeMutation.java",
-                    },
-                    "filename": "SomeMutation.java",
-                    "titos": [],
-                    "leaves": [("TestSink", 0)],
-                    "caller_port": "argument(1)",
-                    "callee_port": "anchor:argument(1)",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
+                    callee="SomeMutation:some_field",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="SomeMutation.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1)",
+                    callee_port="anchor:argument(1)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -831,25 +848,24 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.POSTCONDITION,
-                    "callable": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
-                    "caller": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
-                    "callee": "TestEvent:field_a",
-                    "callee_location": {
-                        "line": 1,
-                        "start": 1,
-                        "end": 1,
-                        "filename": "TestEvent.java",
-                    },
-                    "filename": "TestEvent.java",
-                    "titos": [],
-                    "leaves": [("TestSource", 0)],
-                    "caller_port": "result",
-                    "callee_port": "anchor:result",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
+                    callee="TestEvent:field_a",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="anchor:result",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )
 
@@ -881,24 +897,23 @@ class TestParser(unittest.TestCase):
             }
             """,
             [
-                {
-                    "type": ParseType.PRECONDITION,
-                    "callable": "LClass;.indirect_sink:(LData;LData;)V",
-                    "caller": "LClass;.indirect_sink:(LData;LData;)V",
-                    "callee": "Lcom/facebook/Sink$4;.sink:(LData;)V",
-                    "callee_location": {
-                        "line": 2,
-                        "start": 4,
-                        "end": 5,
-                        "filename": "com/facebook/Sink",
-                    },
-                    "filename": "Class",
-                    "titos": [],
-                    "leaves": [("TestSink", 1)],
-                    "caller_port": "argument(2)",
-                    "callee_port": "argument(1)",
-                    "type_interval": None,
-                    "features": [],
-                }
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="Lcom/facebook/Sink$4;.sink:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=2,
+                        begin_column=4,
+                        end_column=5,
+                    ),
+                    filename="Class",
+                    titos=[],
+                    leaves=[("TestSink", 1)],
+                    caller_port="argument(2)",
+                    callee_port="argument(1)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
             ],
         )

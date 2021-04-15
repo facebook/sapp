@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     NamedTuple,
     Optional,
     Set,
@@ -208,15 +209,12 @@ class Position(NamedTuple):
             path = path[1:]
         return Position(path, line, start, end)
 
-    def to_sapp(self, with_path: bool = True) -> sapp.ParsePosition:
-        position: sapp.ParsePosition = {
-            "line": self.line,
-            "start": self.start,
-            "end": self.end,
-        }
-        if with_path:
-            position["filename"] = self.path
-        return position
+    def to_sapp(self) -> sapp.SourceLocation:
+        return sapp.SourceLocation(
+            line_no=self.line,
+            begin_column=self.start,
+            end_column=self.end,
+        )
 
 
 class Call(NamedTuple):
@@ -255,10 +253,8 @@ class LocalPositions(NamedTuple):
             [Position.from_json(position, method) for position in positions]
         )
 
-    def to_sapp(self) -> List[sapp.ParsePosition]:
-        return [
-            position.to_sapp(with_path=False) for position in sorted(self.positions)
-        ]
+    def to_sapp(self) -> List[sapp.SourceLocation]:
+        return [position.to_sapp() for position in sorted(self.positions)]
 
 
 class Features(NamedTuple):
@@ -274,8 +270,8 @@ class Features(NamedTuple):
         }
         return Features(may_features | always_features)
 
-    def to_sapp(self) -> List[sapp.ParseFeature]:
-        return [{"": feature} for feature in sorted(self.features)]
+    def to_sapp(self) -> List[str]:
+        return sorted(self.features)
 
 
 class Condition(NamedTuple):
@@ -286,34 +282,33 @@ class Condition(NamedTuple):
     local_positions: LocalPositions
     features: Features
 
-    def to_sapp(self) -> sapp.ParseCondition:
-        return {
-            "callable": self.caller.method.name,
-            "caller": self.caller.method.name,
-            "caller_port": self.caller.port.value,
-            "filename": self.caller.position.path,
-            "callee": self.callee.method.name,
-            "callee_port": self.callee.port.value,
-            "callee_location": self.callee.position.to_sapp(),
-            "type_interval": None,
-            "features": self.features.to_sapp(),
-            "titos": self.local_positions.to_sapp(),
-            "leaves": [(self.kind, self.distance)],
-        }
+    def convert_to_sapp(
+        self, kind: Literal[sapp.ParseType.PRECONDITION, sapp.ParseType.POSTCONDITION]
+    ) -> sapp.ParseConditionTuple:
+        return sapp.ParseConditionTuple(
+            type=kind,
+            caller=self.caller.method.name,
+            caller_port=self.caller.port.value,
+            filename=self.caller.position.path,
+            callee=self.callee.method.name,
+            callee_port=self.callee.port.value,
+            callee_location=self.callee.position.to_sapp(),
+            type_interval=None,
+            features=self.features.to_sapp(),
+            titos=self.local_positions.to_sapp(),
+            leaves=[(self.kind, self.distance)],
+            annotations=[],
+        )
 
 
 class Precondition(Condition):
-    def to_sapp(self) -> sapp.ParseCondition:
-        condition = super().to_sapp()
-        condition["type"] = sapp.ParseType.PRECONDITION
-        return condition
+    def to_sapp(self) -> sapp.ParseConditionTuple:
+        return super().convert_to_sapp(sapp.ParseType.PRECONDITION)
 
 
 class Postcondition(Condition):
-    def to_sapp(self) -> sapp.ParseCondition:
-        condition = super().to_sapp()
-        condition["type"] = sapp.ParseType.POSTCONDITION
-        return condition
+    def to_sapp(self) -> sapp.ParseConditionTuple:
+        return super().convert_to_sapp(sapp.ParseType.POSTCONDITION)
 
 
 class IssueCondition(NamedTuple):
@@ -323,17 +318,17 @@ class IssueCondition(NamedTuple):
     local_positions: LocalPositions
     features: Features
 
-    def to_sapp(self) -> sapp.ParseIssueCondition:
-        return {
-            "callee": self.callee.method.name,
-            "port": self.callee.port.value,
-            "location": self.callee.position.to_sapp(),
-            "leaves": [(self.kind, self.distance)],
-            "titos": self.local_positions.to_sapp(),
-            "features": self.features.to_sapp(),
-            "type_interval": None,
-            "annotations": [],
-        }
+    def to_sapp(self) -> sapp.ParseIssueConditionTuple:
+        return sapp.ParseIssueConditionTuple(
+            callee=self.callee.method.name,
+            port=self.callee.port.value,
+            location=self.callee.position.to_sapp(),
+            leaves=[(self.kind, self.distance)],
+            titos=self.local_positions.to_sapp(),
+            features=self.features.to_sapp(),
+            type_interval=None,
+            annotations=[],
+        )
 
 
 class Leaf(NamedTuple):
@@ -357,34 +352,34 @@ class Issue(NamedTuple):
     final_sinks: Set[Leaf]
     features: Features
 
-    def to_sapp(self, parser: "Parser") -> sapp.ParseIssue:
-        return {
-            "type": sapp.ParseType.ISSUE,
-            "code": self.code,
-            "message": self.message,
-            "callable": self.callable.name,
-            "handle": parser.compute_master_handle(
+    def to_sapp(self, parser: "Parser") -> sapp.ParseIssueTuple:
+        return sapp.ParseIssueTuple(
+            code=self.code,
+            message=self.message,
+            callable=self.callable.name,
+            handle=parser.compute_master_handle(
                 callable=self.callable.name,
                 line=self.issue_position.line - self.callable_position.line,
                 start=self.issue_position.start,
                 end=self.issue_position.end,
                 code=self.code,
             ),
-            "filename": self.callable_position.path,
-            "callable_line": self.callable_position.line,
-            "line": self.issue_position.line,
-            "start": self.issue_position.start,
-            "end": self.issue_position.end,
-            "preconditions": [
+            filename=self.callable_position.path,
+            callable_line=self.callable_position.line,
+            line=self.issue_position.line,
+            start=self.issue_position.start,
+            end=self.issue_position.end,
+            preconditions=[
                 precondition.to_sapp() for precondition in self.preconditions
             ],
-            "postconditions": [
+            postconditions=[
                 postcondition.to_sapp() for postcondition in self.postconditions
             ],
-            "initial_sources": {leaf.to_sapp() for leaf in self.initial_sources},
-            "final_sinks": {leaf.to_sapp() for leaf in self.final_sinks},
-            "features": self.features.to_sapp(),
-        }
+            initial_sources={leaf.to_sapp() for leaf in self.initial_sources},
+            final_sinks={leaf.to_sapp() for leaf in self.final_sinks},
+            features=self.features.to_sapp(),
+            fix_info=None,
+        )
 
 
 class Parser(BaseParser):
@@ -412,7 +407,7 @@ class Parser(BaseParser):
     # pyre-fixme[14]: `parse` overrides method defined in `BaseParser` inconsistently.
     def parse(
         self, output: AnalysisOutput
-    ) -> Iterable[Union[sapp.ParseCondition, sapp.ParseIssue]]:
+    ) -> Iterable[Union[sapp.ParseConditionTuple, sapp.ParseIssueTuple]]:
         self.initialize(output.metadata)
 
         for handle in output.file_handles():
@@ -420,7 +415,7 @@ class Parser(BaseParser):
 
     def parse_handle(
         self, handle: IO[str]
-    ) -> Iterable[Union[sapp.ParseCondition, sapp.ParseIssue]]:
+    ) -> Iterable[Union[sapp.ParseConditionTuple, sapp.ParseIssueTuple]]:
         for line in handle.readlines():
             if line.startswith("//"):
                 continue
@@ -431,7 +426,7 @@ class Parser(BaseParser):
             for postcondition in self._parse_postconditions(model):
                 yield postcondition.to_sapp()
 
-    def _parse_issues(self, model: Dict[str, Any]) -> Iterable[sapp.ParseIssue]:
+    def _parse_issues(self, model: Dict[str, Any]) -> Iterable[sapp.ParseIssueTuple]:
         for issue in model.get("issues", []):
             code = issue["rule"]
             rule = self._rules[code]
