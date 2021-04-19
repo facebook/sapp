@@ -185,9 +185,22 @@ class Port(NamedTuple):
             elements[0] = leaf_kind
         elif elements[0] == "return":
             elements[0] = "result"
-        elif elements[0] in ("anchor", "producer"):
+        elif elements[0] == "anchor":
             return Port("%s:%s" % (elements[0], ".".join(elements[1:])))
-
+        elif elements[0] == "producer" and len(elements) >= 4:
+            # Producer port is of the form Producer:<producer_id>:<canonical_port>:<canonical_name>
+            port_match = re.search("Argument\\((-?\\d+)\\)", elements[2])
+            if port_match:
+                # Add 1 here since we subtracted 1 when canonicalizing the port in to_crtex.py
+                index = int(port_match.group(1)) + 1
+                return Port(
+                    "%s:%s:%s"
+                    % (
+                        elements[0],
+                        elements[1],
+                        f"argument({index})",
+                    )
+                )
         return Port(".".join(elements))
 
 
@@ -501,7 +514,7 @@ class Parser(BaseParser):
     @staticmethod
     def _normalize_frame(frame: Dict[str, Any], caller: Method) -> Dict[str, Any]:
         # Handle cross-repository taint exchange.
-        if frame["callee_port"] in ("Anchor", "Producer"):
+        if str.startswith(frame["callee_port"], "Anchor"):
             frame["callee"] = CanonicalNames.mariana_trench_canonicalize_name(
                 caller.name
             )
@@ -509,6 +522,13 @@ class Parser(BaseParser):
             frame["callee_port"] += Port.from_json(
                 frame["caller_port"], leaf_kind=""
             ).value
+        elif str.startswith(frame["callee_port"], "Producer"):
+            # Currently the Producer port is of the form
+            # Producer.<producer_id>.<canonical_port>.<canonical_name>,
+            # so we get the canonical name from it
+            port_parts = frame["callee_port"].split(".", 3)
+            if len(port_parts) == 4:
+                frame["callee"] = port_parts[-1]
 
         return frame
 

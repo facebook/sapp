@@ -868,6 +868,50 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
+        self.assertParsed(
+            """
+            {
+              "method": {
+                "name": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+              },
+              "generations": [
+                {
+                  "caller": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
+                  "kind": "TestSource",
+                  "caller_port": "Return",
+                  "origins": [
+                   "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+                  ],
+                  "callee_port": "Producer.1234.Argument(1).LClass;.method:(I)V"
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "TestEvent.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
+                    callee="LClass;.method:(I)V",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="producer:1234:argument(2)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
 
     def testNormalizedPath(self) -> None:
         self.assertParsed(
