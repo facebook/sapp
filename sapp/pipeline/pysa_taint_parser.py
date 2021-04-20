@@ -34,10 +34,12 @@ from . import (
     ParseFeature,
     ParsePosition,
     ParseTypeInterval,
-    ParseCondition,
+    ParseConditionTuple,
     ParseIssueCondition,
+    ParseIssueConditionTuple,
     ParseIssueLeaf,
-    ParseIssue,
+    ParseIssueTuple,
+    SourceLocation,
 )
 from .base_parser import (
     BaseParser,
@@ -67,14 +69,14 @@ class Parser(BaseParser):
 
     def parse(
         self, input: AnalysisOutput
-    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
+    ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
         for handle in input.file_handles():
             for entry in self.parse_handle(handle):
                 yield entry
 
     def parse_handle(
         self, handle: IO[str]
-    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
+    ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
         for entry in self._parse_basic(handle):
             yield from self._parse_by_type(entry)
 
@@ -154,7 +156,7 @@ class Parser(BaseParser):
 
     def _parse_by_type(
         self, entry: Dict[str, Any]
-    ) -> Iterable[Union[ParseCondition, ParseIssue]]:
+    ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
         if entry["kind"] == "model":
             yield from self._parse_model(entry["data"])
         elif entry["kind"] == "issue":
@@ -165,91 +167,100 @@ class Parser(BaseParser):
         return callable
 
     @log_trace_keyerror_in_generator
-    def _parse_model(self, json: Dict[str, Any]) -> Iterable[ParseCondition]:
+    def _parse_model(self, json: Dict[str, Any]) -> Iterable[ParseConditionTuple]:
         callable = json["callable"]
         yield from self._parse_model_sources(callable, json["sources"])
         yield from self._parse_model_sinks(callable, json["sinks"])
 
     def _parse_model_sources(
         self, callable: str, source_traces: List[Dict[str, Any]]
-    ) -> Iterable[ParseCondition]:
+    ) -> Iterable[ParseConditionTuple]:
         for source_trace in source_traces:
             port = source_trace["port"]
             for fragment in self._parse_trace_fragments(
                 "source", source_trace["taint"]
             ):
-                condition: ParseCondition = {
-                    "type": ParseType.POSTCONDITION,
-                    "caller": callable,
-                    "callee": fragment["callee"],
-                    "callee_location": fragment["location"],
-                    "filename": fragment["location"]["filename"],
-                    "leaves": [
+                yield ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller=callable,
+                    callee=fragment["callee"],
+                    callee_location=SourceLocation.from_typed_dict(
+                        fragment["location"]
+                    ),
+                    filename=fragment["location"]["filename"],
+                    titos=[],
+                    leaves=[
                         (kind, distance) for (_, kind, distance) in fragment["leaves"]
                     ],
-                    "caller_port": port,
-                    "callee_port": fragment["port"],
-                    "type_interval": None,
-                    "features": [],
-                }
-                yield condition
+                    caller_port=port,
+                    callee_port=fragment["port"],
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
 
     def _parse_model_sinks(
         self, callable: str, sink_traces: List[Dict[str, Any]]
-    ) -> Iterable[ParseCondition]:
+    ) -> Iterable[ParseConditionTuple]:
         for sink_trace in sink_traces:
             port = sink_trace["port"]
             for fragment in self._parse_trace_fragments("sink", sink_trace["taint"]):
-                condition: ParseCondition = {
-                    "type": ParseType.PRECONDITION,
-                    "caller": callable,
-                    "callee": fragment["callee"],
-                    "callee_location": fragment["location"],
-                    "filename": fragment["location"]["filename"],
-                    "titos": fragment["titos"],
-                    "leaves": [
+                yield ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller=callable,
+                    callee=fragment["callee"],
+                    callee_location=SourceLocation.from_typed_dict(
+                        fragment["location"]
+                    ),
+                    filename=fragment["location"]["filename"],
+                    titos=list(map(SourceLocation.from_typed_dict, fragment["titos"])),
+                    leaves=[
                         (kind, distance) for (_, kind, distance) in fragment["leaves"]
                     ],
-                    "caller_port": port,
-                    "callee_port": fragment["port"],
-                    "type_interval": None,
-                    "features": [],
-                }
-                yield condition
+                    caller_port=port,
+                    callee_port=fragment["port"],
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
 
     @log_trace_keyerror_in_generator
-    def _parse_issue(self, json: Dict[str, Any]) -> Iterable[ParseIssue]:
-        issue: ParseIssue = {}
-
-        issue["type"] = ParseType.ISSUE
-        issue["code"] = json["code"]
-        issue["line"] = json["line"]
-        issue["callable_line"] = json["callable_line"]
-        issue["start"] = json["start"]
-        issue["end"] = json["end"]
-        issue["callable"] = json["callable"]
-        issue["handle"] = self._generate_issue_master_handle(issue)
-        issue["message"] = json["message"]
-        issue["filename"] = self._extract_filename(json["filename"])
-
+    def _parse_issue(self, json: Dict[str, Any]) -> Iterable[ParseIssueTuple]:
         (
-            issue["preconditions"],
-            issue["final_sinks"],
+            preconditions,
+            final_sinks,
             bw_features,
         ) = self._parse_issue_traces(json["traces"], "backward", "sink")
         (
-            issue["postconditions"],
-            issue["initial_sources"],
+            postconditions,
+            initial_sources,
             fw_features,
         ) = self._parse_issue_traces(json["traces"], "forward", "source")
+
         if "features" in json:
-            issue["features"] = json["features"]
+            features = json["features"]
         else:
-            issue["features"] = bw_features + fw_features  # legacy
+            features = bw_features + fw_features  # legacy
 
-        yield issue
+        yield ParseIssueTuple(
+            code=json["code"],
+            line=json["line"],
+            callable_line=json["callable_line"],
+            start=json["start"],
+            end=json["end"],
+            callable=json["callable"],
+            handle=self._generate_issue_master_handle(json),
+            message=json["message"],
+            filename=self._extract_filename(json["filename"]),
+            preconditions=preconditions,
+            final_sinks=final_sinks,
+            postconditions=postconditions,
+            initial_sources=initial_sources,
+            fix_info=None,
+            features=features,
+        )
 
-    def _generate_issue_master_handle(self, issue: ParseIssue) -> str:
+    def _generate_issue_master_handle(self, issue: Dict[str, Any]) -> str:
         line = issue["line"] - issue["callable_line"]
         return self.compute_master_handle(
             callable=issue["callable"],
@@ -278,7 +289,7 @@ class Parser(BaseParser):
 
     def _parse_issue_traces(
         self, traces: List[Dict[str, Any]], name: str, leaf_port: str
-    ) -> Tuple[List[ParseIssueCondition], Set[ParseIssueLeaf], List[ParseFeature]]:
+    ) -> Tuple[List[ParseIssueConditionTuple], Set[ParseIssueLeaf], List[ParseFeature]]:
         for trace in traces:
             if trace["name"] == name:
                 return self._parse_issue_trace_fragments(leaf_port, trace["roots"])
@@ -286,7 +297,7 @@ class Parser(BaseParser):
 
     def _parse_issue_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
-    ) -> Tuple[List[ParseIssueCondition], Set[ParseIssueLeaf], List[ParseFeature]]:
+    ) -> Tuple[List[ParseIssueConditionTuple], Set[ParseIssueLeaf], List[ParseFeature]]:
         fragments = []
         leaf_distances = set()
         all_features = []
@@ -300,7 +311,7 @@ class Parser(BaseParser):
                 new_fragment["leaves"] = [
                     (kind, length) for (_, kind, length) in leaves
                 ]
-                fragments.append(new_fragment)
+                fragments.append(ParseIssueConditionTuple.from_typed_dict(new_fragment))
                 # Leaf distances should be represented as:
                 #   (leaf_detail, leaf_kind, depth)
                 leaf_distances.update(leaves)
