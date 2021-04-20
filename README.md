@@ -20,6 +20,61 @@ The postprocessing will translate the raw output containing models for every ana
 
 After the results have been processed we can now explore them through the UI and a command line interface. We will briefly look at both of those methods here.
 
+### Importing Saved Filters
+SAPP can import filters from a file with the following format:
+
+```
+{
+    "name": "Name of filter",
+    "description": "Description for the filter",
+    "features": [
+        {
+            "mode": "all of",
+            "features": [
+                "pysa:feature1",
+                "pysa:feature2",
+            ]
+        },
+        {
+            "mode": "any of",
+            "features": [
+                "pysa:feature3",
+            ]
+        },
+        {
+            "mode": "none of",
+            "features": [
+                "pysa:feature5",
+            ]
+        }
+    ],
+    "codes": [
+        5005
+    ],
+    "paths": [
+        "filename.py"
+    ],
+    "callables": [
+        "main.function_name",
+    ],
+    "traceLengthFromSources": [
+        0,
+        3
+    ],
+    "traceLengthToSinks": [
+        0,
+        5
+    ],
+    "is_new_issue": false
+}
+
+```
+
+You can share your filters with others and have them import your filter with:
+```
+[~/example]$ sapp --database-name sapp.db import-filter high-signal-filter.json
+```
+
 ### Web Interface
 Start the web interface with
 
