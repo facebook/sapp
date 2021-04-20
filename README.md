@@ -82,7 +82,7 @@ Start the web interface with
 [~/example]$ sapp --database-name sapp.db server --source-directory=<WHERE YOUR CODE LIVES>
 ```
 
-and visit http://localhost:5000 in your browser (note: the URL displayd in the code output currently will not work). You will be presented with a list of issues that provide access to example traces.
+and visit http://localhost:5000 in your browser (note: the URL displayed in the code output currently will not work). You will be presented with a list of issues that provide access to example traces.
 
 ### Command Line Interface
 The same information can be accessed through the command line interface:
@@ -215,7 +215,7 @@ Every invocation of
 ```shell
 [~/example]$ sapp --database-name sapp.db analyze taint-output.json
 ```
-will add a single *run* to the database. An *issue* can exist over multiple runs (we typicall call the issue in a single run an *instance*). You can select a run from the web UI and look at all the instances of that run. You can also chose to only show the instances of issues that are newly introduced in this run in the filter menu.
+will add a single *run* to the database. An *issue* can exist over multiple runs (we typically call the issue in a single run an *instance*). You can select a run from the web UI and look at all the instances of that run. You can also chose to only show the instances of issues that are newly introduced in this run in the filter menu.
 
 Each instance consists of a *data flow* from a particular source kind (e.g. user controlled input) into a *callable* (i.e. a function or method), and a data flow from that callable into a particular sink kind (e.g. RCE).
 
@@ -255,7 +255,7 @@ Build static files and run the flask server:
 
 ## FAQ
 ### Why is SAPP it's own project and not just part of Pysa?
-Stay tuned for future annoucements.
+Stay tuned for future announcements.
 
 ## License
 
