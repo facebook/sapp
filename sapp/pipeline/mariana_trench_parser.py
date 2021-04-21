@@ -23,15 +23,14 @@ from typing import (
 
 from .. import pipeline as sapp
 from ..analysis_output import AnalysisOutput, Metadata
-from ..constant import Constant
 from .base_parser import BaseParser
 
 try:
     # type: ignore
-    from ...facebook.lib import resources
+    from ...facebook.lib import configuration
 except Exception:
     # pyre-ignore[21]
-    from . import resources
+    from . import configuration
 
 
 LOG: logging.Logger = logging.getLogger()
@@ -93,9 +92,7 @@ class CanonicalNames:
             )
             return method_prototype
 
-        if method_parsed.class_package == resources.get_string(
-            Constant.GRAPHQL_PACKAGE
-        ):
+        if method_parsed.class_package == configuration.GRAPHQL_PACKAGE:
             ### GraphQL mutation
 
             if not method_parsed.method_name.startswith("set"):
@@ -113,9 +110,10 @@ class CanonicalNames:
             )
 
             return f"{mutation_name}:{field_name}"
-        elif method_parsed.class_package == resources.get_string(
-            Constant.STRUCTURED_LOGGER_PACKAGE
-        ) and not method_parsed.class_name.endswith("Impl"):
+        elif (
+            method_parsed.class_package == configuration.STRUCTURED_LOGGER_PACKAGE
+            and not method_parsed.class_name.endswith("Impl")
+        ):
             #### Structured logggers
 
             if not method_parsed.method_name.startswith("set"):
