@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-strict
+
 import json
 from json import JSONEncoder
 from typing import Dict, Union, List, Optional, Any
@@ -47,12 +49,12 @@ class JSONFilter:
 
     def _json_filtering_keys(self) -> List[str]:
         return [
-            attr
-            for attr in self.__dict__.keys()
-            if not attr.startswith("__")
-            and not callable(attr)
-            and attr != "name"
-            and attr != "description"
+            attribute
+            for attribute in self.__dict__.keys()
+            if not attribute.startswith("__")
+            and not callable(attribute)
+            and attribute != "name"
+            and attribute != "description"
         ]
 
     def to_json(self) -> str:
@@ -64,7 +66,9 @@ class FilterEncoder(JSONEncoder):
         self, o: JSONFilter
     ) -> Dict[str, Union[bool, List[int], List[str], Dict[str, Union[str, List[str]]]]]:
         filtering_conditions: Dict[str, Any] = {
-            attr: value for attr, value in o.__dict__.items() if value is not None
+            attribute: value
+            for attribute, value in o.__dict__.items()
+            if value is not None
         }
         filtering_conditions.pop("name", None)
         filtering_conditions.pop("description", None)
