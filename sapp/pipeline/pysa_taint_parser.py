@@ -31,6 +31,7 @@ import ujson as json
 from .. import errors
 from ..analysis_output import AnalysisOutput, Metadata
 from . import (
+    flatten_features,
     ParseFeature,
     ParsePosition,
     ParseTypeInterval,
@@ -238,9 +239,9 @@ class Parser(BaseParser):
         ) = self._parse_issue_traces(json["traces"], "forward", "source")
 
         if "features" in json:
-            features = json["features"]
+            features: Iterable[ParseFeature] = json["features"]
         else:
-            features = bw_features + fw_features  # legacy
+            features: Iterable[ParseFeature] = bw_features + fw_features  # legacy
 
         yield ParseIssueTuple(
             code=json["code"],
@@ -257,7 +258,7 @@ class Parser(BaseParser):
             postconditions=postconditions,
             initial_sources=initial_sources,
             fix_info=None,
-            features=features,
+            features=flatten_features(features),
         )
 
     def _generate_issue_master_handle(self, issue: Dict[str, Any]) -> str:
