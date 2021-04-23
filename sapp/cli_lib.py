@@ -6,7 +6,7 @@
 import logging
 import os
 from functools import wraps
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Tuple
 
 import click
 import click_log
@@ -25,7 +25,7 @@ from .pipeline.create_database import CreateDatabase
 from .pipeline.database_saver import DatabaseSaver
 from .pipeline.model_generator import ModelGenerator
 from .pipeline.trim_trace_graph import TrimTraceGraph
-from .ui.filters import import_filter_from_path
+from .ui import filters
 from .ui.interactive import Interactive
 from .ui.server import start_server
 
@@ -242,7 +242,23 @@ def import_filter(
     ctx: Context,
     input_filter_path: str,
 ) -> None:
-    import_filter_from_path(ctx.database, input_filter_path)
+    filters.import_filter_from_path(ctx.database, input_filter_path)
 
 
-commands: List[Callable[[], None]] = [analyze, explore, server, import_filter]
+@click.command(help="Delete filters from database")
+@argument("filter_names", nargs=-1)
+@pass_context
+def delete_filters(
+    ctx: Context,
+    filter_names: Tuple[str],
+) -> None:
+    filters.delete_filters(ctx.database, filter_names)
+
+
+commands: List[Callable[[], None]] = [
+    analyze,
+    explore,
+    server,
+    import_filter,
+    delete_filters,
+]

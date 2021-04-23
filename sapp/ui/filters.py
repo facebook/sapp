@@ -21,6 +21,7 @@ from typing import (
     TypeVar,
     Union,
     Any,
+    Tuple,
     Dict,
 )
 
@@ -188,12 +189,12 @@ class EmptyDeletionError(Exception):
 
 
 def delete_filter(session: Session, name: str) -> None:
-    LOG.debug(f"Deleting {name}")
     deleted_rows = (
         session.query(FilterRecord).filter(FilterRecord.name == name).delete()
     )
     if deleted_rows == 0:
         raise EmptyDeletionError(f'No filter with `name` "{name}" exists.')
+    LOG.debug(f"Deleting {name}")
     session.commit()
 
 
@@ -231,3 +232,18 @@ def import_filter_from_path(database: DB, input_filter_path: str) -> None:
                 "Error: You need to run `sapp analyze` before running `sapp import-filter"
             )
             sys.exit(1)
+
+
+def delete_filters(database: DB, filter_names: Tuple[str]) -> None:
+    if len(filter_names) <= 0:
+        return
+
+    with database.make_session() as session:
+        for name in filter_names:
+            if name == "":
+                LOG.warning("You have provided an empty string for your filter name.")
+                continue
+            try:
+                delete_filter(session, name)
+            except EmptyDeletionError as error:
+                LOG.exception(error)
