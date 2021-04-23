@@ -5,6 +5,7 @@
 
 import logging
 import os
+import pathlib
 from functools import wraps
 from typing import Optional, List, Callable, Tuple
 
@@ -242,7 +243,7 @@ def import_filter(
     ctx: Context,
     input_filter_path: str,
 ) -> None:
-    filters.import_filter_from_path(ctx.database, input_filter_path)
+    filters.import_filter_from_path(ctx.database, pathlib.Path(input_filter_path))
 
 
 @click.command(help="Delete filters from database")

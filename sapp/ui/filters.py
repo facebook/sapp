@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
-import sys
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
 from typing import (
@@ -33,14 +31,15 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.expression import or_
 from typing_extensions import Final
 
+from .. import models
 from ..models import DBID, Base
 from .json_filter import JSONFilter
 
-
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ..db import DB
     from .issues import IssueQueryResult  # noqa
-
 
 LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -198,40 +197,33 @@ def delete_filter(session: Session, name: str) -> None:
     session.commit()
 
 
-def import_filter_from_path(database: DB, input_filter_path: str) -> None:
-    if not os.path.isfile(input_filter_path):
+def import_filter_from_path(database: DB, input_filter_path: Path) -> None:
+    if not input_filter_path.is_file():
         raise FileNotFoundError("Input file does not exist")
     with ExitStack() as stack:
-        input_file = stack.enter_context(open(input_filter_path, "r"))
-        try:
-            json_blob: Dict[str, Any] = json.load(input_file)
-        except json.decoder.JSONDecodeError:
-            print("Error: Your filter file input contains invalid JSON")
-            sys.exit(1)
+        json_blob: Dict[str, Any] = json.loads(input_filter_path.read_text())
         filter_obj: JSONFilter = JSONFilter(**json_blob)
         imported_filter: FilterRecord = FilterRecord(
             name=filter_obj.name,
             description=filter_obj.description,
             json=filter_obj.to_json(),
         )
-
+        # TODO(T89343050)
+        models.create(database)
         session = stack.enter_context(database.make_session())
         try:
             session.add(imported_filter)
             session.commit()
+        except sqlalchemy.exc.IntegrityError:
+            LOG.error(
+                f"Error: The filter `{filter_obj.name}` you want to import already exists in SAPP db"
+            )
+            raise
         except sqlalchemy.exc.DatabaseError:
-            print(
+            LOG.error(
                 "Error: Database disk image is malformed. Please recreate your SAPP db"
             )
-            sys.exit(1)
-        except sqlalchemy.exc.IntegrityError:
-            print("Error: The filter you want to import already exists in SAPP db")
-            sys.exit(1)
-        except sqlalchemy.exc.OperationalError:
-            print(
-                "Error: You need to run `sapp analyze` before running `sapp import-filter"
-            )
-            sys.exit(1)
+            raise
 
 
 def delete_filters(database: DB, filter_names: Tuple[str]) -> None:
