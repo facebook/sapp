@@ -6,6 +6,7 @@
 
 import logging
 import os
+from typing import Dict, Type
 
 import click
 
@@ -13,10 +14,17 @@ from .cli_lib import commands, common_options
 from .context import Context
 from .db import DB, DBType
 from .lint import lint
-from .pipeline.pysa_taint_parser import Parser
+from .pipeline.base_parser import BaseParser
+from .pipeline.mariana_trench_parser import Parser as MarianaTrenchParser
+from .pipeline.pysa_taint_parser import Parser as PysaParser
 
 
 LOG: logging.Logger = logging.getLogger("sapp")
+
+PARSERS: Dict[str, Type[BaseParser]] = {
+    "pysa": PysaParser,
+    "mariana-trench": MarianaTrenchParser,
+}
 
 
 @common_options
@@ -27,16 +35,26 @@ LOG: logging.Logger = logging.getLogger("sapp")
     default=DBType.SQLITE,
     help="database engine to use",
 )
+@click.option(
+    "--tool",
+    type=click.Choice(list(PARSERS.keys())),
+    default="pysa",
+    help="tool the data is coming from",
+)
 @click.pass_context
 def cli(
-    ctx: click.Context, repository: str, database_name: str, database_engine: str
+    ctx: click.Context,
+    repository: str,
+    database_name: str,
+    database_engine: str,
+    tool: str,
 ) -> None:
     ctx.obj = Context(
         repository=repository,
         database=DB(
             database_engine, os.path.expanduser(database_name), assertions=True
         ),
-        parser_class=Parser,
+        parser_class=PARSERS[tool],
     )
     LOG.debug(f"Context: {ctx.obj}")
 
