@@ -7,7 +7,7 @@ import logging
 import os
 import pathlib
 from functools import wraps
-from typing import Optional, List, Callable, Tuple
+from typing import Optional, List, Callable, Tuple, Dict, Any
 
 import click
 import click_log
@@ -151,27 +151,18 @@ def explore(ctx: Context, ipython_args) -> None:
 @argument("input_file", type=Path(exists=True))
 def analyze(
     ctx: Context,
-    # pyre-fixme[2]: Parameter must be annotated.
-    run_kind,
-    # pyre-fixme[2]: Parameter must be annotated.
-    branch,
-    # pyre-fixme[2]: Parameter must be annotated.
-    commit_hash,
-    # pyre-fixme[2]: Parameter must be annotated.
-    job_id,
-    # pyre-fixme[2]: Parameter must be annotated.
-    differential_id,
-    # pyre-fixme[2]: Parameter must be annotated.
-    previous_issue_handles,
-    # pyre-fixme[2]: Parameter must be annotated.
-    linemap,
-    # pyre-fixme[2]: Parameter must be annotated.
-    store_unused_models,
-    # pyre-fixme[2]: Parameter must be annotated.
-    input_file,
+    run_kind: Optional[str],
+    branch: Optional[str],
+    commit_hash: Optional[str],
+    job_id: Optional[str],
+    differential_id: Optional[int],
+    previous_issue_handles: Optional[str],
+    linemap: Optional[str],
+    store_unused_models: bool,
+    input_file: str,
 ) -> None:
     # Store all options in the right places
-    summary_blob = {
+    summary_blob: Dict[str, Any] = {
         "run_kind": run_kind,
         "repository": ctx.repository,
         "branch": branch,
