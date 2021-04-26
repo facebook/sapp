@@ -29,7 +29,6 @@ try:
     # type: ignore
     from ...facebook.lib import configuration
 except Exception:
-    # pyre-ignore[21]
     from .. import configuration
 
 if sys.version_info >= (3, 8):
