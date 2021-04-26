@@ -30,7 +30,7 @@ try:
     from ...facebook.lib import configuration
 except Exception:
     # pyre-ignore[21]
-    from . import configuration
+    from .. import configuration
 
 if sys.version_info >= (3, 8):
     from typing import Literal
