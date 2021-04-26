@@ -6,13 +6,13 @@
 import json
 import logging
 import re
+import sys
 from typing import (
     IO,
     Any,
     Dict,
     Iterable,
     List,
-    Literal,
     NamedTuple,
     Optional,
     Set,
@@ -31,6 +31,11 @@ try:
 except Exception:
     # pyre-ignore[21]
     from . import configuration
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 
 LOG: logging.Logger = logging.getLogger()
