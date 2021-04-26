@@ -113,7 +113,7 @@ class TrimmedTraceGraph(TraceGraph):
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
             if self.get_trace_frame_from_id(tf_id).kind == TraceKind.POSTCONDITION
         }
-        return self._get_min_depth(first_hop_tf_ids)
+        return self._get_min_leaf_depth(first_hop_tf_ids)
 
     def _get_min_depth_to_sinks(self, instance_id: int) -> int:
         """See get_min_depths_to_sources."""
@@ -122,15 +122,17 @@ class TrimmedTraceGraph(TraceGraph):
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
             if self.get_trace_frame_from_id(tf_id).kind == TraceKind.PRECONDITION
         }
-        return self._get_min_depth(first_hop_tf_ids)
+        return self._get_min_leaf_depth(first_hop_tf_ids)
 
-    def _get_min_depth(self, first_hop_tf_ids: Set[int]) -> int:
+    def _get_min_leaf_depth(self, first_hop_tf_ids: Set[int]) -> int:
         min_depth = None
         for tf_id in first_hop_tf_ids:
             leaf_depths = self._trace_frame_leaf_assoc[tf_id]
-            for (_leaf_id, depth) in leaf_depths:
-                if depth is not None and (min_depth is None or depth < min_depth):
-                    min_depth = depth
+            for (leaf_id, depth) in leaf_depths:
+                kind = self.get_shared_text_by_local_id(leaf_id).kind
+                if kind == SharedTextKind.source or kind == SharedTextKind.sink:
+                    if depth is not None and (min_depth is None or depth < min_depth):
+                        min_depth = depth
         if min_depth is not None:
             return min_depth
         return 0
