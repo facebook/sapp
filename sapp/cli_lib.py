@@ -181,7 +181,11 @@ def analyze(
         )
 
     # Construct pipeline
-    input_files = AnalysisOutput.from_file(input_file)
+    if os.path.isdir(input_file):
+        analysis_output = AnalysisOutput.from_directory(input_file)
+    else:
+        analysis_output = AnalysisOutput.from_file(input_file)
+
     pipeline_steps = [
         ctx.parser_class(),
         CreateDatabase(ctx.database),
@@ -195,7 +199,7 @@ def analyze(
     #  param but got `List[typing.Union[DatabaseSaver, ModelGenerator, TrimTraceGraph,
     #  tools.sapp.sapp.base_parser.BaseParser]]`.
     pipeline = Pipeline(pipeline_steps)
-    pipeline.run(input_files, summary_blob)
+    pipeline.run(analysis_output, summary_blob)
 
 
 @click.command(

@@ -28,7 +28,7 @@ def isolated_fs():
 
 
 @patch(
-    f"{client}.analysis_output.AnalysisOutput.from_file",
+    f"{client}.analysis_output.AnalysisOutput.from_directory",
     return_value="fake_analysis_output",
 )
 class TestSappCli(TestCase):
@@ -149,8 +149,12 @@ class TestSappCli(TestCase):
     def verify_previous_issue_handles(self, input_files, summary_blob) -> None:
         self.assertEqual(summary_blob["previous_issue_handles"], "fake_analysis_output")
 
+    @patch(
+        f"{client}.analysis_output.AnalysisOutput.from_file",
+        return_value="fake_analysis_output",
+    )
     # pyre-fixme[2]: Parameter must be annotated.
-    def test_previous_input(self, mock_analysis_output) -> None:
+    def test_previous_input(self, _, mock_analysis_output) -> None:
         with patch(PIPELINE_RUN, self.verify_previous_issue_handles):
             with isolated_fs() as path:
                 result = self.runner.invoke(
