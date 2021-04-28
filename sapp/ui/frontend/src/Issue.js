@@ -163,7 +163,6 @@ export function Issue(
   return (
     <Card
       size="small"
-      style={{margin: '0 10px 0 10px'}}
       title={
         <>
           <FireOutlined style={{marginRight: '.5em'}} />
