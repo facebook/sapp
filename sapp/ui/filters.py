@@ -32,8 +32,8 @@ from sqlalchemy.sql.expression import or_
 from typing_extensions import Final
 
 from .. import models
+from ..filter import StoredFilter
 from ..models import DBID, Base
-from .json_filter import JSONFilter
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -202,7 +202,7 @@ def import_filter_from_path(database: DB, input_filter_path: Path) -> None:
         raise FileNotFoundError("Input file does not exist")
     with ExitStack() as stack:
         json_blob: Dict[str, Any] = json.loads(input_filter_path.read_text())
-        filter_obj: JSONFilter = JSONFilter(**json_blob)
+        filter_obj: StoredFilter = StoredFilter(**json_blob)
         imported_filter: FilterRecord = FilterRecord(
             name=filter_obj.name,
             description=filter_obj.description,
