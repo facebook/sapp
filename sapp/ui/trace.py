@@ -76,6 +76,9 @@ class TraceFrameQueryResult(NamedTuple):
     filename: Optional[str] = None
     trace_length: Optional[int] = None
     titos: Optional[str] = None
+    type_interval_lower: Optional[int] = None
+    type_interval_upper: Optional[int] = None
+    preserves_type_context: Optional[bool] = None
     shared_texts: List[SharedText] = []
 
     @staticmethod
@@ -96,6 +99,9 @@ class TraceFrameQueryResult(NamedTuple):
             filename=record.filename,
             trace_length=getattr(record, "trace_length", None),
             titos=";".join([str(titos) for titos in getattr(record, "titos", [])]),
+            type_interval_lower=record.type_interval_lower,
+            type_interval_upper=record.type_interval_upper,
+            preserves_type_context=record.preserves_type_context,
             shared_texts=shared_texts if shared_texts else [],
         )
 
@@ -179,6 +185,9 @@ def initial_frames(
             TraceFrame.callee_port,
             TraceFrame.callee_location,
             TraceFrame.kind,
+            TraceFrame.type_interval_lower,
+            TraceFrame.type_interval_upper,
+            TraceFrame.preserves_type_context,
             FilenameText.contents.label("filename"),
             TraceFrameLeafAssoc.trace_length,
             TraceFrame.titos,
@@ -261,8 +270,8 @@ def navigate_trace_frames(
 
 def next_frames(
     session: Session,
-    frame: TraceFrameQueryResult,
-    leaf_kind: Set[str],
+    pre_frame: TraceFrameQueryResult,
+    leaf_kinds: Set[str],
     visited_ids: Set[int],
     run_id: Optional[DBID] = None,
     leaf_lookup: Optional[LeafLookup] = None,
@@ -284,12 +293,15 @@ def next_frames(
             TraceFrame.callee_port,
             TraceFrame.callee_location,
             TraceFrame.kind,
+            TraceFrame.type_interval_lower,
+            TraceFrame.type_interval_upper,
+            TraceFrame.preserves_type_context,
             FilenameText.contents.label("filename"),
             TraceFrameLeafAssoc.trace_length,
             TraceFrame.titos,
         )
         .filter(TraceFrame.run_id == (run_id or run.latest(session)))
-        .filter(TraceFrame.kind == frame.kind)
+        .filter(TraceFrame.kind == pre_frame.kind)
         .join(CallerText, CallerText.id == TraceFrame.caller_id)
         .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
         .join(FilenameText, FilenameText.id == TraceFrame.filename_id)
@@ -298,12 +310,12 @@ def next_frames(
         )  # skip recursive calls for now
     )
     if backwards:
-        query = query.filter(TraceFrame.callee_id == frame.caller_id).filter(
-            TraceFrame.callee_port == frame.caller_port
+        query = query.filter(TraceFrame.callee_id == pre_frame.caller_id).filter(
+            TraceFrame.callee_port == pre_frame.caller_port
         )
     else:
-        query = query.filter(TraceFrame.caller_id == frame.callee_id).filter(
-            TraceFrame.caller_port == frame.callee_port
+        query = query.filter(TraceFrame.caller_id == pre_frame.callee_id).filter(
+            TraceFrame.caller_port == pre_frame.callee_port
         )
 
     results = (
@@ -315,8 +327,11 @@ def next_frames(
     )
 
     filtered_results = []
+
     for frame in results:
-        if int(frame.id) not in visited_ids and leaf_kind.intersection(
+        if int(frame.id) in visited_ids:
+            continue
+        if not leaf_kinds.intersection(
             set(
                 get_leaves_trace_frame(
                     session,
@@ -326,14 +341,28 @@ def next_frames(
                 )
             )
         ):
-            shared_texts = list(
-                session.query(SharedText)
-                .join(TraceFrameLeafAssoc, SharedText.id == TraceFrameLeafAssoc.leaf_id)
-                .filter(TraceFrameLeafAssoc.trace_frame_id == frame.id)
-                .all()
-            )
+            continue
 
-            filtered_results.append((frame, shared_texts))
+        if not TraceFrame.type_intervals_match_or_ignored(
+            pre_frame.type_interval_lower,
+            pre_frame.type_interval_upper,
+            pre_frame.preserves_type_context,
+            frame.type_interval_lower,
+            frame.type_interval_upper,
+            frame.preserves_type_context,
+        ):
+            # We are not ignoring and we have no match
+            # so therefore filter the result from the results
+            continue
+
+        shared_texts = list(
+            session.query(SharedText)
+            .join(TraceFrameLeafAssoc, SharedText.id == TraceFrameLeafAssoc.leaf_id)
+            .filter(TraceFrameLeafAssoc.trace_frame_id == frame.id)
+            .all()
+        )
+
+        filtered_results.append((frame, shared_texts))
 
     return [
         TraceFrameQueryResult.from_record(frame, shared_texts)

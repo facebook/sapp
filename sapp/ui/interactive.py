@@ -926,6 +926,9 @@ details              show additional information about the current trace frame
                     TraceFrame.callee_port,
                     TraceFrame.callee_location,
                     TraceFrame.kind,
+                    TraceFrame.type_interval_lower,
+                    TraceFrame.type_interval_upper,
+                    TraceFrame.preserves_type_context,
                     FilenameText.contents.label("filename"),
                 )
                 .filter(TraceFrame.id == self.current_frame_id)

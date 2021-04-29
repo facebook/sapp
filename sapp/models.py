@@ -1029,6 +1029,52 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):  # noqa
         ),
     )
 
+    @staticmethod
+    def type_intervals_match_or_ignored(
+        caller_start: Optional[int],
+        caller_end: Optional[int],
+        caller_preserves: Optional[bool],
+        callee_start: Optional[int],
+        callee_end: Optional[int],
+        callee_preserves: Optional[bool],
+    ) -> bool:
+        """
+        returns whether or not to filter based on comparing the type intervals between
+        the "caller" trace_frame and the "callee" trace_frame.
+        This works both backwards and forwards
+        """
+        if (
+            caller_start is None
+            or caller_end is None
+            or callee_start is None
+            or callee_end is None
+            or not callee_preserves
+        ):
+            # in this case we cannot filter out frames
+            return True
+
+        assert caller_start <= caller_end
+        assert callee_start <= callee_end
+
+        if caller_start <= callee_start and callee_end <= caller_end:
+            # we have a match so we don't filter out the frame
+            # in other words for this callee frame the callee is a subset
+            # (or the same type) of the callee
+            return True
+
+        # we can filter out and we don't have a match return
+        # no-match
+        # Note that this can happen in a 2 cases
+        # (In both cases the caller and callee frams are part of the same base type
+        # since we know that the callee 'preserves type')
+        # 1. the caller is subset of the callee frame.
+        # (e.g. we know the caller is Dog and and the callee could have a trace-frame that
+        # allows any animal to traverse.)
+        # 2. the caller is an adjacent type
+        # (e.g. we know the caller is a Dog and the callee could have a Cat option
+        # that needs to be filtered.)
+        return False
+
 
 # Extra bits of information we can show on a TraceFrame.
 # This may be a message description, or it may be the start of another series
