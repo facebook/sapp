@@ -8,122 +8,42 @@
  * @flow
  */
 
-import React, {useEffect, useState} from 'react';
-import {useQuery, gql} from '@apollo/client';
-import {Modal, Breadcrumb} from 'antd';
-import Filter, {loadFilter, filterToVariables} from './Filter';
-import {Issue, IssueSkeleton} from './Issue.js';
+import React, { useEffect, useState } from 'react';
+import { useQuery, gql } from '@apollo/client';
+import { Button, Modal, Breadcrumb } from 'antd';
+import Filter, { loadFilter, filterToVariables } from './Filter';
+import { Issue, IssueSkeleton } from './Issue.js';
 
 import './Issues.css';
+import { MoreOutlined } from '@ant-design/icons';
 
-type Props = $ReadOnly<{|
+function IssuesList(props: $ReadOnly<{|
+  issues: any,
   run_id: number,
-  data: any,
-  fetchMore: any,
-  loading: boolean,
-|}>;
-
-type State = $ReadOnly<{|
-  recently_started_loading: boolean,
-|}>;
-
-class IssuesList extends React.Component<Props, State> {
-  state: State = {
-    recently_started_loading: false,
-  };
-
-  constructor(props: Props) {
-    super(props);
-    // $FlowFixMe
-    this._fetchIssues = this._fetchIssues.bind(this);
-    // $FlowFixMe
-    this._handleScroll = this._handleScroll.bind(this);
-  }
-
-  componentDidMount(): void {
-    window.addEventListener('scroll', this._handleScroll);
-  }
-
-  componentWillUnount(): void {
-    window.removeEventListener('scroll', this._handleScroll);
-  }
-
-  render() {
-    return (
-      <>
-        {this._renderIssues()}
-        {this._renderLoadingSkeleton()}
-      </>
-    );
-  }
-
-  _fetchIssues() {
-    const endCursor = this.props.data.issues.pageInfo.endCursor;
-    this.props.fetchMore({
-      variables: {after: endCursor},
-      updateQuery: (prevResult, {fetchMoreResult}) => {
-        fetchMoreResult.issues.edges = [
-          ...prevResult.issues.edges,
-          ...fetchMoreResult.issues.edges,
-        ];
-        return fetchMoreResult;
-      },
-    });
-  }
-
-  _handleScroll(event: any): void {
-    let body = document.body;
-    if (body === null) {
-      return;
-    }
-    if (
-      !this.props.loading &&
-      !this.state.recently_started_loading &&
-      window.pageYOffset + body.clientHeight >= body.scrollHeight - 100
-    ) {
-      this.setState({recently_started_loading: true});
-      const captured = this;
-      setTimeout(function() {
-        // Avoid clobbering the server with too many requests.
-        captured.setState({recently_started_loading: false});
-      }, 1000);
-      this._fetchIssues();
-    }
-  }
-
-  _renderIssues() {
-    if (this.props.loading) {
-      return null;
-    }
-
-    return (
-      <>
-        {this.props.data.issues.edges.map(({node}) => (
-          <>
-            <Issue run_id={this.props.run_id} issue={node} />
-            <br />
-          </>
-        ))}
-      </>
-    );
-  }
-
-  _renderLoadingSkeleton() {
-    if (!this.props.loading && !this.state.recently_started_loading) {
-      return null;
-    }
-    return (
-      <>
-        {[...Array(5).keys()].map(() => (
-          <>
-            <IssueSkeleton />
-            <br />
-          </>
-        ))}
-      </>
-    );
-  }
+  onFetchMore: any,
+  canFetchMore: boolean
+|}>): React$Node {
+  return (
+    <>
+      {props.issues.map(({ node }) => (
+        <>
+          <Issue run_id={props.run_id} issue={node} />
+          <br />
+        </>
+      ))}
+      <div style={{ textAlign: 'center' }}>
+        <Button
+          type="dashed"
+          disabled={!props.canFetchMore}
+          onClick={props.onFetchMore}>
+          Load More...
+        </Button>
+      </div>
+    </>
+  );
 }
+
+const PAGE_SIZE = 20;
 
 const IssueQuery = gql`
   query Issue(
@@ -140,7 +60,7 @@ const IssueQuery = gql`
     $is_new_issue: Boolean
   ) {
     issues(
-      first: 20
+      first: ${PAGE_SIZE}
       after: $after
       run_id: $run_id
       codes: $codes
@@ -179,7 +99,7 @@ const IssueQuery = gql`
   }
 `;
 
-const Issues = (props: $ReadOnly<{match: any}>): React$Node => {
+const Issues = (props: $ReadOnly<{ match: any }>): React$Node => {
   const run_id = props.match.params.run_id;
 
   const savedFilter = loadFilter();
@@ -187,9 +107,13 @@ const Issues = (props: $ReadOnly<{match: any}>): React$Node => {
 
   const [oldData, setOldData] = useState(null);
   const [refetching, setRefetching] = useState(false);
-  const {loading, error, data, fetchMore, refetch} = useQuery(IssueQuery, {
-    variables: {...variables, run_id},
+
+  const [cursor, setCursor] = useState(null);
+  const { loading, error, data, fetchMore, refetch } = useQuery(IssueQuery, {
+    variables: { ...variables, run_id, offset: 0 },
   });
+  const [moreData, setMoreData] = useState([]);
+  const [canFetchMore, setCanFetchMore] = useState(true);
 
   // Ridiculous workaround for https://github.com/apollographql/react-apollo/issues/3709.
   const clearAndRefetch = values => {
@@ -203,27 +127,42 @@ const Issues = (props: $ReadOnly<{match: any}>): React$Node => {
     }
   }, [data, oldData, setOldData]);
 
-  var content = (
-    <IssuesList
-      run_id={run_id}
-      data={data}
-      fetchMore={fetchMore}
-      loading={loading}
-    />
-  );
-
+  var content = null;
   if (error) {
     content = (
       <Modal title="Error" visible={true} footer={null}>
         <p>{error.toString()}</p>
       </Modal>
     );
+  } else if (loading) {
+    content = <IssueSkeleton />;
+  } else {
+    const issues = data.issues.edges || [];
+    content = (
+      <IssuesList
+        run_id={run_id}
+        issues={[...issues, ...moreData]}
+        onFetchMore={() => {
+          fetchMore({
+            variables: {
+              after: cursor || data.issues.pageInfo.endCursor,
+            }
+          }).then(fetchMoreResult => {
+            const issues = fetchMoreResult.data.issues;
+            setCursor(issues.pageInfo.endCursor);
+            setMoreData([...moreData, ...issues.edges])
+            setCanFetchMore(issues.edges.length == PAGE_SIZE)
+          });
+        }}
+        canFetchMore={issues.length >= PAGE_SIZE && canFetchMore}
+      />
+    );
   }
 
   return (
     <>
       <Filter refetch={clearAndRefetch} refetching={refetching} />
-      <Breadcrumb style={{margin: '16px 0'}}>
+      <Breadcrumb style={{ margin: '16px 0' }}>
         <Breadcrumb.Item href="/runs">Runs</Breadcrumb.Item>
         <Breadcrumb.Item>Run {run_id}</Breadcrumb.Item>
       </Breadcrumb>
