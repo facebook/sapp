@@ -251,10 +251,28 @@ def delete_filters(
     filters.delete_filters(ctx.database, filter_names)
 
 
+@click.command(help="Show issues after applying a filter to a Pysa run")
+@argument("run_id", type=int)
+@argument("input_filter_path", type=Path(exists=True, readable=True))
+@pass_context
+def filter(
+    ctx: Context,
+    run_id: int,
+    input_filter_path: str,
+) -> None:
+    """Applies filter from INPUT_FILTER_PATH to filter issues in RUN_ID
+
+    RUN_ID is the `Run` number corresponding to the list of issues you want to apply the filter to
+    INPUT_FILTER_PATH is the path to the filter you want to use to filter the list of issues in RUN_ID
+    """
+    filters.filter_run(ctx.database, run_id, pathlib.Path(input_filter_path))
+
+
 commands: List[Callable[[], None]] = [
     analyze,
     explore,
     server,
     import_filter,
     delete_filters,
+    filter,
 ]

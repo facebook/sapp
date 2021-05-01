@@ -23,13 +23,13 @@ from sqlalchemy import Column, String
 from sqlalchemy.orm import Session
 
 from .. import models
+from ..db import DB
 from ..filter import StoredFilter
 from ..models import Base
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ..db import DB
     from .issues import IssueQueryResult  # noqa
 
 LOG: logging.Logger = logging.getLogger(__name__)
@@ -135,3 +135,11 @@ def delete_filters(database: DB, filter_names: Tuple[str]) -> None:
                 delete_filter(session, name)
             except EmptyDeletionError as error:
                 LOG.exception(error)
+
+
+def filter_run(
+    database: DB,
+    run_id_input: int,
+    filter_path: Path,
+) -> None:
+    return None
