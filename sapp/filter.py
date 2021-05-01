@@ -5,9 +5,15 @@
 
 # pyre-strict
 
+from __future__ import annotations
+
 import json
 from json import JSONEncoder
-from typing import Dict, Union, List, Optional, Any
+from typing import Dict, Union, List, Optional, Any, Tuple, TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .ui.schema import FeatureCondition
 
 
 class FilterValidationException(Exception):
@@ -16,12 +22,12 @@ class FilterValidationException(Exception):
 
 class Filter:
     def __init__(self, **kwargs: Any) -> None:
-        self.features: Optional[List[Dict[str, Union[str, List[str]]]]] = kwargs.get(
-            "features", None
+        self.features: List[Dict[str, Union[str, List[str]]]] = kwargs.get(
+            "features", []
         )
-        self.codes: Optional[List[int]] = kwargs.get("codes", None)
-        self.paths: Optional[List[str]] = kwargs.get("paths", None)
-        self.callables: Optional[List[str]] = kwargs.get("callables", None)
+        self.codes: List[int] = kwargs.get("codes", [])
+        self.paths: List[str] = kwargs.get("paths", [])
+        self.callables: List[str] = kwargs.get("callables", [])
         self.traceLengthFromSources: Optional[List[int]] = kwargs.get(
             "traceLengthFromSources", None
         )
@@ -31,7 +37,8 @@ class Filter:
         self.is_new_issue: Optional[bool] = kwargs.get("is_new_issue", None)
 
         missing_filtering_condition: bool = all(
-            self.__getattribute__(key) is None for key in self._json_filtering_keys()
+            self.__getattribute__(key) is None or self.__getattribute__(key) == []
+            for key in self._json_filtering_keys()
         )
 
         if missing_filtering_condition:
@@ -53,6 +60,64 @@ class Filter:
     def to_json(self) -> str:
         return json.dumps(self, cls=FilterEncoder)
 
+    def format_features_for_query(self) -> List[Tuple[str, List[str]]]:
+        formatted_features = []
+        if self.features is not None:
+            for feature in self.features:
+                formatted_features.append((feature["mode"], feature["features"]))
+        return formatted_features
+
+    @staticmethod
+    def from_query(
+        codes: List[int],
+        paths: List[str],
+        callables: List[str],
+        features: Optional[List[FeatureCondition]],
+        min_trace_length_to_sinks: Optional[int],
+        max_trace_length_to_sinks: Optional[int],
+        min_trace_length_to_sources: Optional[int],
+        max_trace_length_to_sources: Optional[int],
+        is_new_issue: Optional[bool],
+    ) -> Filter:
+
+        restructured_features: List[Dict[str, Union[str, List[str]]]] = []
+        for filtering_condition in features or []:
+            feature_entry = {}
+            feature_entry["mode"] = filtering_condition.mode
+            # pyre-ignore [6] You can use list() to convert graphene.List to Python list
+            feature_entry["features"] = list(filtering_condition.features)
+            restructured_features.append(feature_entry)
+
+        traceLengthFromSources: Optional[List[int]] = None
+        if (
+            min_trace_length_to_sources is not None
+            or max_trace_length_to_sources is not None
+        ):
+            traceLengthFromSources = [
+                min_trace_length_to_sources or 0,
+                max_trace_length_to_sources or 31,
+            ]
+
+        traceLengthToSinks: Optional[List[int]] = None
+        if (
+            min_trace_length_to_sinks is not None
+            or max_trace_length_to_sinks is not None
+        ):
+            traceLengthToSinks = [
+                min_trace_length_to_sinks or 0,
+                max_trace_length_to_sinks or 31,
+            ]
+
+        return Filter(
+            features=restructured_features,
+            codes=codes,
+            paths=paths,
+            callables=callables,
+            traceLengthFromSources=traceLengthFromSources,
+            traceLengthToSinks=traceLengthToSinks,
+            is_new_issue=is_new_issue,
+        )
+
 
 class FilterEncoder(JSONEncoder):
     def default(
@@ -61,7 +126,7 @@ class FilterEncoder(JSONEncoder):
         filtering_conditions: Dict[str, Any] = {
             attribute: value
             for attribute, value in o.__dict__.items()
-            if value is not None
+            if value and value != ["%"]
         }
         filtering_conditions.pop("name", None)
         filtering_conditions.pop("description", None)

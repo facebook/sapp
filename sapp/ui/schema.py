@@ -12,9 +12,10 @@ from graphene import relay
 from graphene_sqlalchemy import get_session
 from graphql.execution.base import ResolveInfo
 
+from ..filter import Filter
 from ..models import DBID, TraceFrame, TraceKind
 from . import filters as filters_module, issues, run, trace, typeahead
-from .issues import IssueQueryResult, IssueQueryResultType
+from .issues import Instance, IssueQueryResult, IssueQueryResultType
 from .trace import TraceFrameQueryResult, TraceFrameQueryResultType
 
 
@@ -143,33 +144,25 @@ class Query(graphene.ObjectType):
     ) -> List[IssueQueryResult]:
         session = get_session(info.context)
 
-        builder = (
-            issues.Instance(session, DBID(run_id))
-            .where_codes_is_any_of(codes)
-            .where_callables_is_any_of(callables)
-            .where_path_is_any_of(paths)
-            .where_trace_length_to_sinks(
-                min_trace_length_to_sinks, max_trace_length_to_sinks
-            )
-            .where_trace_length_to_sources(
-                min_trace_length_to_sources, max_trace_length_to_sources
-            )
-            .where_issue_instance_id_is(issue_instance_id)
-            .where_is_new_issue(is_new_issue)
+        filter_instance = Filter.from_query(
+            codes,
+            paths,
+            callables,
+            features,
+            min_trace_length_to_sinks,
+            max_trace_length_to_sinks,
+            min_trace_length_to_sources,
+            max_trace_length_to_sources,
+            is_new_issue,
         )
 
-        for feature in features or []:
-            if feature.mode == "any of":
-                # pyre-fixme[6]: Expected `List[str]` for 1st param but got `List`.
-                builder = builder.where_any_features(feature.features)
-            if feature.mode == "all of":
-                # pyre-fixme[6]: Expected `List[str]` for 1st param but got `List`.
-                builder = builder.where_all_features(feature.features)
-            if feature.mode == "none of":
-                # pyre-fixme[6]: Expected `List[str]` for 1st param but got `List`.
-                builder = builder.where_exclude_features(feature.features)
-
-        return builder.get()
+        issues = (
+            Instance(session, DBID(run_id))
+            .where_filter(filter_instance)
+            .where_issue_instance_id_is(issue_instance_id)
+            .get()
+        )
+        return issues
 
     def resolve_initial_trace_frames(
         self, info: ResolveInfo, issue_instance_id: int, kind: str

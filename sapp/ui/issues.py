@@ -12,6 +12,7 @@ from graphql.execution.base import ResolveInfo
 from sqlalchemy import func
 from sqlalchemy.orm import Session, aliased
 
+from ..filter import Filter
 from ..models import (
     DBID,
     Issue,
@@ -234,6 +235,48 @@ class Instance:
                 IssueInstance.min_trace_length_to_sinks, lower=minimum, upper=maximum
             )
         )
+
+    def where_filter(self, filter_instance: Filter) -> "Instance":
+        traceLengthToSinks = filter_instance.traceLengthToSinks
+        min_trace_length_to_sinks: Optional[int] = None
+        if traceLengthToSinks is not None:
+            min_trace_length_to_sinks = traceLengthToSinks[0]
+
+        max_trace_length_to_sinks: Optional[int] = None
+        if traceLengthToSinks is not None:
+            max_trace_length_to_sinks = traceLengthToSinks[1]
+
+        traceLengthFromSources = filter_instance.traceLengthFromSources
+        min_trace_length_to_sources: Optional[int] = None
+        if traceLengthFromSources is not None:
+            min_trace_length_to_sources = traceLengthFromSources[0]
+
+        max_trace_length_to_sources: Optional[int] = None
+        if traceLengthFromSources is not None:
+            max_trace_length_to_sources = traceLengthFromSources[1]
+
+        builder = (
+            self.where_codes_is_any_of(filter_instance.codes)
+            .where_callables_is_any_of(filter_instance.callables)
+            .where_path_is_any_of(filter_instance.paths)
+            .where_trace_length_to_sinks(
+                min_trace_length_to_sinks, max_trace_length_to_sinks
+            )
+            .where_trace_length_to_sources(
+                min_trace_length_to_sources, max_trace_length_to_sources
+            )
+            .where_is_new_issue(filter_instance.is_new_issue)
+        )
+
+        for feature in filter_instance.format_features_for_query() or []:
+            if feature[0] == "any of":
+                builder = builder.where_any_features(feature[1])
+            if feature[0] == "all of":
+                builder = builder.where_all_features(feature[1])
+            if feature[0] == "none of":
+                builder = builder.where_exclude_features(feature[1])
+
+        return builder
 
     def where_trace_length_to_sources(
         self, minimum: Optional[int] = None, maximum: Optional[int] = None

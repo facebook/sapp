@@ -151,8 +151,8 @@ class StoredFilterTests(TestCase):
             test_is_new_issue=False,
         )
         self.assertEqual("", partial_storedfilter_instance.description)
-        self.assertEqual(None, partial_storedfilter_instance.paths)
-        self.assertEqual(None, partial_storedfilter_instance.callables)
+        self.assertEqual([], partial_storedfilter_instance.paths)
+        self.assertEqual([], partial_storedfilter_instance.callables)
         self.assertEqual(None, partial_storedfilter_instance.traceLengthToSinks)
         self.assertEqual(None, partial_storedfilter_instance.is_new_issue)
 
