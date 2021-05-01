@@ -21,8 +21,8 @@ from ..models import (
     SharedTextKind,
     SourceLocation,
 )
-from . import filters, run
-
+from . import filter_predicates
+from . import run
 
 # pyre-fixme[5]: Global expression must be annotated.
 FilenameText = aliased(SharedText)
@@ -130,7 +130,7 @@ class IssueQueryResult(NamedTuple):
 class Instance:
     def __init__(self, session: Session, run_id: Optional[DBID] = None) -> None:
         self._session: Session = session
-        self._predicates: List[filters.Predicate] = []
+        self._predicates: List[filter_predicates.Predicate] = []
         self._run_id: DBID = run_id or run.latest(session)
 
     def get(self) -> List[IssueQueryResult]:
@@ -178,7 +178,7 @@ class Instance:
         )
 
         for predicate in self._predicates:
-            if isinstance(predicate, filters.QueryPredicate):
+            if isinstance(predicate, filter_predicates.QueryPredicate):
                 query = predicate.apply(query)
 
         issues = [
@@ -191,7 +191,7 @@ class Instance:
         issue_predicates = [
             predicate
             for predicate in self._predicates
-            if isinstance(predicate, filters.IssuePredicate)
+            if isinstance(predicate, filter_predicates.IssuePredicate)
         ]
         if len(issue_predicates) > 0:
             for issue_predicate in issue_predicates:
@@ -199,34 +199,38 @@ class Instance:
 
         return issues
 
-    def where(self, *predicates: filters.Predicate) -> "Instance":
+    def where(self, *predicates: filter_predicates.Predicate) -> "Instance":
         self._predicates.extend(predicates)
         return self
 
     def where_issue_instance_id_is(self, issue_id: Optional[int]) -> "Instance":
         if issue_id is not None:
-            self._predicates.append(filters.Equals(IssueInstance.id, issue_id))
+            self._predicates.append(
+                filter_predicates.Equals(IssueInstance.id, issue_id)
+            )
         return self
 
     def where_is_new_issue(self, is_new_issue: Optional[bool]) -> "Instance":
         if is_new_issue:
-            self._predicates.append(filters.Equals(IssueInstance.is_new_issue, True))
+            self._predicates.append(
+                filter_predicates.Equals(IssueInstance.is_new_issue, True)
+            )
         return self
 
     def where_codes_is_any_of(self, codes: List[int]) -> "Instance":
-        return self.where(filters.Like(Issue.code, codes))
+        return self.where(filter_predicates.Like(Issue.code, codes))
 
     def where_callables_is_any_of(self, callables: List[str]) -> "Instance":
-        return self.where(filters.Like(CallableText.contents, callables))
+        return self.where(filter_predicates.Like(CallableText.contents, callables))
 
     def where_path_is_any_of(self, paths: List[str]) -> "Instance":
-        return self.where(filters.Like(FilenameText.contents, paths))
+        return self.where(filter_predicates.Like(FilenameText.contents, paths))
 
     def where_trace_length_to_sinks(
         self, minimum: Optional[int] = None, maximum: Optional[int] = None
     ) -> "Instance":
         return self.where(
-            filters.InRange(
+            filter_predicates.InRange(
                 IssueInstance.min_trace_length_to_sinks, lower=minimum, upper=maximum
             )
         )
@@ -235,19 +239,19 @@ class Instance:
         self, minimum: Optional[int] = None, maximum: Optional[int] = None
     ) -> "Instance":
         return self.where(
-            filters.InRange(
+            filter_predicates.InRange(
                 IssueInstance.min_trace_length_to_sources, lower=minimum, upper=maximum
             )
         )
 
     def where_any_features(self, features: List[str]) -> "Instance":
-        return self.where(filters.HasAny(set(features)))
+        return self.where(filter_predicates.HasAny(set(features)))
 
     def where_all_features(self, features: List[str]) -> "Instance":
-        return self.where(filters.HasAll(set(features)))
+        return self.where(filter_predicates.HasAll(set(features)))
 
     def where_exclude_features(self, features: List[str]) -> "Instance":
-        return self.where(filters.HasNone(set(features)))
+        return self.where(filter_predicates.HasNone(set(features)))
 
 
 def sources(session: Session, issue_id: DBID) -> Set[str]:
