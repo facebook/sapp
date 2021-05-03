@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import json
 from json import JSONEncoder
+from pathlib import Path
 from typing import Dict, Union, List, Optional, Any, Tuple, TYPE_CHECKING
-
 
 if TYPE_CHECKING:
     from .ui.schema import FeatureCondition
@@ -144,3 +144,8 @@ class StoredFilter(Filter):
                 "Error: A StoredFilter description cannot be `None`"
             )
         super(StoredFilter, self).__init__(**kwargs)
+
+    @staticmethod
+    def from_file(input_path: Path) -> StoredFilter:
+        json_blob: Dict[str, Any] = json.loads(input_path.read_text())
+        return StoredFilter(**json_blob)

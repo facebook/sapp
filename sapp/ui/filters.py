@@ -22,10 +22,16 @@ import sqlalchemy
 from sqlalchemy import Column, String
 from sqlalchemy.orm import Session
 
+from .. import filter
 from .. import models
 from ..db import DB
-from ..filter import StoredFilter
-from ..models import Base
+from ..models import (
+    DBID,
+    Base,
+    Run,
+    RunStatus,
+)
+from .issues import Instance
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -98,7 +104,7 @@ def import_filter_from_path(database: DB, input_filter_path: Path) -> None:
         raise FileNotFoundError("Input file does not exist")
     with ExitStack() as stack:
         json_blob: Dict[str, Any] = json.loads(input_filter_path.read_text())
-        filter_obj: StoredFilter = StoredFilter(**json_blob)
+        filter_obj: filter.StoredFilter = filter.StoredFilter(**json_blob)
         imported_filter: FilterRecord = FilterRecord(
             name=filter_obj.name,
             description=filter_obj.description,
@@ -137,9 +143,34 @@ def delete_filters(database: DB, filter_names: Tuple[str]) -> None:
                 LOG.exception(error)
 
 
+class InvalidRunException(Exception):
+    pass
+
+
 def filter_run(
     database: DB,
     run_id_input: int,
     filter_path: Path,
 ) -> None:
-    return None
+    with database.make_session() as session:
+        run_id: Run = (
+            session.query(Run)
+            .filter(Run.status == RunStatus.FINISHED)
+            .filter(Run.id == run_id_input)
+            .scalar()
+        )
+        if run_id is None:
+            raise InvalidRunException(
+                f"No finished run with ID {run_id_input} exists. Make sure you have run 'sapp analyze' before running `sapp filter`"
+            )
+
+        filter_instance = filter.StoredFilter.from_file(filter_path)
+
+        query_results = (
+            Instance(session, DBID(run_id_input)).where_filter(filter_instance).get()
+        )
+
+        LOG.debug(f"Number of results: {len(query_results)}")
+        for i in range(len(query_results)):
+            LOG.debug(f"Result #{i+1}")
+            LOG.debug(query_results[i])
