@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-strict
 from __future__ import annotations
 
 import json
@@ -170,7 +171,6 @@ def filter_run(
             Instance(session, DBID(run_id_input)).where_filter(filter_instance).get()
         )
 
-        LOG.debug(f"Number of results: {len(query_results)}")
-        for i in range(len(query_results)):
-            LOG.debug(f"Result #{i+1}")
-            LOG.debug(query_results[i])
+        LOG.debug(f"Number of issues after filtering: {len(query_results)}")
+        issues_json = [issue.to_json() for issue in query_results]
+        print(json.dumps(issues_json, indent=2))

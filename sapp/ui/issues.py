@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, NamedTuple, Optional, Set
+from typing import Any, List, NamedTuple, Optional, Set, Dict, Union
 
 import graphene
 from graphql.execution.base import ResolveInfo
@@ -126,6 +126,21 @@ class IssueQueryResult(NamedTuple):
             if record.concatenated_features
             else set(),
         )
+
+    def to_json(self) -> Dict[str, Union[str, int, List[str], bool]]:
+        return {
+            "issue_id": self.issue_id.resolved(),
+            "line": self.location.line_no,
+            "begin_column": self.location.begin_column,
+            "end_column": self.location.end_column,
+            "code": self.code,
+            "message": self.message,
+            "callable": self.callable,
+            "min_trace_length_to_sources": self.min_trace_length_to_sources,
+            "min_trace_length_to_sinks": self.min_trace_length_to_sinks,
+            "features": list(self.features),
+            "is_new_issue": self.is_new_issue,
+        }
 
 
 class Instance:
