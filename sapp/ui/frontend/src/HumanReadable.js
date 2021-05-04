@@ -48,6 +48,48 @@ export function HumanReadablePort(props: $ReadOnly<{port: string}>) {
   );
 }
 
+function makeDalvikParametersHumanReadable(input: string): Array<string> {
+  if (input.length == 0) {
+    return [];
+  }
+
+  if (!input.startsWith('L')) {
+    return [makeDalvikClassHumanReadable(input[0])].concat(
+      makeDalvikParametersHumanReadable(input.slice(1)),
+    );
+  } else {
+    const split = input.split(';');
+    return [makeDalvikClassHumanReadable(split[0] + ';')].concat(
+      makeDalvikParametersHumanReadable(split.slice(1).join(';')),
+    );
+  }
+}
+
+function makeDalvikClassHumanReadable(input: string): string {
+  switch (input) {
+    case 'I': return 'int';
+    case 'V': return 'void';
+    case 'Z': return 'boolean';
+  }
+
+  const split = input.split('/');
+  return split[split.length - 1].slice(0, -1);
+}
+
+function makeDalvikHumanReadable(input: string): string {
+  const match = input.match(/(.*);\.(.*):\((.*)\)(.*)/);
+  if (match == null) {
+    return input;
+  }
+
+  const clazz = makeDalvikClassHumanReadable(match[1]);
+  const method = match[2];
+  const return_type = makeDalvikClassHumanReadable(match[4]);
+  const parameters = makeDalvikParametersHumanReadable(match[3]).join(', ');
+
+  return `${return_type} ${clazz}.${method}(${parameters})`;
+}
+
 export function HumanReadable(
   props: $ReadOnly<{
     input: string,
@@ -60,6 +102,12 @@ export function HumanReadable(
   const threshold = props.threshold || 50;
 
   var readable = props.input;
+
+  if (readable.includes(';')) {
+    // Assume this is a Dalvik identifier
+    readable = makeDalvikHumanReadable(readable);
+  }
+
   if (readable.length > threshold) {
     // Attempt to construct `module...Class.method`.
     const split = readable.split(separator);
