@@ -159,10 +159,12 @@ function Source(
   var content = <div />;
   if (error) {
     content = (
-      <Alert
-        message={`Unable to load ${props.path} (${error.toString()})`}
-        type="error"
-      />
+      <Tooltip title={error.toString()}>
+        <Alert
+          message={`No file found for ${props.path}`}
+          type="info"
+        />
+      </Tooltip>
     );
   } else if (loading) {
     content = (
