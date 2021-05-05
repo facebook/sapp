@@ -231,7 +231,15 @@ def server(
     start_server(ctx.database, debug, static_resources, source_directory, editor_schema)
 
 
-@click.command(help="Import a filter or a directory containing filters into database")
+@click.group()
+def filter() -> None:
+    pass
+
+
+@filter.command(
+    name="import",
+    help="Import a filter or a directory containing filters into database",
+)
 @pass_context
 @argument("input_filter_path", type=Path(exists=True, readable=True))
 def import_filters(
@@ -241,8 +249,8 @@ def import_filters(
     filters.import_filter_from_path(ctx.database, pathlib.Path(input_filter_path))
 
 
-@click.command(help="Delete filters from database")
-@argument("filter_names", nargs=-1)
+@filter.command(name="delete", help="Delete filters from database")
+@argument("filter_names", nargs=-1, required=True)
 @pass_context
 def delete_filters(
     ctx: Context,
@@ -251,11 +259,11 @@ def delete_filters(
     filters.delete_filters(ctx.database, filter_names)
 
 
-@click.command(help="Show issues after applying a filter to a Pysa run")
+@filter.command(name="issues", help="Show issues after applying a filter to a run")
 @argument("run_id", type=int)
 @argument("input_filter_path", type=Path(exists=True, readable=True))
 @pass_context
-def filter(
+def filter_issues(
     ctx: Context,
     run_id: int,
     input_filter_path: str,
@@ -272,7 +280,5 @@ commands: List[Callable[[], None]] = [
     analyze,
     explore,
     server,
-    import_filters,
-    delete_filters,
     filter,
 ]
