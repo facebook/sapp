@@ -8,14 +8,11 @@ from __future__ import annotations
 
 import json
 import logging
-from contextlib import ExitStack
 from typing import (
     TYPE_CHECKING,
     List,
     Optional,
-    Any,
     Tuple,
-    Dict,
 )
 
 import graphene
@@ -23,9 +20,9 @@ import sqlalchemy
 from sqlalchemy import Column, String
 from sqlalchemy.orm import Session
 
-from .. import filter
 from .. import models
 from ..db import DB
+from ..filter import StoredFilter
 from ..models import (
     DBID,
     Base,
@@ -101,27 +98,32 @@ def delete_filter(session: Session, name: str) -> None:
 
 
 def import_filter_from_path(database: DB, input_filter_path: Path) -> None:
-    if not input_filter_path.is_file():
-        raise FileNotFoundError("Input file does not exist")
-    with ExitStack() as stack:
-        json_blob: Dict[str, Any] = json.loads(input_filter_path.read_text())
-        filter_obj: filter.StoredFilter = filter.StoredFilter(**json_blob)
-        imported_filter: FilterRecord = FilterRecord(
-            name=filter_obj.name,
-            description=filter_obj.description,
-            json=filter_obj.to_json(),
-        )
-        # TODO(T89343050)
-        models.create(database)
-        session = stack.enter_context(database.make_session())
-        try:
-            session.add(imported_filter)
-            session.commit()
-        except sqlalchemy.exc.IntegrityError:
-            LOG.error(
-                f"Error: The filter `{filter_obj.name}` you want to import already exists in SAPP db"
+    filter_paths = (
+        list(input_filter_path.glob("**/*.json"))
+        if input_filter_path.is_dir()
+        else [input_filter_path]
+    )
+
+    imported_filterrecords = []
+    for path in filter_paths:
+        filter_instance = StoredFilter.from_file(path)
+        imported_filterrecords.append(
+            FilterRecord(
+                name=filter_instance.name,
+                description=filter_instance.description,
+                json=filter_instance.to_json(),
             )
-            raise
+        )
+
+    # TODO(T89343050)
+    models.create(database)
+    with database.make_session() as session:
+        with session.begin_nested():
+            for record in imported_filterrecords:
+                session.merge(record)
+                LOG.debug(f"`{record.name}` filter has been imported")
+        try:
+            session.commit()
         except sqlalchemy.exc.DatabaseError:
             LOG.error(
                 "Error: Database disk image is malformed. Please recreate your SAPP db"
@@ -165,7 +167,7 @@ def filter_run(
                 f"No finished run with ID {run_id_input} exists. Make sure you have run 'sapp analyze' before running `sapp filter`"
             )
 
-        filter_instance = filter.StoredFilter.from_file(filter_path)
+        filter_instance = StoredFilter.from_file(filter_path)
 
         query_results = (
             Instance(session, DBID(run_id_input)).where_filter(filter_instance).get()

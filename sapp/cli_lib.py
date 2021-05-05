@@ -231,10 +231,10 @@ def server(
     start_server(ctx.database, debug, static_resources, source_directory, editor_schema)
 
 
-@click.command(help="Import filter into database")
+@click.command(help="Import a filter or a directory containing filters into database")
 @pass_context
 @argument("input_filter_path", type=Path(exists=True, readable=True))
-def import_filter(
+def import_filters(
     ctx: Context,
     input_filter_path: str,
 ) -> None:
@@ -272,7 +272,7 @@ commands: List[Callable[[], None]] = [
     analyze,
     explore,
     server,
-    import_filter,
+    import_filters,
     delete_filters,
     filter,
 ]
