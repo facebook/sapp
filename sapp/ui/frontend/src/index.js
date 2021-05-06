@@ -89,7 +89,7 @@ const routing = (
   <ApolloProvider client={client}>
     <Router>
       <Layout>
-        <Header>
+        <Header class="header">
           <div class="logo">
             <FireFilled style={{marginRight: '.2em'}} />
             SAPP

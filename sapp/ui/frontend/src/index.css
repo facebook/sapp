@@ -19,9 +19,24 @@ code {
     monospace;
 }
 
+.header {
+  padding: 0;
+  background: #001529;
+  height: 64px;
+  line-height: 64px;
+}
+
 .logo {
   color: white;
   font-size: 20px;
-  max-width: 1000px;
+  font-weight: bold;
+  max-width: 1200px;
   margin: 0 auto 0 auto;
+  padding: 0 10px 0 10px;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto 0 auto;
+  padding: 0 10px 0 10px;
 }
