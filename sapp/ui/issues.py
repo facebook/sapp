@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, NamedTuple, Optional, Set, Dict, Union
+from typing import Any, List, NamedTuple, Optional, Set, Dict, Union, FrozenSet
 
 import graphene
 from graphql.execution.base import ResolveInfo
@@ -106,7 +106,7 @@ class IssueQueryResult(NamedTuple):
     min_trace_length_to_sources: int
     min_trace_length_to_sinks: int
 
-    features: Set[str]
+    features: FrozenSet[str]
 
     @staticmethod
     # pyre-fixme[2]: Parameter annotation cannot be `Any`.
@@ -122,9 +122,9 @@ class IssueQueryResult(NamedTuple):
             is_new_issue=record.is_new_issue,
             min_trace_length_to_sources=record.min_trace_length_to_sources,
             min_trace_length_to_sinks=record.min_trace_length_to_sinks,
-            features=set(record.concatenated_features.split(","))
+            features=frozenset(record.concatenated_features.split(","))
             if record.concatenated_features
-            else set(),
+            else frozenset(),
         )
 
     def to_json(self) -> Dict[str, Union[str, int, List[str], bool]]:
@@ -141,6 +141,40 @@ class IssueQueryResult(NamedTuple):
             "features": list(self.features),
             "is_new_issue": self.is_new_issue,
         }
+
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.issue_id.resolved(),
+                self.issue_instance_id.resolved(),
+                self.code,
+                self.message,
+                self.callable,
+                self.filename,
+                self.location,
+                self.is_new_issue,
+                self.min_trace_length_to_sinks,
+                self.min_trace_length_to_sources,
+                self.features,
+            )
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return (
+            self.issue_id.resolved() == other.issue_id.resolved()
+            and self.issue_instance_id.resolved() == other.issue_instance_id.resolved()
+            and self.code == other.code
+            and self.message == other.message
+            and self.callable == other.callable
+            and self.filename == other.filename
+            and self.location == other.location
+            and self.is_new_issue == other.is_new_issue
+            and self.min_trace_length_to_sinks == other.min_trace_length_to_sinks
+            and self.min_trace_length_to_sources == other.min_trace_length_to_sources
+            and self.features == other.features
+        )
 
 
 class Instance:
