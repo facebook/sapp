@@ -20,61 +20,6 @@ The postprocessing will translate the raw output containing models for every ana
 
 After the results have been processed we can now explore them through the UI and a command line interface. We will briefly look at both of those methods here.
 
-### Importing Saved Filters
-SAPP can import filters from a file with the following format:
-
-```
-{
-    "name": "Name of filter",
-    "description": "Description for the filter",
-    "features": [
-        {
-            "mode": "all of",
-            "features": [
-                "pysa:feature1",
-                "pysa:feature2",
-            ]
-        },
-        {
-            "mode": "any of",
-            "features": [
-                "pysa:feature3",
-            ]
-        },
-        {
-            "mode": "none of",
-            "features": [
-                "pysa:feature5",
-            ]
-        }
-    ],
-    "codes": [
-        5005
-    ],
-    "paths": [
-        "filename.py"
-    ],
-    "callables": [
-        "main.function_name",
-    ],
-    "traceLengthFromSources": [
-        0,
-        3
-    ],
-    "traceLengthToSinks": [
-        0,
-        5
-    ],
-    "is_new_issue": false
-}
-
-```
-
-You can share your filters with others and have them import your filter with:
-```
-[~/example]$ sapp --database-name sapp.db import-filter high-signal-filter.json
-```
-
 ### Web Interface
 Start the web interface with
 
@@ -220,6 +165,90 @@ will add a single *run* to the database. An *issue* can exist over multiple runs
 Each instance consists of a *data flow* from a particular source kind (e.g. user controlled input) into a *callable* (i.e. a function or method), and a data flow from that callable into a particular sink kind (e.g. RCE).
 
 *Note: the data can come from different sources of the same kind and flow into different sinks of the same kind. The traces view of a single instance represents a multitude of traces, not just a single trace.*
+
+## Filters
+SAPP filters are used to include/exclude which issues are shown to you by the issue properties you choose. Filters are useful to remove noise from the output from your static analysis tool, so you can focus on the particular properties of issues you care about.
+
+SAPP functionality can be accessed through the web interface or through a subcommand of `sapp filter`.
+
+### File Format
+A filter is required to have a `name` and at least one other key, excluding `description`. Filters can be stored as JSON in the following format:
+```
+{
+    "name": "Name of filter",
+    "description": "Description for the filter",
+    "features": [
+        {
+            "mode": "all of",
+            "features": [
+                "via:feature1",
+                "feature2",
+            ]
+        },
+        {
+            "mode": "any of",
+            "features": [
+                "always-via:feature3",
+            ]
+        },
+        {
+            "mode": "none of",
+            "features": [
+                "type:feature5",
+            ]
+        }
+    ],
+    "codes": [
+        5005
+    ],
+    "paths": [
+        "filename.py"
+    ],
+    "callables": [
+        "main.function_name",
+    ],
+    "traceLengthFromSources": [
+        0,
+        3
+    ],
+    "traceLengthToSinks": [
+        0,
+        5
+    ],
+    "is_new_issue": false
+}
+```
+
+You can find some example filters to reference in the [pyre-check repo](https://github.com/facebook/pyre-check/tree/master/tools/sapp/pysa_filters)
+
+### Importing filters
+You can import a filter from a file by running:
+```
+[~/example]$ sapp --database-name sapp.db filter import filter-filename.json
+```
+
+You can also import all filters within a directory by running:
+```
+[~/example]$ sapp --database-name sapp.db filter import path/to/list_of_filters
+```
+
+### Deleting filters
+You can delete filters by name with:
+```
+[~/example]$ sapp --database-name sapp.db filter delete "filter name 1" "filter name 2" "filter name 3"
+```
+
+### Filtering list of issues
+You can apply a filter to a list of issues by run number. For example, the following command will show you a list of issues after applying `example-filter` to run `1`:
+```
+[~/example]$ sapp --database-name sapp.db filter issues 1 example-filter.json
+```
+
+You can also apply a list of filters to a single list of issues by run number. SAPP will apply each filter individually from the directory you specify to the list of issues and merge results into a single list of issues to show you. For example, the following command will show you a list of issues after applying every filter in `list_of_filters` to run `1`:
+```
+[~/example]$ sapp --database-name sapp.db filter issues 1 path/to/list_of_filters
+```
+
 
 ## Development Environment Setup
 Start by cloning the repo and setting up a virtual environment:
