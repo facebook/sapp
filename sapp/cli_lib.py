@@ -259,7 +259,10 @@ def delete_filters(
     filters.delete_filters(ctx.database, filter_names)
 
 
-@filter.command(name="issues", help="Show issues after applying a filter to a run")
+@filter.command(
+    name="issues",
+    help="Show issues after applying a filter or directory of filters to a run",
+)
 @argument("run_id", type=int)
 @argument("input_filter_path", type=Path(exists=True, readable=True))
 @pass_context

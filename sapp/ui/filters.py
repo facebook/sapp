@@ -167,11 +167,22 @@ def filter_run(
                 f"No finished run with ID {run_id_input} exists. Make sure you have run 'sapp analyze' before running `sapp filter`"
             )
 
-        filter_instance = StoredFilter.from_file(filter_path)
-
-        query_results = (
-            Instance(session, DBID(run_id_input)).where_filter(filter_instance).get()
+        paths = (
+            list(filter_path.glob("**/*.json"))
+            if filter_path.is_dir()
+            else [filter_path]
         )
+        filter_instances = [StoredFilter.from_file(path) for path in paths]
+
+        query_results = set()
+        for filter_instance in filter_instances:
+            query_result = (
+                Instance(session, DBID(run_id_input))
+                .where_filter(filter_instance)
+                .get()
+            )
+            for issue in query_result:
+                query_results.add(issue)
 
         LOG.debug(f"Number of issues after filtering: {len(query_results)}")
         issues_json = [issue.to_json() for issue in query_results]
