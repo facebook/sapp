@@ -173,7 +173,7 @@ SAPP functionality can be accessed through the web interface or through a subcom
 
 ### File Format
 A filter is required to have a `name` and at least one other key, excluding `description`. Filters can be stored as JSON in the following format:
-```
+```json
 {
     "name": "Name of filter",
     "description": "Description for the filter",
@@ -223,36 +223,36 @@ You can find some example filters to reference in the [pyre-check repo](https://
 
 ### Importing filters
 You can import a filter from a file by running:
-```
+```shell
 [~/example]$ sapp --database-name sapp.db filter import filter-filename.json
 ```
 
 You can also import all filters within a directory by running:
-```
+```shell
 [~/example]$ sapp --database-name sapp.db filter import path/to/list_of_filters
 ```
 
 ### Deleting filters
 You can delete filters by name with:
-```
+```shell
 [~/example]$ sapp --database-name sapp.db filter delete "filter name 1" "filter name 2" "filter name 3"
 ```
 
 ### Filtering list of issues
 You can apply a filter to a list of issues by run number. For example, the following command will show you a list of issues after applying `example-filter` to run `1`:
-```
+```shell
 [~/example]$ sapp --database-name sapp.db filter issues 1 example-filter.json
 ```
 
 You can also apply a list of filters to a single list of issues by run number. SAPP will apply each filter individually from the directory you specify to the list of issues and merge results into a single list of issues to show you. For example, the following command will show you a list of issues after applying every filter in `list_of_filters` to run `1`:
-```
+```shell
 [~/example]$ sapp --database-name sapp.db filter issues 1 path/to/list_of_filters
 ```
 
 
 ## Development Environment Setup
 Start by cloning the repo and setting up a virtual environment:
-```
+```shell
 $ git clone git@github.com:facebook/sapp.git && cd sapp
 $ python3 -m venv ~/.venvs/sapp
 $ source ~/.venvs/sapp/bin/activate
@@ -260,24 +260,24 @@ $ source ~/.venvs/sapp/bin/activate
 ```
 
 Run the flask server:
-```
+```shell
 (sapp) $ python3 -m sapp.cli server
 ```
 
 Parse static analysis output and save to disk:
-```
+```shell
 (sapp) $ python3 -m sapp.cli analyze taint-output.json
 ```
 
 If you make any changes to files under `sapp/ui/frontend/*`, you will need to run `npm install` once to install dependencies and `npm run-script build` each time you make changes before running the flask server to see the changes you made reflected:
 
 Installing dependencies:
-```
+```shell
 (sapp) $ cd sapp/ui/frontend && npm install
 ```
 
 Build static files and run the flask server:
-```
+```shell
 (sapp) $ cd sapp/ui/frontend && npm run-script build
 (sapp) $ python3 -m sapp.cli server --debug
 ```
