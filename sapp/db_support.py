@@ -113,6 +113,7 @@ class DBID(object):
 
 class DBIDType(types.TypeDecorator):
     impl = types.Integer
+    cache_ok = False
 
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.

@@ -75,6 +75,7 @@ attributes like the status of an issue.
 
 class CaseSensitiveStringType(types.TypeDecorator):
     impl = types.String
+    cache_ok = False
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "mysql":
@@ -97,6 +98,7 @@ class SourceLocationType(types.TypeDecorator):
     """
 
     impl = types.String
+    cache_ok = False
 
     def __init__(self) -> None:
         super(SourceLocationType, self).__init__(length=255)
@@ -128,6 +130,7 @@ class SourceLocationsType(types.TypeDecorator):
     """Defines a type to store multiple source locations in a single string"""
 
     impl = types.String
+    cache_ok = False
 
     def __init__(self) -> None:
         super(SourceLocationsType, self).__init__(length=4096)
