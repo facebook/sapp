@@ -93,7 +93,7 @@ def delete_filter(session: Session, name: str) -> None:
     )
     if deleted_rows == 0:
         raise EmptyDeletionError(f'No filter with `name` "{name}" exists.')
-    LOG.debug(f"Deleting {name}")
+    LOG.info(f"Deleting {name}")
     session.commit()
 
 
@@ -121,7 +121,7 @@ def import_filter_from_path(database: DB, input_filter_path: Path) -> None:
         with session.begin_nested():
             for record in imported_filterrecords:
                 session.merge(record)
-                LOG.debug(f"`{record.name}` filter has been imported")
+                LOG.info(f"`{record.name}` filter has been imported")
         try:
             session.commit()
         except sqlalchemy.exc.DatabaseError:
@@ -184,6 +184,6 @@ def filter_run(
             for issue in query_result:
                 query_results.add(issue)
 
-        LOG.debug(f"Number of issues after filtering: {len(query_results)}")
+        LOG.info(f"Number of issues after filtering: {len(query_results)}")
         issues_json = [issue.to_json() for issue in query_results]
         print(json.dumps(issues_json, indent=2))
