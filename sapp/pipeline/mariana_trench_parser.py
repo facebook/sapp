@@ -48,97 +48,6 @@ def _upper_camel_case_to_snake_case(string: str) -> str:
     return re.sub("([a-z])([A-Z])", "\\1_\\2", string).lower()
 
 
-class CanonicalNames:
-    class JavaMethod:
-        class_package: str
-        class_name: str
-        method_name: str
-        type_string: str
-
-        def __init__(
-            self,
-            class_package: str,
-            class_name: str,
-            method_name: str,
-            type_string: str,
-        ) -> None:
-            self.class_package = class_package
-            self.class_name = class_name
-            self.method_name = method_name
-            self.type_string = type_string
-
-        _prototype_regex: Pattern[str] = re.compile("L(.+)/([^/;]+);\\.([^:]+):(.+)")
-
-        @classmethod
-        def parse_from_prototype(
-            cls, prototype_string: str
-        ) -> Optional["CanonicalNames.JavaMethod"]:
-            match_data = cls._prototype_regex.match(prototype_string)
-
-            if match_data is None:
-                return None
-            else:
-                return CanonicalNames.JavaMethod(
-                    match_data[1], match_data[2], match_data[3], match_data[4]
-                )
-
-    @staticmethod
-    def mariana_trench_canonicalize_name(method_prototype: str) -> str:
-        method_parsed: Optional[
-            CanonicalNames.JavaMethod
-        ] = CanonicalNames.JavaMethod.parse_from_prototype(method_prototype)
-
-        if method_parsed is None:
-            LOG.warning(
-                f"Attempting to canonicalize Java method prototype {method_prototype} "
-                "as connection point. This likely occurred because a leaf marked as "
-                "a connection point had parameter overrides."
-            )
-            return method_prototype
-
-        if method_parsed.class_package == configuration.GRAPHQL_PACKAGE:
-            ### GraphQL mutation
-
-            if not method_parsed.method_name.startswith("set"):
-                LOG.error(
-                    f"Non-setter method {method_parsed.method_name} "
-                    "of GraphQL mutation {method_parsed.class_name} "
-                    "marked as connection point; don't know how to "
-                    "canonicalize name."
-                )
-                return method_prototype
-
-            mutation_name = method_parsed.class_name
-            field_name = _upper_camel_case_to_snake_case(
-                method_parsed.method_name[len("set") :]
-            )
-
-            return f"{mutation_name}:{field_name}"
-        elif (
-            method_parsed.class_package == configuration.STRUCTURED_LOGGER_PACKAGE
-            and not method_parsed.class_name.endswith("Impl")
-        ):
-            #### Structured logggers
-
-            if not method_parsed.method_name.startswith("set"):
-                LOG.error(
-                    f"Non-setter method {method_parsed.method_name} "
-                    "of structured logger {method_parsed.class_name} "
-                    "marked as connection point; don't know how to "
-                    "canonicalize name."
-                )
-                return method_prototype
-
-            event_name = method_parsed.class_name
-            field_name = _upper_camel_case_to_snake_case(
-                method_parsed.method_name[len("set") :]
-            )
-
-            return f"{event_name}:{field_name}"
-        else:
-            return method_prototype
-
-
 class Method(NamedTuple):
     name: str
 
@@ -188,7 +97,10 @@ class Port(NamedTuple):
         elif elements[0] == "return":
             elements[0] = "result"
         elif elements[0] == "anchor":
-            return Port("%s:%s" % (elements[0], ".".join(elements[1:])))
+            canonical_port = Port.from_json(
+                ".".join(elements[1:]), "unreachable_leaf_kind"
+            )
+            return Port("%s:%s" % (elements[0], canonical_port.value))
         elif elements[0] == "producer" and len(elements) >= 4:
             # Producer port is of the form Producer:<producer_id>:<canonical_port>:<canonical_name>
             port_match = re.search("Argument\\((-?\\d+)\\)", elements[2])
@@ -483,48 +395,44 @@ class Parser(BaseParser):
         leaves = set()
 
         for frame in frames:
-            frame = Parser._normalize_frame(frame, callable)
-            conditions.append(
-                IssueCondition(
-                    callee=Call.from_json(
-                        method=frame.get("callee"),
-                        port=frame["callee_port"],
-                        position=frame.get("call_position"),
-                        default_position=callable_position,
-                        leaf_kind=leaf_kind,
-                    ),
-                    kind=frame["kind"],
-                    distance=frame.get("distance", 0),
-                    local_positions=LocalPositions.from_json(
-                        frame.get("local_positions", []), callable
-                    ),
-                    features=Features.from_json(frame.get("local_features", {})),
-                )
-            )
-
-            for origin in frame.get("origins", []):
-                leaves.add(
-                    Leaf(
-                        method=Method.from_json(origin),
+            frames = Parser._normalize_frame(frame, callable)
+            for frame in frames:
+                conditions.append(
+                    IssueCondition(
+                        callee=Call.from_json(
+                            method=frame.get("callee"),
+                            port=frame["callee_port"],
+                            position=frame.get("call_position"),
+                            default_position=callable_position,
+                            leaf_kind=leaf_kind,
+                        ),
                         kind=frame["kind"],
                         distance=frame.get("distance", 0),
+                        local_positions=LocalPositions.from_json(
+                            frame.get("local_positions", []), callable
+                        ),
+                        features=Features.from_json(frame.get("local_features", {})),
                     )
                 )
+
+                for origin in frame.get("origins", []):
+                    leaves.add(
+                        Leaf(
+                            method=Method.from_json(origin),
+                            kind=frame["kind"],
+                            distance=frame.get("distance", 0),
+                        )
+                    )
 
         return conditions, leaves
 
     @staticmethod
-    def _normalize_frame(frame: Dict[str, Any], caller: Method) -> Dict[str, Any]:
-        # Handle cross-repository taint exchange.
-        if str.startswith(frame["callee_port"], "Anchor"):
-            frame["callee"] = CanonicalNames.mariana_trench_canonicalize_name(
-                caller.name
-            )
-            frame["callee_port"] += "."
-            frame["callee_port"] += Port.from_json(
-                frame["caller_port"], leaf_kind=""
-            ).value
-        elif str.startswith(frame["callee_port"], "Producer"):
+    def _normalize_legacy_frame(
+        frame: Dict[str, Any], caller: Method
+    ) -> Dict[str, Any]:
+        # Handle cross-repository taint exchange for consumers.
+        # TODO(T90249898): Update consumers to specify models using the new "canonical_names" field.
+        if str.startswith(frame["callee_port"], "Producer"):
             # Currently the Producer port is of the form
             # Producer.<producer_id>.<canonical_port>.<canonical_name>,
             # so we get the canonical name from it
@@ -534,56 +442,79 @@ class Parser(BaseParser):
 
         return frame
 
+    @staticmethod
+    def _normalize_frame(frame: Dict[str, Any], caller: Method) -> List[Dict[str, Any]]:
+        if "canonical_names" not in frame:
+            return [Parser._normalize_legacy_frame(frame, caller)]
+
+        frames = []
+        # Expected format: "canonical_names": [ { "instantiated": "<name>" }, ... ]
+        # Canonical names are used for CRTEX only, and are expected to be the callee name
+        # where traces are concerened. Each instantiated name maps to one frame.
+        for canonical_name in frame["canonical_names"]:
+            if "instantiated" not in canonical_name:
+                # Uninstantiated canonical names are user-defined CRTEX leaves
+                # They do not show up as a frame in the UI.
+                continue
+
+            frame_copy = frame.copy()  # Shallow copy is ok, only "callee" is different.
+            frame_copy["callee"] = canonical_name["instantiated"]
+            frames.append(frame_copy)
+
+        return frames
+
     def _parse_precondition(self, model: Dict[str, Any]) -> Iterable[Precondition]:
         caller = Method.from_json(model["method"])
         caller_position = Position.from_json(model["position"], caller)
 
         for sink in model.get("sinks", []):
-            sink = Parser._normalize_frame(sink, caller)
-            yield Precondition(
-                caller=Call(
-                    method=caller,
-                    port=Port.from_json(sink["caller_port"], "sink"),
-                    position=caller_position,
-                ),
-                callee=Call.from_json(
-                    method=sink.get("callee"),
-                    port=sink["callee_port"],
-                    position=sink.get("call_position"),
-                    default_position=caller_position,
-                    leaf_kind="sink",
-                ),
-                kind=sink["kind"],
-                distance=sink.get("distance", 0),
-                local_positions=LocalPositions.from_json(
-                    sink.get("local_positions", []), caller
-                ),
-                features=Features.from_json(sink.get("local_features", {})),
-            )
+            sinks = Parser._normalize_frame(sink, caller)
+            for sink in sinks:
+                yield Precondition(
+                    caller=Call(
+                        method=caller,
+                        port=Port.from_json(sink["caller_port"], "sink"),
+                        position=caller_position,
+                    ),
+                    callee=Call.from_json(
+                        method=sink.get("callee"),
+                        port=sink["callee_port"],
+                        position=sink.get("call_position"),
+                        default_position=caller_position,
+                        leaf_kind="sink",
+                    ),
+                    kind=sink["kind"],
+                    distance=sink.get("distance", 0),
+                    local_positions=LocalPositions.from_json(
+                        sink.get("local_positions", []), caller
+                    ),
+                    features=Features.from_json(sink.get("local_features", {})),
+                )
 
     def _parse_postconditions(self, model: Dict[str, Any]) -> Iterable[Postcondition]:
         caller = Method.from_json(model["method"])
         caller_position = Position.from_json(model["position"], caller)
 
         for generation in model.get("generations", []):
-            generation = Parser._normalize_frame(generation, caller)
-            yield Postcondition(
-                caller=Call(
-                    method=caller,
-                    port=Port.from_json(generation["caller_port"], "source"),
-                    position=caller_position,
-                ),
-                callee=Call.from_json(
-                    method=generation.get("callee"),
-                    port=generation["callee_port"],
-                    position=generation.get("call_position"),
-                    default_position=caller_position,
-                    leaf_kind="source",
-                ),
-                kind=generation["kind"],
-                distance=generation.get("distance", 0),
-                local_positions=LocalPositions.from_json(
-                    generation.get("local_positions", []), caller
-                ),
-                features=Features.from_json(generation.get("local_features", {})),
-            )
+            generations = Parser._normalize_frame(generation, caller)
+            for generation in generations:
+                yield Postcondition(
+                    caller=Call(
+                        method=caller,
+                        port=Port.from_json(generation["caller_port"], "source"),
+                        position=caller_position,
+                    ),
+                    callee=Call.from_json(
+                        method=generation.get("callee"),
+                        port=generation["callee_port"],
+                        position=generation.get("call_position"),
+                        default_position=caller_position,
+                        leaf_kind="source",
+                    ),
+                    kind=generation["kind"],
+                    distance=generation.get("distance", 0),
+                    local_positions=LocalPositions.from_json(
+                        generation.get("local_positions", []), caller
+                    ),
+                    features=Features.from_json(generation.get("local_features", {})),
+                )

@@ -792,7 +792,8 @@ class TestParser(unittest.TestCase):
                   "distance": 0,
                   "kind": "TestSink",
                   "caller_port": "Argument(1)",
-                  "callee_port": "Anchor"
+                  "callee_port": "Anchor:Argument(0)",
+                  "canonical_names": [ { "instantiated": "SomeMutation:some_field" } ]
                 }
               ],
               "position": {
@@ -815,7 +816,7 @@ class TestParser(unittest.TestCase):
                     titos=[],
                     leaves=[("TestSink", 0)],
                     caller_port="argument(1)",
-                    callee_port="anchor:argument(1)",
+                    callee_port="anchor:argument(0)",
                     type_interval=None,
                     features=[],
                     annotations=[],
@@ -838,7 +839,8 @@ class TestParser(unittest.TestCase):
                   "origins": [
                    "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
                   ],
-                  "callee_port": "Anchor"
+                  "callee_port": "Anchor.Return",
+                  "canonical_names": [ { "instantiated": "TestEvent:field_a" } ]
                 }
               ],
               "position": {
