@@ -15,14 +15,14 @@ def _requirements():
 
 setup(
     name="fb-sapp",
-    version="0.4.1",
+    version="0.4.2",
     description="Static Analysis Post-Processor for processing taint analysis results.",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
     install_requires=_requirements(),
     entry_points={"console_scripts": ["sapp = sapp.cli:cli"]},
     packages=find_packages(),
-    url="https://pyre-check.org/",
+    url="https://github.com/facebook/sapp",
     author="Facebook",
     maintainer_email="pyre@fb.com",
     package_data={
