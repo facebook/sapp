@@ -230,7 +230,6 @@ details              show additional information about the current trace frame
             print(self.help_message)
             return
 
-        # pyre-fixme[16]: Module `builtins` has no attribute `help`.
         builtins.help(object)
 
     def state(self) -> None:
