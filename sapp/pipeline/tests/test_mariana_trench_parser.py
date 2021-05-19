@@ -884,7 +884,8 @@ class TestParser(unittest.TestCase):
                   "origins": [
                    "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
                   ],
-                  "callee_port": "Producer.1234.Argument(1).LClass;.method:(I)V"
+                  "callee_port": "Producer.1234.Argument(2)",
+                  "canonical_names": [ { "instantiated": "LClass;.method:(I)V" }]
                 }
               ],
               "position": {

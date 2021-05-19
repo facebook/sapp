@@ -98,23 +98,19 @@ class Port(NamedTuple):
             elements[0] = "result"
         elif elements[0] == "anchor":
             canonical_port = Port.from_json(
-                ".".join(elements[1:]), "unreachable_leaf_kind"
+                ".".join(elements[1:]), "unreachable_leaf_kind_anchor"
             )
-            return Port("%s:%s" % (elements[0], canonical_port.value))
-        elif elements[0] == "producer" and len(elements) >= 4:
-            # Producer port is of the form Producer:<producer_id>:<canonical_port>:<canonical_name>
-            port_match = re.search("Argument\\((-?\\d+)\\)", elements[2])
-            if port_match:
-                # Add 1 here since we subtracted 1 when canonicalizing the port in to_crtex.py
-                index = int(port_match.group(1)) + 1
-                return Port(
-                    "%s:%s:%s"
-                    % (
-                        elements[0],
-                        elements[1],
-                        f"argument({index})",
-                    )
-                )
+            return Port(f"{elements[0]}:{canonical_port.value}")
+        elif elements[0] == "producer" and len(elements) >= 3:
+            # Producer port is of the form Producer.<producer_id>.<MT port>.
+            # SAPP/CRTEX expects: "producer:<producer_id>:<canonical_port>".
+            root = elements[0]
+            producer_id = elements[1]
+            canonical_port = Port.from_json(
+                ".".join(elements[2:]), "unreachable_leaf_kind_producer"
+            )
+            return Port(f"{root}:{producer_id}:{canonical_port.value}")
+
         return Port(".".join(elements))
 
 
@@ -395,7 +391,7 @@ class Parser(BaseParser):
         leaves = set()
 
         for frame in frames:
-            frames = Parser._normalize_frame(frame, callable)
+            frames = Parser._normalize_frame(frame)
             for frame in frames:
                 conditions.append(
                     IssueCondition(
@@ -427,25 +423,9 @@ class Parser(BaseParser):
         return conditions, leaves
 
     @staticmethod
-    def _normalize_legacy_frame(
-        frame: Dict[str, Any], caller: Method
-    ) -> Dict[str, Any]:
-        # Handle cross-repository taint exchange for consumers.
-        # TODO(T90249898): Update consumers to specify models using the new "canonical_names" field.
-        if str.startswith(frame["callee_port"], "Producer"):
-            # Currently the Producer port is of the form
-            # Producer.<producer_id>.<canonical_port>.<canonical_name>,
-            # so we get the canonical name from it
-            port_parts = frame["callee_port"].split(".", 3)
-            if len(port_parts) == 4:
-                frame["callee"] = port_parts[-1]
-
-        return frame
-
-    @staticmethod
-    def _normalize_frame(frame: Dict[str, Any], caller: Method) -> List[Dict[str, Any]]:
+    def _normalize_frame(frame: Dict[str, Any]) -> List[Dict[str, Any]]:
         if "canonical_names" not in frame:
-            return [Parser._normalize_legacy_frame(frame, caller)]
+            return [frame]
 
         frames = []
         # Expected format: "canonical_names": [ { "instantiated": "<name>" }, ... ]
@@ -468,7 +448,7 @@ class Parser(BaseParser):
         caller_position = Position.from_json(model["position"], caller)
 
         for sink in model.get("sinks", []):
-            sinks = Parser._normalize_frame(sink, caller)
+            sinks = Parser._normalize_frame(sink)
             for sink in sinks:
                 yield Precondition(
                     caller=Call(
@@ -496,7 +476,7 @@ class Parser(BaseParser):
         caller_position = Position.from_json(model["position"], caller)
 
         for generation in model.get("generations", []):
-            generations = Parser._normalize_frame(generation, caller)
+            generations = Parser._normalize_frame(generation)
             for generation in generations:
                 yield Postcondition(
                     caller=Call(
