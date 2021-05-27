@@ -29,7 +29,7 @@ from .pipeline.trim_trace_graph import TrimTraceGraph
 from .ui import filters
 from .ui.interactive import Interactive
 from .ui.server import start_server
-
+from .warning_messages import update_warning_messages
 
 MARKER_DIRECTORIES = [".pyre", ".hg", ".git", ".svn"]
 
@@ -294,7 +294,7 @@ def update_warning_codes(
     ctx: Context,
     input_metadata_file: str,
 ) -> None:
-    return
+    update_warning_messages(ctx.database, pathlib.Path(input_metadata_file))
 
 
 commands: List[Callable[[], None]] = [
