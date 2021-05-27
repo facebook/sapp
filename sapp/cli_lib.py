@@ -279,9 +279,28 @@ def filter_issues(
     filters.filter_run(ctx.database, run_id, pathlib.Path(input_filter_path))
 
 
+@click.group()
+def update() -> None:
+    pass
+
+
+@update.command(
+    name="warning-codes",
+    help="Parse static analysis metadata output and update warning codes in SAPP db",
+)
+@argument("input_metadata_file", type=Path(exists=True, readable=True))
+@pass_context
+def update_warning_codes(
+    ctx: Context,
+    input_metadata_file: str,
+) -> None:
+    return
+
+
 commands: List[Callable[[], None]] = [
     analyze,
     explore,
     server,
     filter,
+    update,
 ]
