@@ -72,6 +72,10 @@ function parseRanges(
       // TODO(T78595608): remove temporary workaround for Pysa inverting locations.
       [begin, end] = [end, begin];
     }
+    // If the highlight is empty and the line is in range, then highlight the whole line
+    if (begin === end && end === 1 && line >= 0 && line < lines.length) {
+      end = lines[line].length;
+    }
 
     return adjustRange(
       {
@@ -160,10 +164,7 @@ function Source(
   if (error) {
     content = (
       <Tooltip title={error.toString()}>
-        <Alert
-          message={`No file found for ${props.path}`}
-          type="info"
-        />
+        <Alert message={`No file found for ${props.path}`} type="info" />
       </Tooltip>
     );
   } else if (loading) {
