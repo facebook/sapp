@@ -12,6 +12,7 @@ from typing import Optional
 from ..bulk_saver import BulkSaver
 from ..models import (
     DBID,
+    FrameReachability,
     Issue,
     IssueDBID,
     IssueInstance,
@@ -107,6 +108,7 @@ class FakeObjectGenerator:
             type_interval_lower=5,
             type_interval_upper=7,
             preserves_type_context=False,
+            reachability=FrameReachability.UNREACHABLE,
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
@@ -149,6 +151,7 @@ class FakeObjectGenerator:
             type_interval_lower=5,
             type_interval_upper=7,
             preserves_type_context=False,
+            reachability=FrameReachability.UNREACHABLE,
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)

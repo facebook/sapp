@@ -642,6 +642,48 @@ class RunStatus(enum.Enum):
         return cls.failed
 
 
+class PurgeStatus(enum.Enum):
+    "Internal purge status of a run"
+
+    # Do NOT reorder the enums. Depending on the type of database, existing
+    # DBs may have these enums represented internally as ints based on the
+    # order shown here, and changing it here messes up existing data. This
+    # also means that new enums should be added AT THE END of the list.
+    unpurged = enum.auto()
+    purged = enum.auto()
+
+    @classproperty
+    def UNPURGED(cls) -> str:
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.unpurged
+
+    @classproperty
+    def PURGED(cls) -> str:
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.purged
+
+
+class FrameReachability(enum.Enum):
+    "Internal reachability status of a trace frame"
+
+    # Do NOT reorder the enums. Depending on the type of database, existing
+    # DBs may have these enums represented internally as ints based on the
+    # order shown here, and changing it here messes up existing data. This
+    # also means that new enums should be added AT THE END of the list.
+    unreachable = enum.auto()
+    reachable = enum.auto()
+
+    @classproperty
+    def UNREACHABLE(cls) -> str:
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.unreachable
+
+    @classproperty
+    def REACHABLE(cls) -> str:
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.reachable
+
+
 CURRENT_DB_VERSION = 1
 
 
@@ -669,12 +711,12 @@ class Run(Base):  # noqa
     )
 
     revision_id: Column[Optional[int]] = Column(
-        Integer, doc="Differential revision (DXXXXXX)", nullable=True, index=True
+        Integer, doc="Phabricator Diff number (DXXXXXX)", nullable=True, index=True
     )
 
     differential_id: Column[Optional[int]] = Column(
         Integer,
-        doc="Differential diff (instance of revision)",
+        doc="Phabricator Version number",
         nullable=True,
         index=True,
     )
@@ -726,6 +768,14 @@ class Run(Base):  # noqa
         nullable=False,
         default=CURRENT_DB_VERSION,
         server_default="0",
+    )
+
+    purge_status: Column[str] = Column(
+        Enum(PurgeStatus),
+        server_default="unpurged",
+        nullable=False,
+        doc="Tracks whether Internal deletion jobs have purged unnecessary issue instances "
+        + "and trace frames from this run. Should NOT be set to anything but the default in SAPP code.",
     )
 
     def get_summary(self, **kwargs) -> RunSummary:
@@ -1005,6 +1055,14 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):  # noqa
         doc="Locations of TITOs aka abductions for the trace frame",
         nullable=False,
         server_default="",
+    )
+
+    reachability: Column[str] = Column(
+        Enum(FrameReachability),
+        server_default="unreachable",
+        nullable=False,
+        doc="Reachability of this trace frame, for deletion purposes. "
+        + "Is set by internal jobs and should NOT be set to anything but the default in SAPP code.",
     )
 
     annotations = relationship(

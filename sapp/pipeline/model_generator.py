@@ -14,11 +14,13 @@ import ujson as json
 
 from ..models import (
     DBID,
+    FrameReachability,
     Issue,
     IssueDBID,
     IssueInstance,
     IssueInstanceFixInfo,
     IssueStatus,
+    PurgeStatus,
     Run,
     RunStatus,
     SharedText,
@@ -110,6 +112,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             branch=self.summary["branch"],
             commit_hash=self.summary["commit_hash"],
             kind=self.summary["run_kind"],
+            purge_status=PurgeStatus.UNPURGED,
         )
         return run
 
@@ -431,6 +434,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             type_interval_lower=lb,
             type_interval_upper=ub,
             leaf_mapping=leaf_mapping_ids,
+            reachability=FrameReachability.UNREACHABLE,
         )
 
         for (leaf_record, depth) in leaf_records:
