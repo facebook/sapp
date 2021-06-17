@@ -78,8 +78,21 @@ def all_filters(session: Session) -> List[Filter]:
 
 
 def save_filter(session: Session, filter: Filter) -> None:
-    LOG.debug(f"Storing {filter}")
-    session.add(FilterRecord.from_filter(filter))
+
+    existing = (
+        session.query(FilterRecord).filter(FilterRecord.name == filter.name).first()
+    )
+
+    if not existing:
+        session.add(FilterRecord.from_filter(filter))
+        LOG.debug(f"Adding {filter}")
+    else:
+        # pyre-ignore [8]: `graphene.String` is not compatible with `str`
+        existing.description = filter.description
+        # pyre-ignore [8]: `graphene.String` is not compatible with `str`
+        existing.json = filter.json
+        LOG.debug(f"Updating {filter}")
+
     session.commit()
 
 
