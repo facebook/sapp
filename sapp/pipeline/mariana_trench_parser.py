@@ -85,6 +85,12 @@ class Port(NamedTuple):
         )
 
     @staticmethod
+    def to_crtex(port: str) -> str:
+        """Converts 'argument(n)' to 'formal(n)'. Other CRTEX tools use 'formal'
+        to denote argument positions."""
+        return re.sub(r"argument\((-?\d+)\)", r"formal(\1)", port)
+
+    @staticmethod
     def from_json(port: str, leaf_kind: str) -> "Port":
         elements = port.split(".")
 
@@ -97,10 +103,12 @@ class Port(NamedTuple):
         elif elements[0] == "return":
             elements[0] = "result"
         elif elements[0] == "anchor":
+            # Anchor port is of the form Anchor.<MT port, e.g. Argument(0)>
+            # SAPP/CRTEX expects: "anchor:formal(0)"
             canonical_port = Port.from_json(
                 ".".join(elements[1:]), "unreachable_leaf_kind_anchor"
             )
-            return Port(f"{elements[0]}:{canonical_port.value}")
+            return Port(f"{elements[0]}:{Port.to_crtex(canonical_port.value)}")
         elif elements[0] == "producer" and len(elements) >= 3:
             # Producer port is of the form Producer.<producer_id>.<MT port>.
             # SAPP/CRTEX expects: "producer:<producer_id>:<canonical_port>".
@@ -109,7 +117,7 @@ class Port(NamedTuple):
             canonical_port = Port.from_json(
                 ".".join(elements[2:]), "unreachable_leaf_kind_producer"
             )
-            return Port(f"{root}:{producer_id}:{canonical_port.value}")
+            return Port(f"{root}:{producer_id}:{Port.to_crtex(canonical_port.value)}")
 
         return Port(".".join(elements))
 

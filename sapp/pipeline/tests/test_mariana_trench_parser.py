@@ -792,7 +792,7 @@ class TestParser(unittest.TestCase):
                   "distance": 0,
                   "kind": "TestSink",
                   "caller_port": "Argument(1)",
-                  "callee_port": "Anchor:Argument(0)",
+                  "callee_port": "Anchor.Argument(0)",
                   "canonical_names": [ { "instantiated": "SomeMutation:some_field" } ]
                 }
               ],
@@ -816,7 +816,49 @@ class TestParser(unittest.TestCase):
                     titos=[],
                     leaves=[("TestSink", 0)],
                     caller_port="argument(1)",
-                    callee_port="anchor:argument(0)",
+                    callee_port="anchor:formal(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+        self.assertParsed(
+            """
+            {
+              "method": {
+                "name": "Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V"
+              },
+              "sinks": [
+                {
+                  "distance": 0,
+                  "kind": "TestSink",
+                  "caller_port": "Argument(1)",
+                  "callee_port": "Anchor.Argument(-1)",
+                  "canonical_names": [ { "instantiated": "SomeMutation:some_field" } ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "SomeMutation.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
+                    callee="SomeMutation:some_field",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="SomeMutation.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1)",
+                    callee_port="anchor:formal(-1)",
                     type_interval=None,
                     features=[],
                     annotations=[],
@@ -908,7 +950,7 @@ class TestParser(unittest.TestCase):
                     titos=[],
                     leaves=[("TestSource", 0)],
                     caller_port="result",
-                    callee_port="producer:1234:argument(2)",
+                    callee_port="producer:1234:formal(2)",
                     type_interval=None,
                     features=[],
                     annotations=[],
