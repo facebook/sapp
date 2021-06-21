@@ -170,8 +170,8 @@ class Parser(BaseParser):
     @log_trace_keyerror_in_generator
     def _parse_model(self, json: Dict[str, Any]) -> Iterable[ParseConditionTuple]:
         callable = json["callable"]
-        yield from self._parse_model_sources(callable, json["sources"])
-        yield from self._parse_model_sinks(callable, json["sinks"])
+        yield from self._parse_model_sources(callable, json.get("sources", []))
+        yield from self._parse_model_sinks(callable, json.get("sinks", []))
 
     def _parse_model_sources(
         self, callable: str, source_traces: List[Dict[str, Any]]
