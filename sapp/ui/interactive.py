@@ -109,7 +109,7 @@ leaves               list all leaves of issues for the selected run
 show                 show info about selected issue or trace frame
 
 == Selection commands ==
-analysis_output DIR  sets the location of the analysis output
+analysis_output DIRS sets the location of the analysis output
 run ID               select a specific run for browsing issues
 latest_run KIND      sets run to the latest of the specified kind
 issue ID             select a specific issue for browsing a trace
@@ -317,20 +317,22 @@ details              show additional information about the current trace frame
 
     @catch_keyboard_interrupt()
     @catch_user_error()
-    def analysis_output(self, location: Optional[str] = None) -> None:
+    def analysis_output(self, locations: Optional[List[str]] = None) -> None:
         """Sets the location of the output from the static analysis tool.
 
         Parameters:
-            location: str   Filesystem location for the results.
+            locations: List[str]   Filesystem locations for the results.
         """
         try:
-            if not location:
-                location = self.prompt(
-                    "Analysis results: ",
-                    history_key="analysis_results",
-                    completer=PathCompleter(),
-                )
-            self.current_analysis_output = AnalysisOutput.from_str(location)
+            if not locations:
+                locations = [
+                    self.prompt(
+                        "Analysis results: ",
+                        history_key="analysis_results",
+                        completer=PathCompleter(),
+                    )
+                ]
+            self.current_analysis_output = AnalysisOutput.from_strs(locations)
         except AnalysisOutputError as e:
             raise UserError(f"Error loading results: {e}")
 
