@@ -864,6 +864,10 @@ class MetaRun(Base):  # noqa
         default=CURRENT_DB_VERSION,
     )
 
+    status: Column[str] = Column(
+        Enum(RunStatus), server_default="finished", nullable=False, index=True
+    )
+
 
 class RunSummary:
     def __init__(
