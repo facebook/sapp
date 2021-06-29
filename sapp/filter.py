@@ -84,7 +84,6 @@ class Filter:
         for filtering_condition in features or []:
             feature_entry = {}
             feature_entry["mode"] = filtering_condition.mode
-            # pyre-ignore [6] You can use list() to convert graphene.List to Python list
             feature_entry["features"] = list(filtering_condition.features)
             restructured_features.append(feature_entry)
 

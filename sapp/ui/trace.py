@@ -244,7 +244,12 @@ def navigate_trace_frames(
                 or trace_frame.kind == TraceKind.PRECONDITION
             )
         next_nodes = next_frames(
-            session, trace_frame, leaf_kind, visited_ids, leaf_lookup=leaf_lookup
+            session,
+            trace_frame,
+            # pyre-fixme[61]: `leaf_kind` may not be initialized here.
+            leaf_kind,
+            visited_ids,
+            leaf_lookup=leaf_lookup,
         )
 
         if len(next_nodes) == 0:

@@ -851,6 +851,7 @@ details              show additional information about the current trace frame
             parent_trace_frames = trace.next_frames(
                 session,
                 current_trace_tuple.trace_frame,
+                # pyre-fixme[61]: `leaf_kind` may not be initialized here.
                 leaf_kind,
                 set(),
                 self._current_run_id,
@@ -1199,6 +1200,7 @@ details              show additional information about the current trace frame
         return trace.next_frames(
             session,
             parent_trace_frame,
+            # pyre-fixme[61]: `leaf_kind` may not be initialized here.
             leaf_kind,
             set(),
             self._current_run_id,

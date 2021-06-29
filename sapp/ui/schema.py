@@ -190,6 +190,7 @@ class Query(graphene.ObjectType):
         return trace.next_frames(
             session,
             trace_frame,
+            # pyre-fixme[61]: `leaf_kind` may not be initialized here.
             leaf_kind,
             visited_ids=set(),
         )
