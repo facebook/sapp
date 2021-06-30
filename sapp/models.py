@@ -643,19 +643,31 @@ class RunStatus(enum.Enum):
 
 
 class PurgeStatus(enum.Enum):
-    "Internal purge status of a run"
+    "Purge status of a run"
 
     # Do NOT reorder the enums. Depending on the type of database, existing
     # DBs may have these enums represented internally as ints based on the
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
+
+    # Run has not been touched by purging automation
     unpurged = enum.auto()
+    # Issue instances associated with an untriaged issue have been deleted
+    # Trace frames marked as UNREACHABLE have been deleted
     purged = enum.auto()
+    # Trace frames not reachable by an issue instance whose issue is triaged have been
+    # marked UNREACHABLE.
+    ready_to_purge = enum.auto()
 
     @classproperty
     def UNPURGED(cls) -> str:
         # pyre-ignore[7]: Coerce to string for SQLAlchemy
         return cls.unpurged
+
+    @classproperty
+    def READY_TO_PURGE(cls) -> str:
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.ready_to_purge
 
     @classproperty
     def PURGED(cls) -> str:
