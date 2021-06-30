@@ -81,7 +81,7 @@ class DB(object):
             self.close_session(session)
 
     @retryable(num_tries=2, retryable_exs=[OperationalError])
-    def make_session_object(self, *args: Any, **kwargs: Any) -> None:
+    def make_session_object(self, *args: Any, **kwargs: Any) -> Session:
         # use scoped_session so sessionmaker generates the same session in
         # different threads. This is useful for UTs.
         session = scoped_session(sessionmaker(bind=self.engine))(*args, **kwargs)

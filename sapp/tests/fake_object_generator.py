@@ -17,6 +17,7 @@ from ..models import (
     IssueDBID,
     IssueInstance,
     IssueInstanceFixInfo,
+    IssueStatus,
     Run,
     SharedText,
     SharedTextKind,
@@ -52,6 +53,7 @@ class FakeObjectGenerator:
         callable="lib.server.posts.request.new_post_request",
         handle=None,
         code=None,
+        status=IssueStatus.UNCATEGORIZED,
     ):
         self.handle += 1
         now = datetime.datetime.now()
@@ -68,6 +70,7 @@ class FakeObjectGenerator:
             line=1,
             start=1,
             end=2,
+            status=status,
         )
         if self.graph:
             self.graph.add_issue(result)
@@ -84,6 +87,7 @@ class FakeObjectGenerator:
         filename="lib/server/posts/request.py",
         location=(4, 5, 6),
         leaves=None,
+        reachability=FrameReachability.UNREACHABLE,
     ):
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -108,7 +112,7 @@ class FakeObjectGenerator:
             type_interval_lower=5,
             type_interval_upper=7,
             preserves_type_context=False,
-            reachability=FrameReachability.UNREACHABLE,
+            reachability=reachability,
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
