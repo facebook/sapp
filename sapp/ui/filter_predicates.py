@@ -107,11 +107,45 @@ class HasAll(IssuePredicate):
 
 
 class HasAny(IssuePredicate):
-    def __init__(self, features: Set[str]) -> None:
-        self._features = features
+    def __init__(
+        self, parameter_list: Set[str], parameter_type: str = "features"
+    ) -> None:
+        self._parameter_list = parameter_list
+        self._parameter_type = parameter_type
 
     def apply(self, issues: List[IssueQueryResult]) -> List[IssueQueryResult]:
-        return [issue for issue in issues if len(issue.features & self._features) > 0]
+        if self._parameter_type == "features":
+            return [
+                issue
+                for issue in issues
+                if len(issue.features & self._parameter_list) > 0
+            ]
+        elif self._parameter_type == "source_names":
+            return [
+                issue
+                for issue in issues
+                if len(issue.source_names & self._parameter_list) > 0
+            ]
+        elif self._parameter_type == "source_kinds":
+            return [
+                issue
+                for issue in issues
+                if len(issue.source_kinds & self._parameter_list) > 0
+            ]
+        elif self._parameter_type == "sink_names":
+            return [
+                issue
+                for issue in issues
+                if len(issue.sink_names & self._parameter_list) > 0
+            ]
+        elif self._parameter_type == "sink_kinds":
+            return [
+                issue
+                for issue in issues
+                if len(issue.sink_kinds & self._parameter_list) > 0
+            ]
+        else:
+            return issues
 
 
 class HasNone(IssuePredicate):

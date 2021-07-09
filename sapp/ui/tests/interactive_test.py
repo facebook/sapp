@@ -1782,6 +1782,10 @@ class InteractiveTest(TestCase):
             min_trace_length_to_sinks=1,
             features=set(),
             is_new_issue=False,
+            source_names=None,
+            source_kinds=None,
+            sink_names=None,
+            sink_kinds=["sink1", "sink2"],
         )
         sources = []
         sinks = ["sink1", "sink2"]
@@ -1813,6 +1817,10 @@ class InteractiveTest(TestCase):
             min_trace_length_to_sinks=1,
             features=set(),
             is_new_issue=False,
+            source_names=None,
+            source_kinds=None,
+            sink_names=None,
+            sink_kinds=["sink1"],
         )
         sources = []
         sinks = ["sink1"]
@@ -1843,6 +1851,10 @@ class InteractiveTest(TestCase):
             min_trace_length_to_sinks=6,
             features=set(),
             is_new_issue=False,
+            source_names=None,
+            source_kinds=None,
+            sink_names=None,
+            sink_kinds=["sink1", "sink2"],
         )
         sources = []
         sinks = ["sink1", "sink2"]
@@ -1864,6 +1876,10 @@ class InteractiveTest(TestCase):
             min_trace_length_to_sinks=1,
             features=set(),
             is_new_issue=False,
+            source_names=None,
+            source_kinds=None,
+            sink_names=None,
+            sink_kinds=["sink1", "sink2"],
         )
         sources = []
         sinks = ["sink1", "sink2"]

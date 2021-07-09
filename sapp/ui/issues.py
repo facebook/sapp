@@ -37,7 +37,14 @@ CalleeText = aliased(SharedText)
 MessageText = aliased(SharedText)
 # pyre-fixme[5]: Global expression must be annotated.
 FeatureText = aliased(SharedText)
-
+# pyre-fixme[5]: Global expression must be annotated.
+SourceNameText = aliased(SharedText)
+# pyre-fixme[5]: Global expression must be annotated.
+SourceKindText = aliased(SharedText)
+# pyre-fixme[5]: Global expression must be annotated.
+SinkNameText = aliased(SharedText)
+# pyre-fixme[5]: Global expression must be annotated.
+SinkKindText = aliased(SharedText)
 
 # pyre-ignore[13]: unitialized class attribute
 class IssueQueryResultType(graphene.ObjectType):
@@ -108,6 +115,11 @@ class IssueQueryResult(NamedTuple):
 
     features: FrozenSet[str]
 
+    source_names: FrozenSet[str]
+    source_kinds: FrozenSet[str]
+    sink_names: FrozenSet[str]
+    sink_kinds: FrozenSet[str]
+
     @staticmethod
     # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def from_record(record: Any) -> IssueQueryResult:
@@ -125,6 +137,18 @@ class IssueQueryResult(NamedTuple):
             features=frozenset(record.concatenated_features.split(","))
             if record.concatenated_features
             else frozenset(),
+            source_names=frozenset(record.concatenated_source_names.split(","))
+            if record.concatenated_source_names
+            else frozenset(),
+            source_kinds=frozenset(record.concatenated_source_kinds.split(","))
+            if record.concatenated_source_kinds
+            else frozenset(),
+            sink_names=frozenset(record.concatenated_sink_names.split(","))
+            if record.concatenated_sink_names
+            else frozenset(),
+            sink_kinds=frozenset(record.concatenated_sink_kinds.split(","))
+            if record.concatenated_sink_kinds
+            else frozenset(),
         )
 
     def to_json(self) -> Dict[str, Union[str, int, List[str], bool]]:
@@ -136,6 +160,10 @@ class IssueQueryResult(NamedTuple):
             "code": self.code,
             "message": self.message,
             "callable": self.callable,
+            "source_names": list(self.source_names),
+            "source_kinds": list(self.source_kinds),
+            "sink_names": list(self.sink_names),
+            "sink_kinds": list(self.sink_kinds),
             "min_trace_length_to_sources": self.min_trace_length_to_sources,
             "min_trace_length_to_sinks": self.min_trace_length_to_sinks,
             "features": list(self.features),
@@ -150,6 +178,10 @@ class IssueQueryResult(NamedTuple):
                 self.code,
                 self.message,
                 self.callable,
+                self.source_names,
+                self.source_kinds,
+                self.sink_names,
+                self.sink_kinds,
                 self.filename,
                 self.location,
                 self.is_new_issue,
@@ -168,6 +200,10 @@ class IssueQueryResult(NamedTuple):
             and self.code == other.code
             and self.message == other.message
             and self.callable == other.callable
+            and self.source_names == other.source_names
+            and self.source_kinds == other.source_kinds
+            and self.sink_names == other.sink_names
+            and self.sink_kinds == other.sink_kinds
             and self.filename == other.filename
             and self.location == other.location
             and self.is_new_issue == other.is_new_issue
@@ -206,6 +242,83 @@ class Instance:
             .group_by(IssueInstance)
             .subquery()
         )
+        source_names = (
+            self._session.query(
+                IssueInstance.id.label("id"),
+                func.group_concat(SourceNameText.contents.distinct()).label(
+                    "concatenated_source_names"
+                ),
+            )
+            .join(
+                IssueInstanceSharedTextAssoc,
+                IssueInstanceSharedTextAssoc.issue_instance_id == IssueInstance.id,
+            )
+            .join(
+                SourceNameText,
+                SourceNameText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+            )
+            .filter(SourceNameText.kind == SharedTextKind.SOURCE_DETAIL)
+            .group_by(IssueInstance)
+            .subquery()
+        )
+        source_kinds = (
+            self._session.query(
+                IssueInstance.id.label("id"),
+                func.group_concat(SourceKindText.contents.distinct()).label(
+                    "concatenated_source_kinds"
+                ),
+            )
+            .join(
+                IssueInstanceSharedTextAssoc,
+                IssueInstanceSharedTextAssoc.issue_instance_id == IssueInstance.id,
+            )
+            .join(
+                SourceKindText,
+                SourceKindText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+            )
+            .filter(SourceKindText.kind == SharedTextKind.SOURCE)
+            .group_by(IssueInstance)
+            .subquery()
+        )
+        sink_names = (
+            self._session.query(
+                IssueInstance.id.label("id"),
+                func.group_concat(SinkNameText.contents.distinct()).label(
+                    "concatenated_sink_names"
+                ),
+            )
+            .join(
+                IssueInstanceSharedTextAssoc,
+                IssueInstanceSharedTextAssoc.issue_instance_id == IssueInstance.id,
+            )
+            .join(
+                SinkNameText,
+                SinkNameText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+            )
+            .filter(SinkNameText.kind == SharedTextKind.SINK_DETAIL)
+            .group_by(IssueInstance)
+            .subquery()
+        )
+        sink_kinds = (
+            self._session.query(
+                IssueInstance.id.label("id"),
+                func.group_concat(SinkKindText.contents.distinct()).label(
+                    "concatenated_sink_kinds"
+                ),
+            )
+            .join(
+                IssueInstanceSharedTextAssoc,
+                IssueInstanceSharedTextAssoc.issue_instance_id == IssueInstance.id,
+            )
+            .join(
+                SinkKindText,
+                SinkKindText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+            )
+            .filter(SinkKindText.kind == SharedTextKind.SINK)
+            .group_by(IssueInstance)
+            .subquery()
+        )
+
         query = (
             self._session.query(
                 IssueInstance.id.label("issue_instance_id"),
@@ -220,11 +333,19 @@ class Instance:
                 IssueInstance.min_trace_length_to_sources,
                 IssueInstance.min_trace_length_to_sinks,
                 features.c.concatenated_features,
+                source_names.c.concatenated_source_names,
+                source_kinds.c.concatenated_source_kinds,
+                sink_names.c.concatenated_sink_names,
+                sink_kinds.c.concatenated_sink_kinds,
             )
             .filter(IssueInstance.run_id == self._run_id)
             .join(FilenameText, FilenameText.id == IssueInstance.filename_id)
             .join(CallableText, CallableText.id == IssueInstance.callable_id)
             .join(features, IssueInstance.id == features.c.id, isouter=True)
+            .join(source_names, IssueInstance.id == source_names.c.id, isouter=True)
+            .join(source_kinds, IssueInstance.id == source_kinds.c.id, isouter=True)
+            .join(sink_names, IssueInstance.id == sink_names.c.id, isouter=True)
+            .join(sink_kinds, IssueInstance.id == sink_kinds.c.id, isouter=True)
         )
 
         for predicate in self._predicates:
@@ -276,6 +397,18 @@ class Instance:
     def where_path_is_any_of(self, paths: List[str]) -> "Instance":
         return self.where(filter_predicates.Like(FilenameText.contents, paths))
 
+    def where_source_name_is_any_of(self, source_names: List[str]) -> "Instance":
+        return self.where(filter_predicates.HasAny(set(source_names), "source_names"))
+
+    def where_source_kind_is_any_of(self, source_kinds: List[str]) -> "Instance":
+        return self.where(filter_predicates.HasAny(set(source_kinds), "source_kinds"))
+
+    def where_sink_name_is_any_of(self, sink_names: List[str]) -> "Instance":
+        return self.where(filter_predicates.HasAny(set(sink_names), "sink_names"))
+
+    def where_sink_kind_is_any_of(self, sink_kinds: List[str]) -> "Instance":
+        return self.where(filter_predicates.HasAny(set(sink_kinds), "sink_kinds"))
+
     def where_trace_length_to_sinks(
         self, minimum: Optional[int] = None, maximum: Optional[int] = None
     ) -> "Instance":
@@ -317,6 +450,27 @@ class Instance:
             .where_is_new_issue(filter_instance.is_new_issue)
         )
 
+        if (
+            filter_instance.source_names is not None
+            and len(filter_instance.source_names) > 0
+        ):
+            builder = builder.where_source_name_is_any_of(filter_instance.source_names)
+        if (
+            filter_instance.source_kinds is not None
+            and len(filter_instance.source_kinds) > 0
+        ):
+            builder = builder.where_source_kind_is_any_of(filter_instance.source_kinds)
+        if (
+            filter_instance.sink_names is not None
+            and len(filter_instance.sink_names) > 0
+        ):
+            builder = builder.where_sink_name_is_any_of(filter_instance.sink_names)
+        if (
+            filter_instance.sink_kinds is not None
+            and len(filter_instance.sink_kinds) > 0
+        ):
+            builder = builder.where_sink_kind_is_any_of(filter_instance.sink_kinds)
+
         for feature in filter_instance.format_features_for_query() or []:
             if feature[0] == "any of":
                 builder = builder.where_any_features(feature[1])
@@ -337,7 +491,7 @@ class Instance:
         )
 
     def where_any_features(self, features: List[str]) -> "Instance":
-        return self.where(filter_predicates.HasAny(set(features)))
+        return self.where(filter_predicates.HasAny(set(features), "features"))
 
     def where_all_features(self, features: List[str]) -> "Instance":
         return self.where(filter_predicates.HasAll(set(features)))

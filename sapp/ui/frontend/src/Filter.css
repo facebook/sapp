@@ -21,3 +21,15 @@
     margin-top: 20px;
     height: 120px;
 }
+
+.ant-collapse-arrow {
+    left: 0 !important;
+}
+
+.ant-collapse-header {
+    padding: 12px 16px 12px 20px !important;
+}
+
+.ant-collapse-content-box{
+    padding: 1px !important;
+}
