@@ -260,11 +260,24 @@ class DeleteFilterMutation(relay.ClientIDMutation):
         return DeleteFilterMutation()
 
 
+class DeleteRunMutation(relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID(required=True)
+
+    def mutate_and_get_payload(
+        self, info: ResolveInfo, **kwargs: Any
+    ) -> "DeleteRunMutation":
+        session = info.context.get("session")
+        run.delete_run(session, kwargs["id"])
+        return DeleteRunMutation()
+
+
 class Mutation(graphene.ObjectType):
     # pyre-fixme[4]: Attribute must be annotated.
     save_filter = SaveFilterMutation.Field()
     # pyre-fixme[4]: Attribute must be annotated.
     delete_filter = DeleteFilterMutation.Field()
+    delete_run: DeleteRunMutation = DeleteRunMutation.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

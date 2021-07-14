@@ -9,7 +9,15 @@ import graphene
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
-from ..models import DBID, Run as RunColumn, RunStatus
+from ..models import (
+    DBID,
+    IssueInstance,
+    Run as RunColumn,
+    RunStatus,
+    TraceFrame,
+    RunOrigin,
+    MetaRunToRunAssoc,
+)
 
 
 def latest(session: Session) -> DBID:
@@ -34,3 +42,18 @@ def runs(session: Session) -> List[Run]:
         .order_by(RunColumn.id.desc())
         .all()
     )
+
+
+class EmptyDeletionError(Exception):
+    pass
+
+
+def delete_run(session: Session, id: str) -> None:
+    deleted_run_rows = session.query(RunColumn).filter(RunColumn.id == id).delete()
+    if deleted_run_rows == 0:
+        raise EmptyDeletionError(f'No run with `id` "{id}" exists.')
+    session.query(IssueInstance).filter(IssueInstance.run_id == id).delete()
+    session.query(TraceFrame).filter(TraceFrame.run_id == id).delete()
+    session.query(RunOrigin).filter(RunOrigin.run_id == id).delete()
+    session.query(MetaRunToRunAssoc).filter(MetaRunToRunAssoc.run_id == id).delete()
+    session.commit()
