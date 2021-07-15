@@ -64,7 +64,8 @@ function TraceRoot(
         <Text>
           <VerticalAlignMiddleOutlined style={{marginRight: '.5em'}} />
           Source and sink traces meet at{' '}
-          <HumanReadable input={issue.callable} code />.
+          <HumanReadable input={issue.callable} code /> in {' '}
+          <HumanReadable input={issue.filename} code />.
         </Text>
         <Source path={issue.filename} location={issue.location} />
       </Card>
@@ -309,7 +310,8 @@ function Expansion(
             {issue.sources.map(leave => (
               <Tag color="green">{leave}</Tag>
             ))}
-            flowing <i>up to</i> <HumanReadable input={issue.callable} code />.
+            flowing <i>up to</i> <HumanReadable input={issue.callable} code />
+            {' '}in <HumanReadable input={issue.filename} code/>.
           </Text>
           <Divider plain>Traces</Divider>
         </>
@@ -328,7 +330,7 @@ function Expansion(
             {issue.sinks.map(leave => (
               <Tag color="red">{leave}</Tag>
             ))}
-            .
+            in <HumanReadable input={issue.filename} code/>.
           </Text>
           <Divider plain>Traces</Divider>
         </>
