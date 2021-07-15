@@ -197,7 +197,7 @@ function Source(
     content = (
       <CodeMirror
         value={source}
-        options={{lineNumbers: true, readOnly: 'nocursor'}}
+        options={{lineNumbers: true, readOnly: 'true'}}
         editorDidMount={nativeEditor => {
           editor = nativeEditor;
 

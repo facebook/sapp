@@ -51,3 +51,7 @@
 ::-webkit-resizer {
   border-bottom: 2px solid lightgray;
 }
+
+.CodeMirror-cursor {
+  display: none !important;
+}
