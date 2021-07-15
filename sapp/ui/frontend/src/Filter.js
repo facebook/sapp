@@ -14,6 +14,7 @@ import {
   Alert,
   AutoComplete,
   Checkbox,
+  Collapse,
   Divider,
   Dropdown,
   Popover,
@@ -41,6 +42,7 @@ import {Documentation} from './Documentation.js';
 
 import './Filter.css';
 
+const {Panel} = Collapse;
 const {Text} = Typography;
 
 type FeatureCondition = {
@@ -53,6 +55,10 @@ type FilterDescription = {
   description?: string,
   codes?: $ReadOnlyArray<number>,
   paths?: $ReadOnlyArray<string>,
+  source_names?: $ReadOnlyArray<string>,
+  source_kinds?: $ReadOnlyArray<string>,
+  sink_names?: $ReadOnlyArray<string>,
+  sink_kinds?: $ReadOnlyArray<string>,
   callables?: $ReadOnlyArray<string>,
   features?: $ReadOnlyArray<FeatureCondition>,
   traceLengthFromSources?: $ReadOnlyArray<number>,
@@ -166,6 +172,166 @@ const Paths = (
             style={{width: '100%'}}
             onChange={paths =>
               props.setCurrentFilter({...props.currentFilter, paths})
+            }
+          />
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+const SourceNames = (
+  props: $ReadOnly<{
+    currentFilter: FilterDescription,
+    setCurrentFilter: FilterDescription => void,
+  }>,
+): React$Node => {
+  const sourceNamesQuery = gql`
+    query SourceNames {
+      source_names {
+        edges {
+          node {
+            source_name
+          }
+        }
+      }
+    }
+  `;
+  const {data: sourceNamesData} = useQuery(sourceNamesQuery);
+  const allSourceNames = (sourceNamesData?.source_names?.edges || []).map(edge => edge.node.source_name);
+
+  return (
+    <>
+      <Label label="name" />
+      <Row gutter={gutter}>
+        <Col span={22}>
+          <Select
+            mode="multiple"
+            value={props.currentFilter.source_names}
+            options={allSourceNames.map(value => ({value}))}
+            style={{width: '100%'}}
+            onChange={source_names =>
+              props.setCurrentFilter({...props.currentFilter, source_names})
+            }
+          />
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+const SourceKinds = (
+  props: $ReadOnly<{
+    currentFilter: FilterDescription,
+    setCurrentFilter: FilterDescription => void,
+  }>,
+): React$Node => {
+  const sourceKindsQuery = gql`
+    query SourceKinds {
+      source_kinds {
+        edges {
+          node {
+            source_kind
+          }
+        }
+      }
+    }
+  `;
+  const {data: sourceKindsData} = useQuery(sourceKindsQuery);
+  const allSourceKinds = (sourceKindsData?.source_kinds?.edges || []).map(edge => edge.node.source_kind);
+
+  return (
+    <>
+      <Label label="kind" />
+      <Row gutter={gutter}>
+        <Col span={22}>
+          <Select
+            mode="multiple"
+            value={props.currentFilter.source_kinds}
+            options={allSourceKinds.map(value => ({value}))}
+            style={{width: '100%'}}
+            onChange={source_kinds =>
+              props.setCurrentFilter({...props.currentFilter, source_kinds})
+            }
+          />
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+const SinkNames = (
+  props: $ReadOnly<{
+    currentFilter: FilterDescription,
+    setCurrentFilter: FilterDescription => void,
+  }>,
+): React$Node => {
+  const sinkNamesQuery = gql`
+    query SinkNames {
+      sink_names {
+        edges {
+          node {
+            sink_name
+          }
+        }
+      }
+    }
+  `;
+  const {data: sinkNamesData} = useQuery(sinkNamesQuery);
+  const allSinkNames = (sinkNamesData?.sink_names?.edges || []).map(edge => edge.node.sink_name);
+
+  return (
+    <>
+      <Label label="name" />
+      <Row gutter={gutter}>
+        <Col span={22}>
+          <Select
+            mode="multiple"
+            value={props.currentFilter.sink_names}
+            options={allSinkNames.map(value => ({value}))}
+            style={{width: '100%'}}
+            onChange={sink_names =>
+              props.setCurrentFilter({...props.currentFilter, sink_names})
+            }
+          />
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+const SinkKinds = (
+  props: $ReadOnly<{
+    currentFilter: FilterDescription,
+    setCurrentFilter: FilterDescription => void,
+  }>,
+): React$Node => {
+  const sinkKindsQuery = gql`
+    query SinkKinds {
+      sink_kinds {
+        edges {
+          node {
+            sink_kind
+          }
+        }
+      }
+    }
+  `;
+  const {data: sinkKindsData} = useQuery(sinkKindsQuery);
+  const allSinkKinds = (sinkKindsData?.sink_kinds?.edges || []).map(edge => edge.node.sink_kind);
+
+  return (
+    <>
+      <Label label="kind" />
+      <Row gutter={gutter}>
+        <Col span={22}>
+          <Select
+            mode="multiple"
+            value={props.currentFilter.sink_kinds}
+            options={allSinkKinds.map(value => ({value}))}
+            style={{width: '100%'}}
+            onChange={sink_kinds =>
+              props.setCurrentFilter({...props.currentFilter, sink_kinds})
             }
           />
         </Col>
@@ -457,6 +623,28 @@ const FilterForm = (props: {
         currentFilter={props.currentFilter}
         setCurrentFilter={props.setCurrentFilter}
       />
+      <Collapse ghost>
+        <Panel header="Source">
+          <SourceNames
+            currentFilter={props.currentFilter}
+            setCurrentFilter={props.setCurrentFilter}
+          />
+          <SourceKinds
+            currentFilter={props.currentFilter}
+            setCurrentFilter={props.setCurrentFilter}
+          />
+        </Panel>
+        <Panel header="Sink">
+          <SinkNames
+            currentFilter={props.currentFilter}
+            setCurrentFilter={props.setCurrentFilter}
+          />
+          <SinkKinds
+            currentFilter={props.currentFilter}
+            setCurrentFilter={props.setCurrentFilter}
+          />
+        </Panel>
+      </Collapse>
       <Callables
         currentFilter={props.currentFilter}
         setCurrentFilter={props.setCurrentFilter}

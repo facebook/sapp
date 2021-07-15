@@ -63,6 +63,26 @@ class CallableConnection(relay.Connection):
         node = typeahead.Callable
 
 
+class SourceNameConnection(relay.Connection):
+    class Meta:
+        node = typeahead.SourceName
+
+
+class SourceKindConnection(relay.Connection):
+    class Meta:
+        node = typeahead.SourceKind
+
+
+class SinkNameConnection(relay.Connection):
+    class Meta:
+        node = typeahead.SinkName
+
+
+class SinkKindConnection(relay.Connection):
+    class Meta:
+        node = typeahead.SinkKind
+
+
 class FeatureConnection(relay.Connection):
     class Meta:
         node = typeahead.Feature
@@ -92,6 +112,10 @@ class Query(graphene.ObjectType):
         codes=graphene.List(graphene.Int, default_value=["%"]),
         paths=graphene.List(graphene.String, default_value=["%"]),
         callables=graphene.List(graphene.String, default_value=["%"]),
+        source_names=graphene.List(graphene.String),
+        source_kinds=graphene.List(graphene.String),
+        sink_names=graphene.List(graphene.String),
+        sink_kinds=graphene.List(graphene.String),
         features=graphene.List(FeatureCondition),
         min_trace_length_to_sinks=graphene.Int(),
         max_trace_length_to_sinks=graphene.Int(),
@@ -117,6 +141,10 @@ class Query(graphene.ObjectType):
     paths = relay.ConnectionField(PathConnection)
     callables = relay.ConnectionField(CallableConnection)
     features = relay.ConnectionField(FeatureConnection)
+    source_names = relay.ConnectionField(SourceNameConnection)
+    source_kinds = relay.ConnectionField(SourceKindConnection)
+    sink_names = relay.ConnectionField(SinkNameConnection)
+    sink_kinds = relay.ConnectionField(SinkKindConnection)
 
     file = relay.ConnectionField(FileConnection, path=graphene.String())
 
@@ -140,6 +168,10 @@ class Query(graphene.ObjectType):
         max_trace_length_to_sources: Optional[int] = None,
         issue_instance_id: Optional[int] = None,
         is_new_issue: Optional[bool] = None,
+        source_names: Optional[List[str]] = None,
+        source_kinds: Optional[List[str]] = None,
+        sink_names: Optional[List[str]] = None,
+        sink_kinds: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> List[IssueQueryResult]:
         session = get_session(info.context)
@@ -148,6 +180,11 @@ class Query(graphene.ObjectType):
             codes,
             paths,
             callables,
+            # pyre-ignore[6]: Optional, Final doesn't work
+            source_names,
+            source_kinds,
+            sink_names,
+            sink_kinds,
             features,
             min_trace_length_to_sinks,
             max_trace_length_to_sinks,
@@ -206,6 +243,22 @@ class Query(graphene.ObjectType):
     def resolve_callables(self, info: ResolveInfo) -> List[typeahead.Callable]:
         session = info.context["session"]
         return typeahead.all_callables(session)
+
+    def resolve_source_names(self, info: ResolveInfo) -> List[typeahead.SourceName]:
+        session = info.context["session"]
+        return typeahead.all_source_names(session)
+
+    def resolve_source_kinds(self, info: ResolveInfo) -> List[typeahead.SourceName]:
+        session = info.context["session"]
+        return typeahead.all_source_kinds(session)
+
+    def resolve_sink_names(self, info: ResolveInfo) -> List[typeahead.SourceName]:
+        session = info.context["session"]
+        return typeahead.all_sink_names(session)
+
+    def resolve_sink_kinds(self, info: ResolveInfo) -> List[typeahead.SourceName]:
+        session = info.context["session"]
+        return typeahead.all_sink_kinds(session)
 
     def resolve_features(self, info: ResolveInfo) -> List[typeahead.Feature]:
         session = info.context["session"]

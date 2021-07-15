@@ -35,6 +35,62 @@ def all_paths(session: Session) -> List[Path]:
     )
 
 
+class SourceName(graphene.ObjectType):
+    source_name = graphene.String()
+
+
+def all_source_names(session: Session) -> List[SourceName]:
+    return (
+        # pyre-fixme[16]: `str` has no attribute `label`
+        session.query(IssueInstance, SharedText.contents.label("source_name"))
+        .join(SharedText, SharedText.kind == SharedTextKind.SOURCE_DETAIL)
+        .group_by(SharedText)
+        .all()
+    )
+
+
+class SourceKind(graphene.ObjectType):
+    source_kind = graphene.String()
+
+
+def all_source_kinds(session: Session) -> List[SourceName]:
+    return (
+        # pyre-fixme[16]: `str` has no attribute `label`
+        session.query(IssueInstance, SharedText.contents.label("source_kind"))
+        .join(SharedText, SharedText.kind == SharedTextKind.SOURCE)
+        .group_by(SharedText)
+        .all()
+    )
+
+
+class SinkName(graphene.ObjectType):
+    sink_name = graphene.String()
+
+
+def all_sink_names(session: Session) -> List[SourceName]:
+    return (
+        # pyre-fixme[16]: `str` has no attribute `label`
+        session.query(IssueInstance, SharedText.contents.label("sink_name"))
+        .join(SharedText, SharedText.kind == SharedTextKind.SINK_DETAIL)
+        .group_by(SharedText)
+        .all()
+    )
+
+
+class SinkKind(graphene.ObjectType):
+    sink_kind = graphene.String()
+
+
+def all_sink_kinds(session: Session) -> List[SourceName]:
+    return (
+        # pyre-fixme[16]: `str` has no attribute `label`
+        session.query(IssueInstance, SharedText.contents.label("sink_kind"))
+        .join(SharedText, SharedText.kind == SharedTextKind.SINK)
+        .group_by(SharedText)
+        .all()
+    )
+
+
 class Callable(graphene.ObjectType):
     callable = graphene.String()
 
