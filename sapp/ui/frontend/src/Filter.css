@@ -33,3 +33,11 @@
 .ant-collapse-content-box{
     padding: 1px !important;
 }
+
+.ant-layout-sider{
+    background: none !important;
+}
+
+.ant-menu-submenu-title{
+    padding-left: 16px !important;
+}
