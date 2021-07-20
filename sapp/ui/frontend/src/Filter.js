@@ -38,6 +38,7 @@ import {
   SettingOutlined,
   SaveOutlined,
   DeleteOutlined,
+  ClearOutlined,
 } from '@ant-design/icons';
 import {Documentation} from './Documentation.js';
 import {statusMap} from './Issue.js';
@@ -827,6 +828,23 @@ export function loadFilter(): ?FilterDescription {
   return null;
 }
 
+export function clearFilter(
+  refetch: any = false,
+  setCurrentFilter: any = false,
+  currentFilter: FilterDescription = emptyFilter,
+): void {
+  if(!refetch) {
+    window.sessionStorage.removeItem('filter');
+  } else  {
+    setCurrentFilter(emptyFilter);
+    // workaround for https://github.com/apollographql/react-apollo/issues/3709
+    // implemented in clearAndRefetch function makes us implement this hacky
+    // solution. Otherwise, the app just keeps loading and does nothing.
+    refetch(filterToVariables(emptyFilter));
+    refetch(filterToVariables(currentFilter));
+  }
+}
+
 export function filterToVariables(filter: FilterDescription): mixed {
   const rangeValue = value => {
     if (value === 0) {
@@ -1095,6 +1113,17 @@ const Filter = (props: {
     </div>
   );
 
+  const clearButton = (
+    <Button
+      style={{width: '100%', marginTop: '10px'}}
+      icon={<ClearOutlined />}
+      onClick={() =>
+        clearFilter(props.refetch, props.setCurrentFilter, props.currentFilter)
+      }>
+        Clear Filter
+    </Button>
+  );
+
   return (
     <>
       <div style={{marginBottom: '10px'}}>
@@ -1110,6 +1139,7 @@ const Filter = (props: {
             Filter...
           </Button>
         </Popover>
+        { !filterEqual(initialFilter, emptyFilter) ? clearButton : null }
       </div>
     </>
   );
