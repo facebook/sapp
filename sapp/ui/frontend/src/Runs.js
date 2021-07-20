@@ -8,10 +8,10 @@
  * @flow
  */
 
-import React from 'react';
-import {useQuery, gql} from '@apollo/client';
+import React, {useState} from 'react';
+import {useQuery, useMutation, gql} from '@apollo/client';
 import {Breadcrumb, Card, Col, Modal, Row, Typography} from 'antd';
-import {LoadingOutlined, SyncOutlined} from '@ant-design/icons';
+import {DeleteOutlined, LoadingOutlined, SyncOutlined} from '@ant-design/icons';
 
 const {Text, Link} = Typography;
 
@@ -22,6 +22,7 @@ type RunDescription = $ReadOnly<{
 
 function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
   const gutter = [8, 8];
+  const [showRun, setShowRun] = useState(true);
 
   const Label = (props: $ReadOnly<{children: React$Node}>): React$Node => {
     return (
@@ -38,8 +39,33 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
     );
   };
 
-  return (
-    <>
+  const deleteRunMutation = gql`
+    mutation DeleteRun($id: ID!) {
+      delete_run(input: {id: $id}) {
+        clientMutationId
+      }
+    }
+  `;
+
+  const [deleteRun, {error: deleteError}] = useMutation(
+    deleteRunMutation,
+    {
+      onCompleted() {
+        setShowRun(false)
+      }
+    }
+  );
+
+  const onDelete = (): void => {
+    deleteRun({variables: {id: props.run.run_id}});
+  };
+
+  if(deleteError) {
+    Modal.error({title: 'Unable to delete run ', content: deleteError.toString()});
+  }
+
+  const contents = (
+    <Col span={8}>
       <Card
         size="small"
         title={
@@ -48,7 +74,10 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
             Run {props.run.run_id}
           </>
         }
-        extra={<Link href={`/run/${props.run.run_id}`}>Issues</Link>}>
+        extra={<Link href={`/run/${props.run.run_id}`}>Issues</Link>}
+        actions={[
+          <DeleteOutlined onClick={onDelete}/>
+        ]}>
         <Row gutter={gutter}>
           <Label>Date</Label>
           <Item>
@@ -57,6 +86,12 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
         </Row>
       </Card>
       <br />
+    </Col>
+  )
+
+  return (
+    <>
+      { showRun ? contents : null }
     </>
   );
 }
@@ -85,15 +120,17 @@ export default function Runs(props: $ReadOnly<{}>): React$Node {
   var content = null;
   if (loading) {
     content = (
-      <Card>
-        <div style={{height: '12em', textAlign: 'center', paddingTop: '5em'}}>
-          <Text type="secondary">
-            <LoadingOutlined />
-            <br />
-            Loading runs...
-          </Text>
-        </div>
-      </Card>
+      <Col span={8}>
+        <Card>
+          <div style={{height: '12em', textAlign: 'center', paddingTop: '5em'}}>
+            <Text type="secondary">
+              <LoadingOutlined />
+              <br />
+              Loading runs...
+            </Text>
+          </div>
+        </Card>
+      </Col>
     );
   }
 
@@ -106,7 +143,9 @@ export default function Runs(props: $ReadOnly<{}>): React$Node {
       <Breadcrumb style={{margin: '16px 0'}}>
         <Breadcrumb.Item>Runs</Breadcrumb.Item>
       </Breadcrumb>
-      {content}
+      <Row gutter={16}>
+        {content}
+      </Row>
     </>
   );
 }
