@@ -827,6 +827,23 @@ export function loadFilter(): ?FilterDescription {
   return null;
 }
 
+export function clearFilter(
+  refetch: any = false,
+  setCurrentFilter: any = false,
+  currentFilter: FilterDescription = emptyFilter,
+): void {
+  if(!refetch) {
+    window.sessionStorage.removeItem('filter');
+  } else  {
+    setCurrentFilter(emptyFilter);
+    // workaround for https://github.com/apollographql/react-apollo/issues/3709
+    // implemented in clearAndRefetch function makes us implement this hacky
+    // solution. Otherwise, the app just keeps loading and does nothing.
+    refetch(filterToVariables(emptyFilter));
+    refetch(filterToVariables(currentFilter));
+  }
+}
+
 export function filterToVariables(filter: FilterDescription): mixed {
   const rangeValue = value => {
     if (value === 0) {
