@@ -49,7 +49,6 @@ class ParallelParser(BaseParser):
         args = zip([(self.parser, self.repo_dirs, input.metadata)] * num_files, files)
 
         with Pool(processes=None) as pool:
-            # pyre-ignore[6]
             for idx, f in enumerate(pool.imap_unordered(parse, args)):
                 if idx % 10 == 0:
                     cur = idx + 1
