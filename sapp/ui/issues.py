@@ -18,6 +18,7 @@ from ..models import (
     Issue,
     IssueInstance,
     IssueInstanceSharedTextAssoc,
+    IssueStatus,
     SharedText,
     SharedTextKind,
     SourceLocation,
@@ -60,6 +61,7 @@ class IssueQueryResultType(graphene.ObjectType):
     message = graphene.String()
 
     callable = graphene.String()
+    status = graphene.String()
 
     filename = graphene.String()
     location = graphene.String()
@@ -104,6 +106,7 @@ class IssueQueryResult(NamedTuple):
     message: str
 
     callable: str
+    status: str
 
     filename: str
     location: SourceLocation
@@ -129,6 +132,7 @@ class IssueQueryResult(NamedTuple):
             code=record.code,
             message=record.message,
             callable=record.callable,
+            status=record.status.name.replace("_", " ").capitalize(),
             filename=record.filename,
             location=record.location,
             is_new_issue=record.is_new_issue,
@@ -160,6 +164,7 @@ class IssueQueryResult(NamedTuple):
             "code": self.code,
             "message": self.message,
             "callable": self.callable,
+            "status": self.status,
             "source_names": list(self.source_names),
             "source_kinds": list(self.source_kinds),
             "sink_names": list(self.sink_names),
@@ -178,6 +183,7 @@ class IssueQueryResult(NamedTuple):
                 self.code,
                 self.message,
                 self.callable,
+                self.status,
                 self.source_names,
                 self.source_kinds,
                 self.sink_names,
@@ -198,6 +204,7 @@ class IssueQueryResult(NamedTuple):
             self.issue_id.resolved() == other.issue_id.resolved()
             and self.issue_instance_id.resolved() == other.issue_instance_id.resolved()
             and self.code == other.code
+            and self.status == other.status
             and self.message == other.message
             and self.callable == other.callable
             and self.source_names == other.source_names
@@ -327,6 +334,7 @@ class Instance:
                 # pyre-ignore[16]: SQLAlchemy
                 Issue.id.label("issue_id"),
                 Issue.code,
+                Issue.status,
                 CallableText.contents.label("callable"),
                 MessageText.contents.label("message"),
                 IssueInstance.is_new_issue,
@@ -394,6 +402,9 @@ class Instance:
     def where_callables_is_any_of(self, callables: List[str]) -> "Instance":
         return self.where(filter_predicates.Like(CallableText.contents, callables))
 
+    def where_status_is_any_of(self, statuses: List[str]) -> "Instance":
+        return self.where(filter_predicates.Like(Issue.status, statuses))
+
     def where_path_is_any_of(self, paths: List[str]) -> "Instance":
         return self.where(filter_predicates.Like(FilenameText.contents, paths))
 
@@ -448,6 +459,7 @@ class Instance:
                 min_trace_length_to_sources, max_trace_length_to_sources
             )
             .where_is_new_issue(filter_instance.is_new_issue)
+            .where_status_is_any_of(filter_instance.statuses)
         )
 
         if (
@@ -542,3 +554,15 @@ def _get_leaves(
         )
     }
     return {leaf_lookup[id] for id in message_ids if id in leaf_lookup}
+
+
+def update_status(session: Session, id: str, status: str) -> None:
+    status_enums = {
+        "bad_practice": IssueStatus.BAD_PRACTICE,
+        "false_positive": IssueStatus.FALSE_POSITIVE,
+        "valid_bug": IssueStatus.VALID_BUG,
+        "do_not_care": IssueStatus.DO_NOT_CARE,
+        "uncategorized": IssueStatus.UNCATEGORIZED,
+    }
+    session.query(Issue).filter(Issue.id == id).update({"status": status_enums[status]})
+    session.commit()

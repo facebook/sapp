@@ -193,6 +193,7 @@ class StoredFilterTests(TestCase):
                 "codes",
                 "paths",
                 "callables",
+                "statuses",
                 "source_names",
                 "source_kinds",
                 "sink_names",

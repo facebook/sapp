@@ -28,6 +28,7 @@ class Filter:
         self.codes: List[int] = kwargs.get("codes", [])
         self.paths: List[str] = kwargs.get("paths", [])
         self.callables: List[str] = kwargs.get("callables", [])
+        self.statuses: List[str] = kwargs.get("statuses", [])
         self.source_names: List[str] = kwargs.get("source_names", [])
         self.source_kinds: List[str] = kwargs.get("source_kinds", [])
         self.sink_names: List[str] = kwargs.get("sink_names", [])
@@ -76,6 +77,7 @@ class Filter:
         codes: List[int],
         paths: List[str],
         callables: List[str],
+        statuses: List[str],
         source_names: List[str],
         source_kinds: List[str],
         sink_names: List[str],
@@ -120,6 +122,7 @@ class Filter:
             codes=codes,
             paths=paths,
             callables=callables,
+            statuses=statuses,
             source_names=source_names,
             source_kinds=source_kinds,
             sink_names=sink_names,

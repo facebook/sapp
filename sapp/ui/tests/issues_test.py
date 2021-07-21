@@ -25,7 +25,7 @@ class QueryTest(TestCase):
         self.fakes = FakeObjectGenerator()
         run = self.fakes.run()
 
-        issue1 = self.fakes.issue(code=6016)
+        issue1 = self.fakes.issue(code=6016, status="do_not_care")
         self.fakes.instance(
             issue_id=issue1.id,
             callable="module.sub.function1",
@@ -35,7 +35,7 @@ class QueryTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue2 = self.fakes.issue(code=6017)
+        issue2 = self.fakes.issue(code=6017, status="valid_bug")
         self.fakes.instance(
             issue_id=issue2.id,
             callable="module.sub.function2",
@@ -45,7 +45,7 @@ class QueryTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue3 = self.fakes.issue(code=6018)
+        issue3 = self.fakes.issue(code=6018, status="bad_practice")
         self.fakes.instance(
             issue_id=issue3.id,
             callable="module.function3",
@@ -111,6 +111,22 @@ class QueryTest(TestCase):
                 .get()
             }
             self.assertNotIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+            self.assertNotIn(3, issue_ids)
+
+    def testWhereStatus(self) -> None:
+        with self.db.make_session() as session:
+            latest_run_id = (
+                session.query(func.max(Run.id))
+                .filter(Run.status == RunStatus.FINISHED)
+                .scalar()
+            )
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_status_is_any_of(["do_not_care"]).get()
+            }
+            self.assertIn(1, issue_ids)
             self.assertNotIn(2, issue_ids)
             self.assertNotIn(3, issue_ids)
 

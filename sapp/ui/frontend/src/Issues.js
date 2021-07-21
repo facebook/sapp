@@ -55,6 +55,7 @@ const IssueQuery = gql`
     $source_kinds: [String]
     $sink_names: [String]
     $sink_kinds: [String]
+    $statuses: [String]
     $features: [FeatureCondition]
     $min_trace_length_to_sinks: Int
     $max_trace_length_to_sinks: Int
@@ -73,6 +74,7 @@ const IssueQuery = gql`
       source_kinds: $source_kinds
       sink_names: $sink_names
       sink_kinds: $sink_kinds
+      statuses: $statuses
       features: $features
       min_trace_length_to_sinks: $min_trace_length_to_sinks
       max_trace_length_to_sinks: $max_trace_length_to_sinks
@@ -93,6 +95,7 @@ const IssueQuery = gql`
           source_names
           sinks
           sink_names
+          status
           features
           is_new_issue
           min_trace_length_to_sources
