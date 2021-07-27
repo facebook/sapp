@@ -102,11 +102,11 @@ class CatchUserErrorTest(TestCase):
     @catch_user_error()
     # pyre-fixme[3]: Return type must be annotated.
     def throwsException(self):
-        raise Exception
+        raise ValueError
 
     # pyre-fixme[3]: Return type must be annotated.
     def testDoesNotCatchOtherExceptions(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.throwsException()
 
 
@@ -126,9 +126,9 @@ class CatchKeyboardInterruptTest(TestCase):
     @catch_keyboard_interrupt()
     # pyre-fixme[3]: Return type must be annotated.
     def throwsException(self):
-        raise Exception
+        raise ValueError
 
     # pyre-fixme[3]: Return type must be annotated.
     def testDoesNotCatchOtherExceptions(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.throwsException()
