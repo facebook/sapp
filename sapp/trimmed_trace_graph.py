@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from collections import Counter
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from .models import SharedTextKind, TraceFrame, TraceFrameAnnotation, TraceKind
 from .trace_graph import TraceGraph

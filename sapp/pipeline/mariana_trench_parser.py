@@ -18,7 +18,6 @@ from typing import (
     Set,
     Tuple,
     Union,
-    Pattern,
 )
 
 from .. import pipeline as sapp

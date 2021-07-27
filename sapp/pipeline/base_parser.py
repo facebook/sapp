@@ -6,7 +6,6 @@
 """Abstract Parser for Zoncolan like output"""
 
 import logging
-import os
 import pprint
 from collections import defaultdict
 from typing import (

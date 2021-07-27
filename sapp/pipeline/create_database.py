@@ -8,7 +8,6 @@ from typing import Tuple
 
 from ..db import DB
 from ..models import create as create_models
-from ..trace_graph import TraceGraph
 from . import DictEntries, PipelineStep, Summary
 
 

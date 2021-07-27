@@ -26,8 +26,6 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import TypedDict, Literal
 
-from ..analysis_output import AnalysisOutput
-
 
 # pyre-fixme[5]: Global expression must be annotated.
 log = logging.getLogger("sapp")
