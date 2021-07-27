@@ -391,8 +391,7 @@ class PipelineStep(Generic[T_in, T_out], metaclass=ABCMeta):
 
     @abstractmethod
     def run(self, input: T_in, summary: Summary) -> Tuple[T_out, Summary]:
-        assert False, "Abstract method called!"
-        pass
+        raise NotImplementedError("PipelineStep.run is abstract")
 
 
 class Pipeline(object):
