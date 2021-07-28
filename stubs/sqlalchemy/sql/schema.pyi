@@ -117,6 +117,7 @@ class Table(DialectKWArgs, SchemaItem, TableClause):  # type: ignore
     ) -> Table: ...
 
 _C = TypeVar("_C", bound=Column)
+
 @final
 class Column(SchemaItem, ColumnClause[_T]):
     __visit_name__: str = ...
