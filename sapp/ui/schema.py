@@ -5,7 +5,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional
+from typing import Any, List, Optional
 
 import graphene
 from graphene import relay
@@ -13,7 +13,7 @@ from graphene_sqlalchemy import get_session
 from graphql.execution.base import ResolveInfo
 
 from ..filter import Filter
-from ..models import DBID, IssueStatus, TraceFrame, TraceKind
+from ..models import DBID, TraceFrame, TraceKind
 from . import filters as filters_module, issues, run, trace, typeahead
 from .issues import Instance, IssueQueryResult, IssueQueryResultType, update_status
 from .trace import TraceFrameQueryResult, TraceFrameQueryResultType

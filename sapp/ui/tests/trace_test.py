@@ -7,13 +7,9 @@ import unittest
 from typing import Any, List
 from unittest import TestCase
 
-from sqlalchemy.sql import func
-
 from ...db import DB, DBType
 from ...models import (
     DBID,
-    Run,
-    RunStatus,
     SharedText,
     SharedTextKind,
     TraceFrameLeafAssoc,

@@ -20,8 +20,6 @@ from ...db import DB, DBType
 from ...decorators import UserError
 from ...models import (
     DBID,
-    Issue,
-    IssueInstance,
     IssueInstanceSharedTextAssoc,
     IssueInstanceTraceFrameAssoc,
     IssueStatus,
