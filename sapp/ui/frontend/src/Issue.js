@@ -9,11 +9,14 @@
  */
 
 import React, {useState} from 'react';
+import {useMutation, gql} from '@apollo/client';
 import {
   Card,
   Col,
+  Modal,
   Popover,
   Row,
+  Select,
   Skeleton,
   Tag,
   Tooltip,
@@ -30,6 +33,7 @@ import Source from './Source.js';
 import {Documentation} from './Documentation.js';
 import {HumanReadable} from './HumanReadable';
 
+const {Option} = Select;
 const {Text, Link} = Typography;
 
 function ShowMore(
@@ -130,10 +134,63 @@ export type IssueDescription = {
   source_names: $ReadOnlyArray<string>,
   sinks: $ReadOnlyArray<string>,
   sink_names: $ReadOnlyArray<string>,
+  status: string,
   features: $ReadOnlyArray<string>,
   min_trace_length_to_sources: number,
   min_trace_length_to_sinks: number,
   is_new_issue: boolean,
+};
+
+export const statusMap = {
+  "uncategorized": "Uncategorized",
+  "bad_practice": "Bad practice",
+  "false_positive": "False positive",
+  "valid_bug": "Valid bug",
+  "do_not_care": "Do not care",
+};
+
+const StatusSelect = (
+  props: $ReadOnly<{
+    issue_id: number,
+    status: string,
+  }>,
+): React$Node => {
+  let allStatuses = [];
+  for(let key in statusMap) {
+    allStatuses.push(<Option value={key}>{statusMap[key]}</Option>);
+  };
+
+  const updateStatusMutation = gql`
+    mutation UpdateStatus($id: ID!, $status: String!) {
+      update_status(input: {id: $id, status: $status}) {
+        clientMutationId
+      }
+    }
+  `;
+
+  const [updateStatus, {error: statusUpdateError}] = useMutation(
+    updateStatusMutation
+  );
+
+  const updateStatusFunc = (value) => {
+    updateStatus({variables: {id: props.issue_id, status: value}})
+  };
+
+  if(statusUpdateError) {
+    Modal.error({
+      title: 'Unable to update status',
+      content: statusUpdateError.toString()
+    });
+  }
+
+  return(
+    <Select
+      size='small'
+      defaultValue={props.status}
+      onChange={updateStatusFunc}>
+      {allStatuses}
+    </Select>
+  );
 };
 
 export function Issue(
@@ -187,18 +244,21 @@ export function Issue(
         <Label>Description</Label>
         <Item>{props.issue.message}</Item>
       </Row>
-      {props.issue.is_new_issue ? (
-        <Row gutter={gutter}>
-          <Label>Status</Label>
-          <Item>
-            <Tooltip title={Documentation.issues.likelyNew}>
+      <Row gutter={gutter}>
+        <Label>Status</Label>
+        <Item>
+          <Tooltip title={Documentation.issues.status}>
+            { props.issue.is_new_issue ? (
               <Tag icon={<ExclamationCircleOutlined />} color="warning">
                 likely new
               </Tag>
-            </Tooltip>
-          </Item>
-        </Row>
-      ) : null}
+            ) : null }
+            <StatusSelect
+              issue_id={props.issue.issue_id}
+              status={props.issue.status}/>
+          </Tooltip>
+        </Item>
+      </Row>
       <Row gutter={gutter}>
         <Label>Callable</Label>
         <Item>

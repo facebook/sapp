@@ -17,7 +17,6 @@ from ..models import (
     IssueDBID,
     IssueInstance,
     IssueInstanceFixInfo,
-    IssueStatus,
     Run,
     SharedText,
     SharedTextKind,
@@ -53,7 +52,7 @@ class FakeObjectGenerator:
         callable="lib.server.posts.request.new_post_request",
         handle=None,
         code=None,
-        status=IssueStatus.UNCATEGORIZED,
+        status="uncategorized",
     ):
         self.handle += 1
         now = datetime.datetime.now()

@@ -39,9 +39,11 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons';
 import {Documentation} from './Documentation.js';
+import {statusMap} from './Issue.js';
 
 import './Filter.css';
 
+const {Option} = Select;
 const {Panel} = Collapse;
 const {Text} = Typography;
 
@@ -57,6 +59,7 @@ type FilterDescription = {
   paths?: $ReadOnlyArray<string>,
   source_names?: $ReadOnlyArray<string>,
   source_kinds?: $ReadOnlyArray<string>,
+  statuses?: $ReadOnlyArray<string>,
   sink_names?: $ReadOnlyArray<string>,
   sink_kinds?: $ReadOnlyArray<string>,
   callables?: $ReadOnlyArray<string>,
@@ -334,6 +337,52 @@ const SinkKinds = (
               props.setCurrentFilter({...props.currentFilter, sink_kinds})
             }
           />
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+const Statuses = (
+  props: $ReadOnly<{
+    currentFilter: FilterDescription,
+    setCurrentFilter: FilterDescription => void,
+  }>,
+): React$Node => {
+  const statusQuery = gql`
+    query Statuses {
+      statuses {
+        edges {
+          node {
+            status
+          }
+        }
+      }
+    }
+  `;
+  const {data: statusData} = useQuery(statusQuery);
+  const allStatusOptions = (
+    statusData?.statuses?.edges || []
+  ).map(edge =>
+    edge.node.status.replace("IssueStatus.", "")
+  ).map(status =>
+    <Option value={status}>{statusMap[status]}</Option>
+  );
+
+  return (
+    <>
+      <Label label="status" />
+      <Row gutter={gutter}>
+        <Col span={22}>
+          <Select
+            mode="multiple"
+            value={props.currentFilter.statuses}
+            style={{width: '100%'}}
+            onChange={statuses =>
+              props.setCurrentFilter({...props.currentFilter, statuses})
+            }>
+            {allStatusOptions}
+          </Select>
         </Col>
       </Row>
     </>
@@ -645,6 +694,10 @@ const FilterForm = (props: {
           />
         </Panel>
       </Collapse>
+      <Statuses
+        currentFilter={props.currentFilter}
+        setCurrentFilter={props.setCurrentFilter}
+      />
       <Callables
         currentFilter={props.currentFilter}
         setCurrentFilter={props.setCurrentFilter}

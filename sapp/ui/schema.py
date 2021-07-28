@@ -13,9 +13,9 @@ from graphene_sqlalchemy import get_session
 from graphql.execution.base import ResolveInfo
 
 from ..filter import Filter
-from ..models import DBID, TraceFrame, TraceKind
+from ..models import DBID, IssueStatus, TraceFrame, TraceKind
 from . import filters as filters_module, issues, run, trace, typeahead
-from .issues import Instance, IssueQueryResult, IssueQueryResultType
+from .issues import Instance, IssueQueryResult, IssueQueryResultType, update_status
 from .trace import TraceFrameQueryResult, TraceFrameQueryResultType
 
 
@@ -83,6 +83,11 @@ class SinkKindConnection(relay.Connection):
         node = typeahead.SinkKind
 
 
+class StatusConnection(relay.Connection):
+    class Meta:
+        node = typeahead.Status
+
+
 class FeatureConnection(relay.Connection):
     class Meta:
         node = typeahead.Feature
@@ -116,6 +121,7 @@ class Query(graphene.ObjectType):
         source_kinds=graphene.List(graphene.String),
         sink_names=graphene.List(graphene.String),
         sink_kinds=graphene.List(graphene.String),
+        statuses=graphene.List(graphene.String, default_value=["%"]),
         features=graphene.List(FeatureCondition),
         min_trace_length_to_sinks=graphene.Int(),
         max_trace_length_to_sinks=graphene.Int(),
@@ -145,6 +151,7 @@ class Query(graphene.ObjectType):
     source_kinds = relay.ConnectionField(SourceKindConnection)
     sink_names = relay.ConnectionField(SinkNameConnection)
     sink_kinds = relay.ConnectionField(SinkKindConnection)
+    statuses = relay.ConnectionField(StatusConnection)
 
     file = relay.ConnectionField(FileConnection, path=graphene.String())
 
@@ -161,6 +168,7 @@ class Query(graphene.ObjectType):
         codes: List[int],
         paths: List[str],
         callables: List[str],
+        statuses: List[str],
         features: Optional[List[FeatureCondition]] = None,
         min_trace_length_to_sinks: Optional[int] = None,
         max_trace_length_to_sinks: Optional[int] = None,
@@ -180,6 +188,7 @@ class Query(graphene.ObjectType):
             codes,
             paths,
             callables,
+            statuses,
             # pyre-ignore[6]: Optional, Final doesn't work
             source_names,
             source_kinds,
@@ -260,6 +269,10 @@ class Query(graphene.ObjectType):
         session = info.context["session"]
         return typeahead.all_sink_kinds(session)
 
+    def resolve_statuses(self, info: ResolveInfo) -> List[typeahead.Status]:
+        session = info.context["session"]
+        return typeahead.all_statuses(session)
+
     def resolve_features(self, info: ResolveInfo) -> List[typeahead.Feature]:
         session = info.context["session"]
         return typeahead.all_features(session)
@@ -325,12 +338,26 @@ class DeleteRunMutation(relay.ClientIDMutation):
         return DeleteRunMutation()
 
 
+class UpdateStatusMutation(relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID(required=True)
+        status = graphene.String(required=True)
+
+    def mutate_and_get_payload(
+        self, info: ResolveInfo, **kwargs: Any
+    ) -> "UpdateStatusMutation":
+        session = info.context.get("session")
+        update_status(session, kwargs["id"], kwargs["status"])
+        return UpdateStatusMutation()
+
+
 class Mutation(graphene.ObjectType):
     # pyre-fixme[4]: Attribute must be annotated.
     save_filter = SaveFilterMutation.Field()
     # pyre-fixme[4]: Attribute must be annotated.
     delete_filter = DeleteFilterMutation.Field()
     delete_run: DeleteRunMutation = DeleteRunMutation.Field()
+    update_status: UpdateStatusMutation = UpdateStatusMutation.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

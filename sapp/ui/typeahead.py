@@ -91,6 +91,14 @@ def all_sink_kinds(session: Session) -> List[SourceName]:
     )
 
 
+class Status(graphene.ObjectType):
+    status = graphene.String()
+
+
+def all_statuses(session: Session) -> List[Status]:
+    return session.query(Issue.status.distinct().label("status")).all()
+
+
 class Callable(graphene.ObjectType):
     callable = graphene.String()
 

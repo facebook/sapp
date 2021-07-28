@@ -441,6 +441,7 @@ details              show additional information about the current trace frame
         exact_trace_length_to_sinks: Optional[int] = None,
         max_trace_length_to_sources: Optional[int] = None,
         max_trace_length_to_sinks: Optional[int] = None,
+        statuses: Optional[Union[str, List[str]]] = None,
     ) -> None:
         """Lists issues for the selected run.
 
@@ -449,6 +450,7 @@ details              show additional information about the current trace frame
             codes: int or list[int]        issue codes to filter on
             callables: str or list[str]    callables to filter on (supports wildcards)
             filenames: str or list[str]    filenames to filter on (supports wildcards)
+            statuses: str or list[str]     statues to filter on (supports wildcards)
             all_features: str or list[str] features to filter on
             any_features: str or list[str] features to inclusively filter on
             exclude_features: str or list[str]
@@ -492,6 +494,13 @@ details              show additional information about the current trace frame
                 if isinstance(callables, str):
                     callables = [callables]
                 builder = builder.where_callables_is_any_of(callables)
+
+            if statuses is not None:
+                if not isinstance(statuses, str) and not isinstance(statuses, list):
+                    raise UserError("'statuses' should be str or list of str.")
+                if isinstance(statuses, str):
+                    statuses = [statuses]
+                builder = builder.where_status_is_any_of(statuses)
 
             if filenames is not None:
                 if not isinstance(filenames, str) and not isinstance(filenames, list):

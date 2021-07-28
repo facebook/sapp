@@ -24,6 +24,7 @@ from ...models import (
     IssueInstance,
     IssueInstanceSharedTextAssoc,
     IssueInstanceTraceFrameAssoc,
+    IssueStatus,
     Run,
     RunStatus,
     SharedText,
@@ -168,7 +169,7 @@ class InteractiveTest(TestCase):
     def _list_issues_filter_setup(self):
         run = self.fakes.run()
 
-        issue1 = self.fakes.issue()
+        issue1 = self.fakes.issue(status="do_not_care")
         self.fakes.instance(
             issue_id=issue1.id,
             callable="module.sub.function1",
@@ -178,7 +179,7 @@ class InteractiveTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue2 = self.fakes.issue()
+        issue2 = self.fakes.issue(status="valid_bug")
         self.fakes.instance(
             issue_id=issue2.id,
             callable="module.sub.function2",
@@ -188,7 +189,7 @@ class InteractiveTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue3 = self.fakes.issue()
+        issue3 = self.fakes.issue(status="bad_practice")
         self.fakes.instance(
             issue_id=issue3.id,
             callable="module.function3",
@@ -533,6 +534,20 @@ class InteractiveTest(TestCase):
             output = self.stdout.getvalue().strip()
             self.assertIn("Issue 1", output)
             self.assertIn("Issue 2", output)
+
+    def testListIssuesFilterStatuses(self):
+        self._list_issues_filter_setup()
+
+        self.interactive.setup()
+        self.interactive.issues(statuses=1234)
+        stderr = self.stderr.getvalue().strip()
+        self.assertIn("'statuses' should be", stderr)
+
+        self.interactive.issues(statuses=["do_not_care", "bad_practice"])
+        output = self.stdout.getvalue().strip()
+        self.assertIn("Issue 1", output)
+        self.assertNotIn("Issue 2", output)
+        self.assertIn("Issue 3", output)
 
     def testNoRunsFound(self):
         self.interactive.setup()
@@ -1786,6 +1801,7 @@ class InteractiveTest(TestCase):
             source_kinds=None,
             sink_names=None,
             sink_kinds=["sink1", "sink2"],
+            status=IssueStatus.UNCATEGORIZED,
         )
         sources = []
         sinks = ["sink1", "sink2"]
@@ -1821,6 +1837,7 @@ class InteractiveTest(TestCase):
             source_kinds=None,
             sink_names=None,
             sink_kinds=["sink1"],
+            status=IssueStatus.UNCATEGORIZED,
         )
         sources = []
         sinks = ["sink1"]
@@ -1855,6 +1872,7 @@ class InteractiveTest(TestCase):
             source_kinds=None,
             sink_names=None,
             sink_kinds=["sink1", "sink2"],
+            status=IssueStatus.UNCATEGORIZED,
         )
         sources = []
         sinks = ["sink1", "sink2"]
@@ -1880,6 +1898,7 @@ class InteractiveTest(TestCase):
             source_kinds=None,
             sink_names=None,
             sink_kinds=["sink1", "sink2"],
+            status=IssueStatus.UNCATEGORIZED,
         )
         sources = []
         sinks = ["sink1", "sink2"]
