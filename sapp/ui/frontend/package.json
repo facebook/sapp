@@ -76,10 +76,16 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
-    "flow": "flow"
+    "flow": "flow",
+    "lint": "npx eslint . --max-warnings=0"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "rules": {
+      "eqeqeq": "off",
+      "strict": "off",
+      "default-case": "off"
+    }
   },
   "browserslist": {
     "production": [
