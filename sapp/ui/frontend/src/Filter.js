@@ -31,6 +31,7 @@ import {
   Typography,
 } from 'antd';
 import {
+  ExportOutlined,
   FieldTimeOutlined,
   FilterOutlined,
   PlusOutlined,
@@ -1070,6 +1071,19 @@ export const FilterControls = (props: {
             onClick={() => setDeleteModalVisible(true)}
             icon={<DeleteOutlined />}>
             Delete
+          </Menu.Item>
+          <Menu.Item
+            disabled={currentFilter?.name === undefined}
+            icon={<ExportOutlined />}>
+            {(currentFilter?.name === undefined) ? "Export" :
+              <a
+                href={`/export_filter/${currentFilter.name}`}
+                download={`${currentFilter.name}.json`}
+                target='_blank'
+                rel='noopener noreferrer'>
+                Export
+              </a>
+            }
           </Menu.Item>
         </SubMenu>
         <SubMenu

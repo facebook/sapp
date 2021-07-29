@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from .. import models
 from ..db import DB
+from .filters import ServeExportFilter
 from .schema import schema
 
 logging.basicConfig(
@@ -90,6 +91,10 @@ def start_server(
                 "editor_schema": editor_schema,
             },
         ),
+    )
+    application.add_url_rule(
+        "/export_filter/<string:filter_name>",
+        view_func=ServeExportFilter.as_view("filter_export_view", session=session),
     )
     if static_resources:
         application.static_folder = static_resources
