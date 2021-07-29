@@ -715,6 +715,11 @@ Array [
                     onKeyDown={[Function]}
                     onKeyUp={[Function]}
                     onMouseDown={[Function]}
+                    style={
+                      Object {
+                        "minWidth": "130px",
+                      }
+                    }
                   >
                     <div
                       className="ant-select-selector"

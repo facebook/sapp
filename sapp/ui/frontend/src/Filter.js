@@ -22,6 +22,7 @@ import {
   Input,
   Layout,
   Menu,
+  message,
   Modal,
   Row,
   Col,
@@ -29,10 +30,13 @@ import {
   Slider,
   Tooltip,
   Typography,
+  Upload,
 } from 'antd';
 import {
   FieldTimeOutlined,
   FilterOutlined,
+  ImportOutlined,
+  InboxOutlined,
   PlusOutlined,
   MinusCircleOutlined,
   SettingOutlined,
@@ -45,6 +49,7 @@ import {statusMap} from './Issue.js';
 
 import './Filter.css';
 
+const {Dragger} = Upload;
 const {Option} = Select;
 const {Panel} = Collapse;
 const {Sider} = Layout;
@@ -746,12 +751,15 @@ const FilterForm = (props: {
   );
 };
 
-const SaveFilterModal = (
+const SaveAndImportFilterModals = (
   props: $ReadOnly<{|
     currentFilter: FilterDescription,
-    visible: boolean,
-    hide: void => void,
-    onSave: FilterDescription => void,
+    setCurrentFilter: FilterDescription => void,
+    saveModalVisible: boolean,
+    hideSaveModal: void => void,
+    importModalVisible: boolean,
+    hideImportModalVisible: void => void,
+    refetch: void => void,
   |}>,
 ): React$Node => {
   const [form] = Form.useForm();
@@ -763,12 +771,9 @@ const SaveFilterModal = (
   }
 
   const onCompleted = (data: any): void => {
-    const filter = {
-      ...data.save_filter.node,
-      ...JSON.parse(data.save_filter.node.json),
-    };
-    props.onSave(filter);
+    props.refetch();
   };
+
   const saveFilterMutation = gql`
     mutation SaveFilter($name: String!, $description: String, $json: String!) {
       save_filter(
@@ -788,7 +793,71 @@ const SaveFilterModal = (
     return <Alert type="error">{error.toString()}</Alert>;
   }
 
-  const onOk = (): void => {
+  let filterList = [];
+  let filterNamesList = [];
+
+  const isValidFilter = (filter: FilterDescription): Boolean => {
+    return !(filter.name === undefined ||
+      filter.description === undefined ||
+      Object.keys(filter).length < 3);
+  };
+
+  const importProps = {
+    multiple: true,
+    onRemove: filterFile => {
+      filterList.splice(filterList.indexOf(filterFile), 1);
+    },
+    beforeUpload(filterFile) {
+      return new Promise(resolve => {
+        if (filterFile.type !== 'application/json') {
+          message.error(`${filterFile.name} is not a json file`);
+          resolve(Upload.LIST_IGNORE);
+        } else {
+          let reader: FileReader = new FileReader();
+          reader.onload = (e) => {
+            let filter: FilterDescription = JSON.parse(e.target.result);
+            if (!isValidFilter(filter)) {
+              message.error(`${filterFile.name} is an invalid filter file`);
+            } else {
+              filterList.push(filter);
+              filterNamesList.push(`${filter.name}.json`)
+            }
+            resolve();
+          };
+          reader.readAsText(filterFile);
+        }
+      });
+    },
+    customRequest: ({onSuccess, onError, file}) => {
+      if (filterNamesList.includes(file.name)) {
+        onSuccess("Ok");
+      } else {
+        onError("Error");
+      }
+    },
+  };
+
+  const onImport = (): void => {
+    filterList.forEach(filter => {
+      let name = filter.name;
+      let description = filter.description;
+      delete filter["name"];
+      delete filter["description"];
+      saveFilter({
+        variables: {
+          name: name,
+          description: description,
+          json: JSON.stringify(filter),
+        },
+      });
+    });
+    props.hideImportModal();
+    message.success(`Imported ${filterList.length} filters`);
+    filterList = [];
+    filterNamesList = [];
+  };
+
+  const onSave = (): void => {
     const values = form.getFieldsValue();
     saveFilter({
       variables: {
@@ -797,26 +866,48 @@ const SaveFilterModal = (
         json: JSON.stringify(props.currentFilter),
       },
     });
-    props.hide();
+    props.hideSaveModal();
+    let savedFilter = props.currentFilter;
+    savedFilter["name"] = values.name;
+    savedFilter["description"] = values.description;
+    props.setCurrentFilter(savedFilter);
   };
 
   return (
-    <Modal
-      title="Save Filters..."
-      visible={props.visible}
-      onOk={onOk}
-      okText="Save"
-      onCancel={props.hide}
-      zIndex={2000}>
-      <Form layout="vertical" form={form} autoComplete="off">
-        <Form.Item label="Name" name="name">
-          <Input />
-        </Form.Item>
-        <Form.Item label="Description" name="description">
-          <Input />
-        </Form.Item>
-      </Form>
-    </Modal>
+    <>
+      <Modal
+        title="Save Filters..."
+        visible={props.saveModalVisible}
+        onOk={onSave}
+        okText="Save"
+        onCancel={props.hideSaveModal}
+        zIndex={2000}>
+        <Form layout="vertical" form={form} autoComplete="off">
+          <Form.Item label="Name" name="name">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Description" name="description">
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Modal
+        visible={props.importModalVisible}
+        okText="Import Filters"
+        onOk={onImport}
+        onCancel={props.hideImportModal}
+        zIndex={2000}
+        destroyOnClose={true}>
+        <Dragger {...importProps} style={{marginTop: '30px'}}>
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">
+            Click or drag filter json file to import
+          </p>
+        </Dragger>
+      </Modal>
+    </>
   );
 };
 
@@ -899,6 +990,7 @@ export const FilterControls = (props: {
   const initialFilter = loadFilter() || emptyFilter;
   const [saveModalVisible, setSaveModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
   const [recentFilters, setRecentFilters] = useState(getRecentFilters())
   const [filterFormVisible, setFilterFormVisible] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<FilterDescription>(
@@ -979,11 +1071,6 @@ export const FilterControls = (props: {
     return <Alert type="error">{filterError.toString()}</Alert>;
   }
 
-  const onSave = (filter: FilterDescription): void => {
-    setCurrentFilter(filter);
-    filterRefetch();
-  };
-
   const onDelete = (): void => {
     deleteFilter({variables: {name: currentFilter.name}});
     setDeleteModalVisible(false);
@@ -1037,12 +1124,14 @@ export const FilterControls = (props: {
         Do you really want to delete{' '}
         <Text keyboard>{currentFilter.name}</Text>
       </Modal>
-      <SaveFilterModal
+      <SaveAndImportFilterModals
         currentFilter={currentFilter}
-        visible={saveModalVisible}
-        hide={() => setSaveModalVisible(false)}
-        onSave={onSave}
-      />
+        setCurrentFilter={setCurrentFilter}
+        saveModalVisible={saveModalVisible}
+        hideSaveModal={() => setSaveModalVisible(false)}
+        importModalVisible={importModalVisible}
+        hideImportModal={() => setImportModalVisible(false)}
+        refetch={filterRefetch}/>
       <Menu
         mode="inline"
         defaultOpenKeys={['recents']}
@@ -1070,6 +1159,11 @@ export const FilterControls = (props: {
             onClick={() => setDeleteModalVisible(true)}
             icon={<DeleteOutlined />}>
             Delete
+          </Menu.Item>
+          <Menu.Item
+            onClick={() => setImportModalVisible(true)}
+            icon={<ImportOutlined />}>
+            Import
           </Menu.Item>
         </SubMenu>
         <SubMenu
