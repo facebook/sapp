@@ -754,6 +754,12 @@ const SaveFilterModal = (
 ): React$Node => {
   const [form] = Form.useForm();
 
+  if(props.currentFilter.name !== undefined) {
+    form.setFieldsValue({
+      name: props.currentFilter.name,
+    });
+  }
+
   const onCompleted = (data: any): void => {
     const filter = {
       ...data.save_filter.node,
@@ -941,10 +947,7 @@ const SavedFilters = (
           overlay={
             <Menu>
               <Menu.Item
-                disabled={
-                  Object.keys(props.currentFilter).length === 0 ||
-                  props.currentFilter?.name !== undefined
-                }
+                disabled={filterEqual(emptyFilter, props.currentFilter)}
                 onClick={() => setSaveModalVisible(true)}
                 icon={<SaveOutlined />}>
                 Save...
