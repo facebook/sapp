@@ -167,6 +167,7 @@ def filter_run(
     database: DB,
     run_id_input: int,
     filter_path: Path,
+    output_format: str,
 ) -> None:
     with database.make_session() as session:
         run_id: Run = (

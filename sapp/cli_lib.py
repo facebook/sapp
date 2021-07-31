@@ -262,6 +262,13 @@ def delete_filters(
 @filter.command(
     name="issues",
     help="Show issues after applying a filter or directory of filters to a run",
+    context_settings={"token_normalize_func": str.lower},
+)
+@click.option(
+    "--output-format",
+    type=click.Choice(["json", "sarif"]),
+    default="json",
+    help="output format you want your filtered results in",
 )
 @argument("run_id", type=int)
 @argument("input_filter_path", type=Path(exists=True, readable=True))
@@ -270,13 +277,17 @@ def filter_issues(
     ctx: Context,
     run_id: int,
     input_filter_path: str,
+    output_format: str,
 ) -> None:
     """Applies filter from INPUT_FILTER_PATH to filter issues in RUN_ID
 
     RUN_ID is the `Run` number corresponding to the list of issues you want to apply the filter to
     INPUT_FILTER_PATH is the path to the filter you want to use to filter the list of issues in RUN_ID
+    OUTPUT_FORMAT is the format you want the results to be in
     """
-    filters.filter_run(ctx.database, run_id, pathlib.Path(input_filter_path))
+    filters.filter_run(
+        ctx.database, run_id, pathlib.Path(input_filter_path), output_format
+    )
 
 
 @click.group()
