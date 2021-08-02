@@ -16,11 +16,11 @@ import {
   Checkbox,
   Collapse,
   Divider,
-  Dropdown,
   Popover,
   Button,
   Form,
   Input,
+  Layout,
   Menu,
   Modal,
   Row,
@@ -31,10 +31,11 @@ import {
   Typography,
 } from 'antd';
 import {
+  FieldTimeOutlined,
   FilterOutlined,
   PlusOutlined,
   MinusCircleOutlined,
-  MoreOutlined,
+  SettingOutlined,
   SaveOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
@@ -45,6 +46,8 @@ import './Filter.css';
 
 const {Option} = Select;
 const {Panel} = Collapse;
+const {Sider} = Layout;
+const {SubMenu} = Menu;
 const {Text} = Typography;
 
 type FeatureCondition = {
@@ -651,13 +654,11 @@ const FilterForm = (props: {
   setVisible: boolean => void,
   currentFilter: FilterDescription,
   setCurrentFilter: FilterDescription => void,
+  appliedFilter: FilterDescription,
+  setAppliedFilter: FilterDescription => void,
 }): React$Node => {
-  const [appliedFilter, setAppliedFilter] = useState<FilterDescription>(
-    loadFilter() || emptyFilter,
-  );
-
   const apply = () => {
-    setAppliedFilter(props.currentFilter);
+    props.setAppliedFilter(props.currentFilter);
     props.refetch(filterToVariables(props.currentFilter));
     props.setVisible(false);
   };
@@ -736,7 +737,7 @@ const FilterForm = (props: {
           type="primary"
           onClick={apply}
           loading={props.refetching}
-          disabled={filterEqual(props.currentFilter, appliedFilter)}>
+          disabled={filterEqual(props.currentFilter, props.appliedFilter)}>
           Apply
         </Button>
       </div>
@@ -818,156 +819,6 @@ const SaveFilterModal = (
   );
 };
 
-const SavedFilters = (
-  props: $ReadOnly<{|
-    currentFilter: FilterDescription,
-    setCurrentFilter: FilterDescription => mixed,
-  |}>,
-): React$Node => {
-  const [search, setSearch] = useState(null);
-  const [saveModalVisible, setSaveModalVisible] = useState(false);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-
-  const filtersQuery = gql`
-    query Filters {
-      filters {
-        edges {
-          node {
-            name
-            description
-            json
-          }
-        }
-      }
-    }
-  `;
-  const {loading, error: filterError, data, refetch} = useQuery(filtersQuery);
-
-  const deleteFilterMutation = gql`
-    mutation DeleteFilter($name: String!) {
-      delete_filter(input: {name: $name}) {
-        clientMutationId
-      }
-    }
-  `;
-  const [deleteFilter, {error: deleteError}] = useMutation(
-    deleteFilterMutation,
-    {
-      onCompleted: refetch,
-    },
-  );
-
-  if (filterError) {
-    return <Alert type="error">{filterError.toString()}</Alert>;
-  }
-  if (deleteError) {
-    return <Alert type="error">{deleteError.toString()}</Alert>;
-  }
-
-  const filters = loading
-    ? []
-    : data.filters.edges.map(edge => {
-        const decoded = JSON.parse(edge.node.json);
-        return {
-          ...edge.node,
-          ...decoded,
-        };
-      });
-
-  const options = filters
-    .filter(filter => {
-      if (search === null) {
-        return true;
-      }
-      return (
-        filter.name.toLowerCase().includes(search.toLowerCase()) ||
-        filter.description?.toLowerCase()?.includes(search.toLowerCase())
-      );
-    })
-    .map(filter => {
-      return {
-        value: filter.name,
-        label: (
-          <div>
-            {filter.name}
-            <br />
-            <Text type="secondary">{filter.description}</Text>
-          </div>
-        ),
-      };
-    });
-
-  var filterMap = {};
-  filters.forEach(filter => (filterMap[filter.name] = filter));
-  const onSelect = (value: string): void => {
-    setSearch(null);
-    props.setCurrentFilter(filterMap[value]);
-  };
-
-  const onSave = (filter: FilterDescription): void => {
-    props.setCurrentFilter(filter);
-    refetch();
-  };
-
-  const onDelete = (): void => {
-    deleteFilter({variables: {name: props.currentFilter.name}});
-    setDeleteModalVisible(false);
-    props.setCurrentFilter(emptyFilter);
-  };
-
-  return (
-    <Row justify="space-between">
-      <Col span={22}>
-        <AutoComplete
-          style={{width: '100%'}}
-          options={options}
-          onSelect={onSelect}
-          onSearch={setSearch}
-          value={search || props.currentFilter?.name || null}>
-          <Input.Search placeholder="saved filter" />
-        </AutoComplete>
-      </Col>
-      <Col>
-        <Modal
-          visible={deleteModalVisible}
-          okText="Delete"
-          onOk={onDelete}
-          onCancel={() => setDeleteModalVisible(false)}
-          zIndex={2000}>
-          Do you really want to delete{' '}
-          <Text keyboard>{props.currentFilter.name}</Text>
-        </Modal>
-        <SaveFilterModal
-          currentFilter={props.currentFilter}
-          visible={saveModalVisible}
-          hide={() => setSaveModalVisible(false)}
-          onSave={onSave}
-        />
-        <Dropdown
-          overlay={
-            <Menu>
-              <Menu.Item
-                disabled={filterEqual(emptyFilter, props.currentFilter)}
-                onClick={() => setSaveModalVisible(true)}
-                icon={<SaveOutlined />}>
-                Save...
-              </Menu.Item>
-              <Menu.Item
-                disabled={props.currentFilter?.name === undefined}
-                onClick={() => setDeleteModalVisible(true)}
-                icon={<DeleteOutlined />}>
-                Delete...
-              </Menu.Item>
-            </Menu>
-          }
-          placement="bottomRight">
-          <Button type="text" icon={<MoreOutlined />} ghost />
-        </Dropdown>
-      </Col>
-    </Row>
-  );
-};
-
 export function loadFilter(): ?FilterDescription {
   const filter = window.sessionStorage.getItem('filter');
   if (filter !== undefined) {
@@ -1000,47 +851,263 @@ export function filterToVariables(filter: FilterDescription): mixed {
   };
 }
 
-const Filter = (props: {refetch: any, refetching: boolean}) => {
-  const initialFilter = loadFilter() || emptyFilter;
+function getRecentFilters(): mixed {
+  let data = JSON.parse(localStorage.getItem("recent_filters"));
+  if(data){
+    return data.recent_filters;
+  }
+  return [];
+}
 
-  const [visible, setVisible] = useState(false);
+export const FilterControls = (props: {
+  refetch: mixed => mixed,
+  refetching: boolean,
+}) => {
+  const [search, setSearch] = useState(null);
+  const initialFilter = loadFilter() || emptyFilter;
+  const [saveModalVisible, setSaveModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [recentFilters, setRecentFilters] = useState(getRecentFilters())
+  const [filterFormVisible, setFilterFormVisible] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<FilterDescription>(
+    initialFilter,
+  );
+  const [appliedFilter, setAppliedFilter] = useState<FilterDescription>(
     initialFilter,
   );
 
   useEffect(() => {
-    window.sessionStorage.setItem('filter', JSON.stringify(currentFilter));
-  }, [currentFilter]);
+    localStorage.setItem(
+      "recent_filters",
+      JSON.stringify({"recent_filters": recentFilters})
+    );
+  });
+
+  const filtersQuery = gql`
+    query Filters {
+      filters {
+        edges {
+          node {
+            name
+            description
+            json
+          }
+        }
+      }
+    }
+  `;
+  const {
+    loading: filterLoading,
+    error: filterError,
+    data: filterData,
+    refetch: filterRefetch
+  } = useQuery(filtersQuery);
+
+  const filters = filterLoading
+    ? []
+    : filterData.filters.edges.map(edge => {
+        const decoded = JSON.parse(edge.node.json);
+        return {
+          ...edge.node,
+          ...decoded,
+        };
+      });
+
+  const options = filters
+    .filter(filter => {
+      if (search === null) {
+        return true;
+      }
+      return (
+        filter.name.toLowerCase().includes(search.toLowerCase()) ||
+        filter.description?.toLowerCase()?.includes(search.toLowerCase())
+      );
+    })
+    .map(filter => {
+      return {
+        value: filter.name,
+        label: (
+          <div>
+            {filter.name}
+            <br />
+            <Text type="secondary">{filter.description}</Text>
+          </div>
+        ),
+      };
+    });
+
+  var filterMap = {};
+  filters.forEach(filter => (filterMap[filter.name] = filter));
+
+  const deleteFilterMutation = gql`
+    mutation DeleteFilter($name: String!) {
+      delete_filter(input: {name: $name}) {
+        clientMutationId
+      }
+    }
+  `;
+  const [deleteFilter, {error: deleteError}] = useMutation(
+    deleteFilterMutation,
+    {
+      onCompleted: filterRefetch,
+    },
+  );
+
+  if (deleteError) {
+    return <Alert type="error">{deleteError.toString()}</Alert>;
+  }
+  if (filterError) {
+    return <Alert type="error">{filterError.toString()}</Alert>;
+  }
+
+  const onSave = (filter: FilterDescription): void => {
+    setCurrentFilter(filter);
+    filterRefetch();
+  };
+
+  const onDelete = (): void => {
+    deleteFilter({variables: {name: currentFilter.name}});
+    setDeleteModalVisible(false);
+    setCurrentFilter(emptyFilter);
+    setRecentFilters(recentFilters.filter(item =>
+      item !== currentFilter.name
+    ));
+  };
+
+  const updateRecentFilters = (filter: string): void => {
+    if(recentFilters.length > 0) {
+      let filterArray = recentFilters;
+      let index = filterArray.indexOf(filter);
+      if(index === -1) {
+        let end = filterArray.length >= 5 ? 4 : filterArray.length;
+        filterArray = filterArray.slice(0, end);
+        setRecentFilters([filter].concat(filterArray));
+      }
+    } else {
+      setRecentFilters([filter]);
+    }
+  };
+
+  const onSelect = (value: string): void => {
+    setSearch(null);
+    updateRecentFilters(value);
+    setCurrentFilter(filterMap[value]);
+    setAppliedFilter(filterMap[value]);
+    props.refetch(filterToVariables(filterMap[value]));
+    setFilterFormVisible(false);
+  };
+
+  return (
+    <Sider width={300}>
+      <Filter
+        refetch={props.refetch}
+        refetching={props.refetching}
+        currentFilter={currentFilter}
+        setCurrentFilter={setCurrentFilter}
+        appliedFilter={appliedFilter}
+        setAppliedFilter={setAppliedFilter}
+        visible={filterFormVisible}
+        setVisible={setFilterFormVisible}
+      />
+      <Modal
+        visible={deleteModalVisible}
+        okText="Delete"
+        onOk={onDelete}
+        onCancel={() => setDeleteModalVisible(false)}
+        zIndex={2000}>
+        Do you really want to delete{' '}
+        <Text keyboard>{currentFilter.name}</Text>
+      </Modal>
+      <SaveFilterModal
+        currentFilter={currentFilter}
+        visible={saveModalVisible}
+        hide={() => setSaveModalVisible(false)}
+        onSave={onSave}
+      />
+      <Menu
+        mode="inline"
+        defaultOpenKeys={['recents']}
+        style={{ borderRight: 0 }}
+        selectable={false}>
+        <>
+          <AutoComplete
+            style={{width: '100%', padding: '12px 12px 0 12px'}}
+            options={options}
+            onSelect={onSelect}
+            onSearch={setSearch}
+            value={search || currentFilter?.name || null}>
+            <Input.Search placeholder="saved filter" />
+          </AutoComplete>
+        </>
+        <SubMenu icon={<SettingOutlined />} title="Filter options">
+          <Menu.Item
+            disabled={filterEqual(emptyFilter, currentFilter)}
+            onClick={() => setSaveModalVisible(true)}
+            icon={<SaveOutlined />}>
+            Save
+          </Menu.Item>
+          <Menu.Item
+            disabled={currentFilter?.name === undefined}
+            onClick={() => setDeleteModalVisible(true)}
+            icon={<DeleteOutlined />}>
+            Delete
+          </Menu.Item>
+        </SubMenu>
+        <SubMenu
+          key="recents"
+          disabled={!(recentFilters.length > 0)}
+          icon={<FieldTimeOutlined />} title="Recent filters">
+          { recentFilters.map(name => (
+            <Menu.Item onClick={() => onSelect(name)}>
+              {name}
+            </Menu.Item>
+          ))}
+        </SubMenu>
+      </Menu>
+    </Sider>
+  )
+};
+
+const Filter = (props: {
+  refetch: any,
+  refetching: boolean,
+  currentFilter: FilterDescription,
+  setCurrentFilter: FilterDescription => void,
+  appliedFilter: FilterDescription,
+  setAppliedFilter: FilterDescription => void,
+}) => {
+  useEffect(() => {
+    window.sessionStorage.setItem('filter', JSON.stringify(props.currentFilter));
+  }, [props.currentFilter]);
+  const initialFilter = loadFilter() || emptyFilter;
 
   const content = (
     <div style={{width: '500px'}}>
-      <SavedFilters
-        currentFilter={currentFilter}
-        setCurrentFilter={setCurrentFilter}
-      />
-      <Divider />
       <FilterForm
         refetch={props.refetch}
         refetching={props.refetching}
-        setVisible={setVisible}
-        currentFilter={currentFilter}
-        setCurrentFilter={setCurrentFilter}
+        setVisible={props.setVisible}
+        currentFilter={props.currentFilter}
+        setCurrentFilter={props.setCurrentFilter}
+        appliedFilter={props.appliedFilter}
+        setAppliedFilter={props.setAppliedFilter}
       />
     </div>
   );
 
   return (
     <>
-      <div style={{textAlign: 'right', margin: '10px 0 -40px 0'}}>
+      <div style={{marginBottom: '10px'}}>
         <Popover
-          visible={visible || props.refetching}
+          visible={props.visible}
           content={content}
-          placement="bottomRight"
-          onClick={() => setVisible(!visible)}>
+          placement="leftTop"
+          onClick={() => props.setVisible(!props.visible)}>
           <Button
+            style={{width: '100%'}}
             icon={<FilterOutlined />}
             type={!filterEqual(initialFilter, emptyFilter) ? 'primary' : null}>
-            Filter
+            Filter...
           </Button>
         </Popover>
       </div>
@@ -1048,4 +1115,4 @@ const Filter = (props: {refetch: any, refetching: boolean}) => {
   );
 };
 
-export default Filter;
+export default FilterControls;

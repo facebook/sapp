@@ -10,8 +10,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { Button, Modal, Breadcrumb } from 'antd';
-import Filter, { loadFilter, filterToVariables } from './Filter';
+import { Button, Layout, Modal, Breadcrumb } from 'antd';
+import FilterControls, { loadFilter, filterToVariables } from './Filter';
 import { Issue, IssueSkeleton } from './Issue.js';
 
 import { MoreOutlined } from '@ant-design/icons';
@@ -171,12 +171,18 @@ const Issues = (props: $ReadOnly<{ match: any }>): React$Node => {
 
   return (
     <>
-      <Filter refetch={clearAndRefetch} refetching={refetching} />
       <Breadcrumb style={{ margin: '16px 0' }}>
         <Breadcrumb.Item href="/runs">Runs</Breadcrumb.Item>
         <Breadcrumb.Item>Run {run_id}</Breadcrumb.Item>
       </Breadcrumb>
-      {content}
+      <Layout>
+        <Layout style={{ paddingRight: '24px' }}>
+          {content}
+        </Layout>
+        <FilterControls
+          refetch={clearAndRefetch}
+          refetching={refetching} />
+      </Layout>
     </>
   );
 };
