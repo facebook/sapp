@@ -259,9 +259,9 @@ $ source ~/.venvs/sapp/bin/activate
 (sapp) $ pip3 install -r requirements.txt
 ```
 
-Run the flask server:
+Run the flask server in debug mode:
 ```shell
-(sapp) $ python3 -m sapp.cli server
+(sapp) $ python3 -m sapp.cli server --debug
 ```
 
 Parse static analysis output and save to disk:
@@ -269,17 +269,21 @@ Parse static analysis output and save to disk:
 (sapp) $ python3 -m sapp.cli analyze taint-output.json
 ```
 
-If you make any changes to files under `sapp/ui/frontend/*`, you will need to run `npm install` once to install dependencies and `npm run-script build` each time you make changes before running the flask server to see the changes you made reflected:
-
-Installing dependencies:
+Installing dependencies for frontend:
 ```shell
 (sapp) $ cd sapp/ui/frontend && npm install
 ```
 
-Build static files and run the flask server:
+To interface sapp through the UI, we need to run both the frontend
+and backend simultaneously. In a production environment they run
+in the same port (because we serve the compilled version of frontend
+through the flask app in production). But in a development environment,
+the frontend runs in port 3000 and the backend runs in port 5000.
+
+Run the flask server and react app in development mode:
 ```shell
-(sapp) $ cd sapp/ui/frontend && npm run-script build
 (sapp) $ python3 -m sapp.cli server --debug
+(sapp) $ cd sapp/ui/frontend && npm run-script start
 ```
 
 ## FAQ

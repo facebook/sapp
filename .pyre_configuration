@@ -52,6 +52,9 @@
     {
       "site-package": "pyre_extensions"
     },
+    {
+      "site-package": "flask_cors"
+    },
     "stubs"
   ],
   "source_directories": [
