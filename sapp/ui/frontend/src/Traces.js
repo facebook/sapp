@@ -33,7 +33,6 @@ import {
 } from '@ant-design/icons';
 import {useQuery, gql} from '@apollo/client';
 import Source from './Source.js';
-import {Documentation} from './Documentation.js';
 import {Issue, IssueSkeleton} from './Issue.js';
 import {HumanReadable, HumanReadablePort} from './HumanReadable';
 
