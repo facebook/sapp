@@ -31,7 +31,6 @@ from sqlalchemy import (
     func,
     types,
 )
-from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -50,7 +49,6 @@ from .db_support import (
     RecordMixin,
 )
 from .decorators import classproperty
-from .errors import AIException
 from .pipeline import SourceLocation
 
 
@@ -71,23 +69,6 @@ or existing Issues.  Each run is tied to Issues through IssueInstances.
 IssueInstances have per run information, like source location, while Issues have
 attributes like the status of an issue.
 """
-
-
-class CaseSensitiveStringType(types.TypeDecorator):
-    impl = types.String
-    cache_ok = False
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "mysql":
-            return dialect.type_descriptor(
-                mysql.VARCHAR(length=255, collation="latin1_general_cs")
-            )
-        elif dialect.name == "sqlite":
-            return dialect.type_descriptor(
-                sqlite.VARCHAR(length=255, collation="binary")
-            )
-        else:
-            raise AIException("%s not supported" % dialect.name)
 
 
 class SourceLocationType(types.TypeDecorator):
