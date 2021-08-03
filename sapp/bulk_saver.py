@@ -81,9 +81,7 @@ class BulkSaver:
         return self.saving[cls.__name__]
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def save_all(self, database: DB, use_lock=False, dbname=""):
+    def save_all(self, database: DB):
         saving_classes = [
             cls
             for cls in self.SAVING_CLASSES_ORDER

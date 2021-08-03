@@ -364,7 +364,6 @@ class PrimaryKeyGeneratorBase:  # pyre-ignore[13]
         #  `typing.Type` to avoid runtime subscripting errors.
         saving_classes: List[Type],
         item_counts: Optional[Dict[str, int]] = None,
-        use_lock: bool = False,
     ) -> "PrimaryKeyGeneratorBase":
         """
         session - Session for DB operations.
@@ -378,7 +377,7 @@ class PrimaryKeyGeneratorBase:  # pyre-ignore[13]
                 count = item_counts[cls.__name__]
             else:
                 count = 1
-            self._reserve_id_range(session, cls, count, use_lock)
+            self._reserve_id_range(session, cls, count)
 
         return self
 
@@ -416,10 +415,9 @@ class PrimaryKeyGeneratorBase:  # pyre-ignore[13]
         #  `typing.Type` to avoid runtime subscripting errors.
         cls: Type,
         count: int,
-        use_lock: bool,
     ) -> None:
         cls_pk = self._lock_pk_with_retries(session, cls)
-        if use_lock or not cls_pk:
+        if not cls_pk:
             # If cls_pk is None, then we query the data table for the max ID
             # and use that as the current_id in the primary_keys table. This
             # should only occur once (the except with a rollback means any
@@ -427,17 +425,14 @@ class PrimaryKeyGeneratorBase:  # pyre-ignore[13]
             # id value)
             row = session.query(cls.id).order_by(cls.id.desc()).first()
             try:
-                if not cls_pk:
-                    session.execute(
-                        "INSERT INTO primary_keys(table_name, current_id) \
-                        VALUES (:table_name, :current_id)",
-                        {
-                            "table_name": cls.__name__,
-                            "current_id": (row.id) if row else 0,
-                        },
-                    )
-                else:
-                    cls_pk.current_id = row.id if row else 0
+                session.execute(
+                    "INSERT INTO primary_keys(table_name, current_id) \
+                    VALUES (:table_name, :current_id)",
+                    {
+                        "table_name": cls.__name__,
+                        "current_id": (row.id) if row else 0,
+                    },
+                )
                 session.commit()
             except exc.SQLAlchemyError:
                 session.rollback()

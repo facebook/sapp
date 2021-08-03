@@ -39,10 +39,8 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
     def __init__(
         self,
         database: DB,
-        use_lock: bool = False,
         primary_key_generator: Optional[PrimaryKeyGenerator] = None,
     ):
-        self.use_lock = use_lock
         # pyre-fixme[4]: Attribute must be annotated.
         self.dbname = database.dbname
         self.database = database
@@ -104,9 +102,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
         )
 
         with self.database.make_session() as session:
-            pk_gen = self.primary_key_generator.reserve(
-                session, [Run], use_lock=self.use_lock
-            )
+            pk_gen = self.primary_key_generator.reserve(session, [Run])
             self.summary["run"].id.resolve(id=pk_gen.get(Run), is_new=True)
             session.add(self.summary["run"])
             meta_run_identifier = self.summary.get("meta_run_identifier")
@@ -123,7 +119,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
             run_id = self.summary["run"].id.resolved()
             self.summary["run"] = None  # Invalidate it
 
-        self.bulk_saver.save_all(self.database, self.use_lock)
+        self.bulk_saver.save_all(self.database)
 
         # Now that the run is finished, fetch it from the DB again and set its
         # status to FINISHED.

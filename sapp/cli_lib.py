@@ -191,7 +191,6 @@ def analyze(
         CreateDatabase(ctx.database),
         ModelGenerator(),
         TrimTraceGraph(),
-        # pyre-fixme[6]: Expected `bool` for 2nd param but got `PrimaryKeyGenerator`.
         DatabaseSaver(ctx.database, PrimaryKeyGenerator()),
     ]
     # pyre-fixme[6]: Expected
