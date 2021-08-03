@@ -150,7 +150,7 @@ class IssueBIGDBIDType(BIGDBIDType):
         return IssueDBID(value)
 
 
-class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):  # noqa
+class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "issue_instance_trace_frame_assoc"
 
@@ -237,7 +237,7 @@ class SharedTextKind(enum.Enum):
         return cls.__members__.get(string)
 
 
-class SharedText(Base, PrepareMixin, RecordMixin):  # noqa
+class SharedText(Base, PrepareMixin, RecordMixin):
     """Any string-ish type that can be shared as a property of some other
     object. (e.g. features, sources, sinks). The table name 'messages' is due
     to legacy reasons."""
@@ -286,7 +286,7 @@ class SharedText(Base, PrepareMixin, RecordMixin):  # noqa
         )
 
 
-class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):  # noqa
+class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
     """Assoc table between issue instances and its properties that are
     representable by a string. The DB table name and column names are due to
     legacy reasons and warrant some explanation:
@@ -351,7 +351,7 @@ class TraceKind(enum.Enum):
         return cls.postcondition
 
     @classmethod
-    def create_from_string(cls, value: str) -> TraceKind:  # noqa
+    def create_from_string(cls, value: str) -> TraceKind:
         if value == "precondition":
             return cls.precondition
         if value == "postcondition":
@@ -359,7 +359,7 @@ class TraceKind(enum.Enum):
         raise ValueError(f"`{value}` is not a valid `TraceKind`")
 
 
-class IssueInstance(Base, PrepareMixin, MutableRecordMixin):  # noqa
+class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     """A particularly instance of an issue found in a run"""
 
     __tablename__ = "issue_instances"
@@ -529,7 +529,7 @@ class IssueStatus(enum.Enum):
         return cls.do_not_care
 
 
-class Issue(Base, PrepareMixin, MutableRecordMixin):  # noqa
+class Issue(Base, PrepareMixin, MutableRecordMixin):
     """An issue coming from the static analysis.
 
     An issue can persist across multiple runs, even if it moves around in the
@@ -641,17 +641,17 @@ class PurgeStatus(enum.Enum):
     ready_to_purge = enum.auto()
 
     @classproperty
-    def UNPURGED(cls) -> str:
+    def UNPURGED(cls) -> str:  # noqa
         # pyre-ignore[7]: Coerce to string for SQLAlchemy
         return cls.unpurged
 
     @classproperty
-    def READY_TO_PURGE(cls) -> str:
+    def READY_TO_PURGE(cls) -> str:  # noqa
         # pyre-ignore[7]: Coerce to string for SQLAlchemy
         return cls.ready_to_purge
 
     @classproperty
-    def PURGED(cls) -> str:
+    def PURGED(cls) -> str:  # noqa
         # pyre-ignore[7]: Coerce to string for SQLAlchemy
         return cls.purged
 
@@ -667,12 +667,12 @@ class FrameReachability(enum.Enum):
     reachable = enum.auto()
 
     @classproperty
-    def UNREACHABLE(cls) -> str:
+    def UNREACHABLE(cls) -> str:  # noqa
         # pyre-ignore[7]: Coerce to string for SQLAlchemy
         return cls.unreachable
 
     @classproperty
-    def REACHABLE(cls) -> str:
+    def REACHABLE(cls) -> str:  # noqa
         # pyre-ignore[7]: Coerce to string for SQLAlchemy
         return cls.reachable
 
@@ -680,7 +680,7 @@ class FrameReachability(enum.Enum):
 CURRENT_DB_VERSION = 1
 
 
-class Run(Base):  # noqa
+class Run(Base):
     """A particular run of the static analyzer.
 
     Each time output is parsed from the static analyzer we generate a new run. A
@@ -816,7 +816,7 @@ class Run(Base):  # noqa
         )
 
 
-class MetaRun(Base):  # noqa
+class MetaRun(Base):
     """An identifier that represents multiple runs which should be grouped semantically.
 
     Meta-runs and runs have a many-to-many relationship, and the purpose of a meta-run
@@ -893,7 +893,7 @@ class RunSummary:
         return cls(**d)
 
 
-class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):  # noqa
+class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
     """The responsibility of filling out the meta-run to run assoc is on the child jobs
     of a larger run.
     """
@@ -924,7 +924,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):  # noqa
         return cls._merge_assocs(session, items, cls.meta_run_id, cls.run_id)
 
 
-class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):  # noqa
+class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frame_message_assoc"
 
@@ -956,7 +956,7 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):  # noqa
         return cls._merge_assocs(session, items, cls.trace_frame_id, cls.leaf_id)
 
 
-class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):  # noqa
+class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_fix_info"
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
@@ -975,7 +975,7 @@ class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):  # noqa
     )
 
 
-class TraceFrame(Base, PrepareMixin, RecordMixin):  # noqa
+class TraceFrame(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frames"
 
@@ -1138,7 +1138,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):  # noqa
 # This may be a message description, or it may be the start of another series
 # of traces leading to some other leaf. TraceFrameAnnotationTraceFrameAssoc
 # contains the first hop towards that leaf..
-class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):  # noqa
+class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frame_annotations"
 
@@ -1206,7 +1206,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):  # noqa
 # the first hop trace frame from the annotation. It is similar to
 # IssueInstanceTraceFrameAssoc, which indicates the first hop trace frame from
 # the issue instance.
-class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):  # noqa
+class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frame_annotation_trace_frame_assoc"
 
@@ -1243,7 +1243,7 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):  # n
         )
 
 
-class WarningMessage(Base):  # noqa
+class WarningMessage(Base):
     __tablename__ = "warning_messages"
 
     code: Column[int] = Column(Integer, autoincrement=False, primary_key=True)
@@ -1268,7 +1268,7 @@ class WarningCodeCategory(enum.Enum):
         return cls.code_smell
 
 
-class WarningCodeProperties(Base):  # noqa
+class WarningCodeProperties(Base):
     """Contains properties describing each warning code"""
 
     __tablename__ = "warning_code_properties"
@@ -1377,7 +1377,7 @@ class WarningCodeProperties(Base):  # noqa
     )
 
 
-class RunOrigin(Base, PrepareMixin, RecordMixin):  # noqa
+class RunOrigin(Base, PrepareMixin, RecordMixin):
     """This table associates runs with metadata concerning how the run was built, which we
     call run origins. An example of run origins is Buck targets."""
 
