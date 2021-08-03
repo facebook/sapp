@@ -7,7 +7,7 @@ graphene_sqlalchemy
 ipython
 munch
 pygments
-SQLAlchemy
+SQLAlchemy<1.4
 ujson
 xxhash
 prompt-toolkit
