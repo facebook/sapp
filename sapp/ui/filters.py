@@ -68,7 +68,9 @@ class FilterRecord(Base):
         return FilterRecord(
             # pyre-ignore[6]: graphene too dynamic.
             name=filter.name,
+            # pyre-fixme[6]: Expected `Optional[str]` for 2nd param but got `String`.
             description=filter.description,
+            # pyre-fixme[6]: Expected `str` for 3rd param but got `String`.
             json=filter.json,
         )
 

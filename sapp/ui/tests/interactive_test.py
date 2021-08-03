@@ -101,6 +101,7 @@ class InteractiveTest(TestCase):
             caller_id=trace_frame.caller_id,
             callee_id=trace_frame.callee_id,
             callee_location=trace_frame.callee_location,
+            # pyre-fixme[6]: Expected `Optional[TraceKind]` for 9th param but got `str`.
             kind=trace_frame.kind,
             filename=filename,
         )

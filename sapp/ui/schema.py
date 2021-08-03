@@ -191,8 +191,14 @@ class Query(graphene.ObjectType):
             statuses,
             # pyre-ignore[6]: Optional, Final doesn't work
             source_names,
+            # pyre-fixme[6]: Expected `List[str]` for 6th param but got
+            #  `Optional[List[str]]`.
             source_kinds,
+            # pyre-fixme[6]: Expected `List[str]` for 7th param but got
+            #  `Optional[List[str]]`.
             sink_names,
+            # pyre-fixme[6]: Expected `List[str]` for 8th param but got
+            #  `Optional[List[str]]`.
             sink_kinds,
             features,
             min_trace_length_to_sinks,
