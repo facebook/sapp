@@ -129,8 +129,6 @@ details              show additional information about the current trace frame
 """
     welcome_message = "Interactive issue exploration. Type 'help' for help."
 
-    LEAF_NAMES = {"source", "sink", "leaf"}
-
     SELF_SCOPE_KEY = "_interactive"
     PARSER_CLASS_SCOPE_KEY = "_parser_class"
 
