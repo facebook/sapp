@@ -800,22 +800,21 @@ details              show additional information about the current trace frame
             for (_, name) in query:
                 leaves[name] += 1
 
-        # pyre-fixme[35]: Target cannot be annotated.
-        query: Iterable[Tuple[str, int]]
+        results: Iterable[Tuple[str, int]]
         if order_by == LeafOrderBy.name:
-            query = sorted(leaves.items(), key=lambda leaf: leaf[0])
+            results = sorted(leaves.items(), key=lambda leaf: leaf[0])
         elif order_by == LeafOrderBy.number_issues:
-            query = sorted(leaves.items(), key=lambda leaf: leaf[1], reverse=True)
+            results = sorted(leaves.items(), key=lambda leaf: leaf[1], reverse=True)
         elif order_by is None:
-            query = leaves.items()
+            results = leaves.items()
         else:
             raise UserError("Invalid order_by method.")
 
         if limit is not None:
-            query = itertools.islice(query, limit)
+            results = itertools.islice(results, limit)
 
         leaves_strings = []
-        for name, number_issues in query:
+        for name, number_issues in results:
             leaves_strings.append(f"{name} (in {number_issues} issues)")
 
         pager("\n".join(leaves_strings))
