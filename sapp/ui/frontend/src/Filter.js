@@ -38,6 +38,7 @@ import {
   SettingOutlined,
   SaveOutlined,
   DeleteOutlined,
+  ClearOutlined,
 } from '@ant-design/icons';
 import {Documentation} from './Documentation.js';
 import {statusMap} from './Issue.js';
@@ -1112,6 +1113,17 @@ const Filter = (props: {
     </div>
   );
 
+  const clearButton = (
+    <Button
+      style={{width: '100%', marginTop: '10px'}}
+      icon={<ClearOutlined />}
+      onClick={() =>
+        clearFilter(props.refetch, props.setCurrentFilter, props.currentFilter)
+      }>
+        Clear Filter
+    </Button>
+  );
+
   return (
     <>
       <div style={{marginBottom: '10px'}}>
@@ -1127,6 +1139,7 @@ const Filter = (props: {
             Filter...
           </Button>
         </Popover>
+        { !filterEqual(initialFilter, emptyFilter) ? clearButton : null }
       </div>
     </>
   );
