@@ -174,7 +174,7 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
     trace_frame = relationship(
         "TraceFrame",
         primaryjoin=(
-            "IssueInstanceTraceFrameAssoc.trace_frame_id == " "foreign(TraceFrame.id)"
+            "IssueInstanceTraceFrameAssoc.trace_frame_id == foreign(TraceFrame.id)"
         ),
         uselist=False,
     )
@@ -322,7 +322,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
     shared_text = relationship(
         "SharedText",
         primaryjoin=(
-            "IssueInstanceSharedTextAssoc.shared_text_id == " "foreign(SharedText.id)"
+            "IssueInstanceSharedTextAssoc.shared_text_id == foreign(SharedText.id)"
         ),
         uselist=False,
     )
@@ -410,9 +410,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
 
     fix_info = relationship(
         "IssueInstanceFixInfo",
-        primaryjoin=(
-            "foreign(IssueInstanceFixInfo.id) == " "IssueInstance.fix_info_id"
-        ),
+        primaryjoin=("foreign(IssueInstanceFixInfo.id) == IssueInstance.fix_info_id"),
         uselist=False,
     )
 
@@ -941,7 +939,7 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
 
     trace_frame = relationship(
         "TraceFrame",
-        primaryjoin=("TraceFrameLeafAssoc.trace_frame_id == " "foreign(TraceFrame.id)"),
+        primaryjoin=("TraceFrameLeafAssoc.trace_frame_id == foreign(TraceFrame.id)"),
         uselist=False,
     )
 
@@ -968,9 +966,7 @@ class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
 
     issue_instance = relationship(
         "IssueInstance",
-        primaryjoin=(
-            "foreign(IssueInstance.fix_info_id) == " "IssueInstanceFixInfo.id"
-        ),
+        primaryjoin=("foreign(IssueInstance.fix_info_id) == IssueInstanceFixInfo.id"),
         uselist=False,
     )
 
@@ -1064,9 +1060,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
 
     annotations = relationship(
         "TraceFrameAnnotation",
-        primaryjoin=(
-            "TraceFrame.id == " "foreign(TraceFrameAnnotation.trace_frame_id)"
-        ),
+        primaryjoin=("TraceFrame.id == foreign(TraceFrameAnnotation.trace_frame_id)"),
         uselist=True,
     )
 
@@ -1074,7 +1068,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
 
     leaf_assoc = relationship(
         "TraceFrameLeafAssoc",
-        primaryjoin=("TraceFrame.id == " "foreign(TraceFrameLeafAssoc.trace_frame_id)"),
+        primaryjoin=("TraceFrame.id == foreign(TraceFrameLeafAssoc.trace_frame_id)"),
         uselist=True,
     )
 
@@ -1083,7 +1077,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
     trace_frame_issue_instance = relationship(
         "IssueInstanceTraceFrameAssoc",
         primaryjoin=(
-            "TraceFrame.id == " "foreign(IssueInstanceTraceFrameAssoc.trace_frame_id)"
+            "TraceFrame.id == foreign(IssueInstanceTraceFrameAssoc.trace_frame_id)"
         ),
     )
 
@@ -1183,9 +1177,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
     trace_frame_id: DBID = Column(BIGDBIDType, nullable=False, index=True)
     trace_frame = relationship(
         "TraceFrame",
-        primaryjoin=(
-            "TraceFrame.id == " "foreign(TraceFrameAnnotation.trace_frame_id)"
-        ),
+        primaryjoin=("TraceFrame.id == foreign(TraceFrameAnnotation.trace_frame_id)"),
         uselist=True,
     )
 
