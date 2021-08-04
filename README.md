@@ -219,7 +219,7 @@ A filter is required to have a `name` and at least one other key, excluding `des
 }
 ```
 
-You can find some example filters to reference in the [pyre-check repo](https://github.com/facebook/pyre-check/tree/master/tools/sapp/pysa_filters)
+You can find some example filters to reference in the [pyre-check repo](https://github.com/facebook/pyre-check/tree/main/tools/sapp/pysa_filters)
 
 ### Importing filters
 You can import a filter from a file by running:
