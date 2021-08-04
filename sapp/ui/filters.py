@@ -32,7 +32,7 @@ from ..models import (
 from .issues import Instance
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from pathlib import Path  # usort: skip. Wants trailing whitespace
 
     from .issues import IssueQueryResult  # noqa
 

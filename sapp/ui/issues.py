@@ -47,6 +47,7 @@ SinkNameText = aliased(SharedText)
 # pyre-fixme[5]: Global expression must be annotated.
 SinkKindText = aliased(SharedText)
 
+
 # pyre-ignore[13]: unitialized class attribute
 class IssueQueryResultType(graphene.ObjectType):
     concatenated_features: str

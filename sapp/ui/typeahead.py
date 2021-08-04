@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import List, NamedTuple
+from typing import List
 
 import graphene
 from sqlalchemy.orm import Session

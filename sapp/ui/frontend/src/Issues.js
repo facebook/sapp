@@ -14,8 +14,6 @@ import { Button, Layout, Modal, Breadcrumb } from 'antd';
 import FilterControls, { loadFilter, filterToVariables } from './Filter';
 import { Issue, IssueSkeleton } from './Issue.js';
 
-import { MoreOutlined } from '@ant-design/icons';
-
 function IssuesList(props: $ReadOnly<{|
   issues: any,
   run_id: number,

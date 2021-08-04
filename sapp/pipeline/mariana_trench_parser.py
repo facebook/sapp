@@ -24,12 +24,6 @@ from .. import pipeline as sapp
 from ..analysis_output import AnalysisOutput, Metadata
 from .base_parser import BaseParser
 
-try:
-    # type: ignore
-    from ...facebook.lib import configuration
-except Exception:
-    from .. import configuration
-
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
