@@ -12,6 +12,7 @@ import React, {useState} from 'react';
 import {useQuery, useMutation, gql} from '@apollo/client';
 import {Breadcrumb, Card, Col, Modal, Row, Typography} from 'antd';
 import {DeleteOutlined, LoadingOutlined, SyncOutlined} from '@ant-design/icons';
+import {clearFilter} from './Filter';
 
 const {Text, Link} = Typography;
 
@@ -74,7 +75,13 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
             Run {props.run.run_id}
           </>
         }
-        extra={<Link href={`/run/${props.run.run_id}`}>Issues</Link>}
+        extra={
+          <Link
+            onClick={() => clearFilter()}
+            href={`/run/${props.run.run_id}`}>
+            Issues
+          </Link>
+        }
         actions={[
           <DeleteOutlined onClick={onDelete}/>
         ]}>
