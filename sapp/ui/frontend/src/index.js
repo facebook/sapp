@@ -27,8 +27,12 @@ import 'antd/dist/antd.css';
 const {Header, Content, Footer} = Layout;
 const {Text} = Typography;
 
+let uri = '/graphql';
+if (process.env.NODE_ENV === "development") {
+  uri = 'http://localhost:5000/graphql';
+}
 const client = new ApolloClient({
-  uri: '/graphql',
+  uri: uri,
   cache: new InMemoryCache(),
 });
 

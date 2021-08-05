@@ -12,6 +12,7 @@ from typing import Optional
 import sqlalchemy
 from flask import Flask, send_from_directory
 from flask.wrappers import Response
+from flask_cors import CORS
 from flask_graphql import GraphQLView
 from pyre_extensions import none_throws
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
@@ -87,4 +88,6 @@ def start_server(
     )
     if static_resources:
         application.static_folder = static_resources
+    if debug:
+        CORS(application, resources={r"/graphql": {"origins": "http://localhost:3000"}})
     application.run(debug=debug, host="localhost", port=5000)
