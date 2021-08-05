@@ -10,7 +10,9 @@ import os
 from typing import Optional
 
 import sqlalchemy
-from flask import Flask, send_from_directory
+
+# pyre-fixme[21]: `flask` has no attribute `_app_ctx_stack`
+from flask import Flask, send_from_directory, _app_ctx_stack
 from flask.wrappers import Response
 from flask_cors import CORS
 from flask_graphql import GraphQLView
@@ -34,12 +36,11 @@ application = Flask(
 session: Optional[Session] = None
 
 
-@application.teardown_appcontext
+@application.teardown_request
 def shutdown_session(exception: Optional[Exception] = None) -> None:
-    local_session = session
-    if local_session is not None:
+    if session is not None:
         # pyre-fixme[16]: `Session` has no attribute `remove`.
-        local_session.remove()
+        session.remove()
 
 
 @application.route("/", defaults={"path": ""})
@@ -67,7 +68,11 @@ def start_server(
         echo=False,
         poolclass=None,
     )
-    session = scoped_session(sessionmaker(bind=engine))
+    session = scoped_session(
+        sessionmaker(bind=engine),
+        # pyre-fixme[16]: `flask` has no attribute _app_ctx_stack
+        scopefunc=_app_ctx_stack.__ident_func__,
+    )
     # pyre-fixme[16]: `Type` has no attribute `query`.
     models.Base.query = session.query_property()
     # We have additional tables for the UI that need to be created.
