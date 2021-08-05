@@ -8,39 +8,23 @@
 import logging
 import sys
 from collections import defaultdict
-from typing import (
-    cast,
-    IO,
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Set,
-    Optional,
-    Tuple,
-    Union,
-)
-
-if sys.version_info >= (3, 8):
-    from typing import TypedDict
-else:
-    from typing_extensions import TypedDict
+from typing import IO, Any, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
 
 import ujson as json
 
 from .. import errors
 from ..analysis_output import AnalysisOutput, Metadata
 from . import (
-    flatten_features,
-    ParseFeature,
-    ParsePosition,
-    ParseTypeInterval,
     ParseConditionTuple,
+    ParseFeature,
     ParseIssueCondition,
     ParseIssueConditionTuple,
     ParseIssueLeaf,
     ParseIssueTuple,
+    ParsePosition,
+    ParseTypeInterval,
     SourceLocation,
+    flatten_features,
 )
 from .base_parser import (
     BaseParser,
@@ -48,6 +32,11 @@ from .base_parser import (
     ParseType,
     log_trace_keyerror_in_generator,
 )
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -150,7 +139,6 @@ class Parser(BaseParser):
             version = 1
         except ValueError:
             version = 1
-            pass
 
         handle.seek(0)
         return version

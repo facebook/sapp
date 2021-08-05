@@ -8,12 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import (
-    TYPE_CHECKING,
-    List,
-    Optional,
-    Tuple,
-)
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import graphene
 import sqlalchemy
@@ -23,12 +18,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..db import DB
 from ..filter import StoredFilter
-from ..models import (
-    DBID,
-    Base,
-    Run,
-    RunStatus,
-)
+from ..models import DBID, Base, Run, RunStatus
 from .issues import Instance
 
 if TYPE_CHECKING:

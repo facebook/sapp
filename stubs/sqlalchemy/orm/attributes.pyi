@@ -2,28 +2,27 @@ from collections import namedtuple
 from typing import Any, Optional
 
 from . import interfaces
-from .base import (
-    PASSIVE_NO_RESULT as PASSIVE_NO_RESULT,
-    ATTR_WAS_SET as ATTR_WAS_SET,
-    ATTR_EMPTY as ATTR_EMPTY,
-    NO_VALUE as NO_VALUE,
-    NEVER_SET as NEVER_SET,
-    NO_CHANGE as NO_CHANGE,
-    CALLABLES_OK as CALLABLES_OK,
-    SQL_OK as SQL_OK,
-    RELATED_OBJECT_OK as RELATED_OBJECT_OK,
-    INIT_OK as INIT_OK,
-    NON_PERSISTENT_OK as NON_PERSISTENT_OK,
-    LOAD_AGAINST_COMMITTED as LOAD_AGAINST_COMMITTED,
-    PASSIVE_OFF as PASSIVE_OFF,
-    PASSIVE_RETURN_NEVER_SET as PASSIVE_RETURN_NEVER_SET,
-    PASSIVE_NO_INITIALIZE as PASSIVE_NO_INITIALIZE,
-    PASSIVE_NO_FETCH as PASSIVE_NO_FETCH,
-    PASSIVE_NO_FETCH_RELATED as PASSIVE_NO_FETCH_RELATED,
-    PASSIVE_ONLY_PERSISTENT as PASSIVE_ONLY_PERSISTENT,
-    NO_AUTOFLUSH as NO_AUTOFLUSH,
-)
-from .base import state_str as state_str, instance_str as instance_str
+from .base import ATTR_EMPTY as ATTR_EMPTY
+from .base import ATTR_WAS_SET as ATTR_WAS_SET
+from .base import CALLABLES_OK as CALLABLES_OK
+from .base import INIT_OK as INIT_OK
+from .base import LOAD_AGAINST_COMMITTED as LOAD_AGAINST_COMMITTED
+from .base import NEVER_SET as NEVER_SET
+from .base import NO_AUTOFLUSH as NO_AUTOFLUSH
+from .base import NO_CHANGE as NO_CHANGE
+from .base import NO_VALUE as NO_VALUE
+from .base import NON_PERSISTENT_OK as NON_PERSISTENT_OK
+from .base import PASSIVE_NO_FETCH as PASSIVE_NO_FETCH
+from .base import PASSIVE_NO_FETCH_RELATED as PASSIVE_NO_FETCH_RELATED
+from .base import PASSIVE_NO_INITIALIZE as PASSIVE_NO_INITIALIZE
+from .base import PASSIVE_NO_RESULT as PASSIVE_NO_RESULT
+from .base import PASSIVE_OFF as PASSIVE_OFF
+from .base import PASSIVE_ONLY_PERSISTENT as PASSIVE_ONLY_PERSISTENT
+from .base import PASSIVE_RETURN_NEVER_SET as PASSIVE_RETURN_NEVER_SET
+from .base import RELATED_OBJECT_OK as RELATED_OBJECT_OK
+from .base import SQL_OK as SQL_OK
+from .base import instance_str as instance_str
+from .base import state_str as state_str
 
 class QueryableAttribute(
     interfaces._MappedAttribute, interfaces.InspectionAttr, interfaces.PropComparator

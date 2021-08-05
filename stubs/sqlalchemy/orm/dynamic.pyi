@@ -1,7 +1,6 @@
 from typing import Any, Optional
 
-from . import attributes
-from . import strategies
+from . import attributes, strategies
 from .query import Query as Query
 
 class DynaLoader(strategies.AbstractRelationshipLoader):

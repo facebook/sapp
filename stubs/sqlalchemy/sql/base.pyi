@@ -1,26 +1,26 @@
 from typing import (
     Any,
-    Optional,
-    Union,
-    TypeVar,
-    NoReturn,
-    Iterable,
-    List,
     Dict,
+    Iterable,
     Iterator,
+    List,
     MutableMapping,
+    NoReturn,
+    Optional,
     Sequence,
+    TypeVar,
+    Union
 )
 
 from sqlalchemy import util
 
-from ..engine.base import Engine, Connection
+from .. import util
+from ..engine.base import Connection, Engine
 from ..engine.result import ResultProxy
 from ..util import PopulateDict
 from .elements import ColumnElement
 from .schema import Column
 from .visitors import ClauseVisitor as ClauseVisitor
-from .. import util
 
 PARSE_AUTOCOMMIT: util.symbol = ...
 NO_ARG: util.symbol = ...

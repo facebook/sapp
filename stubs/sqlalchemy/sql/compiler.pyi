@@ -1,21 +1,20 @@
 from typing import (
     Any,
-    Optional,
-    Union,
-    Set,
+    Callable,
     Dict,
     List,
-    Set,
-    Pattern,
-    TypeVar,
-    Type,
     Mapping,
+    Optional,
+    Pattern,
+    Set,
     Tuple,
-    Callable,
+    Type,
+    TypeVar,
+    Union
 )
 
-from .. import util, engine
-from .elements import ClauseElement, BindParameter
+from .. import engine, util
+from .elements import BindParameter, ClauseElement
 from .type_api import TypeEngine
 
 RESERVED_WORDS: Set[str] = ...

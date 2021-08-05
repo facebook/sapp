@@ -1,14 +1,13 @@
-from typing import Any, Optional, Union, TypeVar, Iterable, Tuple
+from typing import Any, Iterable, Optional, Tuple, TypeVar, Union
 
-from .base import Executable as Executable, DialectKWArgs as DialectKWArgs
-from .elements import ClauseElement as ClauseElement, ColumnElement, TextClause
-from .schema import Table, Column
-from .selectable import (
-    HasPrefixes as HasPrefixes,
-    HasCTE as HasCTE,
-    TableClause,
-    Selectable,
-)
+from .base import DialectKWArgs as DialectKWArgs
+from .base import Executable as Executable
+from .elements import ClauseElement as ClauseElement
+from .elements import ColumnElement, TextClause
+from .schema import Column, Table
+from .selectable import HasCTE as HasCTE
+from .selectable import HasPrefixes as HasPrefixes
+from .selectable import Selectable, TableClause
 from .visitors import Visitable
 
 _UB = TypeVar("_UB", bound=UpdateBase)

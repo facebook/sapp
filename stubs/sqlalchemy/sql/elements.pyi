@@ -1,33 +1,31 @@
 from typing import (
     Any,
-    Optional,
-    Union,
-    Type,
-    TypeVar,
-    Generic,
     Callable,
-    List,
     Dict,
-    Set,
-    Iterator,
+    Generic,
     Iterable,
-    Tuple as _TupleType,
+    Iterator,
+    List,
     Mapping,
-    overload,
-    Text,
+    Optional,
+    Set,
+    Text
 )
+from typing import Tuple as _TupleType
+from typing import Type, TypeVar, Union, overload
 
 from typing_extensions import Protocol
 
 from .. import util
-from ..engine.base import Engine, Connection
+from ..engine.base import Connection, Engine
 from . import operators
 from .annotation import Annotated as Annotated
-from .base import Executable as Executable, Immutable as Immutable
+from .base import Executable as Executable
+from .base import Immutable as Immutable
 from .functions import FunctionElement
 from .schema import ForeignKey
-from .selectable import TextAsFrom, TableClause
-from .sqltypes import NullType, Boolean, Integer
+from .selectable import TableClause, TextAsFrom
+from .sqltypes import Boolean, Integer, NullType
 from .type_api import TypeEngine
 from .visitors import Visitable as Visitable
 

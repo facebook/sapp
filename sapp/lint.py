@@ -14,7 +14,6 @@ from sqlalchemy.orm import aliased
 from .cli_lib import require_option
 from .models import Issue, IssueInstance, SharedText, TraceFrame
 
-
 # pyre-fixme[5]: Global expression must be annotated.
 MessageText = aliased(SharedText)
 # pyre-fixme[5]: Global expression must be annotated.

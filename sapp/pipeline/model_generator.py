@@ -8,7 +8,7 @@
 import datetime
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple, Union, Iterable
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import ujson as json
 
@@ -32,18 +32,17 @@ from ..models import (
 )
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
-    ParseFeature,
+    DictEntries,
     ParseConditionTuple,
-    ParseIssueTuple,
+    ParseFeature,
     ParseIssueConditionTuple,
+    ParseIssueTuple,
     ParseLeaf,
     ParseTraceAnnotation,
     ParseTypeInterval,
-    DictEntries,
     PipelineStep,
     Summary,
 )
-
 
 log = logging.getLogger("sapp")
 

@@ -1,7 +1,7 @@
 from typing import Any
 
 from .. import util
-from .interfaces import StrategizedProperty, PropComparator
+from .interfaces import PropComparator, StrategizedProperty
 from .relationships import RelationshipProperty as RelationshipProperty
 
 class ColumnProperty(StrategizedProperty):

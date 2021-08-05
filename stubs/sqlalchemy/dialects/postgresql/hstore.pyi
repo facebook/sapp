@@ -1,7 +1,8 @@
-from typing import Any, Optional, Mapping, Type, List, Text
+from typing import Any, List, Mapping, Optional, Text, Type
 
 from ... import types as sqltypes
-from ...sql import functions as sqlfunc, type_api
+from ...sql import functions as sqlfunc
+from ...sql import type_api
 from .array import ARRAY
 
 class HSTORE(

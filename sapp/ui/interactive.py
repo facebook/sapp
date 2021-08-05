@@ -58,13 +58,13 @@ from ..models import (
     SharedTextKind,
     TraceFrame,
     TraceKind,
-    create as create_models,
 )
+from ..models import create as create_models
 from ..pipeline.base_parser import BaseParser
-from . import issues as issues_module, trace
+from . import issues as issues_module
+from . import trace
 from .issues import Instance, IssueQueryResult
 from .trace import TraceFrameQueryResult, TraceTuple
-
 
 T = TypeVar("T")
 

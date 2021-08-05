@@ -1,4 +1,4 @@
-from typing import Any, Optional, Deque
+from typing import Any, Deque, Optional
 
 from . import log
 

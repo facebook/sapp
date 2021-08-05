@@ -9,7 +9,6 @@ import unittest
 
 from ...sharded_files import ShardedFile
 
-
 test_path = "tools/sapp/sapp//tests/sharded_files"
 
 

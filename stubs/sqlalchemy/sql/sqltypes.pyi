@@ -1,33 +1,20 @@
 import decimal
 import sys
-from datetime import datetime, date, time, timedelta
-from typing import (
-    Any,
-    Optional,
-    Union,
-    TypeVar,
-    Dict,
-    List,
-    Tuple,
-    Callable,
-    Type,
-    IO,
-    overload,
-    Text as typing_Text,
-)
+from datetime import date, datetime, time, timedelta
+from typing import IO, Any, Callable, Dict, List, Optional
+from typing import Text as typing_Text
+from typing import Tuple, Type, TypeVar, Union, overload
 
 from typing_extensions import Protocol
 
 from .. import util
-from ..engine import Dialect, Engine, Connection, Connectable
+from ..engine import Connectable, Connection, Dialect, Engine
 from .base import SchemaEventTarget as SchemaEventTarget
 from .schema import MetaData
-from .type_api import (
-    TypeEngine as TypeEngine,
-    TypeDecorator as TypeDecorator,
-    Emulated,
-    NativeForEmulated as NativeForEmulated,
-)
+from .type_api import Emulated
+from .type_api import NativeForEmulated as NativeForEmulated
+from .type_api import TypeDecorator as TypeDecorator
+from .type_api import TypeEngine as TypeEngine
 
 _T = TypeVar("_T")
 

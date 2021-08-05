@@ -5,7 +5,7 @@
 
 from typing import Set, Tuple
 
-from . import ParseIssueTuple, DictEntries, PipelineStep, Summary
+from . import DictEntries, ParseIssueTuple, PipelineStep, Summary
 
 
 class WarningCodeFilter(PipelineStep[DictEntries, DictEntries]):

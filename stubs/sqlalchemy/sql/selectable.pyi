@@ -1,38 +1,32 @@
 from typing import (
     Any,
-    Optional,
-    Union,
-    TypeVar,
-    List,
     Iterable,
-    Sequence,
+    List,
     Mapping,
+    Optional,
+    Sequence,
     Set,
     Tuple,
     Type,
+    TypeVar,
+    Union
 )
 
 from .. import util
-from ..engine import Engine, Connection
+from ..engine import Connection, Engine
 from .annotation import Annotated as Annotated
-from .base import (
-    Immutable as Immutable,
-    Executable as Executable,
-    Generative as Generative,
-    ImmutableColumnCollection,
-    ColumnSet,
-)
-from .dml import Insert, Update, Delete
-from .elements import (
-    ClauseElement as ClauseElement,
-    Grouping as Grouping,
-    UnaryExpression as UnaryExpression,
-    ColumnElement,
-    ColumnClause,
-    TextClause,
-    Label,
-    BindParameter,
-)
+from .base import ColumnSet
+from .base import Executable as Executable
+from .base import Generative as Generative
+from .base import Immutable as Immutable
+from .base import ImmutableColumnCollection
+from .dml import Delete, Insert, Update
+from .elements import BindParameter
+from .elements import ClauseElement as ClauseElement
+from .elements import ColumnClause, ColumnElement
+from .elements import Grouping as Grouping
+from .elements import Label, TextClause
+from .elements import UnaryExpression as UnaryExpression
 from .functions import Function
 from .schema import ForeignKey, Table
 from .type_api import TypeEngine

@@ -9,15 +9,9 @@ import graphene
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
-from ..models import (
-    DBID,
-    IssueInstance,
-    Run as RunColumn,
-    RunStatus,
-    TraceFrame,
-    RunOrigin,
-    MetaRunToRunAssoc,
-)
+from ..models import DBID, IssueInstance, MetaRunToRunAssoc
+from ..models import Run as RunColumn
+from ..models import RunOrigin, RunStatus, TraceFrame
 
 
 def latest(session: Session) -> DBID:

@@ -2,11 +2,9 @@ from typing import Any
 
 from .. import exc as sa_exc
 from . import util as mapperutil
-from .interfaces import (
-    ONETOMANY as ONETOMANY,
-    MANYTOONE as MANYTOONE,
-    MANYTOMANY as MANYTOMANY,
-)
+from .interfaces import MANYTOMANY as MANYTOMANY
+from .interfaces import MANYTOONE as MANYTOONE
+from .interfaces import ONETOMANY as ONETOMANY
 
 class DependencyProcessor(object):
     prop: Any = ...

@@ -1,10 +1,8 @@
 from typing import Any, Optional
 
 from . import query
-from .interfaces import (
-    MapperProperty as MapperProperty,
-    PropComparator as PropComparator,
-)
+from .interfaces import MapperProperty as MapperProperty
+from .interfaces import PropComparator as PropComparator
 
 class DescriptorProperty(MapperProperty):
     doc: Any = ...

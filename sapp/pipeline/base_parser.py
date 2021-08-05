@@ -9,7 +9,6 @@ import logging
 import pprint
 from collections import defaultdict
 from typing import (
-    cast,
     Any,
     Dict,
     Iterable,
@@ -19,24 +18,24 @@ from typing import (
     TextIO,
     Tuple,
     Union,
+    cast,
 )
 
 import xxhash
 
 from ..analysis_output import AnalysisOutput, Metadata
 from . import (
-    ParseType,
+    DictEntries,
+    DictKey,
+    Optional,
     ParseCondition,
     ParseConditionTuple,
     ParseIssue,
     ParseIssueTuple,
-    DictKey,
-    DictEntries,
-    Optional,
+    ParseType,
     PipelineStep,
     Summary,
 )
-
 
 # if these imports have the same name we get a linter error
 try:

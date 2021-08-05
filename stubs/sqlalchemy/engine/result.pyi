@@ -1,5 +1,14 @@
 import sys
-from typing import Any, List, Mapping, Optional, Iterator, Union, AbstractSet, Tuple
+from typing import (
+    AbstractSet,
+    Any,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union
+)
 
 from ..sql.schema import Column
 

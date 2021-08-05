@@ -3,7 +3,8 @@ from typing import Any, Optional, Text
 from ..sql import expression
 from ..sql import util as sql_util
 from ..sql.selectable import FromClause
-from .base import InspectionAttr as InspectionAttr, object_mapper as object_mapper
+from .base import InspectionAttr as InspectionAttr
+from .base import object_mapper as object_mapper
 
 all_cascades: Any = ...
 

@@ -6,14 +6,12 @@
 # pyre-unsafe
 
 import datetime
-import gc
 import logging
 import sys
 import time
 from contextlib import contextmanager
 from functools import wraps
 from typing import Any, Callable, List, Optional
-
 
 log = logging.getLogger("sapp")
 

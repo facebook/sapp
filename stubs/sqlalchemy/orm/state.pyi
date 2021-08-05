@@ -1,16 +1,14 @@
 from typing import Any
 
 from . import interfaces
-from .base import (
-    PASSIVE_NO_RESULT as PASSIVE_NO_RESULT,
-    SQL_OK as SQL_OK,
-    NEVER_SET as NEVER_SET,
-    ATTR_WAS_SET as ATTR_WAS_SET,
-    NO_VALUE as NO_VALUE,
-    PASSIVE_NO_INITIALIZE as PASSIVE_NO_INITIALIZE,
-    INIT_OK as INIT_OK,
-    PASSIVE_OFF as PASSIVE_OFF,
-)
+from .base import ATTR_WAS_SET as ATTR_WAS_SET
+from .base import INIT_OK as INIT_OK
+from .base import NEVER_SET as NEVER_SET
+from .base import NO_VALUE as NO_VALUE
+from .base import PASSIVE_NO_INITIALIZE as PASSIVE_NO_INITIALIZE
+from .base import PASSIVE_NO_RESULT as PASSIVE_NO_RESULT
+from .base import PASSIVE_OFF as PASSIVE_OFF
+from .base import SQL_OK as SQL_OK
 
 class InstanceState(interfaces.InspectionAttr):
     session_id: Any = ...

@@ -7,7 +7,7 @@ import logging
 import os
 import pathlib
 from functools import wraps
-from typing import Optional, List, Callable, Tuple, Dict, Any
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import click
 import click_log

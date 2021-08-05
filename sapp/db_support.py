@@ -18,7 +18,6 @@ from sqlalchemy.orm import Session
 
 from .iterutil import split_every
 
-
 log: logging.Logger = logging.getLogger("sapp")
 
 

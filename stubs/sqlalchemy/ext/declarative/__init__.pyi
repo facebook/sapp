@@ -1,13 +1,11 @@
-from .api import (
-    declarative_base as declarative_base,
-    synonym_for as synonym_for,
-    comparable_using as comparable_using,
-    instrument_declarative as instrument_declarative,
-    ConcreteBase as ConcreteBase,
-    AbstractConcreteBase as AbstractConcreteBase,
-    DeclarativeMeta as DeclarativeMeta,
-    DeferredReflection as DeferredReflection,
-    has_inherited_table as has_inherited_table,
-    declared_attr as declared_attr,
-    as_declarative as as_declarative,
-)
+from .api import AbstractConcreteBase as AbstractConcreteBase
+from .api import ConcreteBase as ConcreteBase
+from .api import DeclarativeMeta as DeclarativeMeta
+from .api import DeferredReflection as DeferredReflection
+from .api import as_declarative as as_declarative
+from .api import comparable_using as comparable_using
+from .api import declarative_base as declarative_base
+from .api import declared_attr as declared_attr
+from .api import has_inherited_table as has_inherited_table
+from .api import instrument_declarative as instrument_declarative
+from .api import synonym_for as synonym_for

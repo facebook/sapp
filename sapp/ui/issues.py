@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, NamedTuple, Optional, Set, Dict, Union, FrozenSet
+from typing import Any, Dict, FrozenSet, List, NamedTuple, Optional, Set, Union
 
 import graphene
 from graphql.execution.base import ResolveInfo
@@ -23,8 +23,7 @@ from ..models import (
     SharedTextKind,
     SourceLocation,
 )
-from . import filter_predicates
-from . import run
+from . import filter_predicates, run
 
 # pyre-fixme[5]: Global expression must be annotated.
 FilenameText = aliased(SharedText)

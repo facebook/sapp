@@ -21,7 +21,6 @@ from ..models import (
 )
 from . import run
 
-
 # pyre-fixme[5]: Global expression must be annotated.
 FilenameText = aliased(SharedText)
 # pyre-fixme[5]: Global expression must be annotated.

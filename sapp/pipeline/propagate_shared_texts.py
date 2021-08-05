@@ -13,7 +13,6 @@ from ..models import IssueInstance, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
 
-
 log: logging.Logger = logging.getLogger("sapp")
 
 

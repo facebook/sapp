@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
-from typing import Any, Dict, Optional, List, Set, Type
+from typing import Any, Dict, List, Optional, Set, Type
 
 from graphene_sqlalchemy.converter import (
     convert_column_to_int_or_id,
@@ -50,7 +50,6 @@ from .db_support import (
 )
 from .decorators import classproperty
 from .pipeline import SourceLocation
-
 
 log: logging.Logger = logging.getLogger("sapp")
 

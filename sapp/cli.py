@@ -18,7 +18,6 @@ from .pipeline.base_parser import BaseParser
 from .pipeline.mariana_trench_parser import Parser as MarianaTrenchParser
 from .pipeline.pysa_taint_parser import Parser as PysaParser
 
-
 LOG: logging.Logger = logging.getLogger("sapp")
 
 PARSERS: Dict[str, Type[BaseParser]] = {

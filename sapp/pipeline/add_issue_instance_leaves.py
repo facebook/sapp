@@ -11,7 +11,6 @@ from ..models import DBID, SharedText, SharedTextKind
 from ..trace_graph import LeafMapping, TraceGraph
 from . import PipelineStep, Summary
 
-
 # pyre-fixme[5]: Global expression must be annotated.
 log = logging.getLogger("sapp")
 

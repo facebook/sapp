@@ -2,16 +2,15 @@ from typing import Any, Optional
 
 from .. import util
 from ..sql import operators
-from .base import (
-    ONETOMANY as ONETOMANY,
-    MANYTOONE as MANYTOONE,
-    MANYTOMANY as MANYTOMANY,
-    EXT_CONTINUE as EXT_CONTINUE,
-    EXT_STOP as EXT_STOP,
-    NOT_EXTENSION as NOT_EXTENSION,
-    InspectionAttrInfo as InspectionAttrInfo,
-)
-from .base import InspectionAttr as InspectionAttr, _MappedAttribute as _MappedAttribute
+from .base import EXT_CONTINUE as EXT_CONTINUE
+from .base import EXT_STOP as EXT_STOP
+from .base import MANYTOMANY as MANYTOMANY
+from .base import MANYTOONE as MANYTOONE
+from .base import NOT_EXTENSION as NOT_EXTENSION
+from .base import ONETOMANY as ONETOMANY
+from .base import InspectionAttr as InspectionAttr
+from .base import InspectionAttrInfo as InspectionAttrInfo
+from .base import _MappedAttribute as _MappedAttribute
 
 MapperExtension: Any = ...
 SessionExtension: Any = ...

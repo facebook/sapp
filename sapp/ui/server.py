@@ -20,7 +20,6 @@ from .. import models
 from ..db import DB
 from .schema import schema
 
-
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s", level=logging.DEBUG
 )

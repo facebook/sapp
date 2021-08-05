@@ -1,6 +1,6 @@
-from typing import Any, Optional, Union, TypeVar, Dict, Tuple, Type, overload
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar, Union, overload
 
-from ...engine.base import Engine, Connection
+from ...engine.base import Connection, Engine
 from ...sql import expression, functions, visitors
 from ...sql.elements import ColumnElement
 from ...sql.schema import ColumnCollectionConstraint

@@ -23,7 +23,6 @@ from .models import (
     TraceKind,
 )
 
-
 log: logging.Logger = logging.getLogger("sapp")
 
 

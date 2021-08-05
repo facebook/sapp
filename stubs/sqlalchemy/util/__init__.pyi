@@ -1,134 +1,129 @@
-from ._collections import (
-    KeyedTuple as KeyedTuple,
-    ImmutableContainer as ImmutableContainer,
-    immutabledict as immutabledict,
-    Properties as Properties,
-    OrderedProperties as OrderedProperties,
-    ImmutableProperties as ImmutableProperties,
-    OrderedDict as OrderedDict,
-    OrderedSet as OrderedSet,
-    IdentitySet as IdentitySet,
-    OrderedIdentitySet as OrderedIdentitySet,
-    column_set as column_set,
-    column_dict as column_dict,
-    ordered_column_set as ordered_column_set,
-    populate_column_dict as populate_column_dict,
-    unique_list as unique_list,
-    UniqueAppender as UniqueAppender,
-    PopulateDict as PopulateDict,
-    EMPTY_SET as EMPTY_SET,
-    to_list as to_list,
-    to_set as to_set,
-    to_column_set as to_column_set,
-    update_copy as update_copy,
-    flatten_iterator as flatten_iterator,
-    has_intersection as has_intersection,
-    LRUCache as LRUCache,
-    ScopedRegistry as ScopedRegistry,
-    ThreadLocalRegistry as ThreadLocalRegistry,
-    WeakSequence as WeakSequence,
-    coerce_generator_arg as coerce_generator_arg,
-    lightweight_named_tuple as lightweight_named_tuple,
-)
-from .compat import (
-    callable as callable,
-    cmp as cmp,
-    reduce as reduce,
-    threading as threading,
-    py3k as py3k,
-    py33 as py33,
-    py36 as py36,
-    py2k as py2k,
-    jython as jython,
-    pypy as pypy,
-    cpython as cpython,
-    win32 as win32,
-    pickle as pickle,
-    dottedgetter as dottedgetter,
-    parse_qsl as parse_qsl,
-    namedtuple as namedtuple,
-    next as next,
-    reraise as reraise,
-    raise_from_cause as raise_from_cause,
-    text_type as text_type,
-    safe_kwarg as safe_kwarg,
-    string_types as string_types,
-    int_types as int_types,
-    binary_type as binary_type,
-    nested as nested,
-    quote_plus as quote_plus,
-    with_metaclass as with_metaclass,
-    print_ as print_,
-    itertools_filterfalse as itertools_filterfalse,
-    u as u,
-    ue as ue,
-    b as b,
-    unquote_plus as unquote_plus,
-    unquote as unquote,
-    b64decode as b64decode,
-    b64encode as b64encode,
-    byte_buffer as byte_buffer,
-    itertools_filter as itertools_filter,
-    iterbytes as iterbytes,
-    StringIO as StringIO,
-    inspect_getargspec as inspect_getargspec,
-    zip_longest as zip_longest,
-)
-from .deprecations import (
-    warn_deprecated as warn_deprecated,
-    warn_pending_deprecation as warn_pending_deprecation,
-    deprecated as deprecated,
-    pending_deprecation as pending_deprecation,
-    inject_docstring_text as inject_docstring_text,
-)
-from .langhelpers import (
-    iterate_attributes as iterate_attributes,
-    class_hierarchy as class_hierarchy,
-    portable_instancemethod as portable_instancemethod,
-    unbound_method_to_callable as unbound_method_to_callable,
-    getargspec_init as getargspec_init,
-    format_argspec_init as format_argspec_init,
-    format_argspec_plus as format_argspec_plus,
-    get_func_kwargs as get_func_kwargs,
-    get_cls_kwargs as get_cls_kwargs,
-    decorator as decorator,
-    as_interface as as_interface,
-    memoized_property as memoized_property,
-    memoized_instancemethod as memoized_instancemethod,
-    md5_hex as md5_hex,
-    group_expirable_memoized_property as group_expirable_memoized_property,
-    dependencies as dependencies,
-    decode_slice as decode_slice,
-    monkeypatch_proxied_specials as monkeypatch_proxied_specials,
-    asbool as asbool,
-    bool_or_str as bool_or_str,
-    coerce_kw_type as coerce_kw_type,
-    duck_type_collection as duck_type_collection,
-    assert_arg_type as assert_arg_type,
-    symbol as symbol,
-    dictlike_iteritems as dictlike_iteritems,
-    classproperty as classproperty,
-    set_creation_order as set_creation_order,
-    warn_exception as warn_exception,
-    warn as warn,
-    NoneType as NoneType,
-    constructor_copy as constructor_copy,
-    methods_equivalent as methods_equivalent,
-    chop_traceback as chop_traceback,
-    asint as asint,
-    generic_repr as generic_repr,
-    counter as counter,
-    PluginLoader as PluginLoader,
-    hybridproperty as hybridproperty,
-    hybridmethod as hybridmethod,
-    safe_reraise as safe_reraise,
-    get_callable_argspec as get_callable_argspec,
-    only_once as only_once,
-    attrsetter as attrsetter,
-    ellipses_string as ellipses_string,
-    warn_limited as warn_limited,
-    map_bits as map_bits,
-    MemoizedSlots as MemoizedSlots,
-    EnsureKWArgType as EnsureKWArgType,
-    wrap_callable as wrap_callable,
-)
+from ._collections import EMPTY_SET as EMPTY_SET
+from ._collections import IdentitySet as IdentitySet
+from ._collections import ImmutableContainer as ImmutableContainer
+from ._collections import ImmutableProperties as ImmutableProperties
+from ._collections import KeyedTuple as KeyedTuple
+from ._collections import LRUCache as LRUCache
+from ._collections import OrderedDict as OrderedDict
+from ._collections import OrderedIdentitySet as OrderedIdentitySet
+from ._collections import OrderedProperties as OrderedProperties
+from ._collections import OrderedSet as OrderedSet
+from ._collections import PopulateDict as PopulateDict
+from ._collections import Properties as Properties
+from ._collections import ScopedRegistry as ScopedRegistry
+from ._collections import ThreadLocalRegistry as ThreadLocalRegistry
+from ._collections import UniqueAppender as UniqueAppender
+from ._collections import WeakSequence as WeakSequence
+from ._collections import coerce_generator_arg as coerce_generator_arg
+from ._collections import column_dict as column_dict
+from ._collections import column_set as column_set
+from ._collections import flatten_iterator as flatten_iterator
+from ._collections import has_intersection as has_intersection
+from ._collections import immutabledict as immutabledict
+from ._collections import lightweight_named_tuple as lightweight_named_tuple
+from ._collections import ordered_column_set as ordered_column_set
+from ._collections import populate_column_dict as populate_column_dict
+from ._collections import to_column_set as to_column_set
+from ._collections import to_list as to_list
+from ._collections import to_set as to_set
+from ._collections import unique_list as unique_list
+from ._collections import update_copy as update_copy
+from .compat import StringIO as StringIO
+from .compat import b as b
+from .compat import b64decode as b64decode
+from .compat import b64encode as b64encode
+from .compat import binary_type as binary_type
+from .compat import byte_buffer as byte_buffer
+from .compat import callable as callable
+from .compat import cmp as cmp
+from .compat import cpython as cpython
+from .compat import dottedgetter as dottedgetter
+from .compat import inspect_getargspec as inspect_getargspec
+from .compat import int_types as int_types
+from .compat import iterbytes as iterbytes
+from .compat import itertools_filter as itertools_filter
+from .compat import itertools_filterfalse as itertools_filterfalse
+from .compat import jython as jython
+from .compat import namedtuple as namedtuple
+from .compat import nested as nested
+from .compat import next as next
+from .compat import parse_qsl as parse_qsl
+from .compat import pickle as pickle
+from .compat import print_ as print_
+from .compat import py2k as py2k
+from .compat import py3k as py3k
+from .compat import py33 as py33
+from .compat import py36 as py36
+from .compat import pypy as pypy
+from .compat import quote_plus as quote_plus
+from .compat import raise_from_cause as raise_from_cause
+from .compat import reduce as reduce
+from .compat import reraise as reraise
+from .compat import safe_kwarg as safe_kwarg
+from .compat import string_types as string_types
+from .compat import text_type as text_type
+from .compat import threading as threading
+from .compat import u as u
+from .compat import ue as ue
+from .compat import unquote as unquote
+from .compat import unquote_plus as unquote_plus
+from .compat import win32 as win32
+from .compat import with_metaclass as with_metaclass
+from .compat import zip_longest as zip_longest
+from .deprecations import deprecated as deprecated
+from .deprecations import inject_docstring_text as inject_docstring_text
+from .deprecations import pending_deprecation as pending_deprecation
+from .deprecations import warn_deprecated as warn_deprecated
+from .deprecations import warn_pending_deprecation as warn_pending_deprecation
+from .langhelpers import EnsureKWArgType as EnsureKWArgType
+from .langhelpers import MemoizedSlots as MemoizedSlots
+from .langhelpers import NoneType as NoneType
+from .langhelpers import PluginLoader as PluginLoader
+from .langhelpers import as_interface as as_interface
+from .langhelpers import asbool as asbool
+from .langhelpers import asint as asint
+from .langhelpers import assert_arg_type as assert_arg_type
+from .langhelpers import attrsetter as attrsetter
+from .langhelpers import bool_or_str as bool_or_str
+from .langhelpers import chop_traceback as chop_traceback
+from .langhelpers import class_hierarchy as class_hierarchy
+from .langhelpers import classproperty as classproperty
+from .langhelpers import coerce_kw_type as coerce_kw_type
+from .langhelpers import constructor_copy as constructor_copy
+from .langhelpers import counter as counter
+from .langhelpers import decode_slice as decode_slice
+from .langhelpers import decorator as decorator
+from .langhelpers import dependencies as dependencies
+from .langhelpers import dictlike_iteritems as dictlike_iteritems
+from .langhelpers import duck_type_collection as duck_type_collection
+from .langhelpers import ellipses_string as ellipses_string
+from .langhelpers import format_argspec_init as format_argspec_init
+from .langhelpers import format_argspec_plus as format_argspec_plus
+from .langhelpers import generic_repr as generic_repr
+from .langhelpers import get_callable_argspec as get_callable_argspec
+from .langhelpers import get_cls_kwargs as get_cls_kwargs
+from .langhelpers import get_func_kwargs as get_func_kwargs
+from .langhelpers import getargspec_init as getargspec_init
+from .langhelpers import \
+    group_expirable_memoized_property as group_expirable_memoized_property
+from .langhelpers import hybridmethod as hybridmethod
+from .langhelpers import hybridproperty as hybridproperty
+from .langhelpers import iterate_attributes as iterate_attributes
+from .langhelpers import map_bits as map_bits
+from .langhelpers import md5_hex as md5_hex
+from .langhelpers import memoized_instancemethod as memoized_instancemethod
+from .langhelpers import memoized_property as memoized_property
+from .langhelpers import methods_equivalent as methods_equivalent
+from .langhelpers import \
+    monkeypatch_proxied_specials as monkeypatch_proxied_specials
+from .langhelpers import only_once as only_once
+from .langhelpers import portable_instancemethod as portable_instancemethod
+from .langhelpers import safe_reraise as safe_reraise
+from .langhelpers import set_creation_order as set_creation_order
+from .langhelpers import symbol as symbol
+from .langhelpers import \
+    unbound_method_to_callable as unbound_method_to_callable
+from .langhelpers import warn as warn
+from .langhelpers import warn_exception as warn_exception
+from .langhelpers import warn_limited as warn_limited
+from .langhelpers import wrap_callable as wrap_callable

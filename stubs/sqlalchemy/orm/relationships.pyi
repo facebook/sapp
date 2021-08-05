@@ -2,13 +2,11 @@ from typing import Any, Generic, List, Optional, Type, TypeVar, Union, overload
 
 from typing_extensions import Literal, final
 
-from .interfaces import (
-    MANYTOMANY as MANYTOMANY,
-    MANYTOONE as MANYTOONE,
-    ONETOMANY as ONETOMANY,
-    PropComparator as PropComparator,
-    StrategizedProperty as StrategizedProperty,
-)
+from .interfaces import MANYTOMANY as MANYTOMANY
+from .interfaces import MANYTOONE as MANYTOONE
+from .interfaces import ONETOMANY as ONETOMANY
+from .interfaces import PropComparator as PropComparator
+from .interfaces import StrategizedProperty as StrategizedProperty
 
 def remote(expr): ...
 def foreign(expr): ...

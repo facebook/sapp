@@ -1,24 +1,32 @@
 from typing import (
     Any,
-    Optional,
-    Union,
-    List,
-    Dict,
-    TypeVar,
-    Generic,
-    Sequence,
     Callable,
-    Tuple,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Sequence,
     Set,
+    Tuple,
+    TypeVar,
+    Union
 )
 
 from typing_extensions import Protocol
 
-from ..engine import Dialect, Engine, Connection, ResultProxy, Connectable
-from .base import Executable as Executable, SchemaVisitor as SchemaVisitor
+from ..engine import Connectable, Connection, Dialect, Engine, ResultProxy
+from .base import Executable as Executable
+from .base import SchemaVisitor as SchemaVisitor
 from .compiler import IdentifierPreparer
-from .elements import ClauseElement as ClauseElement, ColumnElement
-from .schema import Table, MetaData, SchemaItem, ForeignKeyConstraint, ForeignKey
+from .elements import ClauseElement as ClauseElement
+from .elements import ColumnElement
+from .schema import (
+    ForeignKey,
+    ForeignKeyConstraint,
+    MetaData,
+    SchemaItem,
+    Table
+)
 from .type_api import TypeEngine
 
 _T = TypeVar("_T")

@@ -12,12 +12,12 @@ from typing import (
     Any,
     Dict,
     Generic,
+    Iterable,
     List,
     NamedTuple,
     Optional,
     Tuple,
     TypeVar,
-    Iterable,
     Union,
 )
 

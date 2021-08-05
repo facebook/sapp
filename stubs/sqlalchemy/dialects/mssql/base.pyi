@@ -1,22 +1,20 @@
 from typing import Any, Optional
 
 from ... import types as _sqltypes
-from ...types import (
-    INTEGER as INTEGER,
-    BIGINT as BIGINT,
-    SMALLINT as SMALLINT,
-    DECIMAL as DECIMAL,
-    NUMERIC as NUMERIC,
-    FLOAT as FLOAT,
-    DATETIME as DATETIME,
-    DATE as DATE,
-    BINARY as BINARY,
-    TEXT as TEXT,
-    VARCHAR as VARCHAR,
-    NVARCHAR as NVARCHAR,
-    CHAR as CHAR,
-    NCHAR as NCHAR,
-)
+from ...types import BIGINT as BIGINT
+from ...types import BINARY as BINARY
+from ...types import CHAR as CHAR
+from ...types import DATE as DATE
+from ...types import DATETIME as DATETIME
+from ...types import DECIMAL as DECIMAL
+from ...types import FLOAT as FLOAT
+from ...types import INTEGER as INTEGER
+from ...types import NCHAR as NCHAR
+from ...types import NUMERIC as NUMERIC
+from ...types import NVARCHAR as NVARCHAR
+from ...types import SMALLINT as SMALLINT
+from ...types import TEXT as TEXT
+from ...types import VARCHAR as VARCHAR
 
 class REAL(_sqltypes.REAL):
     __visit_name__: str = ...

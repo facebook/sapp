@@ -1,4 +1,4 @@
-from typing import Any, Optional, Callable
+from typing import Any, Callable, Optional
 
 from .base import class_mapper as class_mapper
 from .interfaces import InspectionAttr

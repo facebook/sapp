@@ -10,7 +10,6 @@ from ..db import DB
 from ..models import create as create_models
 from . import DictEntries, PipelineStep, Summary
 
-
 log: logging.Logger = logging.getLogger("sapp")
 
 

@@ -4,13 +4,11 @@
 
 from typing import Any
 
-from .base import (
-    MySQLDialect as MySQLDialect,
-    MySQLExecutionContext as MySQLExecutionContext,
-    MySQLCompiler as MySQLCompiler,
-    MySQLIdentifierPreparer as MySQLIdentifierPreparer,
-    BIT as BIT,
-)
+from .base import BIT as BIT
+from .base import MySQLCompiler as MySQLCompiler
+from .base import MySQLDialect as MySQLDialect
+from .base import MySQLExecutionContext as MySQLExecutionContext
+from .base import MySQLIdentifierPreparer as MySQLIdentifierPreparer
 
 class MySQLExecutionContext_mysqlconnector(MySQLExecutionContext):
     def get_lastrowid(self): ...

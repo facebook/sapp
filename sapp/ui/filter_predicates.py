@@ -6,16 +6,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import (
-    TYPE_CHECKING,
-    Generic,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Generic, List, Optional, Sequence, Set, TypeVar, Union
 
 from sqlalchemy import Column
 from sqlalchemy.orm.query import Query

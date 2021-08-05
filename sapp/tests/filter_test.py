@@ -6,7 +6,7 @@
 import json
 from unittest import TestCase
 
-from ..filter import StoredFilter, FilterValidationException
+from ..filter import FilterValidationException, StoredFilter
 
 filter_dictionary = {
     "name": "test filter",

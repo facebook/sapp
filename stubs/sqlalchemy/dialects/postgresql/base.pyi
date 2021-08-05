@@ -1,19 +1,17 @@
 from datetime import timedelta
-from typing import Any, Optional, Set, Type, Text, Pattern, Dict
+from typing import Any, Dict, Optional, Pattern, Set, Text, Type
 
-from sqlalchemy.types import (
-    INTEGER as INTEGER,
-    BIGINT as BIGINT,
-    SMALLINT as SMALLINT,
-    VARCHAR as VARCHAR,
-    CHAR as CHAR,
-    TEXT as TEXT,
-    FLOAT as FLOAT,
-    NUMERIC as NUMERIC,
-    DATE as DATE,
-    BOOLEAN as BOOLEAN,
-    REAL as REAL,
-)
+from sqlalchemy.types import BIGINT as BIGINT
+from sqlalchemy.types import BOOLEAN as BOOLEAN
+from sqlalchemy.types import CHAR as CHAR
+from sqlalchemy.types import DATE as DATE
+from sqlalchemy.types import FLOAT as FLOAT
+from sqlalchemy.types import INTEGER as INTEGER
+from sqlalchemy.types import NUMERIC as NUMERIC
+from sqlalchemy.types import REAL as REAL
+from sqlalchemy.types import SMALLINT as SMALLINT
+from sqlalchemy.types import TEXT as TEXT
+from sqlalchemy.types import VARCHAR as VARCHAR
 
 from ... import schema
 from ...engine import default, reflection

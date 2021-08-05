@@ -1,4 +1,4 @@
-from typing import Any, Optional, Dict, Text, Union
+from typing import Any, Dict, Optional, Text, Union
 
 class URL(object):
     drivername: str = ...

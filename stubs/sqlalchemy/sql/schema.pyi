@@ -7,15 +7,10 @@ from typing import (
     Iterator,
     List,
     Mapping,
-    Optional,
-    Sequence as SequenceType,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    overload,
+    Optional
 )
+from typing import Sequence as SequenceType
+from typing import Set, Tuple, Type, TypeVar, Union, overload
 
 from typing_extensions import Literal, final
 
@@ -23,13 +18,12 @@ from .. import util
 from ..engine import Connectable, Connection, Engine
 from ..engine.url import URL
 from . import functions, visitors
-from .base import (
-    ColumnCollection,
-    DialectKWArgs as DialectKWArgs,
-    SchemaEventTarget as SchemaEventTarget,
-)
+from .base import ColumnCollection
+from .base import DialectKWArgs as DialectKWArgs
+from .base import SchemaEventTarget as SchemaEventTarget
 from .compiler import DDLCompiler
-from .elements import ColumnClause as ColumnClause, ColumnElement, TextClause
+from .elements import ColumnClause as ColumnClause
+from .elements import ColumnElement, TextClause
 from .expression import FunctionElement
 from .selectable import TableClause as TableClause
 from .type_api import TypeEngine

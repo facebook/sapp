@@ -4,11 +4,9 @@
 
 from typing import Any, Optional
 
-from .base import (
-    BIT as BIT,
-    MySQLDialect as MySQLDialect,
-    MySQLExecutionContext as MySQLExecutionContext,
-)
+from .base import BIT as BIT
+from .base import MySQLDialect as MySQLDialect
+from .base import MySQLExecutionContext as MySQLExecutionContext
 
 class _oursqlBIT(BIT):
     def result_processor(self, dialect, coltype): ...

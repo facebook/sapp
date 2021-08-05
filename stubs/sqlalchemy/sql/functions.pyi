@@ -1,35 +1,31 @@
-from datetime import datetime, date, time
+from datetime import date, datetime, time
 from typing import (
     Any,
-    Optional,
-    Union,
-    Iterable,
-    Tuple,
-    TypeVar,
-    Type,
     Generic,
+    Iterable,
     List,
-    overload,
+    Optional,
     Text,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    overload
 )
 
-from ..engine.base import Engine, Connection
+from ..engine.base import Connection, Engine
 from ..engine.result import ResultProxy
 from . import sqltypes
 from . import util as sqlutil
-from .base import Executable as Executable, ColumnCollection
-from .elements import (
-    ColumnElement as ColumnElement,
-    Grouping,
-    ClauseList,
-    ColumnElement,
-    Over,
-    WithinGroup,
-    FunctionFilter,
-    AsBoolean,
-)
+from .base import ColumnCollection
+from .base import Executable as Executable
+from .elements import AsBoolean, ClauseList
+from .elements import ColumnElement as ColumnElement
+from .elements import FunctionFilter, Grouping, Over, WithinGroup
 from .schema import Sequence
-from .selectable import FromClause as FromClause, Alias, Select
+from .selectable import Alias
+from .selectable import FromClause as FromClause
+from .selectable import Select
 from .type_api import TypeEngine
 from .visitors import VisitableType as VisitableType
 

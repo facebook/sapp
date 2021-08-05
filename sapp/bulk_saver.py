@@ -26,7 +26,6 @@ from .models import (
     TraceFrameLeafAssoc,
 )
 
-
 # pyre-fixme[5]: Global expression must be annotated.
 log = logging.getLogger("sapp")
 

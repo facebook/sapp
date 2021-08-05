@@ -13,7 +13,6 @@ from typing import IO, Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 from .sharded_files import ShardedFile
 
-
 METADATA_GLOB = "*metadata.json"
 
 

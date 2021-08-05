@@ -1,7 +1,7 @@
-from typing import Any, Optional, Union, TypeVar, Generic, List, Iterator
+from typing import Any, Generic, Iterator, List, Optional, TypeVar, Union
 
 from ..sql.elements import Label
-from ..sql.selectable import ForUpdateArg, Alias, CTE
+from ..sql.selectable import CTE, Alias, ForUpdateArg
 from . import interfaces
 from .base import InspectionAttr
 from .session import Session

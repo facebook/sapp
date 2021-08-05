@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from json import JSONEncoder
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Any, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from .ui.schema import FeatureCondition

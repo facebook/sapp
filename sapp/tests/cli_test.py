@@ -15,7 +15,6 @@ from click.testing import CliRunner
 from .. import __name__ as client
 from ..cli import cli
 
-
 PIPELINE_RUN = f"{client}.pipeline.Pipeline.run"
 
 

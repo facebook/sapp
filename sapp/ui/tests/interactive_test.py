@@ -31,8 +31,8 @@ from ...models import (
     TraceFrame,
     TraceFrameLeafAssoc,
     TraceKind,
-    create as create_models,
 )
+from ...models import create as create_models
 from ...pipeline.pysa_taint_parser import Parser
 from ...tests.fake_object_generator import FakeObjectGenerator
 from ..interactive import (

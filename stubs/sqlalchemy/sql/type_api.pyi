@@ -1,25 +1,15 @@
-from typing import (
-    Any,
-    Optional,
-    Union,
-    TypeVar,
-    Generic,
-    Type,
-    Callable,
-    ClassVar,
-    Tuple,
-    Mapping,
-    overload,
-    Text as typing_Text,
-)
+from typing import Any, Callable, ClassVar, Generic, Mapping, Optional
+from typing import Text as typing_Text
+from typing import Tuple, Type, TypeVar, Union, overload
 
 from .. import util
 from ..engine.interfaces import Dialect
 from . import operators
 from .base import SchemaEventTarget as SchemaEventTarget
-from .elements import ColumnElement, BindParameter
-from .sqltypes import NullType, Integer, Boolean, String, MatchType, Indexable
-from .visitors import Visitable as Visitable, VisitableType as VisitableType
+from .elements import BindParameter, ColumnElement
+from .sqltypes import Boolean, Indexable, Integer, MatchType, NullType, String
+from .visitors import Visitable as Visitable
+from .visitors import VisitableType as VisitableType
 
 _T = TypeVar("_T")
 _T_co = TypeVar("_T_co", covariant=True)

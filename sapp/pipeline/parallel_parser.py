@@ -8,9 +8,8 @@ from multiprocessing import Pool
 from typing import Iterable, List, Tuple, Type, Union
 
 from ..analysis_output import AnalysisOutput, Metadata
-from . import ParseCondition, ParseIssue, ParseConditionTuple, ParseIssueTuple
+from . import ParseCondition, ParseConditionTuple, ParseIssue, ParseIssueTuple
 from .base_parser import BaseParser
-
 
 log: logging.Logger = logging.getLogger("sapp")
 logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
