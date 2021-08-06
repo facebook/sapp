@@ -104,8 +104,9 @@ from .langhelpers import get_callable_argspec as get_callable_argspec
 from .langhelpers import get_cls_kwargs as get_cls_kwargs
 from .langhelpers import get_func_kwargs as get_func_kwargs
 from .langhelpers import getargspec_init as getargspec_init
-from .langhelpers import \
-    group_expirable_memoized_property as group_expirable_memoized_property
+from .langhelpers import (
+    group_expirable_memoized_property as group_expirable_memoized_property,
+)
 from .langhelpers import hybridmethod as hybridmethod
 from .langhelpers import hybridproperty as hybridproperty
 from .langhelpers import iterate_attributes as iterate_attributes
@@ -114,15 +115,13 @@ from .langhelpers import md5_hex as md5_hex
 from .langhelpers import memoized_instancemethod as memoized_instancemethod
 from .langhelpers import memoized_property as memoized_property
 from .langhelpers import methods_equivalent as methods_equivalent
-from .langhelpers import \
-    monkeypatch_proxied_specials as monkeypatch_proxied_specials
+from .langhelpers import monkeypatch_proxied_specials as monkeypatch_proxied_specials
 from .langhelpers import only_once as only_once
 from .langhelpers import portable_instancemethod as portable_instancemethod
 from .langhelpers import safe_reraise as safe_reraise
 from .langhelpers import set_creation_order as set_creation_order
 from .langhelpers import symbol as symbol
-from .langhelpers import \
-    unbound_method_to_callable as unbound_method_to_callable
+from .langhelpers import unbound_method_to_callable as unbound_method_to_callable
 from .langhelpers import warn as warn
 from .langhelpers import warn_exception as warn_exception
 from .langhelpers import warn_limited as warn_limited

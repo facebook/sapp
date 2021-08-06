@@ -9,7 +9,7 @@ from typing import (
     Optional,
     Sequence,
     TypeVar,
-    Union
+    Union,
 )
 
 from sqlalchemy import util

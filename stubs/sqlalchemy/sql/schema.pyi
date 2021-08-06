@@ -1,14 +1,5 @@
 import threading
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional
-)
+from typing import Any, Callable, Generic, Iterable, Iterator, List, Mapping, Optional
 from typing import Sequence as SequenceType
 from typing import Set, Tuple, Type, TypeVar, Union, overload
 

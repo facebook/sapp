@@ -10,7 +10,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    overload
+    overload,
 )
 
 from ..engine.base import Connection, Engine
