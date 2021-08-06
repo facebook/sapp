@@ -44,6 +44,7 @@ from sqlalchemy.orm.query import Query as RawQuery
 from sqlalchemy.sql import func
 from sqlalchemy.sql.expression import or_
 
+from .. import queries
 from ..analysis_output import AnalysisOutput, AnalysisOutputError
 from ..db import DB
 from ..decorators import UserError, catch_keyboard_interrupt, catch_user_error
@@ -766,34 +767,11 @@ details              show additional information about the current trace frame
             limit: int (default: all)                       how many leaves to display
             order_by: name|number_issues (default: random)  sort by a criteria
         """
-        pager = self._resolve_pager(use_pager)
         leaves: DefaultDict[str, int] = defaultdict(int)
 
-        text_kind = SharedTextKind.from_string(kind)
-        if text_kind is None:
-            raise UserError("Invalid kind.")
-
-        # Show leaf names instead of leaf kinds.
-        if text_kind == SharedTextKind.source:
-            text_kind = SharedTextKind.source_detail
-        elif text_kind == SharedTextKind.sink:
-            text_kind = SharedTextKind.sink_detail
-
         with self.db.make_session() as session:
-            query = (
-                session.query(
-                    IssueInstanceSharedTextAssoc.shared_text_id, SharedText.contents
-                )
-                .join(
-                    SharedText,
-                    IssueInstanceSharedTextAssoc.shared_text_id == SharedText.id,
-                )
-                .join(
-                    IssueInstance,
-                    IssueInstanceSharedTextAssoc.issue_instance_id == IssueInstance.id,
-                )
-                .filter(IssueInstance.run_id == self._current_run_id)
-                .filter(SharedText.kind == text_kind)
+            query = queries.leaves(
+                session=session, kind=kind, run_id=self._current_run_id
             )
             for (_, name) in query:
                 leaves[name] += 1
@@ -814,7 +792,7 @@ details              show additional information about the current trace frame
         leaves_strings = []
         for name, number_issues in results:
             leaves_strings.append(f"{name} (in {number_issues} issues)")
-
+        pager = self._resolve_pager(use_pager)
         pager("\n".join(leaves_strings))
         print(
             f"Found {len(leaves)} {kind}s in issues with run_id {self._current_run_id}."
