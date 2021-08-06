@@ -248,6 +248,26 @@ def import_filters(
     filters.import_filter_from_path(ctx.database, pathlib.Path(input_filter_path))
 
 
+@filter.command(
+    name="export",
+    help="Export a filter from database",
+)
+@pass_context
+@argument("filter_name", type=str)
+@option(
+    "--output-path",
+    "-o",
+    type=Path(writable=True),
+    help="Path where you want to save the exported filter to",
+)
+def export_filter(
+    ctx: Context,
+    filter_name: str,
+    output_path: str,
+) -> None:
+    return
+
+
 @filter.command(name="delete", help="Delete filters from database")
 @argument("filter_names", nargs=-1, required=True)
 @pass_context
