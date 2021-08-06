@@ -22,6 +22,7 @@ from .extensions import prompt_extension
 from .filesystem import find_root
 from .models import PrimaryKeyGenerator
 from .pipeline import Pipeline
+from .pipeline.add_features import AddFeatures
 from .pipeline.create_database import CreateDatabase
 from .pipeline.database_saver import DatabaseSaver
 from .pipeline.model_generator import ModelGenerator
@@ -133,6 +134,7 @@ def explore(ctx: Context, ipython_args) -> None:
 @option("--commit-hash", type=str)
 @option("--job-id", type=str)
 @option("--differential-id", type=int)
+@option("--add-feature", type=str, multiple=True)
 @option(
     "--previous-issue-handles",
     type=Path(exists=True),
@@ -160,6 +162,7 @@ def analyze(
     linemap: Optional[str],
     store_unused_models: bool,
     input_file: str,
+    add_feature: Optional[List[str]],
 ) -> None:
     # Store all options in the right places
     summary_blob: Dict[str, Any] = {
@@ -189,6 +192,7 @@ def analyze(
     pipeline_steps = [
         ctx.parser_class(),
         CreateDatabase(ctx.database),
+        AddFeatures(add_feature),
         ModelGenerator(),
         TrimTraceGraph(),
         DatabaseSaver(ctx.database, PrimaryKeyGenerator()),
