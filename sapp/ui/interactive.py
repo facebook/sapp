@@ -202,11 +202,7 @@ details              show additional information about the current trace frame
         if not self.read_only:
             create_models(self.db)
         with self.db.make_session() as session:
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
 
             self._leaf_lookup = trace.LeafLookup.create(session)
 

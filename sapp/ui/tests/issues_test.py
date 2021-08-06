@@ -7,6 +7,7 @@ from unittest import TestCase
 
 from sqlalchemy.sql import func
 
+from ... import queries
 from ...db import DB, DBType
 from ...models import IssueInstanceSharedTextAssoc, Run, RunStatus
 from ...models import create as create_models
@@ -67,11 +68,7 @@ class QueryTest(TestCase):
 
     def testWhereCode(self) -> None:
         with self.db.make_session() as session:
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
@@ -112,11 +109,7 @@ class QueryTest(TestCase):
 
     def testWhereStatus(self) -> None:
         with self.db.make_session() as session:
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
@@ -128,11 +121,7 @@ class QueryTest(TestCase):
 
     def testWhereCallables(self) -> None:
         with self.db.make_session() as session:
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
@@ -173,11 +162,7 @@ class QueryTest(TestCase):
 
     def testWhereFileNames(self) -> None:
         with self.db.make_session() as session:
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
@@ -207,11 +192,7 @@ class QueryTest(TestCase):
 
     def testWhereTraceLength(self) -> None:
         with self.db.make_session() as session:
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
 
             builder = Instance(session, latest_run_id)
             issue_ids = {
@@ -329,11 +310,7 @@ class QueryTest(TestCase):
                 )
             )
             session.commit()
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
@@ -385,11 +362,7 @@ class QueryTest(TestCase):
                 )
             )
             session.commit()
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
@@ -452,11 +425,7 @@ class QueryTest(TestCase):
                 )
             )
             session.commit()
-            latest_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.status == RunStatus.FINISHED)
-                .scalar()
-            )
+            latest_run_id = queries.latest_run_id(session)
 
             builder = Instance(session, latest_run_id)
             issue_ids = {

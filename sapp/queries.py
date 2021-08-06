@@ -5,15 +5,28 @@
 # LICENSE file in the root directory of this source tree.
 
 from sqlalchemy.orm import Session, Query
+from sqlalchemy.sql import func
 
 from .decorators import UserError
 from .models import (
     DBID,
     IssueInstance,
     IssueInstanceSharedTextAssoc,
+    Run,
+    RunStatus,
     SharedText,
     SharedTextKind,
 )
+
+
+def latest_run_id(
+    session: Session,
+) -> DBID:
+    return (
+        session.query(func.max(Run.id))
+        .filter(Run.status == RunStatus.FINISHED)
+        .scalar()
+    )
 
 
 def _leaf_detail_kind(kind: str) -> SharedTextKind:
