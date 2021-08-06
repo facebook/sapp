@@ -2417,6 +2417,36 @@ else:
             ],
         )
 
+    def testListLeaves(self) -> None:
+        run = self.fakes.run()
+        self.fakes.issue()
+        instance = self.fakes.instance()
+        sink_detail_1 = self.fakes.sink_detail("sink_detail_1")
+        sink_detail_2 = self.fakes.sink_detail("sink_detail_2")
+        self.fakes.save_all(self.db)
+
+        assocs = [
+            IssueInstanceSharedTextAssoc(
+                shared_text_id=sink_detail_1.id,
+                issue_instance_id=instance.id,
+            ),
+            IssueInstanceSharedTextAssoc(
+                shared_text_id=sink_detail_2.id,
+                issue_instance_id=instance.id,
+            ),
+        ]
+        with self.db.make_session() as session:
+            session.add(run)
+            self._add_to_session(session, assocs)
+            session.commit()
+
+        self.interactive.setup()
+        self.interactive.leaves()
+
+        output = self.stdout.getvalue()
+        self.assertIn("sink_detail_1", output)
+        self.assertIn("sink_detail_2", output)
+
     def mock_pager(self, output_string):
         self.pager_calls += 1
 
