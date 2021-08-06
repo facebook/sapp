@@ -20,7 +20,7 @@ jobs:
         run: pip install black==21.4b2
 
       - name: Run black
-        run: black --check --diff .
+        run: black --exclude 'stubs\/' --check --diff .
 
   usort:
     runs-on: ubuntu-latest

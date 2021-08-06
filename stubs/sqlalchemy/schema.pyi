@@ -22,8 +22,7 @@ from .sql.naming import conv as conv
 from .sql.schema import BLANK_SCHEMA as BLANK_SCHEMA
 from .sql.schema import CheckConstraint as CheckConstraint
 from .sql.schema import Column as Column
-from .sql.schema import \
-    ColumnCollectionConstraint as ColumnCollectionConstraint
+from .sql.schema import ColumnCollectionConstraint as ColumnCollectionConstraint
 from .sql.schema import ColumnCollectionMixin as ColumnCollectionMixin
 from .sql.schema import ColumnDefault as ColumnDefault
 from .sql.schema import Constraint as Constraint

@@ -9,7 +9,7 @@ from typing import (
     Mapping,
     Optional,
     Set,
-    Text
+    Text,
 )
 from typing import Tuple as _TupleType
 from typing import Type, TypeVar, Union, overload

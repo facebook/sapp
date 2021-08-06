@@ -9,7 +9,7 @@ from typing import (
     Set,
     Tuple,
     TypeVar,
-    Union
+    Union,
 )
 
 from typing_extensions import Protocol
@@ -20,13 +20,7 @@ from .base import SchemaVisitor as SchemaVisitor
 from .compiler import IdentifierPreparer
 from .elements import ClauseElement as ClauseElement
 from .elements import ColumnElement
-from .schema import (
-    ForeignKey,
-    ForeignKeyConstraint,
-    MetaData,
-    SchemaItem,
-    Table
-)
+from .schema import ForeignKey, ForeignKeyConstraint, MetaData, SchemaItem, Table
 from .type_api import TypeEngine
 
 _T = TypeVar("_T")

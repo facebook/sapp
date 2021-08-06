@@ -10,7 +10,7 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
-    Union
+    Union,
 )
 
 from .. import engine, util

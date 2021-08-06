@@ -5,11 +5,9 @@
 
 from unittest import TestCase
 
-from sqlalchemy.sql import func
-
 from ... import queries
 from ...db import DB, DBType
-from ...models import IssueInstanceSharedTextAssoc, Run, RunStatus
+from ...models import IssueInstanceSharedTextAssoc
 from ...models import create as create_models
 from ...tests.fake_object_generator import FakeObjectGenerator
 from ..issues import Instance
