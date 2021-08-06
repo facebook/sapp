@@ -59,8 +59,7 @@ class Filter:
         self.is_new_issue: Optional[bool] = kwargs.get("is_new_issue", None)
 
         missing_filtering_condition: bool = all(
-            self.__getattribute__(key) is None or self.__getattribute__(key) == []
-            for key in self._json_filtering_keys()
+            getattr(self, key) in (None, []) for key in self._json_filtering_keys()
         )
 
         if missing_filtering_condition:
@@ -181,9 +180,23 @@ class StoredFilter(Filter):
         json_blob: Dict[str, Any] = json.loads(input_path.read_text())
         return StoredFilter(**json_blob)
 
+    @staticmethod
+    def from_record(record: FilterRecord) -> StoredFilter:
+        return StoredFilter(
+            record.name, record.description or "", **json.loads(record.json)
+        )
+
     def to_record(self) -> FilterRecord:
         return FilterRecord(
             name=self.name,
             description=self.description,
             json=self.to_json(),
         )
+
+    def to_file(self) -> str:
+        output_json: Dict[str, Any] = {
+            attribute: value
+            for attribute, value in self.__dict__.items()
+            if value and value != ["%"]
+        }
+        return json.dumps(output_json, indent=4)

@@ -8,11 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import (
-    TYPE_CHECKING,
-    List,
-    Tuple,
-)
+from typing import TYPE_CHECKING, List, Tuple, Optional
 
 import graphene
 import sqlalchemy
@@ -140,6 +136,39 @@ def delete_filters(database: DB, filter_names: Tuple[str]) -> None:
                 delete_filter(session, name)
             except EmptyDeletionError as error:
                 LOG.exception(error)
+
+
+class FilterNotFound(Exception):
+    pass
+
+
+def export_filter(
+    database: DB, filter_name: str, output_filter_path: Optional[Path] = None
+) -> None:
+    with database.make_session() as session:
+        try:
+            record = (
+                session.query(FilterRecord)
+                .filter(FilterRecord.name == filter_name)
+                .one_or_none()
+            )
+            if not record:
+                raise FilterNotFound(
+                    f"`{filter_name}` does not exist in `{database.dbname}`"
+                )
+            storedfilter_instance = StoredFilter.from_record(record)
+            if output_filter_path:
+                output_filter_path.write_text(storedfilter_instance.to_file())
+                LOG.info(f"`{filter_name}` has been exported to `{output_filter_path}`")
+            else:
+                print(storedfilter_instance.to_file())
+        except sqlalchemy.exc.OperationalError:
+            LOG.error(
+                "Error: Database disk image is malformed or "
+                "database has not been initialized properly."
+                "Please recreate your SAPP db."
+            )
+            raise
 
 
 class InvalidRunException(Exception):

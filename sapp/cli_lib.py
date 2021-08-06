@@ -265,7 +265,10 @@ def export_filter(
     filter_name: str,
     output_path: str,
 ) -> None:
-    return
+    if output_path:
+        filters.export_filter(ctx.database, filter_name, pathlib.Path(output_path))
+    else:
+        filters.export_filter(ctx.database, filter_name)
 
 
 @filter.command(name="delete", help="Delete filters from database")
