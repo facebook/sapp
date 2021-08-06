@@ -232,6 +232,17 @@ You can also import all filters within a directory by running:
 [~/example]$ sapp --database-name sapp.db filter import path/to/list_of_filters
 ```
 
+### Exporting filters
+You can view a filter in a SAPP DB by running:
+```
+[~/example]$ sapp --database-name sapp.db filter export "filter name"
+```
+
+You can export a filter from a SAPP DB to a file by running:
+```
+[~/example]$ sapp --database-name sapp.db filter export "filter name" --output-path /path/to/filename.json
+```
+
 ### Deleting filters
 You can delete filters by name with:
 ```shell
