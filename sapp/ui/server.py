@@ -63,13 +63,8 @@ def start_server(
     source_directory: str,
     editor_schema: Optional[str],
 ) -> None:
-    engine = sqlalchemy.create_engine(
-        sqlalchemy.engine.url.URL("sqlite", database=database.dbname),
-        echo=False,
-        poolclass=None,
-    )
     session = scoped_session(
-        sessionmaker(bind=engine),
+        sessionmaker(bind=database.engine),
         # pyre-fixme[16]: `flask` has no attribute _app_ctx_stack
         scopefunc=_app_ctx_stack.__ident_func__,
     )
