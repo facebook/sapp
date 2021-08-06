@@ -8,17 +8,20 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    List,
+    Tuple,
+)
 
 import graphene
 import sqlalchemy
-from sqlalchemy import Column, String
 from sqlalchemy.orm import Session
 
 from .. import models
 from ..db import DB
-from ..filter import StoredFilter
-from ..models import DBID, Base, Run, RunStatus
+from ..filter import StoredFilter, FilterRecord
+from ..models import DBID, Run, RunStatus
 from .issues import Instance
 
 if TYPE_CHECKING:
@@ -41,30 +44,6 @@ class Filter(graphene.ObjectType):
         )
 
 
-class FilterRecord(Base):
-    __tablename__ = "filters"
-
-    name: Column[str] = Column(
-        String(length=255), nullable=False, unique=True, primary_key=True
-    )
-    description: Column[Optional[str]] = Column(String(length=1024), nullable=True)
-
-    json: Column[str] = Column(
-        String(length=1024), nullable=False, doc="JSON representation of the filter"
-    )
-
-    @staticmethod
-    def from_filter(filter: Filter) -> FilterRecord:
-        return FilterRecord(
-            # pyre-ignore[6]: graphene too dynamic.
-            name=filter.name,
-            # pyre-fixme[6]: Expected `Optional[str]` for 2nd param but got `String`.
-            description=filter.description,
-            # pyre-fixme[6]: Expected `str` for 3rd param but got `String`.
-            json=filter.json,
-        )
-
-
 def all_filters(session: Session) -> List[Filter]:
     return [Filter.from_record(record) for record in session.query(FilterRecord).all()]
 
@@ -75,14 +54,26 @@ def save_filter(session: Session, filter: Filter) -> None:
         session.query(FilterRecord).filter(FilterRecord.name == filter.name).first()
     )
 
+    # pyre-ignore[6]: graphene too dynamic.
+    filter_json = json.loads(filter.json)
+    filter_json.pop("name", None)
+    filter_json.pop("description", None)
+
+    filter_record = StoredFilter(
+        # pyre-ignore[6]: graphene too dynamic.
+        filter.name,
+        # pyre-ignore[6]: graphene too dynamic.
+        filter.description or "",
+        **filter_json,
+    ).to_record()
+
     if not existing:
-        session.add(FilterRecord.from_filter(filter))
+        session.add(filter_record)
         LOG.debug(f"Adding {filter}")
     else:
-        # pyre-ignore [8]: `graphene.String` is not compatible with `str`
-        existing.description = filter.description
-        # pyre-ignore [8]: `graphene.String` is not compatible with `str`
-        existing.json = filter.json
+        existing.name = filter_record.name
+        existing.description = filter_record.description
+        existing.json = filter_record.json
         LOG.debug(f"Updating {filter}")
 
     session.commit()

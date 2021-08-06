@@ -12,8 +12,25 @@ from json import JSONEncoder
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
+from sqlalchemy import Column, String
+
+from .models import Base
+
 if TYPE_CHECKING:
     from .ui.schema import FeatureCondition
+
+
+class FilterRecord(Base):
+    __tablename__ = "filters"
+
+    name: Column[str] = Column(
+        String(length=255), nullable=False, unique=True, primary_key=True
+    )
+    description: Column[Optional[str]] = Column(String(length=1024), nullable=True)
+
+    json: Column[str] = Column(
+        String(length=1024), nullable=False, doc="JSON representation of the filter"
+    )
 
 
 class FilterValidationException(Exception):
@@ -163,3 +180,10 @@ class StoredFilter(Filter):
     def from_file(input_path: Path) -> StoredFilter:
         json_blob: Dict[str, Any] = json.loads(input_path.read_text())
         return StoredFilter(**json_blob)
+
+    def to_record(self) -> FilterRecord:
+        return FilterRecord(
+            name=self.name,
+            description=self.description,
+            json=self.to_json(),
+        )
