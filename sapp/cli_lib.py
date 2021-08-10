@@ -288,8 +288,8 @@ def delete_filters(
 )
 @click.option(
     "--output-format",
-    type=click.Choice(["json", "sarif"]),
-    default="json",
+    type=click.Choice(["sapp", "sarif"]),
+    default="sapp",
     help="output format you want your filtered results in",
 )
 @argument("run_id", type=int)
