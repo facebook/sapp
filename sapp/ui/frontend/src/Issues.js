@@ -42,7 +42,7 @@ function IssuesList(props: $ReadOnly<{|
 
 const PAGE_SIZE = 20;
 
-const IssueQuery = gql`
+export const IssueQuery = gql`
   query Issue(
     $after: String
     $run_id: Int!

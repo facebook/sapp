@@ -877,6 +877,20 @@ function getRecentFilters(): mixed {
   return [];
 }
 
+export const filtersQuery = gql`
+  query Filters {
+    filters {
+      edges {
+        node {
+          name
+          description
+          json
+        }
+      }
+    }
+  }
+`;
+
 export const FilterControls = (props: {
   refetch: mixed => mixed,
   refetching: boolean,
@@ -901,19 +915,6 @@ export const FilterControls = (props: {
     );
   });
 
-  const filtersQuery = gql`
-    query Filters {
-      filters {
-        edges {
-          node {
-            name
-            description
-            json
-          }
-        }
-      }
-    }
-  `;
   const {
     loading: filterLoading,
     error: filterError,

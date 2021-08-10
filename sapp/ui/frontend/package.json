@@ -59,6 +59,7 @@
     "react-dev-utils": "^11.0.4",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
+    "react-test-renderer": "^16.14.0",
     "resolve": "1.15.0",
     "resolve-url-loader": "^3.1.2",
     "sass-loader": "8.0.2",
@@ -76,6 +77,7 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
+    "ui-test": "node node_modules/jest/bin/jest.js",
     "flow": "flow",
     "lint": "npx eslint . --max-warnings=0"
   },
@@ -125,7 +127,8 @@
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$",
-      "^.+\\.module\\.(css|sass|scss)$"
+      "^.+\\.module\\.(css|sass|scss)$",
+      "/node_modules/(?!antd|@ant-design|rc-.+?|@babel/runtime).+(js|jsx)$"
     ],
     "modulePaths": [],
     "moduleNameMapper": {

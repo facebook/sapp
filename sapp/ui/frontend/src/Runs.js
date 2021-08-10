@@ -103,20 +103,20 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
   );
 }
 
-export default function Runs(props: $ReadOnly<{}>): React$Node {
-  const RunsQuery = gql`
-    query Run {
-      runs {
-        edges {
-          node {
-            run_id
-            date
-          }
+export const RunsQuery = gql`
+  query Run {
+    runs {
+      edges {
+        node {
+          run_id
+          date
         }
       }
     }
-  `;
+  }
+`;
 
+export default function Runs(props: $ReadOnly<{}>): React$Node {
   const {loading, error, data} = useQuery(RunsQuery);
 
   if (error) {
