@@ -195,31 +195,37 @@ const MatchesIsField = (
     setCurrentFilter: FilterDescription => void,
   }>,
 ): React$Node => {
-  const [mode, setMode] = useState('is');
-  const [inputValue, setInputValue] = useState(null);
+  const [inputValue, setInputValue] = useState('');
+  const [selectValue, setSelectValue] = useState([]);
+  const [matchedValues, setMatchedValues] = useState([]);
+
+  const triggerChange = (operation: string, value: mixed = undefined): void => {
+    let values = {};
+    if(value === undefined) {
+      value = (operation === 'is') ? selectValue : inputValue;
+    }
+    values[props.parameterName] = {
+      operation: operation,
+      value: value,
+    };
+    props.setCurrentFilter({...props.currentFilter, ...values});
+  }
+
+  const selectedOperation =
+    props.currentFilter[props.parameterName]?.operation || 'is';
 
   return (
     <Row gutter={gutter}>
       <Col span={6}>
         <Select
           options={[{value: 'is'}, {value: 'matches'}]}
-          value={mode}
-          onChange={setMode}
+          value={selectedOperation}
+          onChange={triggerChange}
           style={{width: '100%'}}
         />
       </Col>
       <Col span={16}>
-        {mode === 'is' ? (
-          <Select
-            mode="multiple"
-            value={props.currentFilter[props.parameterName]}
-            options={props.allOptions.map(value => ({value}))}
-            style={{width: '100%'}}
-            onChange={value =>
-              props.setCurrentFilter({...props.currentFilter, value})
-            }
-          />
-        ): (
+        {selectedOperation === 'matches' ? (
           <Input
             placeholder="regular expression"
             style={{width: '100%'}}
@@ -230,19 +236,29 @@ const MatchesIsField = (
               const option_values = props.allOptions.filter(option =>
                   option.match(value),
               );
-              let values = {};
-              values[props.parameterName] = option_values;
-              props.setCurrentFilter({...props.currentFilter, ...values});
+              setMatchedValues(option_values);
+              triggerChange('matches', value);
             }}
             suffix={
               <Tooltip
-                title={(props.currentFilter[props.parameterName] || []).join('\n')}
+                title={(matchedValues || []).join('\n')}
                 placement="bottom">
                 <Text type="secondary" size="small">
-                  {(props.currentFilter[props.parameterName] || []).length}
+                  {(matchedValues || []).length}
                 </Text>
               </Tooltip>
             }
+          />
+        ): (
+          <Select
+            mode="multiple"
+            value={selectValue}
+            options={props.allOptions.map(value => ({value}))}
+            style={{width: '100%'}}
+            onChange={value => {
+              setSelectValue(value);
+              triggerChange('is', value);
+            }}
           />
         )}
       </Col>

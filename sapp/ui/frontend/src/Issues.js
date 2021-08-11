@@ -48,11 +48,11 @@ export const IssueQuery = gql`
     $run_id: Int!
     $codes: [Int]
     $paths: [String]
-    $callables: [String]
-    $source_names: [String]
-    $source_kinds: [String]
-    $sink_names: [String]
-    $sink_kinds: [String]
+    $callables: MatchesIsField
+    $source_names: MatchesIsField
+    $source_kinds: MatchesIsField
+    $sink_names: MatchesIsField
+    $sink_kinds: MatchesIsField
     $statuses: [String]
     $features: [FeatureCondition]
     $min_trace_length_to_sinks: Int

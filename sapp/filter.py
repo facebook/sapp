@@ -10,14 +10,24 @@ from __future__ import annotations
 import json
 from json import JSONEncoder
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypedDict, Union
 
 from sqlalchemy import Column, String
 
 from .models import Base
 
 if TYPE_CHECKING:
-    from .ui.schema import FeatureCondition
+    from .ui.schema import FeatureCondition, MatchesIsField
+
+
+class NewMatchesIsAlias(TypedDict):
+    operation: str
+    value: List[str]
+
+
+# Previously the field contained values in form of a list, maintain Union for
+# backward compatibility.
+MatchesIsAlias = Union[NewMatchesIsAlias, List[str]]
 
 
 class FilterRecord(Base):
@@ -44,12 +54,12 @@ class Filter:
         )
         self.codes: List[int] = kwargs.get("codes", [])
         self.paths: List[str] = kwargs.get("paths", [])
-        self.callables: List[str] = kwargs.get("callables", [])
+        self.callables: MatchesIsAlias = kwargs.get("callables", [])
         self.statuses: List[str] = kwargs.get("statuses", [])
-        self.source_names: List[str] = kwargs.get("source_names", [])
-        self.source_kinds: List[str] = kwargs.get("source_kinds", [])
-        self.sink_names: List[str] = kwargs.get("sink_names", [])
-        self.sink_kinds: List[str] = kwargs.get("sink_kinds", [])
+        self.source_names: MatchesIsAlias = kwargs.get("source_names", [])
+        self.source_kinds: MatchesIsAlias = kwargs.get("source_kinds", [])
+        self.sink_names: MatchesIsAlias = kwargs.get("sink_names", [])
+        self.sink_kinds: MatchesIsAlias = kwargs.get("sink_kinds", [])
         self.traceLengthFromSources: Optional[List[int]] = kwargs.get(
             "traceLengthFromSources", None
         )
@@ -92,12 +102,12 @@ class Filter:
     def from_query(
         codes: List[int],
         paths: List[str],
-        callables: List[str],
+        callables: Optional[MatchesIsField],
         statuses: List[str],
-        source_names: List[str],
-        source_kinds: List[str],
-        sink_names: List[str],
-        sink_kinds: List[str],
+        source_names: Optional[MatchesIsField],
+        source_kinds: Optional[MatchesIsField],
+        sink_names: Optional[MatchesIsField],
+        sink_kinds: Optional[MatchesIsField],
         features: Optional[List[FeatureCondition]],
         min_trace_length_to_sinks: Optional[int],
         max_trace_length_to_sinks: Optional[int],
