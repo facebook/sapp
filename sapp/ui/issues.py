@@ -158,6 +158,7 @@ class IssueQueryResult(NamedTuple):
     def to_json(self) -> Dict[str, Union[str, int, List[str], bool]]:
         return {
             "issue_id": self.issue_id.resolved(),
+            "filename": self.filename,
             "line": self.location.line_no,
             "begin_column": self.location.begin_column,
             "end_column": self.location.end_column,
