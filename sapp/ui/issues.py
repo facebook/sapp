@@ -73,6 +73,7 @@ class IssueQueryResultType(graphene.ObjectType):
     features = graphene.List(graphene.String)
 
     is_new_issue = graphene.Boolean()
+    first_seen = graphene.String()
 
     min_trace_length_to_sources = graphene.Int()
     min_trace_length_to_sinks = graphene.Int()
@@ -111,6 +112,7 @@ class IssueQueryResult(NamedTuple):
     filename: str
     location: SourceLocation
 
+    first_seen: str
     is_new_issue: bool
 
     min_trace_length_to_sources: int
@@ -133,6 +135,7 @@ class IssueQueryResult(NamedTuple):
             message=record.message,
             callable=record.callable,
             status=record.status.name.replace("_", " ").capitalize(),
+            first_seen=record.first_seen,
             filename=record.filename,
             location=record.location,
             is_new_issue=record.is_new_issue,
@@ -173,6 +176,7 @@ class IssueQueryResult(NamedTuple):
             "min_trace_length_to_sinks": self.min_trace_length_to_sinks,
             "features": list(self.features),
             "is_new_issue": self.is_new_issue,
+            "first_seen": self.first_seen,
         }
 
     def __hash__(self) -> int:
@@ -191,6 +195,7 @@ class IssueQueryResult(NamedTuple):
                 self.filename,
                 self.location,
                 self.is_new_issue,
+                self.first_seen,
                 self.min_trace_length_to_sinks,
                 self.min_trace_length_to_sources,
                 self.features,
@@ -214,6 +219,7 @@ class IssueQueryResult(NamedTuple):
             and self.filename == other.filename
             and self.location == other.location
             and self.is_new_issue == other.is_new_issue
+            and self.first_seen == other.first_seen
             and self.min_trace_length_to_sinks == other.min_trace_length_to_sinks
             and self.min_trace_length_to_sources == other.min_trace_length_to_sources
             and self.features == other.features
@@ -335,6 +341,7 @@ class Instance:
                 Issue.id.label("issue_id"),
                 Issue.code,
                 Issue.status,
+                Issue.first_seen,
                 CallableText.contents.label("callable"),
                 MessageText.contents.label("message"),
                 IssueInstance.is_new_issue,

@@ -138,6 +138,7 @@ export type IssueDescription = {
   features: $ReadOnlyArray<string>,
   min_trace_length_to_sources: number,
   min_trace_length_to_sinks: number,
+  first_seen: string,
   is_new_issue: boolean,
 };
 
@@ -257,6 +258,12 @@ export function Issue(
               issue_id={props.issue.issue_id}
               status={props.issue.status}/>
           </Tooltip>
+        </Item>
+      </Row>
+      <Row gutter={gutter}>
+        <Label>First seen</Label>
+        <Item>
+          <Text code>{props.issue.first_seen}</Text>
         </Item>
       </Row>
       <Row gutter={gutter}>
