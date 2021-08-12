@@ -187,7 +187,8 @@ const StatusSelect = (
     <Select
       size='small'
       defaultValue={props.status}
-      onChange={updateStatusFunc}>
+      onChange={updateStatusFunc}
+      style={{minWidth: '130px'}}>
       {allStatuses}
     </Select>
   );
