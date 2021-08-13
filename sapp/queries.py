@@ -4,6 +4,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-strict
+from typing import List
+
 from sqlalchemy.orm import Session, Query
 from sqlalchemy.sql import func
 
@@ -14,9 +17,21 @@ from .models import (
     IssueInstanceSharedTextAssoc,
     Run,
     RunStatus,
+    WarningMessage,
     SharedText,
     SharedTextKind,
 )
+
+
+def get_warning_message_range(
+    session: Session, startingCode: int, endingCode: int
+) -> List[WarningMessage]:
+    return (
+        session.query(WarningMessage)
+        .filter(WarningMessage.code >= startingCode)
+        .filter(WarningMessage.code < endingCode)
+        .all()
+    )
 
 
 def latest_run_id(
