@@ -790,7 +790,7 @@ class Run(Base):
             .all()
         )
 
-    def _get_num_new_issue_instances(self, session):
+    def _get_num_new_issue_instances(self, session) -> int:
         return (
             session.query(IssueInstance)
             .filter(IssueInstance.run_id == self.id)
@@ -798,12 +798,12 @@ class Run(Base):
             .count()
         )
 
-    def _get_num_total_issues(self, session):
+    def _get_num_total_issues(self, session) -> int:
         return (
             session.query(IssueInstance).filter(IssueInstance.run_id == self.id).count()
         )
 
-    def _get_alarm_counts(self, session):
+    def _get_alarm_counts(self, session) -> Dict[int, int]:
         return dict(
             session.query(Issue.code, func.count(Issue.code))
             .filter(IssueInstance.run_id == self.id)
@@ -862,15 +862,15 @@ class MetaRun(Base):
 class RunSummary:
     def __init__(
         self,
-        commit_hash,
-        differential_id,
-        id,
-        job_id,
-        num_new_issues,
-        num_total_issues,
-        num_missing_preconditions: int = -1,
-        num_missing_postconditions: int = -1,
-        alarm_counts=None,
+        commit_hash: Optional[str],
+        differential_id: Optional[int],
+        id: Optional[int],
+        job_id: Optional[str],
+        num_new_issues: int,
+        num_total_issues: int,
+        num_missing_preconditions: Optional[int] = None,
+        num_missing_postconditions: Optional[int] = None,
+        alarm_counts: Optional[Dict[int, int]] = None,
     ) -> None:
         self.commit_hash = commit_hash
         self.differential_id = differential_id
@@ -880,13 +880,13 @@ class RunSummary:
         self.num_total_issues = num_total_issues
         self.num_missing_preconditions = num_missing_preconditions
         self.num_missing_postconditions = num_missing_postconditions
-        self.alarm_counts = alarm_counts or {}
+        self.alarm_counts: Dict[int, int] = alarm_counts or {}
 
     def todict(self) -> Dict[str, Any]:
         return self.__dict__
 
     @classmethod
-    def fromdict(cls, d):
+    def fromdict(cls, d) -> "RunSummary":
         return cls(**d)
 
 

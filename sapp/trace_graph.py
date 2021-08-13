@@ -108,6 +108,12 @@ class TraceGraph(object):
     def get_issue(self, issue_id: DBID) -> Issue:
         return self._issues[issue_id.local_id]
 
+    def get_issues(self) -> Iterable[Issue]:
+        return (issue for issue in self._issues.values())
+
+    def get_number_issues(self) -> int:
+        return len(self._issues)
+
     def add_issue_instance(self, instance: IssueInstance) -> None:
         assert (
             instance.id.local_id not in self._issue_instances

@@ -5,6 +5,7 @@
 
 #!/usr/bin/env python3
 
+import collections
 import logging
 from typing import Optional, Tuple
 
@@ -39,6 +40,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
         self,
         database: DB,
         primary_key_generator: Optional[PrimaryKeyGenerator] = None,
+        dry_run: bool = False,
     ):
         # pyre-fixme[4]: Attribute must be annotated.
         self.dbname = database.dbname
@@ -46,11 +48,12 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
         # pyre-fixme[4]: Attribute must be annotated.
         self.primary_key_generator = primary_key_generator or PrimaryKeyGenerator()
         self.bulk_saver = BulkSaver(self.primary_key_generator)
+        self.dry_run = dry_run
+        self.graph: TraceGraph
         self.summary: Summary
 
     @log_time
     def run(self, input: TraceGraph, summary: Summary) -> Tuple[RunSummary, Summary]:
-        # pyre-fixme[16]: `DatabaseSaver` has no attribute `graph`.
         self.graph = input
         self.summary = summary
 
@@ -63,7 +66,6 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
         database.
         """
         log.info("Preparing bulk save.")
-        # pyre-fixme[16]: `DatabaseSaver` has no attribute `graph`.
         self.graph.update_bulk_saver(self.bulk_saver)
 
         for trace_kind, unused in self.summary["trace_entries"].items():
@@ -100,34 +102,37 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
             num_post,
         )
 
-        with self.database.make_session() as session:
-            pk_gen = self.primary_key_generator.reserve(session, [Run])
-            self.summary["run"].id.resolve(id=pk_gen.get(Run), is_new=True)
-            session.add(self.summary["run"])
-            meta_run_identifier = self.summary.get("meta_run_identifier")
-            if meta_run_identifier is not None:
-                session.add(
-                    MetaRunToRunAssoc(
-                        meta_run_id=meta_run_identifier,
-                        run_id=self.summary["run"].id,
-                        run_label=self.summary.get("meta_run_child_label", None),
+        if not self.dry_run:
+            with self.database.make_session() as session:
+                pk_gen = self.primary_key_generator.reserve(session, [Run])
+                self.summary["run"].id.resolve(id=pk_gen.get(Run), is_new=True)
+                session.add(self.summary["run"])
+                meta_run_identifier = self.summary.get("meta_run_identifier")
+                if meta_run_identifier is not None:
+                    session.add(
+                        MetaRunToRunAssoc(
+                            meta_run_id=meta_run_identifier,
+                            run_id=self.summary["run"].id,
+                            run_label=self.summary.get("meta_run_child_label", None),
+                        )
                     )
-                )
-            session.commit()
+                session.commit()
 
-            run_id = self.summary["run"].id.resolved()
-            self.summary["run"] = None  # Invalidate it
+                run_id = self.summary["run"].id.resolved()
+                self.summary["run"] = None  # Invalidate it
 
-        self.bulk_saver.save_all(self.database)
+            self.bulk_saver.save_all(self.database)
 
-        # Now that the run is finished, fetch it from the DB again and set its
-        # status to FINISHED.
-        with self.database.make_session() as session:
-            run = session.query(self.RUN_MODEL).filter_by(id=run_id).one()
-            run.status = RunStatus.FINISHED
-            session.add(run)
-            session.commit()
-            run_summary = run.get_summary()
+            # Now that the run is finished, fetch it from the DB again and set its
+            # status to FINISHED.
+            with self.database.make_session() as session:
+                run = session.query(self.RUN_MODEL).filter_by(id=run_id).one()
+                run.status = RunStatus.FINISHED
+                session.add(run)
+                session.commit()
+                run_summary = run.get_summary()
+        else:
+            run_summary = self._get_dry_run_summary()
 
         # pyre-fixme[16]: `RunSummary` has no attribute `num_invisible_issues`.
         run_summary.num_invisible_issues = 0
@@ -139,3 +144,17 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
         )
 
         return run_summary
+
+    def _get_dry_run_summary(self) -> RunSummary:
+        run = self.summary["run"]
+        return RunSummary(
+            commit_hash=run.commit_hash,
+            differential_id=run.differential_id,
+            id=None,
+            job_id=run.job_id,
+            num_new_issues=0,
+            num_total_issues=self.graph.get_number_issues(),
+            alarm_counts=dict(
+                collections.Counter(issue.code for issue in self.graph.get_issues())
+            ),
+        )

@@ -150,6 +150,7 @@ def explore(ctx: Context, ipython_args) -> None:
     is_flag=True,
     help="store pre/post conditions unrelated to an issue",
 )
+@option("--dry-run", is_flag=True)
 @argument("input_file", type=Path(exists=True))
 def analyze(
     ctx: Context,
@@ -161,6 +162,7 @@ def analyze(
     previous_issue_handles: Optional[str],
     linemap: Optional[str],
     store_unused_models: bool,
+    dry_run: bool,
     input_file: str,
     add_feature: Optional[List[str]],
 ) -> None:
@@ -195,7 +197,7 @@ def analyze(
         AddFeatures(add_feature),
         ModelGenerator(),
         TrimTraceGraph(),
-        DatabaseSaver(ctx.database, PrimaryKeyGenerator()),
+        DatabaseSaver(ctx.database, PrimaryKeyGenerator(), dry_run),
     ]
     # pyre-fixme[6]: Expected
     #  `List[tools.sapp.sapp.pipeline.PipelineStep[typing.Any, typing.Any]]` for 1st
