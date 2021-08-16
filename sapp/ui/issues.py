@@ -23,6 +23,7 @@ from ..models import (
     SharedTextKind,
     SourceLocation,
 )
+from ..sarif_types import SARIFSeverityLevel, SARIFResult
 from . import filter_predicates, run
 
 # pyre-fixme[5]: Global expression must be annotated.
@@ -175,6 +176,30 @@ class IssueQueryResult(NamedTuple):
             "features": list(self.features),
             "is_new_issue": self.is_new_issue,
         }
+
+    def to_sarif(self, severity_level: str = "warning") -> SARIFResult:
+        region = {
+            "startLine": self.location.line_no,
+            "startColumn": self.location.begin_column,
+        }
+        if self.location.end_column:
+            region["endColumn"] = self.location.end_column + 1
+        sarif_result = {
+            "ruleId": str(self.code),
+            "level": str(SARIFSeverityLevel(severity_level)),
+            "message": {
+                "text": self.message,
+            },
+            "locations": [
+                {
+                    "physicalLocation": {
+                        "artifactLocation": {"uri": self.filename},
+                        "region": region,
+                    }
+                }
+            ],
+        }
+        return sarif_result
 
     def __hash__(self) -> int:
         return hash(
