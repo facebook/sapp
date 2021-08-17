@@ -18,6 +18,7 @@ class Context(NamedTuple):
     parser_class: Type[BaseParser]
     repository: Optional[str]
     ipython_extensions: List[str] = []
+    tool: str = ""
 
 
 # pyre-fixme[5]: Global expression must be annotated.

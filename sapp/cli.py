@@ -53,6 +53,7 @@ def cli(
         database=DB(
             database_engine, os.path.expanduser(database_name), assertions=True
         ),
+        tool=tool,
         parser_class=PARSERS[tool],
     )
     LOG.debug(f"Context: {ctx.obj}")

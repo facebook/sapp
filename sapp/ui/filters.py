@@ -15,9 +15,11 @@ import sqlalchemy
 from sqlalchemy.orm import Session
 
 from .. import models
+from ..context import Context
 from ..db import DB
 from ..filter import StoredFilter, FilterRecord
 from ..models import DBID, Run, RunStatus
+from ..sarif import SARIF
 from .issues import Instance
 
 if TYPE_CHECKING:
@@ -176,12 +178,12 @@ class InvalidRunException(Exception):
 
 
 def filter_run(
-    database: DB,
+    context: Context,
     run_id_input: int,
     filter_path: Path,
     output_format: str,
 ) -> None:
-    with database.make_session() as session:
+    with context.database.make_session() as session:
         run_id: Run = (
             session.query(Run)
             .filter(Run.status == RunStatus.FINISHED)
@@ -211,5 +213,9 @@ def filter_run(
                 query_results.add(issue)
 
         LOG.info(f"Number of issues after filtering: {len(query_results)}")
-        issues_json = [issue.to_json() for issue in query_results]
-        print(json.dumps(issues_json, indent=2))
+        if output_format == "sapp":
+            output_json = {"issues": [issue.to_json() for issue in query_results]}
+            print(json.dumps(output_json, indent=2))
+        elif output_format == "sarif":
+            sarif_output = SARIF(context.tool, session, query_results)
+            print(sarif_output.to_json())

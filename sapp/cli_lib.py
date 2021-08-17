@@ -313,9 +313,7 @@ def filter_issues(
     INPUT_FILTER_PATH is the path to the filter you want to use to filter the list of issues in RUN_ID
     OUTPUT_FORMAT is the format you want the results to be in
     """
-    filters.filter_run(
-        ctx.database, run_id, pathlib.Path(input_filter_path), output_format
-    )
+    filters.filter_run(ctx, run_id, pathlib.Path(input_filter_path), output_format)
 
 
 @click.group()
