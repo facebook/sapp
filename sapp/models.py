@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
-from typing import Any, Dict, List, Optional, Set, Type
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Type
 
 from graphene_sqlalchemy.converter import (
     convert_column_to_int_or_id,
@@ -68,6 +68,12 @@ or existing Issues.  Each run is tied to Issues through IssueInstances.
 IssueInstances have per run information, like source location, while Issues have
 attributes like the status of an issue.
 """
+
+
+class LeafMapping(NamedTuple):
+    caller_leaf: int
+    callee_leaf: int
+    transform: int
 
 
 class SourceLocationType(types.TypeDecorator):
@@ -1079,6 +1085,8 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
             "TraceFrame.id == foreign(IssueInstanceTraceFrameAssoc.trace_frame_id)"
         ),
     )
+
+    leaf_mapping: Set[LeafMapping] = set()
 
     @staticmethod
     def type_intervals_match_or_ignored(

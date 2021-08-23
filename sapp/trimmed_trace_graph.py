@@ -213,7 +213,6 @@ class TrimmedTraceGraph(TraceGraph):
             (trace_frame.caller_id.local_id, trace_frame.caller_port)
         ]:
             predecessor = graph._trace_frames[trace_frame_id]
-            # pyre-fixme[16]: extra fields are not known to pyre
             assert predecessor.leaf_mapping is not None
             pred_kinds = graph.compute_prev_leaf_kinds(leaves, predecessor.leaf_mapping)
             result.append((predecessor, pred_kinds))

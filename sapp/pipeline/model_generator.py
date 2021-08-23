@@ -341,7 +341,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
     ) -> List[Tuple[TraceFrame, Set[LeafMapping]]]:  # TraceFrame, LeafId mappings
         if self.graph.has_trace_frames_with_caller(kind, caller_id, caller_port):
             return [
-                # pyre-fixme[16]: extra fields are not known to pyre
                 (frame, frame.leaf_mapping)
                 for frame in self.graph.get_trace_frames_from_caller(
                     kind, caller_id, caller_port

@@ -156,7 +156,6 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
                     frame,
                     {
                         leaf_map.callee_leaf: kind_map[leaf_map.caller_leaf]
-                        # pyre-fixme[16]: extra fields are not known to pyre
                         for leaf_map in frame.leaf_mapping
                         if leaf_map.caller_leaf in kind_map
                     },

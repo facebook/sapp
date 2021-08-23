@@ -82,7 +82,6 @@ class AddIssueInstanceLeaves(PipelineStep[TraceGraph, TraceGraph]):
         )
         for trace_frame_id, depth in depth_by_frame_id.items():
             trace_frame = graph.get_trace_frame_from_id(trace_frame_id)
-            # pyre-fixme[16]: leaf_mapping is an extra field
             leaf_mapping: Set[LeafMapping] = trace_frame.leaf_mapping
             leaf_mapping.add(
                 LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)

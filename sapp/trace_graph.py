@@ -7,12 +7,13 @@
 
 import logging
 from collections import defaultdict
-from typing import DefaultDict, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
+from typing import DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 from .bulk_saver import BulkSaver
 from .models import (
     DBID,
     SHARED_TEXT_LENGTH,
+    LeafMapping,
     Issue,
     IssueInstance,
     IssueInstanceFixInfo,
@@ -24,12 +25,6 @@ from .models import (
 )
 
 log: logging.Logger = logging.getLogger("sapp")
-
-
-class LeafMapping(NamedTuple):
-    caller_leaf: int
-    callee_leaf: int
-    transform: int
 
 
 class TraceGraph(object):
@@ -392,8 +387,7 @@ class TraceGraph(object):
         )
 
     def _compute_valid_frame_leaves(self, frame: TraceFrame) -> Set[int]:
-        # pyre-fixme[16]: extra fields are not known to pyre
-        leaf_mapping: Set[LeafMapping] = frame.leaf_mapping
+        leaf_mapping = frame.leaf_mapping
         is_leaf_frame = self.is_leaf_port(frame.callee_port)
         if not is_leaf_frame:
             callee_frames = self.get_next_trace_frames(frame)
@@ -491,13 +485,11 @@ class TraceGraph(object):
             return leaf_kind.id.local_id
 
     def get_incoming_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
-        # pyre-fixme[16]: extra fields are not known to pyre
-        leaf_mapping: Set[LeafMapping] = trace_frame.leaf_mapping
+        leaf_mapping = trace_frame.leaf_mapping
         assert leaf_mapping is not None
         return {leaf_map.callee_leaf for leaf_map in leaf_mapping}
 
     def get_outgoing_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
-        # pyre-fixme[16]: extra fields are not known to pyre
-        leaf_mapping: Set[LeafMapping] = trace_frame.leaf_mapping
+        leaf_mapping = trace_frame.leaf_mapping
         assert leaf_mapping is not None
         return {leaf_map.caller_leaf for leaf_map in leaf_mapping}
