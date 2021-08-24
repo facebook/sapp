@@ -202,6 +202,10 @@ def filter_run(
         )
         filter_instances = [StoredFilter.from_file(path) for path in paths]
 
+        if len(filter_instances) <= 0:
+            LOG.error(f"No valid filters found in `{filter_path}`")
+            return
+
         query_results = set()
         for filter_instance in filter_instances:
             query_result = (
@@ -209,10 +213,23 @@ def filter_run(
                 .where_filter(filter_instance)
                 .get()
             )
+            LOG.info(
+                (
+                    f"Applying `{filter_instance.name}` to run `{run_id_input}` "
+                    f"resulted in {len(query_result)} issues"
+                )
+            )
             for issue in query_result:
                 query_results.add(issue)
 
-        LOG.info(f"Number of issues after filtering: {len(query_results)}")
+        total_filtered_issues_output = (
+            f"Total number of issues after filtering: {len(query_results)}"
+        )
+        if len(query_results) <= 0:
+            LOG.error(total_filtered_issues_output)
+            return
+        else:
+            LOG.info(total_filtered_issues_output)
         if output_format == "sapp":
             output_json = {"issues": [issue.to_json() for issue in query_results]}
             print(json.dumps(output_json, indent=2))
