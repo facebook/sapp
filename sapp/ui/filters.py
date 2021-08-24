@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, List, Tuple, Optional
 
 import graphene
 import sqlalchemy
+from flask.views import View
 from sqlalchemy.orm import Session
 
 from .. import models
@@ -164,6 +165,31 @@ def export_filter(
                 LOG.info(f"`{filter_name}` has been exported to `{output_filter_path}`")
             else:
                 print(storedfilter_instance.to_file())
+        except sqlalchemy.exc.OperationalError:
+            LOG.error(
+                "Error: Database disk image is malformed or "
+                "database has not been initialized properly."
+                "Please recreate your SAPP db."
+            )
+            raise
+
+
+class ServeExportFilter(View):
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    # pyre-fixme[14]: Inconsistent override
+    def dispatch_request(self, filter_name: str) -> str:
+        try:
+            record = (
+                self.session.query(FilterRecord)
+                .filter(FilterRecord.name == filter_name)
+                .one_or_none()
+            )
+            if not record:
+                raise FilterNotFound(f"`{filter_name}` does not exist")
+            storedfilter_instance = StoredFilter.from_record(record)
+            return storedfilter_instance.to_file()
         except sqlalchemy.exc.OperationalError:
             LOG.error(
                 "Error: Database disk image is malformed or "
