@@ -230,10 +230,7 @@ class AnalysisOutput(object):
         This method manages closing the handles, no cleanup by the caller is needed.
         """
         if self.file_handle:
-            # pyre-fixme[7]: Expected `Iterable[IO[str]]` but got
-            #  `Generator[Optional[IO[str]], None, None]`.
             yield self.file_handle
-            # pyre-fixme[16]: `Optional` has no attribute `close`.
             self.file_handle.close()
             self.file_handle = None
         else:
