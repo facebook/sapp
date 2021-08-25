@@ -5,8 +5,19 @@
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, List, Optional, Sequence, Set, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Generic,
+    List,
+    Optional,
+    Pattern,
+    Sequence,
+    Set,
+    TypeVar,
+    Union,
+)
 
 from sqlalchemy import Column
 from sqlalchemy.orm.query import Query
@@ -97,46 +108,42 @@ class HasAll(IssuePredicate):
         ]
 
 
-class HasAny(IssuePredicate):
-    def __init__(
-        self, parameter_list: Set[str], parameter_type: str = "features"
-    ) -> None:
-        self._parameter_list = parameter_list
-        self._parameter_type = parameter_type
+class Matches(IssuePredicate):
+    def __init__(self, regex: str, parameter_name: str) -> None:
+        self._regex: Pattern[str] = re.compile(regex)
+        self._parameter_name = parameter_name
+
+    def attribute_set(self, issue: IssueQueryResult) -> Set[str]:
+        attribute = issue._asdict()[self._parameter_name]
+        if isinstance(attribute, str):
+            return {attribute}
+        return set(attribute)
 
     def apply(self, issues: List[IssueQueryResult]) -> List[IssueQueryResult]:
-        if self._parameter_type == "features":
-            return [
-                issue
-                for issue in issues
-                if len(issue.features & self._parameter_list) > 0
-            ]
-        elif self._parameter_type == "source_names":
-            return [
-                issue
-                for issue in issues
-                if len(issue.source_names & self._parameter_list) > 0
-            ]
-        elif self._parameter_type == "source_kinds":
-            return [
-                issue
-                for issue in issues
-                if len(issue.source_kinds & self._parameter_list) > 0
-            ]
-        elif self._parameter_type == "sink_names":
-            return [
-                issue
-                for issue in issues
-                if len(issue.sink_names & self._parameter_list) > 0
-            ]
-        elif self._parameter_type == "sink_kinds":
-            return [
-                issue
-                for issue in issues
-                if len(issue.sink_kinds & self._parameter_list) > 0
-            ]
-        else:
-            return issues
+        return [
+            issue
+            for issue in issues
+            if any(map(self._regex.match, self.attribute_set(issue)))
+        ]
+
+
+class HasAny(IssuePredicate):
+    def __init__(self, parameter_list: Set[str], parameter_name: str) -> None:
+        self._parameter_list = parameter_list
+        self._parameter_name = parameter_name
+
+    def attribute_set(self, issue: IssueQueryResult) -> Set[str]:
+        attribute = issue._asdict()[self._parameter_name]
+        if isinstance(attribute, str):
+            return {attribute}
+        return set(attribute)
+
+    def apply(self, issues: List[IssueQueryResult]) -> List[IssueQueryResult]:
+        return [
+            issue
+            for issue in issues
+            if not self.attribute_set(issue).isdisjoint(self._parameter_list)
+        ]
 
 
 class HasNone(IssuePredicate):

@@ -104,6 +104,11 @@ class FeatureCondition(graphene.InputObjectType):
     features = graphene.List(graphene.String)
 
 
+class MatchesIsField(graphene.InputObjectType):
+    operation = graphene.String()
+    value = graphene.List(graphene.String)
+
+
 class Query(graphene.ObjectType):
     # pyre-fixme[4]: Attribute must be annotated.
     node = relay.Node.Field()
@@ -117,11 +122,11 @@ class Query(graphene.ObjectType):
         run_id=graphene.Int(required=True),
         codes=graphene.List(graphene.Int, default_value=["%"]),
         paths=graphene.List(graphene.String, default_value=["%"]),
-        callables=graphene.List(graphene.String, default_value=["%"]),
-        source_names=graphene.List(graphene.String),
-        source_kinds=graphene.List(graphene.String),
-        sink_names=graphene.List(graphene.String),
-        sink_kinds=graphene.List(graphene.String),
+        callables=MatchesIsField(),
+        source_names=MatchesIsField(),
+        source_kinds=MatchesIsField(),
+        sink_names=MatchesIsField(),
+        sink_kinds=MatchesIsField(),
         statuses=graphene.List(graphene.String, default_value=["%"]),
         features=graphene.List(FeatureCondition),
         min_trace_length_to_sinks=graphene.Int(),
@@ -168,8 +173,8 @@ class Query(graphene.ObjectType):
         run_id: int,
         codes: List[int],
         paths: List[str],
-        callables: List[str],
         statuses: List[str],
+        callables: Optional[MatchesIsField] = None,
         features: Optional[List[FeatureCondition]] = None,
         min_trace_length_to_sinks: Optional[int] = None,
         max_trace_length_to_sinks: Optional[int] = None,
@@ -177,10 +182,10 @@ class Query(graphene.ObjectType):
         max_trace_length_to_sources: Optional[int] = None,
         issue_instance_id: Optional[int] = None,
         is_new_issue: Optional[bool] = None,
-        source_names: Optional[List[str]] = None,
-        source_kinds: Optional[List[str]] = None,
-        sink_names: Optional[List[str]] = None,
-        sink_kinds: Optional[List[str]] = None,
+        source_names: Optional[MatchesIsField] = None,
+        source_kinds: Optional[MatchesIsField] = None,
+        sink_names: Optional[MatchesIsField] = None,
+        sink_kinds: Optional[MatchesIsField] = None,
         **kwargs: Any,
     ) -> List[IssueQueryResult]:
         session = get_session(info.context)
@@ -190,16 +195,9 @@ class Query(graphene.ObjectType):
             paths,
             callables,
             statuses,
-            # pyre-ignore[6]: Optional, Final doesn't work
             source_names,
-            # pyre-fixme[6]: Expected `List[str]` for 6th param but got
-            #  `Optional[List[str]]`.
             source_kinds,
-            # pyre-fixme[6]: Expected `List[str]` for 7th param but got
-            #  `Optional[List[str]]`.
             sink_names,
-            # pyre-fixme[6]: Expected `List[str]` for 8th param but got
-            #  `Optional[List[str]]`.
             sink_kinds,
             features,
             min_trace_length_to_sinks,

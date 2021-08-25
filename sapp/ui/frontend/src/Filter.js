@@ -188,6 +188,85 @@ const Paths = (
   );
 };
 
+const MatchesIsField = (
+  props: $ReadOnly<{
+    allOptions: $ReadOnlyList<string>,
+    parameterName: string,
+    currentFilter: FilterDescription,
+    setCurrentFilter: FilterDescription => void,
+  }>,
+): React$Node => {
+  const [inputValue, setInputValue] = useState('');
+  const [selectValue, setSelectValue] = useState([]);
+  const [matchedValues, setMatchedValues] = useState([]);
+
+  const triggerChange = (operation: string, value: mixed = undefined): void => {
+    let values = {};
+    if(value === undefined) {
+      value = (operation === 'is') ? selectValue : inputValue;
+    }
+    values[props.parameterName] = {
+      operation: operation,
+      value: value,
+    };
+    props.setCurrentFilter({...props.currentFilter, ...values});
+  }
+
+  const selectedOperation =
+    props.currentFilter[props.parameterName]?.operation || 'is';
+
+  return (
+    <Row gutter={gutter}>
+      <Col span={6}>
+        <Select
+          options={[{value: 'is'}, {value: 'matches'}]}
+          value={selectedOperation}
+          onChange={triggerChange}
+          style={{width: '100%'}}
+        />
+      </Col>
+      <Col span={16}>
+        {selectedOperation === 'matches' ? (
+          <Input
+            placeholder="regular expression"
+            style={{width: '100%'}}
+            value={inputValue}
+            onChange={event => {
+              const value = event.target.value;
+              setInputValue(value);
+              const option_values = props.allOptions.filter(option =>
+                  option.match(value),
+              );
+              setMatchedValues(option_values);
+              triggerChange('matches', value);
+            }}
+            suffix={
+              <Tooltip
+                title={(matchedValues || []).join('\n')}
+                placement="bottom">
+                <Text type="secondary" size="small">
+                  {(matchedValues || []).length}
+                </Text>
+              </Tooltip>
+            }
+          />
+        ): (
+          <Select
+            mode="multiple"
+            value={selectValue}
+            options={props.allOptions.map(value => ({value}))}
+            style={{width: '100%'}}
+            onChange={value => {
+              setSelectValue(value);
+              triggerChange('is', value);
+            }}
+          />
+        )}
+      </Col>
+    </Row>
+  );
+};
+
 const SourceNames = (
   props: $ReadOnly<{
     currentFilter: FilterDescription,
@@ -211,19 +290,12 @@ const SourceNames = (
   return (
     <>
       <Label label="name" />
-      <Row gutter={gutter}>
-        <Col span={22}>
-          <Select
-            mode="multiple"
-            value={props.currentFilter.source_names}
-            options={allSourceNames.map(value => ({value}))}
-            style={{width: '100%'}}
-            onChange={source_names =>
-              props.setCurrentFilter({...props.currentFilter, source_names})
-            }
-          />
-        </Col>
-      </Row>
+      <MatchesIsField
+        allOptions={allSourceNames}
+        currentFilter={props.currentFilter}
+        setCurrentFilter={props.setCurrentFilter}
+        parameterName="source_names"
+      />
     </>
   );
 };
@@ -251,19 +323,12 @@ const SourceKinds = (
   return (
     <>
       <Label label="kind" />
-      <Row gutter={gutter}>
-        <Col span={22}>
-          <Select
-            mode="multiple"
-            value={props.currentFilter.source_kinds}
-            options={allSourceKinds.map(value => ({value}))}
-            style={{width: '100%'}}
-            onChange={source_kinds =>
-              props.setCurrentFilter({...props.currentFilter, source_kinds})
-            }
-          />
-        </Col>
-      </Row>
+      <MatchesIsField
+        allOptions={allSourceKinds}
+        currentFilter={props.currentFilter}
+        setCurrentFilter={props.setCurrentFilter}
+        parameterName="source_kinds"
+      />
     </>
   );
 };
@@ -291,19 +356,12 @@ const SinkNames = (
   return (
     <>
       <Label label="name" />
-      <Row gutter={gutter}>
-        <Col span={22}>
-          <Select
-            mode="multiple"
-            value={props.currentFilter.sink_names}
-            options={allSinkNames.map(value => ({value}))}
-            style={{width: '100%'}}
-            onChange={sink_names =>
-              props.setCurrentFilter({...props.currentFilter, sink_names})
-            }
-          />
-        </Col>
-      </Row>
+      <MatchesIsField
+        allOptions={allSinkNames}
+        currentFilter={props.currentFilter}
+        setCurrentFilter={props.setCurrentFilter}
+        parameterName="sink_namess"
+      />
     </>
   );
 };
@@ -331,19 +389,12 @@ const SinkKinds = (
   return (
     <>
       <Label label="kind" />
-      <Row gutter={gutter}>
-        <Col span={22}>
-          <Select
-            mode="multiple"
-            value={props.currentFilter.sink_kinds}
-            options={allSinkKinds.map(value => ({value}))}
-            style={{width: '100%'}}
-            onChange={sink_kinds =>
-              props.setCurrentFilter({...props.currentFilter, sink_kinds})
-            }
-          />
-        </Col>
-      </Row>
+      <MatchesIsField
+        allOptions={allSinkKinds}
+        currentFilter={props.currentFilter}
+        setCurrentFilter={props.setCurrentFilter}
+        parameterName="sink_kinds"
+      />
     </>
   );
 };
@@ -400,9 +451,6 @@ const Callables = (
     setCurrentFilter: FilterDescription => void,
   }>,
 ): React$Node => {
-  const [mode, setMode] = useState('is');
-  const [inputValue, setInputValue] = useState(null);
-
   const callablesQuery = gql`
     query Callables {
       callables {
@@ -422,52 +470,12 @@ const Callables = (
   return (
     <>
       <Label label="callables" />
-      <Row gutter={gutter}>
-        <Col span={6}>
-          <Select
-            options={[{value: 'is'}, {value: 'matches'}]}
-            value={mode}
-            onChange={setMode}
-            style={{width: '100%'}}
-          />
-        </Col>
-        <Col span={16}>
-          {mode === 'is' ? (
-            <Select
-              mode="multiple"
-              value={props.currentFilter.callables}
-              options={allCallables.map(value => ({value}))}
-              style={{width: '100%'}}
-              onChange={callables =>
-                props.setCurrentFilter({...props.currentFilter, callables})
-              }
-            />
-          ) : (
-            <Input
-              placeholder="regular experssion"
-              style={{width: '100%'}}
-              value={inputValue}
-              onChange={event => {
-                const value = event.target.value;
-                setInputValue(value);
-                const callables = allCallables.filter(callable =>
-                  callable.match(value),
-                );
-                props.setCurrentFilter({...props.currentFilter, callables});
-              }}
-              suffix={
-                <Tooltip
-                  title={(props.currentFilter.callables || []).join('\n')}
-                  placement="bottom">
-                  <Text type="secondary" size="small">
-                    {(props.currentFilter.callables || []).length}
-                  </Text>
-                </Tooltip>
-              }
-            />
-          )}
-        </Col>
-      </Row>
+      <MatchesIsField
+        allOptions={allCallables}
+        currentFilter={props.currentFilter}
+        setCurrentFilter={props.setCurrentFilter}
+        parameterName="callables"
+      />
     </>
   );
 };

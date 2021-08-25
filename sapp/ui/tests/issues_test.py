@@ -123,7 +123,7 @@ class QueryTest(TestCase):
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
-                for issue in builder.where_callables_is_any_of(["%sub%"]).get()
+                for issue in builder.where_callables_matches(".*sub.*").get()
             }
             self.assertIn(1, issue_ids)
             self.assertIn(2, issue_ids)
@@ -141,7 +141,7 @@ class QueryTest(TestCase):
             builder = Instance(session, latest_run_id)
             issue_ids = {
                 int(issue.issue_instance_id)
-                for issue in builder.where_callables_is_any_of(["%function3"]).get()
+                for issue in builder.where_callables_matches(".*function3").get()
             }
             self.assertNotIn(1, issue_ids)
             self.assertNotIn(2, issue_ids)
@@ -287,6 +287,226 @@ class QueryTest(TestCase):
             self.assertNotIn(2, issue_ids)
             self.assertNotIn(3, issue_ids)
             self.assertIn(4, issue_ids)
+
+    def testWhereSourceName(self) -> None:
+        self.fakes.instance()
+        source_name_1 = self.fakes.source_detail("source_name_1")
+        source_name_2 = self.fakes.source_detail("source_name_2")
+
+        self.fakes.save_all(self.db)
+
+        with self.db.make_session() as session:
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=source_name_1.id, issue_instance_id=1
+                )
+            )
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=source_name_2.id, issue_instance_id=2
+                )
+            )
+            session.commit()
+            latest_run_id = queries.latest_run_id(session)
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_name_is_any_of(
+                    ["source_name_1"]
+                ).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_name_matches("source_name_1").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_name_is_any_of(
+                    ["source_name_1", "source_name_2"]
+                ).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_name_matches("source_name").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
+
+    def testWhereSourceKind(self) -> None:
+        self.fakes.instance()
+        source_kind_1 = self.fakes.source("source_kind_1")
+        source_kind_2 = self.fakes.source("source_kind_2")
+
+        self.fakes.save_all(self.db)
+
+        with self.db.make_session() as session:
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=source_kind_1.id, issue_instance_id=1
+                )
+            )
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=source_kind_2.id, issue_instance_id=2
+                )
+            )
+            session.commit()
+            latest_run_id = queries.latest_run_id(session)
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_kind_is_any_of(
+                    ["source_kind_1"]
+                ).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_kind_matches("source_kind_1").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_kind_is_any_of(
+                    ["source_kind_1", "source_kind_2"]
+                ).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_source_kind_matches("source_kind").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
+
+    def testWhereSinkName(self) -> None:
+        self.fakes.instance()
+        sink_name_1 = self.fakes.sink_detail("sink_name_1")
+        sink_name_2 = self.fakes.sink_detail("sink_name_2")
+
+        self.fakes.save_all(self.db)
+
+        with self.db.make_session() as session:
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=sink_name_1.id, issue_instance_id=1
+                )
+            )
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=sink_name_2.id, issue_instance_id=2
+                )
+            )
+            session.commit()
+            latest_run_id = queries.latest_run_id(session)
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_name_is_any_of(["sink_name_1"]).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_name_matches("sink_name_1").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_name_is_any_of(
+                    ["sink_name_1", "sink_name_2"]
+                ).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_name_matches("sink_name").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
+
+    def testWhereSinkKind(self) -> None:
+        self.fakes.instance()
+        sink_kind_1 = self.fakes.sink("sink_kind_1")
+        sink_kind_2 = self.fakes.sink("sink_kind_2")
+
+        self.fakes.save_all(self.db)
+
+        with self.db.make_session() as session:
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=sink_kind_1.id, issue_instance_id=1
+                )
+            )
+            session.add(
+                IssueInstanceSharedTextAssoc(
+                    shared_text_id=sink_kind_2.id, issue_instance_id=2
+                )
+            )
+            session.commit()
+            latest_run_id = queries.latest_run_id(session)
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_kind_is_any_of(["sink_kind_1"]).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_kind_matches("sink_kind_1").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertNotIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_kind_is_any_of(
+                    ["sink_kind_1", "sink_kind_2"]
+                ).get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
+
+            builder = Instance(session, latest_run_id)
+            issue_ids = {
+                int(issue.issue_instance_id)
+                for issue in builder.where_sink_kind_matches("sink_kind").get()
+            }
+            self.assertIn(1, issue_ids)
+            self.assertIn(2, issue_ids)
 
     def testWhereAnyFeatures(self) -> None:
         self.fakes.instance()

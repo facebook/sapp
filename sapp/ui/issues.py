@@ -435,6 +435,9 @@ class Instance:
     def where_callables_is_any_of(self, callables: List[str]) -> "Instance":
         return self.where(filter_predicates.Like(CallableText.contents, callables))
 
+    def where_callables_matches(self, regex: str) -> "Instance":
+        return self.where(filter_predicates.Matches(regex, "callable"))
+
     def where_status_is_any_of(self, statuses: List[str]) -> "Instance":
         return self.where(filter_predicates.Like(Issue.status, statuses))
 
@@ -444,14 +447,26 @@ class Instance:
     def where_source_name_is_any_of(self, source_names: List[str]) -> "Instance":
         return self.where(filter_predicates.HasAny(set(source_names), "source_names"))
 
+    def where_source_name_matches(self, regex: str) -> "Instance":
+        return self.where(filter_predicates.Matches(regex, "source_names"))
+
     def where_source_kind_is_any_of(self, source_kinds: List[str]) -> "Instance":
         return self.where(filter_predicates.HasAny(set(source_kinds), "source_kinds"))
+
+    def where_source_kind_matches(self, regex: str) -> "Instance":
+        return self.where(filter_predicates.Matches(regex, "source_kinds"))
 
     def where_sink_name_is_any_of(self, sink_names: List[str]) -> "Instance":
         return self.where(filter_predicates.HasAny(set(sink_names), "sink_names"))
 
+    def where_sink_name_matches(self, regex: str) -> "Instance":
+        return self.where(filter_predicates.Matches(regex, "sink_names"))
+
     def where_sink_kind_is_any_of(self, sink_kinds: List[str]) -> "Instance":
         return self.where(filter_predicates.HasAny(set(sink_kinds), "sink_kinds"))
+
+    def where_sink_kind_matches(self, regex: str) -> "Instance":
+        return self.where(filter_predicates.Matches(regex, "sink_kinds"))
 
     def where_trace_length_to_sinks(
         self, minimum: Optional[int] = None, maximum: Optional[int] = None
@@ -483,7 +498,6 @@ class Instance:
 
         builder = (
             self.where_codes_is_any_of(filter_instance.codes)
-            .where_callables_is_any_of(filter_instance.callables)
             .where_path_is_any_of(filter_instance.paths)
             .where_trace_length_to_sinks(
                 min_trace_length_to_sinks, max_trace_length_to_sinks
@@ -495,26 +509,130 @@ class Instance:
             .where_status_is_any_of(filter_instance.statuses)
         )
 
-        if (
-            filter_instance.source_names is not None
-            and len(filter_instance.source_names) > 0
-        ):
-            builder = builder.where_source_name_is_any_of(filter_instance.source_names)
-        if (
-            filter_instance.source_kinds is not None
-            and len(filter_instance.source_kinds) > 0
-        ):
-            builder = builder.where_source_kind_is_any_of(filter_instance.source_kinds)
-        if (
-            filter_instance.sink_names is not None
-            and len(filter_instance.sink_names) > 0
-        ):
-            builder = builder.where_sink_name_is_any_of(filter_instance.sink_names)
-        if (
-            filter_instance.sink_kinds is not None
-            and len(filter_instance.sink_kinds) > 0
-        ):
-            builder = builder.where_sink_kind_is_any_of(filter_instance.sink_kinds)
+        if filter_instance.callables:
+            if not isinstance(filter_instance.callables, List):
+                # pyre-fixme[16]: `List` has no attribute 'get'
+                if filter_instance.callables.get("operation") == "matches":
+                    builder = builder.where_callables_matches(
+                        filter_instance.callables.get("value", [""])[0]
+                    )
+                elif filter_instance.callables.get("operation") == "is":
+                    if any(filter_instance.callables.get("value", [])):
+                        builder = builder.where_callables_is_any_of(
+                            filter_instance.callables.get("value", [""])
+                        )
+                else:
+                    raise ValueError(
+                        """Invalid value supplied for callables parameter
+                        `operation`. The supported values are `is` and
+                        `matches`."""
+                    )
+            else:
+                # Backward compatibility
+                # pyre-fixme[6]: Expected `List[str]` for 1st positional only
+                # parameter but got
+                # `Union[Dict[str, Union[List[str], str]], List[str]]`
+                builder = builder.where_callables_is_any_of(filter_instance.callables)
+
+        if filter_instance.source_names:
+            if not isinstance(filter_instance.source_names, list):
+                if filter_instance.source_names.get("operation") == "matches":
+                    builder = builder.where_source_name_matches(
+                        filter_instance.source_names.get("value", [""])[0]
+                    )
+                elif filter_instance.source_names.get("operation") == "is":
+                    if any(filter_instance.source_names.get("value", [])):
+                        builder = builder.where_source_name_is_any_of(
+                            filter_instance.source_names.get("value", [""])
+                        )
+                else:
+                    raise ValueError(
+                        """Invalid value supplied for source_names parameter
+                        `operation`. The supported values are `is` and
+                        `matches`."""
+                    )
+            else:
+                # Backward compatibility
+                builder = builder.where_source_name_is_any_of(
+                    # pyre-fixme[6]: Expected `List[str]` for 1st positional only
+                    # parameter but got
+                    # `Union[Dict[str, Union[List[str], str]], List[str]]`
+                    filter_instance.source_names
+                )
+
+        if filter_instance.source_kinds:
+            if not isinstance(filter_instance.source_kinds, list):
+                if filter_instance.source_kinds.get("operation") == "matches":
+                    builder = builder.where_source_kind_matches(
+                        filter_instance.source_kinds.get("value", [""])[0]
+                    )
+                elif filter_instance.source_kinds.get("operation") == "is":
+                    if any(filter_instance.source_kinds.get("value", [])):
+                        builder = builder.where_source_kind_is_any_of(
+                            filter_instance.source_kinds.get("value", [""])
+                        )
+                else:
+                    raise ValueError(
+                        """Invalid value supplied for source_kinds parameter
+                        `operation`. The supported values are `is` and
+                        `matches`."""
+                    )
+            else:
+                # Backward compatibility
+                builder = builder.where_source_kind_is_any_of(
+                    # pyre-fixme[6]: Expected `List[str]` for 1st positional only
+                    # parameter but got
+                    # `Union[Dict[str, Union[List[str], str]], List[str]]`
+                    filter_instance.source_kinds
+                )
+
+        if filter_instance.sink_names:
+            if not isinstance(filter_instance.sink_names, list):
+                if filter_instance.sink_names.get("operation") == "matches":
+                    builder = builder.where_sink_name_matches(
+                        filter_instance.sink_names.get("value", [""])[0]
+                    )
+                elif filter_instance.sink_names.get("operation") == "is":
+                    if any(filter_instance.sink_names.get("value", [])):
+                        builder = builder.where_sink_name_is_any_of(
+                            filter_instance.sink_names.get("value", [""])
+                        )
+                else:
+                    raise ValueError(
+                        """Invalid value supplied for sink_names parameter
+                        `operation`. The supported values are `is` and
+                        `matches`."""
+                    )
+            else:
+                # Backward compatibility
+                # pyre-fixme[6]: Expected `List[str]` for 1st positional only
+                # parameter but got
+                # `Union[Dict[str, Union[List[str], str]], List[str]]`
+                builder = builder.where_sink_name_is_any_of(filter_instance.sink_names)
+
+        if filter_instance.sink_kinds:
+            if not isinstance(filter_instance.sink_kinds, list):
+                if filter_instance.sink_kinds.get("operation") == "matches":
+                    builder = builder.where_sink_kind_matches(
+                        filter_instance.sink_kinds.get("value", [""])[0]
+                    )
+                elif filter_instance.sink_kinds.get("operation") == "is":
+                    if any(filter_instance.sink_kinds.get("value", [])):
+                        builder = builder.where_sink_kind_is_any_of(
+                            filter_instance.sink_kinds.get("value", [""])
+                        )
+                else:
+                    raise ValueError(
+                        """Invalid value supplied for sink_kinds parameter
+                        `operation`. The supported values are `is` and
+                        `matches`."""
+                    )
+            else:
+                # Backward compatibility if the filter is of the form List[str]
+                # pyre-fixme[6]: Expected `List[str]` for 1st positional only
+                # parameter but got
+                # `Union[Dict[str, Union[List[str], str]], List[str]]`
+                builder = builder.where_sink_kind_is_any_of(filter_instance.sink_kinds)
 
         for feature in filter_instance.format_features_for_query() or []:
             if feature[0] == "any of":

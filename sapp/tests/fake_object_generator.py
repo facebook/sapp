@@ -196,6 +196,9 @@ class FakeObjectGenerator:
     def source(self, name="source"):
         return self.shared_text(contents=name, kind=SharedTextKind.SOURCE)
 
+    def source_detail(self, name="source_detail"):
+        return self.shared_text(contents=name, kind=SharedTextKind.SOURCE_DETAIL)
+
     def sink(self, name="sink"):
         return self.shared_text(contents=name, kind=SharedTextKind.SINK)
 
