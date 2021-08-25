@@ -3,12 +3,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# pyre-unsafe
-
 import datetime
 import logging
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import ujson as json
 
@@ -44,7 +42,7 @@ from . import (
     Summary,
 )
 
-log = logging.getLogger("sapp")
+log: logging.Logger = logging.getLogger("sapp")
 
 
 # pyre-fixme[13]: Attribute `graph` is never initialized.
@@ -86,19 +84,23 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         return self.graph, self.summary
 
-    def _compute_callables_count(self, issues: Iterable[ParseIssueTuple]):
+    def _compute_callables_count(
+        self, issues: Iterable[ParseIssueTuple]
+    ) -> Dict[str, int]:
         """Iterate over all issues and count the number of times each callable
         is seen."""
-        count = dict.fromkeys([issue.callable for issue in issues], 0)
+        count: Dict[str, int] = dict.fromkeys(
+            [issue.callable for issue in issues], int(0)
+        )
         for issue in issues:
-            # pyre-fixme[6]: Expected `typing_extensions.Literal[0]` for 2nd param
-            #  but got `int`.
             count[issue.callable] += 1
 
         return count
 
     def _create_empty_run(
-        self, status=RunStatus.FINISHED, status_description=None
+        self,
+        status: str = RunStatus.FINISHED,
+        status_description: Optional[str] = None,
     ) -> Run:
         """setting boilerplate when creating a Run object"""
         run = Run(
@@ -128,7 +130,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return 0
 
     def _generate_issue(
-        self, run, entry: ParseIssueTuple, callablesCount
+        self, run: Run, entry: ParseIssueTuple, callablesCount: Dict[str, int]
     ) -> IssueInstance:
         """Insert the issue instance into a run. This includes creating (for
         new issues) or finding (for existing issues) Issue objects to associate
@@ -238,8 +240,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         entry: Union[
             ParseConditionTuple, ParseIssueConditionTuple, ParseTraceAnnotation
         ],
-        callable,
-    ):
+        callable: str,
+    ) -> List[SourceLocation]:
         titos = list(entry.titos)
         if len(titos) > 200:
             pre_key: Tuple[str, str, int] = (filename, callable, len(titos))
@@ -252,10 +254,10 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
     def _generate_issue_traces(
         self,
         kind: TraceKind,
-        run,
+        run: Run,
         issue: ParseIssueTuple,
         callinfo: ParseIssueConditionTuple,
-    ):
+    ) -> Tuple[TraceFrame, Set[int]]:
         # Generates a synthetic trace frame from a forward or backward trace in callinfo
         # that represents a call edge from the issue callable to the start of a
         # a trace.
@@ -356,7 +358,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return new
 
     def _generate_trace_frame(
-        self, kind: TraceKind, run, entry: ParseConditionTuple
+        self, kind: TraceKind, run: Run, entry: ParseConditionTuple
     ) -> Tuple[TraceFrame, Set[LeafMapping]]:
         titos = self._generate_tito(entry.filename, entry, entry.caller)
         return self._generate_raw_trace_frame(
@@ -378,14 +380,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
     def _generate_raw_trace_frame(
         self,
         kind: TraceKind,
-        run,
+        run: Run,
         filename: str,
         caller: str,
         caller_port: str,
         callee: str,
         callee_port: str,
         callee_location: SourceLocation,
-        titos,
+        titos: List[SourceLocation],
         leaves: Iterable[ParseLeaf],
         type_interval: Optional[ParseTypeInterval],
         annotations: Iterable[ParseTraceAnnotation],
@@ -455,7 +457,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         return trace_frame, leaf_mapping_ids
 
-    def _generate_issue_feature_contents(self, feature: ParseFeature):
+    def _generate_issue_feature_contents(self, feature: ParseFeature) -> Set[str]:
         # Generates a synthetic feature from the extra/feature
         features = set()
         for key in feature:
@@ -476,11 +478,11 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
     def _generate_trace_annotations(
         self,
-        parent_id,
-        parent_filename,
-        parent_caller,
+        parent_id: DBID,
+        parent_filename: str,
+        parent_caller: str,
         annotations: Iterable[ParseTraceAnnotation],
-        run,
+        run: Run,
     ) -> None:
         for annotation in annotations:
             location = annotation.location
@@ -517,13 +519,13 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
     def _generate_annotation_trace(
         self,
-        trace_kind,
-        run,
-        parent_filename,
-        parent_caller,
-        trace,
+        trace_kind: TraceKind,
+        run: Run,
+        parent_filename: str,
+        parent_caller: str,
+        trace: Dict[str, Any],
         annotation: ParseTraceAnnotation,
-    ):
+    ) -> TraceFrame:
         # Generates the first-hop trace frames from the annotation and
         # all dependencies of these sub traces. If this gets called, it is
         # assumed that the annotation leads to traces, and that the leaf kind
@@ -555,13 +557,10 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         return self.graph.get_or_add_shared_text(kind, name)
 
     @staticmethod
-    def get_location(entry: ParseIssueTuple, is_relative=False):
+    def get_location(
+        entry: ParseIssueTuple, is_relative: bool = False
+    ) -> SourceLocation:
         line = entry.line
         if is_relative and entry.callable_line:
             line -= entry.callable_line
         return SourceLocation(line, entry.start, entry.end)
-
-    @staticmethod
-    def get_callable_location(entry):
-        line = entry["callable_line"]
-        return SourceLocation(line, entry["start"], entry["end"])
