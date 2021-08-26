@@ -20,9 +20,8 @@ class ShardedFileComponents(object):
     For shard patterns @*, the shard total is also set to -1.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, filepattern):
+    def __init__(self, filepattern) -> None:
         # pyre-fixme[4]: Attribute must be annotated.
         self.directory, root = os.path.split(filepattern)
         m = re.match(r"([^@]+)@([^.@]+)(\.[^.@]*)?$", root)
@@ -108,9 +107,8 @@ class ShardedFile(object):
     The list of shards is available in shard_file_names.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, pattern):
+    def __init__(self, pattern) -> None:
         """
         Determine shards from pattern and record errors.
         """
@@ -128,9 +126,8 @@ class ShardedFile(object):
     def get_filenames(self):
         return self._shard_file_names
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _set_shard_file_names(self, pcomps):
+    def _set_shard_file_names(self, pcomps) -> None:
         self._shard_file_names = []
         for i in range(pcomps.shard_total):
             filename = pcomps.get_shard_filename(i)
