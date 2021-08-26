@@ -260,6 +260,16 @@ You can also apply a list of filters to a single list of issues by run number. S
 [~/example]$ sapp --database-name sapp.db filter issues 1 path/to/list_of_filters
 ```
 
+#### SARIF Output
+You can get the output of a filtered run in [SARIF](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/sarif-support-for-code-scanning#about-sarif-support) by first storing warning codes information from the static analysis tool in SAPP:
+```shell
+sapp --database-name sapp.db update warning-codes taint-metadata.json
+```
+
+Then running `sapp filter issues` with `--output-format=sarif`:
+```shell
+sapp --database-name sapp.db filter issues 1 path/to/list_of_filters --output-format sarif
+```
 
 ## Development Environment Setup
 Start by cloning the repo and setting up a virtual environment:
