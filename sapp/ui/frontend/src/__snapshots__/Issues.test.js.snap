@@ -831,6 +831,74 @@ Array [
                   }
                 }
               >
+                First seen
+              </span>
+            </div>
+            <div
+              className="ant-col ant-col-20"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                <span
+                  className="ant-typography"
+                  style={
+                    Object {
+                      "WebkitLineClamp": null,
+                    }
+                  }
+                >
+                  <code>
+                    2001-02-24 16:31:12.2402201
+                  </code>
+                </span>
+              </span>
+            </div>
+          </div>
+          <div
+            className="ant-row"
+            style={
+              Object {
+                "marginBottom": 4,
+                "marginLeft": -4,
+                "marginRight": -4,
+                "marginTop": -4,
+              }
+            }
+          >
+            <div
+              className="ant-col ant-col-4"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                  "textAlign": "right",
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
                 Callable
               </span>
             </div>
