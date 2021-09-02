@@ -177,7 +177,7 @@ class Parser(BaseParser):
                         fragment["location"]
                     ),
                     filename=fragment["location"]["filename"],
-                    titos=[],
+                    titos=list(map(SourceLocation.from_typed_dict, fragment["titos"])),
                     leaves=[
                         (kind, distance) for (_, kind, distance) in fragment["leaves"]
                     ],
