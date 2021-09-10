@@ -21,6 +21,9 @@ from typing import (
     Union,
 )
 
+from ..sarif_types import SARIFRegionObject
+
+
 if sys.version_info >= (3, 8):
     from typing import TypedDict, Literal
 else:
@@ -78,6 +81,15 @@ class SourceLocation(NamedTuple):
 
     def __str__(self) -> str:
         return SourceLocation.to_string(self)
+
+    def to_sarif(self) -> SARIFRegionObject:
+        region = {
+            "startLine": self.line_no,
+            "startColumn": self.begin_column,
+        }
+        if self.end_column:
+            region["endColumn"] = self.end_column + 1
+        return region
 
     @staticmethod
     def from_typed_dict(d: ParsePosition) -> "SourceLocation":

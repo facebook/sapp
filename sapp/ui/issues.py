@@ -182,12 +182,6 @@ class IssueQueryResult(NamedTuple):
         }
 
     def to_sarif(self, severity_level: str = "warning") -> SARIFResult:
-        region = {
-            "startLine": self.location.line_no,
-            "startColumn": self.location.begin_column,
-        }
-        if self.location.end_column:
-            region["endColumn"] = self.location.end_column + 1
         sarif_result = {
             "ruleId": str(self.code),
             "level": str(SARIFSeverityLevel(severity_level)),
@@ -198,7 +192,7 @@ class IssueQueryResult(NamedTuple):
                 {
                     "physicalLocation": {
                         "artifactLocation": {"uri": self.filename},
-                        "region": region,
+                        "region": self.location.to_sarif(),
                     }
                 }
             ],

@@ -5,10 +5,15 @@
 
 # pyre-strict
 
+import sys
 from enum import Enum
 from typing import Dict, Union, List
 
-from typing_extensions import TypeAlias
+
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias
+else:
+    from typing_extensions import TypeAlias
 
 
 class SARIFSeverityLevel(Enum):
@@ -21,11 +26,13 @@ class SARIFSeverityLevel(Enum):
         return self.value
 
 
+SARIFRegionObject: TypeAlias = Dict[str, int]
+
 SARIFResult: TypeAlias = Dict[
     str,
     Union[
         Dict[str, str],
-        List[Dict[str, Dict[str, Union[Dict[str, int], Dict[str, str]]]]],
+        List[Dict[str, Dict[str, Union[SARIFRegionObject, Dict[str, str]]]]],
         str,
     ],
 ]
