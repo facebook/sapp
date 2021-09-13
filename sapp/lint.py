@@ -10,18 +10,15 @@ from typing import List
 
 import click
 from sqlalchemy.orm import aliased
+from sqlalchemy.orm.util import AliasedClass
 
 from .cli_lib import require_option
 from .models import Issue, IssueInstance, SharedText, TraceFrame
 
-# pyre-fixme[5]: Global expression must be annotated.
-MessageText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
-FilenameText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
-CallerText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
-CalleeText = aliased(SharedText)
+MessageText: AliasedClass = aliased(SharedText)
+FilenameText: AliasedClass = aliased(SharedText)
+CallerText: AliasedClass = aliased(SharedText)
+CalleeText: AliasedClass = aliased(SharedText)
 
 
 @click.command()
