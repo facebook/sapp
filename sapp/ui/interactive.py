@@ -41,6 +41,7 @@ from pygments.lexers import get_lexer_for_filename
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.query import Query as RawQuery
+from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import func
 from sqlalchemy.sql.expression import or_
 
@@ -69,16 +70,11 @@ from .trace import TraceFrameQueryResult, TraceTuple
 
 T = TypeVar("T")
 
-# pyre-ignore[5]: SQLAlchemy
-FilenameText = aliased(SharedText)
-# pyre-ignore[5]: SQLAlchemy
-CallableText = aliased(SharedText)
-# pyre-ignore[5]: SQLAlchemy
-CallerText = aliased(SharedText)
-# pyre-ignore[5]: SQLAlchemy
-CalleeText = aliased(SharedText)
-# pyre-ignore[5]: SQLAlchemy
-MessageText = aliased(SharedText)
+FilenameText: AliasedClass = aliased(SharedText)
+CallableText: AliasedClass = aliased(SharedText)
+CallerText: AliasedClass = aliased(SharedText)
+CalleeText: AliasedClass = aliased(SharedText)
+MessageText: AliasedClass = aliased(SharedText)
 
 
 class ListFilterException(Exception):
