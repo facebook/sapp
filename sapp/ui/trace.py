@@ -8,6 +8,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, 
 import graphene
 from graphql.execution.base import ResolveInfo
 from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm.util import AliasedClass
 
 from ..models import (
     DBID,
@@ -21,16 +22,11 @@ from ..models import (
 )
 from . import run
 
-# pyre-fixme[5]: Global expression must be annotated.
-FilenameText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
-CallableText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
-CallerText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
-CalleeText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
-MessageText = aliased(SharedText)
+FilenameText: AliasedClass = aliased(SharedText)
+CallableText: AliasedClass = aliased(SharedText)
+CallerText: AliasedClass = aliased(SharedText)
+CalleeText: AliasedClass = aliased(SharedText)
+MessageText: AliasedClass = aliased(SharedText)
 
 
 LEAF_NAMES: Set[str] = {"source", "sink", "leaf"}
