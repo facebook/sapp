@@ -20,8 +20,7 @@ class RetryableTest(TestCase):
         self.times_through = 0
 
     @retryable(num_tries=5)
-    # pyre-fixme[3]: Return type must be annotated.
-    def semiRaiseException(self):
+    def semiRaiseException(self) -> bool:
         self.times_through += 1
         if self.times_through < 3:
             raise Exception("You are killing me.")
@@ -37,8 +36,7 @@ class RetryableTest(TestCase):
         else:
             raise Exception("You are killing me.")
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def testRetries(self):
+    def testRetries(self) -> None:
         self.assertTrue(self.semiRaiseException())
         self.assertTrue(
             self.times_through == 3, "times_through = %d" % (self.times_through)
@@ -48,8 +46,7 @@ class RetryableTest(TestCase):
             self.times_through == 4, "times_through = %d" % (self.times_through)
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def testRetryableExceptions(self):
+    def testRetryableExceptions(self) -> None:
         self.assertRaises(Exception, lambda: self.raiseRetryableException())
         self.assertEqual(3, self.times_through)
 
@@ -68,13 +65,11 @@ def mocked_time_generator():
 @mock.patch("time.time", side_effect=mocked_time_generator())
 class LogTimeTest(TestCase):
     @log_time
-    # pyre-fixme[3]: Return type must be annotated.
-    def takes_some_time(self):
+    def takes_some_time(self) -> None:
         pass
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def testBasic(self, mocked_time_generator):
+    def testBasic(self, mocked_time_generator) -> None:
         with self.assertLogs("sapp") as context_manager:
             self.takes_some_time()
         self.assertEqual(
@@ -92,8 +87,7 @@ class CatchUserErrorTest(TestCase):
     def throwsUserError(self):
         raise UserError
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def testCatchesUserError(self):
+    def testCatchesUserError(self) -> None:
         try:
             self.throwsUserError()
         except UserError:
@@ -104,8 +98,7 @@ class CatchUserErrorTest(TestCase):
     def throwsException(self):
         raise ValueError
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def testDoesNotCatchOtherExceptions(self):
+    def testDoesNotCatchOtherExceptions(self) -> None:
         with self.assertRaises(ValueError):
             self.throwsException()
 
@@ -116,8 +109,7 @@ class CatchKeyboardInterruptTest(TestCase):
     def throwsKeyboardInterrupt(self):
         raise KeyboardInterrupt
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def testCatchesKeyboardInterrupt(self):
+    def testCatchesKeyboardInterrupt(self) -> None:
         try:
             self.throwsKeyboardInterrupt()
         except KeyboardInterrupt:
@@ -128,7 +120,6 @@ class CatchKeyboardInterruptTest(TestCase):
     def throwsException(self):
         raise ValueError
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def testDoesNotCatchOtherExceptions(self):
+    def testDoesNotCatchOtherExceptions(self) -> None:
         with self.assertRaises(ValueError):
             self.throwsException()
