@@ -187,15 +187,6 @@ class TrimmedTraceGraph(TraceGraph):
         self._populate_issues_from_affected_conditions(
             initial_trace_frames,
             graph,
-            lambda instance, trace_frame: (
-                self.add_issue_instance_trace_frame_assoc(instance, trace_frame)
-            ),
-            lambda trace_frame_id: (
-                self._add_trace_frame(graph, graph._trace_frames[trace_frame_id])
-            ),
-            lambda initial_trace_frame_ids: (
-                self._populate_trace(graph, initial_trace_frame_ids)
-            ),
         )
 
     def _get_issue_instances_from_frame_id(
@@ -223,12 +214,6 @@ class TrimmedTraceGraph(TraceGraph):
         # pyre-fixme[2]: Parameter must be annotated.
         initial_conditions,
         graph: TraceGraph,
-        # pyre-fixme[2]: Parameter must be annotated.
-        add_instance_condition_assoc,
-        # pyre-fixme[2]: Parameter must be annotated.
-        add_condition,
-        # pyre-fixme[2]: Parameter must be annotated.
-        add_traces,
     ) -> None:
         """Helper for populating reachable issue instances from the initial
         pre/postconditions. Also populates conditions/traces reachable from
@@ -242,16 +227,6 @@ class TrimmedTraceGraph(TraceGraph):
 
         graph: The trace graph to search for issues. Nodes/edges in this graph
         will be copied over to the local state
-
-        add_instance_condition_assoc: Function that takes in the issue
-        instance and condition and adds the assoc between them.
-
-        add_condition: Function that adds a condition to the graph given its
-        id. This must add all the condition's assocs with the leaves because
-        we don't filter out any condition-leaf assocs.
-
-        add_traces: Function that takes a list of initial conditions and
-        adds all conditions reachable from these to the graph.
         """
         visited: Dict[int, Set[int]] = {}
         que = [
@@ -291,7 +266,7 @@ class TrimmedTraceGraph(TraceGraph):
                 if len(common_leaves) > 0:
                     if instance_id not in self._issue_instances:
                         self._populate_issue(graph, instance_id)
-                    add_instance_condition_assoc(instance, condition)
+                    self.add_issue_instance_trace_frame_assoc(instance, condition)
 
             # Conditions that call this may have originated from other issues,
             # keep searching for parent conditions leading to this one.
@@ -306,9 +281,9 @@ class TrimmedTraceGraph(TraceGraph):
         initial_condition_ids = [
             condition.id.local_id for condition in initial_conditions
         ]
-        add_traces(initial_condition_ids)
-        for condition_id in visited:
-            add_condition(condition_id)
+        self._populate_trace(graph, initial_condition_ids)
+        for frame_id in visited:
+            self._add_trace_frame(graph, graph._trace_frames[frame_id])
 
     def _populate_issue_and_traces(self, graph: TraceGraph, instance_id: int) -> None:
         """Copies an issue over from the given trace graph, including all its
