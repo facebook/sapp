@@ -4,6 +4,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import Generator
 from unittest import TestCase, mock
 
 from ..decorators import (
@@ -51,8 +52,7 @@ class RetryableTest(TestCase):
         self.assertEqual(3, self.times_through)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def mocked_time_generator():
+def mocked_time_generator() -> Generator[float, None, None]:
     """
     Returns time in 10s increments
     """
