@@ -92,8 +92,7 @@ class QueryTest(TestCase):
             self.assertEqual(len(next_frames), 1)
             self.assertEqual(int(next_frames[0].id), int(frames[1].id))
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def testNextTraceFramesBackwards(self):
+    def testNextTraceFramesBackwards(self) -> None:
         run = self.fakes.run()
         frames = [
             self.fakes.precondition(
