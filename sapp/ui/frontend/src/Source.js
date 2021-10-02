@@ -19,6 +19,7 @@ import './Source.css';
 require('codemirror/lib/codemirror.css');
 require('codemirror/addon/fold/foldcode.js');
 require('codemirror/mode/python/python.js');
+require('codemirror/mode/clike/clike.js');
 
 const {Text} = Typography;
 
@@ -31,6 +32,18 @@ type Range = $ReadOnly<{
   from: Location,
   to: Location,
 }>;
+
+const modes = {
+  py: "text/x-python",
+  pyx: "text/x-cython",
+  java: "text/x-java",
+  kt: "text/x-kotlin",
+  c: "text/x-csrc",
+  cpp: "text/x-c++src",
+  cs: "text/x-csharp",
+  m: "text/x-objectivec",
+  scala: "text/x-scala",
+}
 
 function adjustRange(range: Range, lines: $ReadOnlyArray<string>): Range {
   // TODO(T78595608): workaround for inaccurate Pysa locations with leading and
@@ -183,6 +196,8 @@ function Source(
     const range = parseRanges(props.location, lines)[0];
     line = range.from.line;
     const titos = parseRanges(props.titos, lines);
+    const fileExtension = props.path.split('.').pop();
+    const mode = modes[fileExtension] || modes["py"];
 
     const ranges = [...titos, range].sort(
       (left, right) => left.from.line - right.from.line,
@@ -197,7 +212,7 @@ function Source(
     content = (
       <CodeMirror
         value={source}
-        options={{lineNumbers: true, readOnly: 'true'}}
+        options={{lineNumbers: true, readOnly: 'true', mode: mode}}
         editorDidMount={nativeEditor => {
           editor = nativeEditor;
 
