@@ -1135,8 +1135,6 @@ Array [
                 </span>
                 <br />
                 <div
-                  onMouseEnter={[Function]}
-                  onMouseLeave={[Function]}
                   style={
                     Object {
                       "marginTop": ".5em",
@@ -1145,6 +1143,8 @@ Array [
                 >
                   <span
                     className="ant-tag"
+                    onMouseEnter={[Function]}
+                    onMouseLeave={[Function]}
                     style={
                       Object {
                         "backgroundColor": undefined,
@@ -1246,8 +1246,6 @@ Array [
                 </span>
                 <br />
                 <div
-                  onMouseEnter={[Function]}
-                  onMouseLeave={[Function]}
                   style={
                     Object {
                       "marginTop": ".5em",
@@ -1256,6 +1254,8 @@ Array [
                 >
                   <span
                     className="ant-tag"
+                    onMouseEnter={[Function]}
+                    onMouseLeave={[Function]}
                     style={
                       Object {
                         "backgroundColor": undefined,

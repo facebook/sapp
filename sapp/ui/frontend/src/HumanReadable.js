@@ -76,7 +76,7 @@ function makeDalvikClassHumanReadable(input: string): string {
   return split[split.length - 1].slice(0, -1);
 }
 
-function makeDalvikHumanReadable(input: string): string {
+export function makeDalvikHumanReadable(input: string): string {
   const match = input.match(/(.*);\.(.*):\((.*)\)(.*)/);
   if (match == null) {
     return input;

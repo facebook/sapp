@@ -31,7 +31,7 @@ import {
 } from '@ant-design/icons';
 import Source from './Source.js';
 import {Documentation} from './Documentation.js';
-import {HumanReadable} from './HumanReadable';
+import {HumanReadable, makeDalvikHumanReadable} from './HumanReadable';
 
 const {Option} = Select;
 const {Text, Link} = Typography;
@@ -40,6 +40,7 @@ function ShowMore(
   props: $ReadOnly<{|
     items: $ReadOnlyArray<string>,
     maximumElementsToShow: number,
+    displayToolTip?: boolean,
   |}>,
 ): React$Node {
   const [showMore, setShowMore] = useState(false);
@@ -49,7 +50,17 @@ function ShowMore(
     return (
       <>
         {items.map(feature => (
-          <Tag>{feature}</Tag>
+          props.displayToolTip?
+            <Tooltip title={feature}>
+              <Tag>
+                {
+                  feature.includes(";")?
+                    makeDalvikHumanReadable(feature) : feature
+                }
+              </Tag>
+            </Tooltip>
+          :
+            <Tag>{feature}</Tag>
         ))}
       </>
     );
@@ -61,8 +72,18 @@ function ShowMore(
     const moreToShow = items.length - truncatedItems.length;
     return (
       <>
-        {truncatedItems.map(item => (
-          <Tag>{item}</Tag>
+        {truncatedItems.map(feature => (
+          props.displayToolTip?
+            <Tooltip title={feature}>
+              <Tag>
+                {
+                  feature.includes(";")?
+                    makeDalvikHumanReadable(feature) : feature
+                }
+              </Tag>
+            </Tooltip>
+          :
+            <Tag>{feature}</Tag>
         ))}
         <Tag
           onClick={() => setShowMore(!showMore)}
@@ -113,11 +134,9 @@ function Leaves(
         <Text underline>minimum distance {props.distance}.</Text>
       </DelayedTooltip>
       <br />
-      <DelayedTooltip placement="right" content={Documentation.issues.name}>
-        <div style={{marginTop: '.5em'}}>
-          <ShowMore items={props.names} maximumElementsToShow={5} />
-        </div>
-      </DelayedTooltip>
+      <div style={{marginTop: '.5em'}}>
+        <ShowMore items={props.names} maximumElementsToShow={5} displayToolTip={true}/>
+      </div>
     </>
   );
 }
