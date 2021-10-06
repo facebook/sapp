@@ -65,7 +65,7 @@ function makeDalvikParametersHumanReadable(input: string): Array<string> {
   }
 }
 
-function makeDalvikClassHumanReadable(input: string): string {
+export function makeDalvikClassHumanReadable(input: string): string {
   switch (input) {
     case 'I': return 'int';
     case 'V': return 'void';
