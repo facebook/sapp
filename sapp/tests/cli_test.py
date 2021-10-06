@@ -16,6 +16,7 @@ from click.testing import CliRunner
 from .. import __name__ as client
 from ..cli import cli
 
+# pyre-fixme[5]: Global expression must be annotated.
 PIPELINE_RUN = f"{client}.pipeline.Pipeline.run"
 
 
@@ -140,6 +141,9 @@ class TestSappCli(TestCase):
     def verify_previous_issue_handles(self, input_files, summary_blob) -> None:
         self.assertEqual(summary_blob["previous_issue_handles"], "fake_analysis_output")
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `f"{tools.sapp.sapp.__name__}"".analysis_output.AnalysisOutput.from_file"` to
+    #  decorator factory `unittest.mock.patch`.
     @patch(
         f"{client}.analysis_output.AnalysisOutput.from_file",
         return_value="fake_analysis_output",
