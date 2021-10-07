@@ -9,7 +9,7 @@
  */
 
 import React, {useState} from 'react';
-import {useMutation, gql} from '@apollo/client';
+import {useMutation, useQuery, gql} from '@apollo/client';
 import {
   Card,
   Col,
@@ -204,6 +204,32 @@ export function Issue(
 ): React$Node {
   const gutter = [8, 8];
 
+  const WarningMesssageQuery = gql`
+  query Message(
+    $code: Int!
+  
+  ) {
+    message(
+      code: $code
+      
+    ) {
+      edges {
+        node {
+          code
+          message
+        }
+      }
+    }
+  }
+`;
+
+  const { loading, error, data } = useQuery(WarningMesssageQuery, {
+    variables: {code: props.issue.code},
+  });
+
+  const warningMessage = (data && data.message.edges.length > 0) ? data.message.edges[0].node.message : ""
+
+
   const Label = (props: $ReadOnly<{children: React$Node}>): React$Node => {
     return (
       <Col span={4} style={{textAlign: 'right'}}>
@@ -239,7 +265,9 @@ export function Issue(
       <Row gutter={gutter}>
         <Label>Code</Label>
         <Item>
-          <Text code>{props.issue.code}</Text>
+          <Tooltip title={warningMessage}>
+            <Text code>{props.issue.code}</Text>
+          </Tooltip>
         </Item>
       </Row>
       <Row gutter={gutter}>

@@ -22,6 +22,7 @@ from ..models import (
     SharedText,
     SharedTextKind,
     SourceLocation,
+    WarningMessage,
 )
 from ..sarif_types import SARIFSeverityLevel, SARIFResult
 from . import filter_predicates, run
@@ -47,6 +48,18 @@ SinkNameText = aliased(SharedText)
 # pyre-fixme[5]: Global expression must be annotated.
 SinkKindText = aliased(SharedText)
 
+
+class WarningMessageQueryType(graphene.ObjectType):
+    message = graphene.String()
+    code = graphene.Int()
+
+def get_warning_message(
+    session: Session, code: int,) -> List[WarningMessage]:
+    return (
+        session.query(WarningMessage)
+        .filter(WarningMessage.code == code)
+        .all()
+    )
 
 # pyre-ignore[13]: unitialized class attribute
 class IssueQueryResultType(graphene.ObjectType):
