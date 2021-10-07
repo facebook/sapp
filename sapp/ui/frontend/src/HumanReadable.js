@@ -65,7 +65,7 @@ function makeDalvikParametersHumanReadable(input: string): Array<string> {
   }
 }
 
-function makeDalvikClassHumanReadable(input: string): string {
+export function makeDalvikClassHumanReadable(input: string): string {
   switch (input) {
     case 'I': return 'int';
     case 'V': return 'void';
@@ -73,7 +73,8 @@ function makeDalvikClassHumanReadable(input: string): string {
   }
 
   const split = input.split('/');
-  return split[split.length - 1].slice(0, -1);
+  const last = split[split.length - 1];
+  return last[last.length-1] === ';' ? last.slice(0, -1) : last;
 }
 
 function makeDalvikHumanReadable(input: string): string {
