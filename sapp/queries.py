@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # pyre-strict
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session, Query
 from sqlalchemy.sql import func
@@ -31,6 +31,15 @@ def get_warning_message_range(
         .filter(WarningMessage.code >= startingCode)
         .filter(WarningMessage.code < endingCode)
         .all()
+    )
+
+
+def get_warning_message(
+    session: Session,
+    code: int,
+) -> Optional[WarningMessage]:
+    return (
+        session.query(WarningMessage).filter(WarningMessage.code == code).one_or_none()
     )
 
 

@@ -99,6 +99,7 @@ export const IssueQuery = gql`
           min_trace_length_to_sources
           min_trace_length_to_sinks
           first_seen
+          warning_message
         }
       }
       pageInfo {

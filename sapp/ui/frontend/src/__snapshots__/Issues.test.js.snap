@@ -581,6 +581,8 @@ Array [
               >
                 <span
                   className="ant-typography"
+                  onMouseEnter={[Function]}
+                  onMouseLeave={[Function]}
                   style={
                     Object {
                       "WebkitLineClamp": null,
@@ -589,6 +591,74 @@ Array [
                 >
                   <code>
                     6065
+                  </code>
+                </span>
+              </span>
+            </div>
+          </div>
+          <div
+            className="ant-row"
+            style={
+              Object {
+                "marginBottom": 4,
+                "marginLeft": -4,
+                "marginRight": -4,
+                "marginTop": -4,
+              }
+            }
+          >
+            <div
+              className="ant-col ant-col-4"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                  "textAlign": "right",
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                6065
+              </span>
+            </div>
+            <div
+              className="ant-col ant-col-20"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                <span
+                  className="ant-typography"
+                  style={
+                    Object {
+                      "WebkitLineClamp": null,
+                    }
+                  }
+                >
+                  <code>
+                    this is a test warning message
                   </code>
                 </span>
               </span>

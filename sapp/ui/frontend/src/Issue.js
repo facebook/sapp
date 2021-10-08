@@ -9,7 +9,7 @@
  */
 
 import React, {useState} from 'react';
-import {useMutation, useQuery, gql} from '@apollo/client';
+import {useMutation, gql} from '@apollo/client';
 import {
   Card,
   Col,
@@ -140,6 +140,7 @@ export type IssueDescription = {
   min_trace_length_to_sinks: number,
   first_seen: string,
   is_new_issue: boolean,
+  warning_message: string,
 };
 
 export const statusMap = {
@@ -204,31 +205,6 @@ export function Issue(
 ): React$Node {
   const gutter = [8, 8];
 
-  const WarningMesssageQuery = gql`
-  query Message(
-    $code: Int!
-  
-  ) {
-    message(
-      code: $code
-      
-    ) {
-      edges {
-        node {
-          code
-          message
-        }
-      }
-    }
-  }
-`;
-
-  const { loading, error, data } = useQuery(WarningMesssageQuery, {
-    variables: {code: props.issue.code},
-  });
-
-  const warningMessage = (data && data.message.edges.length > 0) ? data.message.edges[0].node.message : ""
-
 
   const Label = (props: $ReadOnly<{children: React$Node}>): React$Node => {
     return (
@@ -265,9 +241,15 @@ export function Issue(
       <Row gutter={gutter}>
         <Label>Code</Label>
         <Item>
-          <Tooltip title={warningMessage}>
+          <Tooltip title={"Code refers to the rule generating the issue"}>
             <Text code>{props.issue.code}</Text>
           </Tooltip>
+        </Item>
+      </Row>
+      <Row gutter={gutter}>
+        <Label>{props.issue.code}</Label>
+        <Item>
+          <Text code>{props.issue.warning_message}</Text>
         </Item>
       </Row>
       <Row gutter={gutter}>

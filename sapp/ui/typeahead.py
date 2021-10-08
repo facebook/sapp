@@ -10,7 +10,7 @@ from typing import List
 import graphene
 from sqlalchemy.orm import Session
 
-from ..models import Issue, IssueInstance, SharedText, SharedTextKind, WarningMessage
+from ..models import Issue, IssueInstance, SharedText, SharedTextKind
 
 
 class Code(graphene.ObjectType):

@@ -22,8 +22,8 @@ from ..models import (
     SharedText,
     SharedTextKind,
     SourceLocation,
-    WarningMessage,
 )
+from ..queries import get_warning_message
 from ..sarif_types import SARIFSeverityLevel, SARIFResult
 from . import filter_predicates, run
 
@@ -48,18 +48,6 @@ SinkNameText = aliased(SharedText)
 # pyre-fixme[5]: Global expression must be annotated.
 SinkKindText = aliased(SharedText)
 
-
-class WarningMessageQueryType(graphene.ObjectType):
-    message = graphene.String()
-    code = graphene.Int()
-
-def get_warning_message(
-    session: Session, code: int,) -> List[WarningMessage]:
-    return (
-        session.query(WarningMessage)
-        .filter(WarningMessage.code == code)
-        .all()
-    )
 
 # pyre-ignore[13]: unitialized class attribute
 class IssueQueryResultType(graphene.ObjectType):
@@ -92,6 +80,8 @@ class IssueQueryResultType(graphene.ObjectType):
     min_trace_length_to_sources = graphene.Int()
     min_trace_length_to_sinks = graphene.Int()
 
+    warning_message = graphene.String()
+
     def resolve_sources(self, info: ResolveInfo) -> List[str]:
         # pyre-ignore[6]: graphene too dynamic.
         return list(sources(info.context["session"], self.issue_instance_id))
@@ -111,6 +101,13 @@ class IssueQueryResultType(graphene.ObjectType):
     def resolve_features(self, info: ResolveInfo) -> List[str]:
         # pyre-ignore[6]: graphene too dynamic.
         return sorted(self.features)
+
+    def resolve_warning_message(self, info: ResolveInfo) -> str:
+        # pyre-ignore[6]: graphene too dynamic.
+        warning_message = get_warning_message(info.context["session"], self.code)
+        if warning_message:
+            return warning_message.message
+        return ""
 
 
 class IssueQueryResult(NamedTuple):

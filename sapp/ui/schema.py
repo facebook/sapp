@@ -16,7 +16,12 @@ from ..filter import Filter
 from ..models import DBID, TraceFrame, TraceKind
 from . import filters as filters_module
 from . import issues, run, trace, typeahead
-from .issues import Instance, IssueQueryResult, IssueQueryResultType, update_status
+from .issues import (
+    Instance,
+    IssueQueryResult,
+    IssueQueryResultType,
+    update_status,
+)
 from .trace import TraceFrameQueryResult, TraceFrameQueryResultType
 
 
@@ -62,11 +67,6 @@ class PathConnection(relay.Connection):
 class CallableConnection(relay.Connection):
     class Meta:
         node = typeahead.Callable
-
-
-class MessageConnection(relay.Connection):
-    class Meta:
-        node = issues.WarningMessageQueryType
 
 
 class SourceNameConnection(relay.Connection):
@@ -157,7 +157,6 @@ class Query(graphene.ObjectType):
     codes = relay.ConnectionField(CodeConnection)
     paths = relay.ConnectionField(PathConnection)
     callables = relay.ConnectionField(CallableConnection)
-    message = relay.ConnectionField(MessageConnection, code=graphene.Int())
     features = relay.ConnectionField(FeatureConnection)
     source_names = relay.ConnectionField(SourceNameConnection)
     source_kinds = relay.ConnectionField(SourceKindConnection)
@@ -263,10 +262,6 @@ class Query(graphene.ObjectType):
     def resolve_callables(self, info: ResolveInfo) -> List[typeahead.Callable]:
         session = info.context["session"]
         return typeahead.all_callables(session)
-
-    def resolve_message(self, info: ResolveInfo, code: int) -> List[typeahead.Callable]:
-        session = info.context["session"]
-        return issues.get_warning_message(session, code)
 
     def resolve_source_names(self, info: ResolveInfo) -> List[typeahead.SourceName]:
         session = info.context["session"]
