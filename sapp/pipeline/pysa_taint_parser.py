@@ -8,7 +8,19 @@
 import logging
 import sys
 from collections import defaultdict
-from typing import IO, Any, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    IO,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import ujson as json
 
@@ -42,11 +54,23 @@ else:
 log: logging.Logger = logging.getLogger("sapp")
 
 
+class LeafWithPort(NamedTuple):
+    name: Optional[str]
+    kind: str
+    port: Optional[str]
+
+
+class LeafWithDistance(NamedTuple):
+    name: Optional[str]
+    kind: str
+    distance: int
+
+
 class TraceFragment(TypedDict):
     callee: str
     port: str
     location: ParsePosition
-    leaves: Iterable[ParseIssueLeaf]
+    leaves: Iterable[LeafWithDistance]
     titos: Iterable[ParsePosition]
     features: Iterable[ParseFeature]
     type_interval: Optional[ParseTypeInterval]
@@ -167,9 +191,7 @@ class Parser(BaseParser):
                     ),
                     filename=fragment["location"]["filename"],
                     titos=list(map(SourceLocation.from_typed_dict, fragment["titos"])),
-                    leaves=[
-                        (kind, distance) for (_, kind, distance) in fragment["leaves"]
-                    ],
+                    leaves=[(leaf.kind, leaf.distance) for leaf in fragment["leaves"]],
                     caller_port=port,
                     callee_port=fragment["port"],
                     type_interval=None,
@@ -192,9 +214,7 @@ class Parser(BaseParser):
                     ),
                     filename=fragment["location"]["filename"],
                     titos=list(map(SourceLocation.from_typed_dict, fragment["titos"])),
-                    leaves=[
-                        (kind, distance) for (_, kind, distance) in fragment["leaves"]
-                    ],
+                    leaves=[(leaf.kind, leaf.distance) for leaf in fragment["leaves"]],
                     caller_port=port,
                     callee_port=fragment["port"],
                     type_interval=None,
@@ -279,9 +299,7 @@ class Parser(BaseParser):
                 #   only expect (leaf_kind, depth)
                 leaves = fragment["leaves"]
                 new_fragment = cast(ParseIssueCondition, fragment.copy())
-                new_fragment["leaves"] = [
-                    (kind, length) for (_, kind, length) in leaves
-                ]
+                new_fragment["leaves"] = [(leaf.kind, leaf.distance) for leaf in leaves]
                 fragments.append(ParseIssueConditionTuple.from_typed_dict(new_fragment))
                 # Leaf distances should be represented as:
                 #   (leaf_detail, leaf_kind, depth)
@@ -302,21 +320,20 @@ class Parser(BaseParser):
         leaves = self._parse_leaves(trace.get("leaves", []))
         if "root" in trace:
             leaf_name_and_port_to_leaves = defaultdict(list)
-            for leaf_name, leaf_kind, distance, port in leaves:
-                port = port or leaf_port
-                callee_name = "leaf"
-                if leaf_name is not None:
-                    callee_name = leaf_name
-                leaf_name_and_port_to_leaves[(callee_name, port)].append(
-                    (leaf_name, leaf_kind, distance)
-                )
+            for leaf in leaves:
+                port = leaf.port or leaf_port
+                callee_name = leaf.name or "leaf"
+                leaf_name_and_port_to_leaves[(callee_name, port)].append(leaf)
 
             for ((callee_name, port), leaves) in leaf_name_and_port_to_leaves.items():
                 fragment: TraceFragment = {
                     "callee": callee_name,
                     "port": port,
                     "location": self._adjust_location(trace["root"]),
-                    "leaves": leaves,
+                    "leaves": [
+                        LeafWithDistance(name=leaf.name, kind=leaf.kind, distance=0)
+                        for leaf in leaves
+                    ],
                     "titos": list(map(self._adjust_location, trace.get("tito", []))),
                     "features": trace.get("features", []),
                     "type_interval": None,
@@ -327,7 +344,10 @@ class Parser(BaseParser):
             port = call["port"]
             resolves_to = call.get("resolves_to", [])
             length = call.get("length", 0)
-            leaves = [(name, kind, length) for (name, kind, _, _) in leaves]
+            leaves = [
+                LeafWithDistance(name=leaf.name, kind=leaf.kind, distance=length)
+                for leaf in leaves
+            ]
 
             for resolved in resolves_to:
                 fragment: TraceFragment = {
@@ -348,22 +368,13 @@ class Parser(BaseParser):
     def _adjust_location(self, location: ParsePosition) -> ParsePosition:
         return {**location, "start": location["start"] + 1}  # pyre-ignore[7]
 
-    def _leaf_name(self, leaf: Dict[str, Any]) -> str:
-        return leaf.get("name", None)
-
-    def _leaf_port(self, leaf: Dict[str, Any]) -> str:
-        return leaf.get("port", None)
-
-    def _parse_leaves(
-        self, leaves: List[Dict[str, Any]]
-    ) -> List[Tuple[str, str, int, Optional[str]]]:
-        """
-        Returns a list of tuples ((leaf_name, leaf_kind, distance, port)).
-        We only return a port in the case that exactly one matches the leaf for the
-        trace frame.
-        """
+    def _parse_leaves(self, leaves: List[Dict[str, Any]]) -> List[LeafWithPort]:
         return [
-            (self._leaf_name(leaf), leaf["kind"], 0, self._leaf_port(leaf))
+            LeafWithPort(
+                name=leaf.get("name", None),
+                kind=leaf["kind"],
+                port=leaf.get("port", None),
+            )
             for leaf in leaves
         ]
 
