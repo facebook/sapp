@@ -38,6 +38,18 @@ T_in = TypeVar("T_in")
 T_out = TypeVar("T_out")
 
 
+class ParseError(Exception):
+    def __init__(self, message: str, received: object = None) -> None:
+        self.message = message
+        self.received = received
+
+    def __str__(self) -> str:
+        message = self.message
+        if self.received is not None:
+            message = f"{message}\nReceived: `{self.received}`"
+        return message
+
+
 class ParseType(Enum):
     ISSUE = "issue"
     PRECONDITION = "precondition"

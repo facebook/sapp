@@ -88,7 +88,7 @@ class Port(NamedTuple):
         elements = port.split(".")
 
         if len(elements) == 0:
-            raise AssertionError(f"invalid port: `{port}`")
+            raise sapp.ParseError(f"Invalid port: `{port}`.")
 
         elements[0] = elements[0].lower()
         if elements[0] == "leaf":
@@ -158,8 +158,8 @@ class Call(NamedTuple):
         call_port = Port.from_json(port, leaf_kind)
         if position is None:
             if not call_port.is_leaf():
-                raise AssertionError(
-                    f"missing call position for call to `{call_method.name}`"
+                raise sapp.ParseError(
+                    f"Missing call position for call to `{call_method.name}`."
                 )
             else:
                 call_position = default_position

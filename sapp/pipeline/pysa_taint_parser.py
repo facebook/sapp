@@ -27,6 +27,7 @@ import ujson as json
 from .. import errors
 from ..analysis_output import AnalysisOutput, Metadata
 from . import (
+    ParseError,
     ParseConditionTuple,
     ParseFeature,
     ParseIssueCondition,
@@ -125,11 +126,9 @@ class Parser(BaseParser):
         """
         file_version = self._parse_file_version(handle)
         if file_version < 2:
-            raise AssertionError(
-                f"File version `{file_version}` is no longer supported."
-            )
+            raise ParseError(f"File version `{file_version}` is no longer supported.")
         if file_version > 2:
-            raise AssertionError(f"Unknown file version `{file_version}`.")
+            raise ParseError(f"Unknown file version `{file_version}`.")
 
         offset, line = handle.tell(), handle.readline()
         while line:
@@ -145,13 +144,10 @@ class Parser(BaseParser):
             json_first_line = json.loads(first_line)
             version = json_first_line["file_version"]
         except ValueError:
-            raise AssertionError(
-                f"First line is not valid JSON.\nReceived: `{first_line}`"
-            )
+            raise ParseError("First line is not valid JSON.", received=first_line)
         except KeyError:
-            raise AssertionError(
-                "First entry must have a `file_version` attribute.\n"
-                f"Received: `{first_line}`"
+            raise ParseError(
+                "First entry must have a `file_version` attribute.", received=first_line
             )
 
         return version
@@ -285,7 +281,7 @@ class Parser(BaseParser):
             if trace["name"] == name:
                 return self._parse_issue_trace_fragments(leaf_port, trace["roots"])
 
-        raise AssertionError(f"Could not find `{name}` in trace.\nReceived: `{traces}`")
+        raise ParseError(f"Could not find `{name}` in trace.", received=traces)
 
     def _parse_issue_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
@@ -363,7 +359,7 @@ class Parser(BaseParser):
         elif "decl" in trace:
             pass  # User-declared fragment.
         else:
-            raise AssertionError(f"Unexpected trace fragment.\nReceived: `{trace}`")
+            raise ParseError("Unexpected trace fragment.", received=trace)
 
     def _adjust_location(self, location: ParsePosition) -> ParsePosition:
         return {**location, "start": location["start"] + 1}  # pyre-ignore[7]
