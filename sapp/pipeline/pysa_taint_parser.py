@@ -316,14 +316,13 @@ class Parser(BaseParser):
                     "port": port,
                     "location": self._adjust_location(trace["root"]),
                     "leaves": leaves,
-                    "titos": trace.get("tito", []),
+                    "titos": list(map(self._adjust_location, trace.get("tito", []))),
                     "features": trace.get("features", []),
                     "type_interval": None,
                 }
                 yield fragment
         elif "call" in trace:
             call = trace["call"]
-            location = self._adjust_location(call["position"])
             port = call["port"]
             resolves_to = call.get("resolves_to", [])
             length = call.get("length", 0)
@@ -333,11 +332,9 @@ class Parser(BaseParser):
                 fragment: TraceFragment = {
                     "callee": resolved,
                     "port": port,
-                    "location": location,
+                    "location": self._adjust_location(call["position"]),
                     "leaves": leaves,
-                    "titos": [
-                        self._adjust_location(tito) for tito in trace.get("tito", [])
-                    ],
+                    "titos": list(map(self._adjust_location, trace.get("tito", []))),
                     "features": trace.get("features", []),
                     "type_interval": None,
                 }

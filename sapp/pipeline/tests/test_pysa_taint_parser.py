@@ -332,10 +332,10 @@ class TestParser(unittest.TestCase):
                             leaves=[("UserControlled", 0)],
                             titos=[
                                 SourceLocation(
-                                    line_no=110, begin_column=111, end_column=112
+                                    line_no=110, begin_column=112, end_column=112
                                 ),
                                 SourceLocation(
-                                    line_no=113, begin_column=114, end_column=115
+                                    line_no=113, begin_column=115, end_column=115
                                 ),
                             ],
                             features=["via:source-direct"],
@@ -369,7 +369,7 @@ class TestParser(unittest.TestCase):
                             leaves=[("RCE", 0)],
                             titos=[
                                 SourceLocation(
-                                    line_no=210, begin_column=211, end_column=212
+                                    line_no=210, begin_column=212, end_column=212
                                 )
                             ],
                             features=["always-via:sink-direct"],
@@ -500,7 +500,7 @@ class TestParser(unittest.TestCase):
                             leaves=[("UserControlled", 0)],
                             titos=[
                                 SourceLocation(
-                                    line_no=110, begin_column=111, end_column=112
+                                    line_no=110, begin_column=112, end_column=112
                                 ),
                             ],
                             features=["via:source-direct"],
@@ -518,7 +518,7 @@ class TestParser(unittest.TestCase):
                             leaves=[("UserControlled", 0)],
                             titos=[
                                 SourceLocation(
-                                    line_no=110, begin_column=111, end_column=112
+                                    line_no=110, begin_column=112, end_column=112
                                 ),
                             ],
                             features=["via:source-direct"],
@@ -538,7 +538,7 @@ class TestParser(unittest.TestCase):
                             leaves=[("RCE", 0)],
                             titos=[
                                 SourceLocation(
-                                    line_no=210, begin_column=211, end_column=212
+                                    line_no=210, begin_column=212, end_column=212
                                 )
                             ],
                             features=["always-via:sink-direct"],
@@ -556,7 +556,7 @@ class TestParser(unittest.TestCase):
                             leaves=[("RCE", 0)],
                             titos=[
                                 SourceLocation(
-                                    line_no=210, begin_column=211, end_column=212
+                                    line_no=210, begin_column=212, end_column=212
                                 )
                             ],
                             features=["always-via:sink-direct"],
@@ -824,8 +824,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0), ("Header", 0)],
                     caller_port="result",
@@ -882,8 +882,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0)],
                     caller_port="result[attribute]",
@@ -903,8 +903,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0)],
                     caller_port="result[attribute]",
@@ -983,8 +983,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
@@ -1004,8 +1004,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0), ("Header", 0)],
                     caller_port="result",
@@ -1025,8 +1025,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
@@ -1046,8 +1046,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
@@ -1277,8 +1277,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
@@ -1406,8 +1406,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("SQL", 0), ("RCE", 0)],
                     caller_port="formal(x)",
@@ -1464,8 +1464,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("RCE", 0)],
                     caller_port="formal(x)",
@@ -1485,8 +1485,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("RCE", 0)],
                     caller_port="formal(x)",
@@ -1565,8 +1565,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("RCE", 0)],
                     caller_port="formal(y)[attribute]",
@@ -1586,8 +1586,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("RCE", 0), ("SQL", 0)],
                     caller_port="formal(y)[attribute]",
@@ -1607,8 +1607,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("RCE", 0)],
                     caller_port="formal(y)[attribute]",
@@ -1628,8 +1628,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("RCE", 0)],
                     caller_port="formal(y)[attribute]",
@@ -1860,8 +1860,8 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="foo.py",
                     titos=[
-                        SourceLocation(line_no=10, begin_column=11, end_column=12),
-                        SourceLocation(line_no=13, begin_column=14, end_column=15),
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[("RCE", 0)],
                     caller_port="formal(x)",
