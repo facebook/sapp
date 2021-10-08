@@ -286,20 +286,31 @@ class Parser(BaseParser):
     def _parse_issue_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
     ) -> Tuple[List[ParseIssueConditionTuple], Set[ParseIssueLeaf]]:
-        fragments = []
-        leaf_distances = set()
+        fragments: List[ParseIssueConditionTuple] = []
+        leaf_distances: Set[ParseIssueLeaf] = set()
 
         for trace in traces:
             for fragment in self._parse_trace_fragment(leaf_port, trace):
-                # Stripping the leaf_detail away for areas that
-                #   only expect (leaf_kind, depth)
                 leaves = fragment["leaves"]
-                new_fragment = cast(ParseIssueCondition, fragment.copy())
-                new_fragment["leaves"] = [(leaf.kind, leaf.distance) for leaf in leaves]
-                fragments.append(ParseIssueConditionTuple.from_typed_dict(new_fragment))
-                # Leaf distances should be represented as:
-                #   (leaf_detail, leaf_kind, depth)
-                leaf_distances.update(leaves)
+                fragments.append(
+                    ParseIssueConditionTuple(
+                        callee=fragment["callee"],
+                        port=fragment["port"],
+                        location=SourceLocation.from_typed_dict(fragment["location"]),
+                        leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
+                        titos=list(
+                            map(SourceLocation.from_typed_dict, fragment["titos"])
+                        ),
+                        features=flatten_features(fragment["features"]),
+                        type_interval=None,
+                        annotations=[],
+                    )
+                )
+                leaf_distances.update(
+                    # pyre-fixme: Expected `str` but got `Optional[str]` for leaf.name
+                    (leaf.name, leaf.kind, leaf.distance)
+                    for leaf in leaves
+                )
 
         return (fragments, leaf_distances)
 
