@@ -207,18 +207,11 @@ class Parser(BaseParser):
         (
             preconditions,
             final_sinks,
-            bw_features,
         ) = self._parse_issue_traces(json["traces"], "backward", "sink")
         (
             postconditions,
             initial_sources,
-            fw_features,
         ) = self._parse_issue_traces(json["traces"], "forward", "source")
-
-        if "features" in json:
-            features: Iterable[ParseFeature] = json["features"]
-        else:
-            features: Iterable[ParseFeature] = bw_features + fw_features  # legacy
 
         yield ParseIssueTuple(
             code=json["code"],
@@ -235,7 +228,7 @@ class Parser(BaseParser):
             postconditions=postconditions,
             initial_sources=initial_sources,
             fix_info=None,
-            features=flatten_features(features),
+            features=flatten_features(json["features"]),
         )
 
     def _generate_issue_master_handle(self, issue: Dict[str, Any]) -> str:
@@ -267,18 +260,17 @@ class Parser(BaseParser):
 
     def _parse_issue_traces(
         self, traces: List[Dict[str, Any]], name: str, leaf_port: str
-    ) -> Tuple[List[ParseIssueConditionTuple], Set[ParseIssueLeaf], List[ParseFeature]]:
+    ) -> Tuple[List[ParseIssueConditionTuple], Set[ParseIssueLeaf]]:
         for trace in traces:
             if trace["name"] == name:
                 return self._parse_issue_trace_fragments(leaf_port, trace["roots"])
-        return ([], set(), [])
+        return ([], set())
 
     def _parse_issue_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
-    ) -> Tuple[List[ParseIssueConditionTuple], Set[ParseIssueLeaf], List[ParseFeature]]:
+    ) -> Tuple[List[ParseIssueConditionTuple], Set[ParseIssueLeaf]]:
         fragments = []
         leaf_distances = set()
-        all_features = []
 
         for trace in traces:
             for fragment in self._parse_trace_fragment(leaf_port, trace):
@@ -293,9 +285,8 @@ class Parser(BaseParser):
                 # Leaf distances should be represented as:
                 #   (leaf_detail, leaf_kind, depth)
                 leaf_distances.update(leaves)
-                all_features.extend(fragment["features"])
 
-        return (fragments, leaf_distances, all_features)
+        return (fragments, leaf_distances)
 
     def _parse_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
