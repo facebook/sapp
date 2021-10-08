@@ -67,14 +67,14 @@ class Parser(BaseParser):
     def parse_handle(
         self, handle: IO[str]
     ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
-        for entry in self._parse_basic(handle):
+        for entry, _ in self._parse_entries(handle):
             yield from self._parse_by_type(entry)
 
     # Instead of returning the actual json from the AnalysisOutput, we return
     # location information so it can be retrieved later.
     def get_json_file_offsets(self, input: AnalysisOutput) -> Iterable[EntryPosition]:
         for handle in input.file_handles():
-            for entry, position in self._parse_v2(handle):
+            for entry, position in self._parse_entries(handle):
                 callable = self._get_callable(entry["data"].get("callable")).lstrip(
                     "\\"
                 )
@@ -90,22 +90,7 @@ class Parser(BaseParser):
             fh.seek(offset)
             return json.loads(fh.readline())
 
-    def _parse_basic(self, handle: IO[str]) -> Iterable[Dict[str, Any]]:
-        file_version = self._guess_file_version(handle)
-        if file_version == 2:
-            for entry, _ in self._parse_v2(handle):
-                yield entry
-        else:
-            yield from self._parse_v1(handle)
-
-    def _parse_v1(self, handle: IO[str]) -> Iterable[Dict[str, Any]]:
-        data = json.load(handle)
-        config = data["config"]
-        self.repo_dirs = [config["repo"]]
-        results = data["results"]
-        return results
-
-    def _parse_v2(
+    def _parse_entries(
         self, handle: IO[str]
     ) -> Iterable[Tuple[Dict[str, Any], Dict[str, int]]]:
         """Parse analysis in jsonlines format:
@@ -114,33 +99,37 @@ class Parser(BaseParser):
         { <error2> }
         ...
         """
-        header = json.loads(handle.readline())
-        assert header["file_version"] == 2
-
-        shard = 0
+        file_version = self._parse_file_version(handle)
+        if file_version < 2:
+            raise AssertionError(
+                f"File version `{file_version}` is no longer supported."
+            )
+        if file_version > 2:
+            raise AssertionError(f"Unknown file version `{file_version}`.")
 
         offset, line = handle.tell(), handle.readline()
         while line:
             entry = json.loads(line)
             if entry:
-                position = {"shard": shard, "offset": offset}
+                position = {"shard": 0, "offset": offset}
                 yield entry, position
             offset, line = handle.tell(), handle.readline()
 
-    def _guess_file_version(self, handle: IO[str]) -> int:
-        first_line = handle.readline()
+    def _parse_file_version(self, handle: IO[str]) -> int:
+        first_line = handle.readline().strip()
         try:
             json_first_line = json.loads(first_line)
             version = json_first_line["file_version"]
-        # Falling back on v1 for expected errors
-        except KeyError as e:
-            if e.args[0] != "file_version":
-                raise
-            version = 1
         except ValueError:
-            version = 1
+            raise AssertionError(
+                f"First line is not valid JSON.\nReceived: `{first_line}`"
+            )
+        except KeyError:
+            raise AssertionError(
+                "First entry must have a `file_version` attribute.\n"
+                f"Received: `{first_line}`"
+            )
 
-        handle.seek(0)
         return version
 
     def _parse_by_type(
