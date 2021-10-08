@@ -342,6 +342,10 @@ class Parser(BaseParser):
                     "type_interval": None,
                 }
                 yield fragment
+        elif "decl" in trace:
+            pass  # User-declared fragment.
+        else:
+            raise AssertionError(f"Unexpected trace fragment.\nReceived: `{trace}`")
 
     def _adjust_location(self, location: ParsePosition) -> ParsePosition:
         return {**location, "start": location["start"] + 1}  # pyre-ignore[7]
