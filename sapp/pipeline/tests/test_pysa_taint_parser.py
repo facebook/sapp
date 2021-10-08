@@ -752,6 +752,132 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
+        # Indirect source into a return sink.
+        self.assertParsed(
+            """
+            {
+              "kind": "issue",
+              "data": {
+                "callable": "foo.bar",
+                "callable_line": 10,
+                "code": 1,
+                "line": 11,
+                "start": 12,
+                "end": 13,
+                "filename": "foo.py",
+                "message": "[UserControlled] to [RCE]",
+                "traces": [
+                  {
+                    "name": "forward",
+                    "roots": [
+                      {
+                        "root": {
+                          "filename": "foo.py",
+                          "line": 20,
+                          "start": 21,
+                          "end": 22
+                        },
+                        "tito": [ { "line": 30, "start": 31, "end": 32 } ],
+                        "leaves": [
+                          {
+                            "kind": "UserControlled",
+                            "name": "_user_controlled"
+                          }
+                        ],
+                        "features": [
+                          { "has": "first-index" },
+                          { "first-index": "payload" },
+                          { "always-via": "tito" }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "backward",
+                    "roots": [
+                      {
+                        "root": {
+                          "filename": "foo.py",
+                          "line": 100,
+                          "start": 101,
+                          "end": 102
+                        },
+                        "leaves": [ { "kind": "RCE" } ]
+                      }
+                    ]
+                  }
+                ],
+                "features": [
+                  { "has": "first-index" },
+                  { "first-index": "payload" },
+                  { "always-via": "tito" }
+                ]
+              }
+            }
+            """,
+            [
+                ParseIssueTuple(
+                    code=1,
+                    message="[UserControlled] to [RCE]",
+                    callable="foo.bar",
+                    handle="foo.bar:1|12|13:1:4f2c49226090f13a",
+                    filename="foo.py",
+                    callable_line=10,
+                    line=11,
+                    start=12,
+                    end=13,
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="_user_controlled",
+                            port="source",
+                            location=SourceLocation(
+                                line_no=20,
+                                begin_column=22,
+                                end_column=22,
+                            ),
+                            leaves=[("UserControlled", 0)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=30, begin_column=32, end_column=32
+                                ),
+                            ],
+                            features=[
+                                "has:first-index",
+                                "first-index:payload",
+                                "always-via:tito",
+                            ],
+                            type_interval=None,
+                            annotations=[],
+                        ),
+                    ],
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="leaf",
+                            port="sink",
+                            location=SourceLocation(
+                                line_no=100,
+                                begin_column=102,
+                                end_column=102,
+                            ),
+                            leaves=[("RCE", 0)],
+                            titos=[],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        ),
+                    ],
+                    initial_sources={("_user_controlled", "UserControlled", 0)},
+                    # pyre-fixme[6]: Expected `str` but got `None`
+                    final_sinks={(None, "RCE", 0)},
+                    features=[
+                        "has:first-index",
+                        "first-index:payload",
+                        "always-via:tito",
+                    ],
+                    fix_info=None,
+                )
+            ],
+        )
 
     def testSourceModel(self) -> None:
         # User-declared source.
@@ -1333,6 +1459,53 @@ class TestParser(unittest.TestCase):
             }
             """,
             [],
+        )
+        # Implicit source.
+        self.assertParsed(
+            """
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "root": {
+                          "filename": "foo.py",
+                          "line": 1,
+                          "start": 2,
+                          "end": 3
+                        },
+                        "leaves": [ { "kind": "UserControlled" } ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[],
+                    leaves=[("UserControlled", 0)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+            ],
         )
 
     def testSinkModel(self) -> None:
@@ -1916,6 +2089,53 @@ class TestParser(unittest.TestCase):
             }
             """,
             [],
+        )
+        # Implicit sink.
+        self.assertParsed(
+            """
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sinks": [
+                  {
+                    "port": "formal(x)",
+                    "taint": [
+                      {
+                        "root": {
+                          "filename": "foo.py",
+                          "line": 1,
+                          "start": 2,
+                          "end": 3
+                        },
+                        "leaves": [ { "kind": "RCE" } ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="foo.bar",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[],
+                    leaves=[("RCE", 0)],
+                    caller_port="formal(x)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+            ],
         )
 
     def testIgnoreModels(self) -> None:
