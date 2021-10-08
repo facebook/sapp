@@ -264,7 +264,8 @@ class Parser(BaseParser):
         for trace in traces:
             if trace["name"] == name:
                 return self._parse_issue_trace_fragments(leaf_port, trace["roots"])
-        return ([], set())
+
+        raise AssertionError(f"Could not find `{name}` in trace.\nReceived: `{traces}`")
 
     def _parse_issue_trace_fragments(
         self, leaf_port: str, traces: List[Dict[str, Any]]
