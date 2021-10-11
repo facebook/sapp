@@ -19,7 +19,6 @@ from typing import (
     Set,
     Tuple,
     Union,
-    cast,
 )
 
 import ujson as json
@@ -30,7 +29,6 @@ from . import (
     ParseError,
     ParseConditionTuple,
     ParseFeature,
-    ParseIssueCondition,
     ParseIssueConditionTuple,
     ParseIssueLeaf,
     ParseIssueTuple,
