@@ -218,6 +218,7 @@ class Query(graphene.ObjectType):
             .where_issue_instance_id_is(issue_instance_id)
             .get()
         )
+
         return issues
 
     def resolve_initial_trace_frames(

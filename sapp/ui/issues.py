@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, FrozenSet, List, NamedTuple, Optional, Set, Union
+from typing import Any, Dict, FrozenSet, List, NamedTuple, Optional, Set, Tuple, Union
 
 import graphene
 from graphql.execution.base import ResolveInfo
@@ -49,6 +49,16 @@ SinkNameText = aliased(SharedText)
 SinkKindText = aliased(SharedText)
 
 
+class SimilarIssueResultType(graphene.ObjectType):
+    issue_id = graphene.ID()
+    score = graphene.Float()
+
+
+class SimilarIssue(NamedTuple):
+    issue_id: DBID
+    score: float
+
+
 # pyre-ignore[13]: unitialized class attribute
 class IssueQueryResultType(graphene.ObjectType):
     concatenated_features: str
@@ -58,6 +68,7 @@ class IssueQueryResultType(graphene.ObjectType):
 
     issue_id = graphene.ID()
     issue_instance_id = graphene.ID()
+    run_id = graphene.ID()
 
     code = graphene.Int()
     message = graphene.String()
@@ -81,6 +92,7 @@ class IssueQueryResultType(graphene.ObjectType):
     min_trace_length_to_sinks = graphene.Int()
 
     warning_message = graphene.String()
+    similar_issues = graphene.List(SimilarIssueResultType)
 
     def resolve_sources(self, info: ResolveInfo) -> List[str]:
         # pyre-ignore[6]: graphene too dynamic.
@@ -109,10 +121,29 @@ class IssueQueryResultType(graphene.ObjectType):
             return warning_message.message
         return ""
 
+    def resolve_similar_issues(self, info: ResolveInfo) -> Set[SimilarIssue]:
+        other_issues = Instance(info.context["session"], DBID(self.run_id)).get()
+
+        for other_issue in other_issues:
+            if (
+                other_issue.issue_instance_id.resolved()
+                # pyre-ignore[16]: grapehene too dynamic
+                == self.issue_instance_id.resolved()
+            ):
+                continue
+            # pyre-ignore[16]: grapehene too dynamic
+            similarity = self.similarity_with(other_issue)
+            if similarity.score > 0.5:
+                # pyre-ignore[16]: grapehene too dynamic
+                self.similar_issues.add(similarity)
+        # pyre-ignore[7]: grapehene too dynamic
+        return self.similar_issues
+
 
 class IssueQueryResult(NamedTuple):
     issue_id: DBID
     issue_instance_id: DBID
+    run_id: DBID
 
     code: int
     message: str
@@ -135,6 +166,8 @@ class IssueQueryResult(NamedTuple):
     source_kinds: FrozenSet[str]
     sink_names: FrozenSet[str]
     sink_kinds: FrozenSet[str]
+
+    similar_issues: Set[SimilarIssue]
 
     @staticmethod
     # pyre-fixme[2]: Parameter annotation cannot be `Any`.
@@ -167,6 +200,8 @@ class IssueQueryResult(NamedTuple):
             sink_kinds=frozenset(record.concatenated_sink_kinds.split(","))
             if record.concatenated_sink_kinds
             else frozenset(),
+            similar_issues=set(),
+            run_id=record.run_id,
         )
 
     def to_json(self) -> Dict[str, Union[str, int, List[str], bool]]:
@@ -189,6 +224,10 @@ class IssueQueryResult(NamedTuple):
             "features": list(self.features),
             "is_new_issue": self.is_new_issue,
             "first_seen": self.first_seen,
+            "run_id": self.run_id,
+            "similar_issues": [
+                similar_issue.__dict__ for similar_issue in self.similar_issues
+            ],
         }
 
     def to_sarif(self, severity_level: str = "warning") -> SARIFResult:
@@ -214,6 +253,7 @@ class IssueQueryResult(NamedTuple):
             (
                 self.issue_id.resolved(),
                 self.issue_instance_id.resolved(),
+                self.run_id.resolved(),
                 self.code,
                 self.message,
                 self.callable,
@@ -229,6 +269,7 @@ class IssueQueryResult(NamedTuple):
                 self.min_trace_length_to_sinks,
                 self.min_trace_length_to_sources,
                 self.features,
+                self.similar_issues,
             )
         )
 
@@ -238,6 +279,7 @@ class IssueQueryResult(NamedTuple):
         return (
             self.issue_id.resolved() == other.issue_id.resolved()
             and self.issue_instance_id.resolved() == other.issue_instance_id.resolved()
+            and self.run_id.resolved() == other.run_id.resolved()
             and self.code == other.code
             and self.status == other.status
             and self.message == other.message
@@ -253,7 +295,27 @@ class IssueQueryResult(NamedTuple):
             and self.min_trace_length_to_sinks == other.min_trace_length_to_sinks
             and self.min_trace_length_to_sources == other.min_trace_length_to_sources
             and self.features == other.features
+            and self.similar_issues == other.similar_issues
         )
+
+    def similarity_with(self, other: object) -> SimilarIssue:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        score: float = 0.0
+        score += 1 if self.source_names == other.source_names else 0
+        score += 1 if self.sink_names == other.sink_names else 0
+        score += 1 if self.code == other.code else 0
+        score += 1 if self.callable == other.callable else 0
+        score += 2 * len(self.sink_kinds.intersection(other.sink_kinds))
+        score += 2 * len(self.source_kinds.intersection(other.source_kinds))
+        score = score / (
+            4
+            + len(self.sink_kinds)
+            + len(other.sink_kinds)
+            + len(self.source_kinds)
+            + len(other.source_kinds)
+        )
+        return SimilarIssue(issue_id=other.issue_id, score=score)
 
 
 class Instance:
@@ -382,6 +444,7 @@ class Instance:
                 source_kinds.c.concatenated_source_kinds,
                 sink_names.c.concatenated_sink_names,
                 sink_kinds.c.concatenated_sink_kinds,
+                IssueInstance.run_id,
             )
             .filter(IssueInstance.run_id == self._run_id)
             .join(FilenameText, FilenameText.id == IssueInstance.filename_id)
@@ -412,7 +475,6 @@ class Instance:
         if len(issue_predicates) > 0:
             for issue_predicate in issue_predicates:
                 issues = issue_predicate.apply(issues)
-
         return issues
 
     def where(self, *predicates: filter_predicates.Predicate) -> "Instance":
