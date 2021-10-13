@@ -1802,6 +1802,8 @@ class InteractiveTest(TestCase):
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            similar_issues={(2, "0.24")},
+            run_id=1,
         )
         sources = []
         sinks = ["sink1", "sink2"]
@@ -1839,6 +1841,8 @@ class InteractiveTest(TestCase):
             sink_kinds=["sink1"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            similar_issues={(2, "0.24")},
+            run_id=1,
         )
         sources = []
         sinks = ["sink1"]
@@ -1875,6 +1879,8 @@ class InteractiveTest(TestCase):
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            similar_issues={(2, "0.24")},
+            run_id=1,
         )
         sources = []
         sinks = ["sink1", "sink2"]
@@ -1902,6 +1908,8 @@ class InteractiveTest(TestCase):
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            similar_issues={(2, "0.24")},
+            run_id=1,
         )
         sources = []
         sinks = ["sink1", "sink2"]
