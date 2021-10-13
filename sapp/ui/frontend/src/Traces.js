@@ -370,6 +370,8 @@ function Trace(props: $ReadOnly<{|match: any|}>): React$Node {
             features
             min_trace_length_to_sources
             min_trace_length_to_sinks
+            first_seen
+            status
           }
         }
       }
