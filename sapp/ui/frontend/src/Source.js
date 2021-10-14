@@ -151,23 +151,24 @@ function computeLayout(
   return {totalLines, folds};
 }
 
+export const SourceQuery = gql`
+  query Issue($path: String) {
+    file(path: $path) {
+      edges {
+        node {
+          contents
+          editor_link
+        }
+      }
+    }
+  }
+`;
+
 function Source(
   props: $ReadOnly<{|path: string, location: string, titos?: string|}>,
 ): React$Node {
   var line = null;
 
-  const SourceQuery = gql`
-    query Issue($path: String) {
-      file(path: $path) {
-        edges {
-          node {
-            contents
-            editor_link
-          }
-        }
-      }
-    }
-  `;
   const {loading, error, data} = useQuery(SourceQuery, {
     variables: {path: props.path},
   });

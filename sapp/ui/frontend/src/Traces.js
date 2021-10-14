@@ -249,6 +249,25 @@ function LoadFrame(
   );
 }
 
+export const InitialTraceFramesQuery = gql`
+  query InitialTraceFrame($issue_instance_id: Int!, $kind: String!) {
+    initial_trace_frames(issue_instance_id: $issue_instance_id, kind: $kind) {
+      edges {
+        node {
+          frame_id
+          callee
+          callee_id
+          filename
+          callee_location
+          trace_length
+          is_leaf
+        }
+      }
+    }
+  }
+`;
+
+
 function Expansion(
   props: $ReadOnly<{|
     issue_instance_id: number,
@@ -256,23 +275,6 @@ function Expansion(
     kind: Kind,
   |}>,
 ): React$Node {
-  const InitialTraceFramesQuery = gql`
-    query InitialTraceFrame($issue_instance_id: Int!, $kind: String!) {
-      initial_trace_frames(issue_instance_id: $issue_instance_id, kind: $kind) {
-        edges {
-          node {
-            frame_id
-            callee
-            callee_id
-            filename
-            callee_location
-            trace_length
-            is_leaf
-          }
-        }
-      }
-    }
-  `;
   const {loading, error, data} = useQuery(InitialTraceFramesQuery, {
     variables: {issue_instance_id: props.issue_instance_id, kind: props.kind},
   });
@@ -347,36 +349,37 @@ function Expansion(
   );
 }
 
-function Trace(props: $ReadOnly<{|match: any|}>): React$Node {
-  const run_id = props.match.params.run_id;
-  const issue_instance_id = props.match.params.issue_instance_id;
-
-  const IssueQuery = gql`
-    query Issue($run_id: Int!, $issue_instance_id: Int!) {
-      issues(run_id: $run_id, issue_instance_id: $issue_instance_id) {
-        edges {
-          node {
-            issue_id
-            issue_instance_id
-            code
-            message
-            callable
-            filename
-            location
-            sources
-            source_names
-            sinks
-            sink_names
-            features
-            min_trace_length_to_sources
-            min_trace_length_to_sinks
-            first_seen
-            status
-          }
+export const IssueQuery = gql`
+  query Issue($run_id: Int!, $issue_instance_id: Int!) {
+    issues(run_id: $run_id, issue_instance_id: $issue_instance_id) {
+      edges {
+        node {
+          issue_id
+          issue_instance_id
+          code
+          message
+          callable
+          filename
+          location
+          sources
+          source_names
+          sinks
+          sink_names
+          features
+          min_trace_length_to_sources
+          min_trace_length_to_sinks
+          first_seen
+          status
         }
       }
     }
-  `;
+  }
+`;
+
+export function Trace(props: $ReadOnly<{|match: any|}>): React$Node {
+  const run_id = props.match.params.run_id;
+  const issue_instance_id = props.match.params.issue_instance_id;
+
   const {loading, error, data} = useQuery(IssueQuery, {
     variables: {run_id, issue_instance_id},
   });
