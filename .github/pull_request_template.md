@@ -5,6 +5,8 @@
     - [ ] `black .`
     - [ ] `usort format .`
     - [ ] `flake8`
+- [ ] I've installed dev dependencies `pip install -r requirements-dev.txt` and completed the following:
+    - [ ] I've ran tests with `./scripts/run-tests.sh` and made sure all tests are passing
 
 ## Summary
 
