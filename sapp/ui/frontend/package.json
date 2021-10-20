@@ -110,12 +110,6 @@
       "src/**/*.{js,jsx,ts,tsx}",
       "!src/**/*.d.ts"
     ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 80,
-        "functions": 80
-      }
-    },
     "setupFiles": [
       "react-app-polyfill/jsdom"
     ],
