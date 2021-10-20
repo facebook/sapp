@@ -9,7 +9,7 @@ set -e
 SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "${SCRIPTS_DIRECTORY}/.."
 
-echo '  Enumerating test files:'
+echo '  Enumerating backend test files:'
 files=$(find sapp -name '*_test.py' ! -name 'sharded_files_test.py' ! -name 'cli_test.py')
 echo "${files}"
 if [[ -z "${files}" ]]; then
@@ -17,10 +17,20 @@ if [[ -z "${files}" ]]; then
   exit 2
 fi
 
-echo '  Running all backend tests:'
-echo "${files}" | sed 's/.py$//' | sed 's:/:.:g' | xargs python -m coverage run -m unittest -v
-python -m coverage report --show-missing --ignore-errors --skip-empty
+if [ "$1" == "--with-coverage" ]; then
+  echo '  Running backend tests with coverage results:'
+  echo "${files}" | sed 's/.py$//' | sed 's:/:.:g' | xargs python -m coverage run -m unittest -v
+  python -m coverage report --show-missing --ignore-errors --skip-empty
+else
+  echo '  Running backend tests'
+  echo "${files}" | sed 's/.py$//' | sed 's:/:.:g' | xargs python -m unittest -v
+fi
 
-echo '  Running frontend tests:'
 cd "$(dirname "$0")/.." || exit 1
-(cd sapp/ui/frontend && npm install && npm run ui-test)
+if [ "$1" == "--with-coverage" ]; then
+  echo '  Running frontend tests with coverage results:'
+  (cd sapp/ui/frontend && npm install && npm run ui-test)
+else
+  echo '  Running frontend tests:'
+  (cd sapp/ui/frontend && npm install && npm run ui-test -- --coverage=false)
+fi
