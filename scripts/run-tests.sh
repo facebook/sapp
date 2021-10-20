@@ -17,6 +17,10 @@ if [[ -z "${files}" ]]; then
   exit 2
 fi
 
-echo '  Running all tests:'
+echo '  Running all backend tests:'
 echo "${files}" | sed 's/.py$//' | sed 's:/:.:g' | xargs python -m coverage run -m unittest -v
 python -m coverage report --show-missing --ignore-errors --skip-empty
+
+echo '  Running frontend tests:'
+cd "$(dirname "$0")/.." || exit 1
+(cd sapp/ui/frontend && npm install && npm run ui-test)
