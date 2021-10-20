@@ -18,4 +18,5 @@ if [[ -z "${files}" ]]; then
 fi
 
 echo '  Running all tests:'
-echo "${files}" | sed 's/.py$//' | sed 's:/:.:g' | xargs python -m unittest -v
+echo "${files}" | sed 's/.py$//' | sed 's:/:.:g' | xargs python -m coverage run -m unittest -v
+python -m coverage report --show-missing --ignore-errors --skip-empty
