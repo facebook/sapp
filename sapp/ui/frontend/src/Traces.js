@@ -370,6 +370,10 @@ export const IssueQuery = gql`
           min_trace_length_to_sinks
           first_seen
           status
+          similar_issues {
+            issue_id
+            score
+          }
         }
       }
     }
