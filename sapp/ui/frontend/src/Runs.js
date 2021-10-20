@@ -11,7 +11,7 @@
 import React, {useState} from 'react';
 import {useQuery, useMutation, gql} from '@apollo/client';
 import {Breadcrumb, Card, Col, Modal, Row, Typography} from 'antd';
-import {DeleteOutlined, LoadingOutlined, SyncOutlined} from '@ant-design/icons';
+import {DeleteOutlined, DotChartOutlined, LoadingOutlined, SyncOutlined} from '@ant-design/icons';
 import {clearFilter} from './Filter';
 
 const {Text, Link} = Typography;
@@ -83,7 +83,12 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
           </Link>
         }
         actions={[
-          <DeleteOutlined onClick={onDelete}/>
+          <Link onClick={onDelete}>
+            <DeleteOutlined/> Delete
+          </Link>,
+          <Link href={`/run/${props.run.run_id}/stats`}>
+            <DotChartOutlined/> Statistics
+          </Link>
         ]}>
         <Row gutter={gutter}>
           <Label>Date</Label>

@@ -12,6 +12,7 @@ import ReactDOM from 'react-dom';
 import {Layout} from 'antd';
 import './index.css';
 import Issues from './Issues';
+import Statistics from './Statistics';
 import Traces from './Traces';
 import Runs from './Runs';
 import * as serviceWorker from './serviceWorker';
@@ -109,6 +110,7 @@ const routing = (
               path="/run/:run_id/issue/:issue_instance_id"
               component={Traces}
             />
+            <Route exact path="/run/:run_id/stats" component={Statistics} />
           </div>
         </Content>
         <Footer />
