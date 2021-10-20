@@ -275,33 +275,83 @@ Array [
           <li
             style={
               Object {
-                "width": "100%",
+                "width": "50%",
               }
             }
           >
             <span>
-              <span
-                aria-label="delete"
-                className="anticon anticon-delete"
+              <a
+                className="ant-typography"
                 onClick={[Function]}
-                role="img"
-                tabIndex={-1}
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
               >
-                <svg
-                  aria-hidden="true"
-                  className=""
-                  data-icon="delete"
-                  fill="currentColor"
-                  focusable="false"
-                  height="1em"
-                  viewBox="64 64 896 896"
-                  width="1em"
+                <span
+                  aria-label="delete"
+                  className="anticon anticon-delete"
+                  role="img"
                 >
-                  <path
-                    d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"
-                  />
-                </svg>
-              </span>
+                  <svg
+                    aria-hidden="true"
+                    className=""
+                    data-icon="delete"
+                    fill="currentColor"
+                    focusable="false"
+                    height="1em"
+                    viewBox="64 64 896 896"
+                    width="1em"
+                  >
+                    <path
+                      d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"
+                    />
+                  </svg>
+                </span>
+                 Delete
+              </a>
+            </span>
+          </li>
+          <li
+            style={
+              Object {
+                "width": "50%",
+              }
+            }
+          >
+            <span>
+              <a
+                className="ant-typography"
+                href="/run/1/stats"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                <span
+                  aria-label="dot-chart"
+                  className="anticon anticon-dot-chart"
+                  role="img"
+                >
+                  <svg
+                    aria-hidden="true"
+                    className=""
+                    data-icon="dot-chart"
+                    fill="currentColor"
+                    focusable="false"
+                    height="1em"
+                    viewBox="64 64 896 896"
+                    width="1em"
+                  >
+                    <path
+                      d="M888 792H200V168c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v688c0 4.4 3.6 8 8 8h752c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM288 604a64 64 0 10128 0 64 64 0 10-128 0zm118-224a48 48 0 1096 0 48 48 0 10-96 0zm158 228a96 96 0 10192 0 96 96 0 10-192 0zm148-314a56 56 0 10112 0 56 56 0 10-112 0z"
+                    />
+                  </svg>
+                </span>
+                 Statistics
+              </a>
             </span>
           </li>
         </ul>
