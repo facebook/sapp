@@ -22,6 +22,7 @@ from .issues import (
     IssueQueryResultType,
     update_status,
 )
+from .metrics import MetricsQueryResult, MetricsQueryResultType
 from .trace import TraceFrameQueryResult, TraceFrameQueryResultType
 
 
@@ -104,6 +105,11 @@ class FilterConnection(relay.Connection):
         node = filters_module.Filter
 
 
+class MetricsConnection(relay.Connection):
+    class Meta:
+        node = MetricsQueryResultType
+
+
 class FeatureCondition(graphene.InputObjectType):
     mode = graphene.String()
     features = graphene.List(graphene.String)
@@ -167,6 +173,9 @@ class Query(graphene.ObjectType):
     file = relay.ConnectionField(FileConnection, path=graphene.String())
 
     filters = relay.ConnectionField(FilterConnection)
+    metrics = relay.ConnectionField(
+        MetricsConnection, run_id=graphene.Int(required=True)
+    )
 
     def resolve_runs(self, info: ResolveInfo) -> List[run.Run]:
         session = get_session(info.context)
@@ -305,6 +314,13 @@ class Query(graphene.ObjectType):
     def resolve_filters(self, info: ResolveInfo) -> List[filters_module.Filter]:
         session = info.context["session"]
         return filters_module.all_filters(session)
+
+    def resolve_metrics(
+        self, info: ResolveInfo, run_id: int
+    ) -> List[MetricsQueryResult]:
+        session = info.context["session"]
+        issues = Instance(session, DBID(run_id)).get()
+        return [MetricsQueryResult.from_issues(session, issues)]
 
 
 class SaveFilterMutation(relay.ClientIDMutation):
