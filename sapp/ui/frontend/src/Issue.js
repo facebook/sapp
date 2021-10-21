@@ -241,15 +241,9 @@ export function Issue(
       <Row gutter={gutter}>
         <Label>Code</Label>
         <Item>
-          <Tooltip title={"Code refers to the rule generating the issue"}>
-            <Text code>{props.issue.code}</Text>
+          <Tooltip title={"Unique identifier for the rule which generated this issue"}>
+            <Text code>{props.issue.code} : {props.issue.warning_message}</Text>
           </Tooltip>
-        </Item>
-      </Row>
-      <Row gutter={gutter}>
-        <Label>{props.issue.code}</Label>
-        <Item>
-          <Text code>{props.issue.warning_message}</Text>
         </Item>
       </Row>
       <Row gutter={gutter}>
