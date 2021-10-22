@@ -11,13 +11,16 @@ on:
 jobs:
   pyre:
     runs-on: ubuntu-20.04
+    strategy:
+        matrix:
+          python-version: ["3.7", "3.8", "3.9", "3.10"]
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: '>=3.7'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Dependencies
         run: |
