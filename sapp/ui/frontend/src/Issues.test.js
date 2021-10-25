@@ -47,6 +47,7 @@ test("Renders issues and filters", async () => {
         min_trace_length_to_sources: 0,
         min_trace_length_to_sinks: 0,
         first_seen: "2001-02-24 16:31:12.2402201",
+        warning_message: "this is a test warning message",
       },
     }],
     pageInfo: {

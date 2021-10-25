@@ -459,6 +459,8 @@ Array [
           >
             <span
               className="ant-typography"
+              onMouseEnter={[Function]}
+              onMouseLeave={[Function]}
               style={
                 Object {
                   "WebkitLineClamp": null,
@@ -467,6 +469,7 @@ Array [
             >
               <code>
                 6065
+                 : 
               </code>
             </span>
           </span>

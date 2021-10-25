@@ -140,6 +140,7 @@ export type IssueDescription = {
   min_trace_length_to_sinks: number,
   first_seen: string,
   is_new_issue: boolean,
+  warning_message: string,
 };
 
 export const statusMap = {
@@ -204,6 +205,7 @@ export function Issue(
 ): React$Node {
   const gutter = [8, 8];
 
+
   const Label = (props: $ReadOnly<{children: React$Node}>): React$Node => {
     return (
       <Col span={4} style={{textAlign: 'right'}}>
@@ -239,7 +241,9 @@ export function Issue(
       <Row gutter={gutter}>
         <Label>Code</Label>
         <Item>
-          <Text code>{props.issue.code}</Text>
+          <Tooltip title={"Unique identifier for the rule which generated this issue"}>
+            <Text code>{props.issue.code} : {props.issue.warning_message}</Text>
+          </Tooltip>
         </Item>
       </Row>
       <Row gutter={gutter}>
