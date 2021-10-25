@@ -8,9 +8,10 @@
 from __future__ import annotations
 
 import json
+import sys
 from json import JSONEncoder
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypedDict, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from sqlalchemy import Column, String
 
@@ -18,6 +19,11 @@ from .models import Base
 
 if TYPE_CHECKING:
     from .ui.schema import FeatureCondition, MatchesIsField
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 
 class NewMatchesIsAlias(TypedDict):
