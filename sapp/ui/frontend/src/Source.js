@@ -194,66 +194,73 @@ function Source(
   } else {
     const source = file.contents;
     const lines = source.split('\n');
-    const range = parseRanges(props.location, lines)[0];
-    line = range.from.line;
-    const titos = parseRanges(props.titos, lines);
-    const fileExtension = props.path.split('.').pop();
-    const mode = modes[fileExtension] || modes["py"];
+    // Potential mismatch between line numbers in bytecode and source in MT issues
+    // can break the frontend, display the error message in that scenario
+    if (lines.length < props.location.split('|')[0]) {
+      content = (
+        <Alert message={`${props.path} cannot be displayed because of mismatch in line numbers in source and issue.`} type="info" />
+      );
+    } else {
+      const range = parseRanges(props.location, lines)[0];
+      line = range.from.line;
+      const titos = parseRanges(props.titos, lines);
+      const fileExtension = props.path.split('.').pop();
+      const mode = modes[fileExtension] || modes["py"];
 
-    const ranges = [...titos, range].sort(
-      (left, right) => left.from.line - right.from.line,
-    );
+      const ranges = [...titos, range].sort(
+        (left, right) => left.from.line - right.from.line,
+      );
 
-    const layout = computeLayout(ranges, lines);
+      const layout = computeLayout(ranges, lines);
 
-    // React codemirror is horribly broken so store a reference to underlying
-    // JS implementation.
-    var editor = null;
+      // React codemirror is horribly broken so store a reference to underlying
+      // JS implementation.
+      var editor = null;
 
-    content = (
-      <CodeMirror
-        value={source}
-        options={{lineNumbers: true, readOnly: 'true', mode}}
-        editorDidMount={nativeEditor => {
-          editor = nativeEditor;
+      content = (
+        <CodeMirror
+          value={source}
+          options={{lineNumbers: true, readOnly: 'true', mode}}
+          editorDidMount={nativeEditor => {
+            editor = nativeEditor;
 
-          editor.markText(range.from, range.to, {
-            className: 'Source-selection',
-            attributes: {
-              title: Documentation.source.toNextFrame,
-            },
-          });
-
-          titos.forEach(range => {
-            nativeEditor.markText(range.from, range.to, {
-              className: 'Source-tito',
+            editor.markText(range.from, range.to, {
+              className: 'Source-selection',
               attributes: {
-                title: Documentation.source.tito,
+                title: Documentation.source.toNextFrame,
               },
             });
-          });
 
-          layout.folds.forEach(fold => {
-            nativeEditor.foldCode(fold.line, {
-              rangeFinder: _ => fold.range,
-              widget: `Hiding ${fold.range.to.line -
-                fold.line} lines. Click to expand...`,
+            titos.forEach(range => {
+              nativeEditor.markText(range.from, range.to, {
+                className: 'Source-tito',
+                attributes: {
+                  title: Documentation.source.tito,
+                },
+              });
             });
-          });
 
-          const textHeight = editor.defaultTextHeight();
-          editor.setSize(null, layout.totalLines * textHeight);
-          const offset = editor.heightAtLine(
-            ranges[ranges.length - 1].from.line - layout.totalLines + 2,
-            'local',
-          );
-          editor.scrollTo(
-            0,
-            offset - (linesPerFold + 2) * layout.folds.length * textHeight,
-          );
-        }}
-      />
-    );
+            layout.folds.forEach(fold => {
+              nativeEditor.foldCode(fold.line, {
+                rangeFinder: _ => fold.range,
+                widget: `Hiding ${fold.range.to.line -
+                  fold.line} lines. Click to expand...`,
+              });
+            });
+            const textHeight = editor.defaultTextHeight();
+            editor.setSize(null, layout.totalLines * textHeight);
+            const offset = editor.heightAtLine(
+              ranges[ranges.length - 1].from.line - layout.totalLines + 2,
+              'local',
+            );
+            editor.scrollTo(
+              0,
+              offset - (linesPerFold + 2) * layout.folds.length * textHeight,
+            );
+          }}
+        />
+      );
+    }
   }
 
   return (
