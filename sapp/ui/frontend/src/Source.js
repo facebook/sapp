@@ -198,7 +198,7 @@ function Source(
     // can break the frontend, display the error message in that scenario
     if (lines.length < props.location.split('|')[0]) {
       content = (
-        <Alert message={`${props.path} cannot be displayed because of mismatch in line numbers in source and issue.`} type="info" />
+        <Alert message={`${props.path} cannot be displayed because of mismatch in line numbers in the source code and the issue. This could be caused by inaccuracies in decompiled bytecode (if viewing Mariana Trench results) or by viewing a file which has been edited after it was processed by your static analyzer.`} type="info" />
       );
     } else {
       const range = parseRanges(props.location, lines)[0];
