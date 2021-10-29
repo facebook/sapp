@@ -19,6 +19,10 @@ class RunTest(TestCase):
         create_models(self.db)
         self.fakes = FakeObjectGenerator()
 
+        if self.shortDescription() == "No setUp":
+            # setUp does not run if the test has docstring "No setUp"
+            return
+
         run1 = self.fakes.run()
         run2 = self.fakes.run()
         run3 = self.fakes.run()
@@ -45,6 +49,12 @@ class RunTest(TestCase):
         with self.db.make_session() as session:
             id = latest(session)
             self.assertEqual(int(id), 3)
+
+    def testLatestRunWithNoRuns(self) -> None:
+        """No setUp"""
+        with self.db.make_session() as session:
+            id = latest(session)
+            self.assertEqual(str(id), "None")
 
     def testDeleteRun(self) -> None:
         with self.db.make_session() as session:
