@@ -27,14 +27,14 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
 
   const Label = (props: $ReadOnly<{children: React$Node}>): React$Node => {
     return (
-      <Col span={4} style={{textAlign: 'right'}}>
+      <Col span={8} style={{textAlign: 'right'}}>
         <Text type="secondary">{props.children}</Text>
       </Col>
     );
   };
   const Item = (props: $ReadOnly<{children: React$Node}>): React$Node => {
     return (
-      <Col span={20}>
+      <Col span={16}>
         <Text type="secondary">{props.children}</Text>
       </Col>
     );
@@ -91,6 +91,25 @@ function Run(props: $ReadOnly<{run: RunDescription}>): React$Node {
             <Text code>{props.run.date}</Text>
           </Item>
         </Row>
+        <Row gutter={gutter}>
+          <Label>Total issues</Label>
+          <Item>
+            <Text code>{props.run.num_issues || 0}</Text>
+          </Item>
+        </Row>
+        <Row gutter={gutter}>
+          <Label>Triaged issues</Label>
+          <Item>
+            <Text code>{props.run.triaged_issues || 0}</Text>
+          </Item>
+        </Row>
+        <Row gutter={gutter}>
+          <Label>Commit hash</Label>
+          <Item>
+            <Text code>{props.run.commit_hash || "None"}</Text>
+          </Item>
+        </Row>
+
       </Card>
       <br />
     </Col>
@@ -110,6 +129,9 @@ export const RunsQuery = gql`
         node {
           run_id
           date
+          commit_hash
+          num_issues
+          triaged_issues
         }
       }
     }
