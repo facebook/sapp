@@ -36,6 +36,9 @@ test("Renders runs", async () => {
             node: {
               run_id: "1",
               date: "Dummy date",
+              triaged_issues: 10,
+              num_issues: 24,
+              commit_hash: "Dummy commit hash",
             },
           }],
         },

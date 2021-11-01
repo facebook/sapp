@@ -212,7 +212,7 @@ Array [
             }
           >
             <div
-              className="ant-col ant-col-4"
+              className="ant-col ant-col-8"
               style={
                 Object {
                   "paddingBottom": 4,
@@ -235,7 +235,7 @@ Array [
               </span>
             </div>
             <div
-              className="ant-col ant-col-20"
+              className="ant-col ant-col-16"
               style={
                 Object {
                   "paddingBottom": 4,
@@ -263,6 +263,210 @@ Array [
                 >
                   <code>
                     Dummy date
+                  </code>
+                </span>
+              </span>
+            </div>
+          </div>
+          <div
+            className="ant-row"
+            style={
+              Object {
+                "marginBottom": 4,
+                "marginLeft": -4,
+                "marginRight": -4,
+                "marginTop": -4,
+              }
+            }
+          >
+            <div
+              className="ant-col ant-col-8"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                  "textAlign": "right",
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                Total issues
+              </span>
+            </div>
+            <div
+              className="ant-col ant-col-16"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                <span
+                  className="ant-typography"
+                  style={
+                    Object {
+                      "WebkitLineClamp": null,
+                    }
+                  }
+                >
+                  <code>
+                    24
+                  </code>
+                </span>
+              </span>
+            </div>
+          </div>
+          <div
+            className="ant-row"
+            style={
+              Object {
+                "marginBottom": 4,
+                "marginLeft": -4,
+                "marginRight": -4,
+                "marginTop": -4,
+              }
+            }
+          >
+            <div
+              className="ant-col ant-col-8"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                  "textAlign": "right",
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                Triaged issues
+              </span>
+            </div>
+            <div
+              className="ant-col ant-col-16"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                <span
+                  className="ant-typography"
+                  style={
+                    Object {
+                      "WebkitLineClamp": null,
+                    }
+                  }
+                >
+                  <code>
+                    10
+                  </code>
+                </span>
+              </span>
+            </div>
+          </div>
+          <div
+            className="ant-row"
+            style={
+              Object {
+                "marginBottom": 4,
+                "marginLeft": -4,
+                "marginRight": -4,
+                "marginTop": -4,
+              }
+            }
+          >
+            <div
+              className="ant-col ant-col-8"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                  "textAlign": "right",
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                Commit hash
+              </span>
+            </div>
+            <div
+              className="ant-col ant-col-16"
+              style={
+                Object {
+                  "paddingBottom": 4,
+                  "paddingLeft": 4,
+                  "paddingRight": 4,
+                  "paddingTop": 4,
+                }
+              }
+            >
+              <span
+                className="ant-typography ant-typography-secondary"
+                style={
+                  Object {
+                    "WebkitLineClamp": null,
+                  }
+                }
+              >
+                <span
+                  className="ant-typography"
+                  style={
+                    Object {
+                      "WebkitLineClamp": null,
+                    }
+                  }
+                >
+                  <code>
+                    Dummy commit hash
                   </code>
                 </span>
               </span>
