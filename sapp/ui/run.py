@@ -7,9 +7,9 @@ from typing import List
 
 import graphene
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, distinct
 
-from ..models import DBID, IssueInstance, MetaRunToRunAssoc
+from ..models import DBID, IssueInstance, Issue, IssueStatus, MetaRunToRunAssoc
 from ..models import Run as RunColumn
 from ..models import RunOrigin, RunStatus, TraceFrame
 
@@ -27,12 +27,34 @@ def latest(session: Session) -> DBID:
 class Run(graphene.ObjectType):
     run_id = graphene.ID()
     date = graphene.String()
+    commit_hash = graphene.String()
+    num_issues = graphene.Int()
+    triaged_issues = graphene.Int()
 
 
 def runs(session: Session) -> List[Run]:
+    triaged_issues = (
+        session.query(
+            RunColumn.id.label("run_id"),
+            func.count(distinct(IssueInstance.id)).label("count"),
+        )
+        .join(IssueInstance, IssueInstance.run_id == RunColumn.id)
+        .join(Issue, Issue.id == IssueInstance.issue_id)
+        .filter(Issue.status != IssueStatus.UNCATEGORIZED)
+        .subquery()
+    )
+
     return (
-        session.query(RunColumn.id.label("run_id"), RunColumn.date)
+        session.query(
+            RunColumn.id.label("run_id"),
+            RunColumn.date,
+            RunColumn.commit_hash,
+            func.count(distinct(IssueInstance.id)).label("num_issues"),
+            triaged_issues.c.count.label("triaged_issues"),
+        )
         .filter(RunColumn.status == "finished")
+        .join(IssueInstance, IssueInstance.run_id == RunColumn.id, isouter=True)
+        .join(triaged_issues, triaged_issues.c.run_id == RunColumn.id, isouter=True)
         .order_by(RunColumn.id.desc())
         .all()
     )
