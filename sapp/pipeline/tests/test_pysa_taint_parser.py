@@ -21,11 +21,12 @@ from ..pysa_taint_parser import Parser
 class TestParser(unittest.TestCase):
     def assertParsed(
         self,
+        version: int,
         input: str,
         expected: Iterable[Union[ParseConditionTuple, ParseIssueTuple]],
     ) -> None:
         input = "".join(input.split("\n"))  # Flatten json-line.
-        input = '{"file_version":2}\n' + input  # Add version header.
+        input = '{"file_version":%d}\n%s' % (version, input)  # Add version header.
         parser = Parser()
         analysis_output = AnalysisOutput(
             directory="/output/directory",
@@ -48,21 +49,23 @@ class TestParser(unittest.TestCase):
             expected,
         )
 
-    def testEmptyModel(self) -> None:
+    def testEmptyModelV2(self) -> None:
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {}
             }
             """,
-            [],
+            expected=[],
         )
 
-    def testIssue(self) -> None:
+    def testIssueV2(self) -> None:
         # Indirect source to indirect sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "issue",
               "data": {
@@ -139,7 +142,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseIssueTuple(
                     code=1,
                     message="[UserControlled] to [RCE]",
@@ -199,7 +202,8 @@ class TestParser(unittest.TestCase):
         )
         # Direct source + indirect source to direct sink + indirect sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "issue",
               "data": {
@@ -309,7 +313,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseIssueTuple(
                     code=1,
                     message="[UserControlled] to [RCE]",
@@ -406,7 +410,8 @@ class TestParser(unittest.TestCase):
         )
         # direct source with multiple leaves to direct sinks with multiple leaves.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "issue",
               "data": {
@@ -477,7 +482,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseIssueTuple(
                     code=1,
                     message="[UserControlled] to [RCE]",
@@ -579,7 +584,8 @@ class TestParser(unittest.TestCase):
         )
         # Indirect source with multiple callees to indirect sinks with multiple callees.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "issue",
               "data": {
@@ -658,7 +664,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseIssueTuple(
                     code=1,
                     message="[UserControlled] to [RCE]",
@@ -754,7 +760,8 @@ class TestParser(unittest.TestCase):
         )
         # Indirect source into a return sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "issue",
               "data": {
@@ -815,7 +822,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseIssueTuple(
                     code=1,
                     message="[UserControlled] to [RCE]",
@@ -879,10 +886,11 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-    def testSourceModel(self) -> None:
+    def testSourceModelV2(self) -> None:
         # User-declared source.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -902,11 +910,12 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [],
+            expected=[],
         )
         # Direct source.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -938,7 +947,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
@@ -964,7 +973,8 @@ class TestParser(unittest.TestCase):
         )
         # Direct source with multiple leaves.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -996,7 +1006,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
@@ -1043,7 +1053,8 @@ class TestParser(unittest.TestCase):
         )
         # Direct source with ports on leaves (e.g, cross-repo),
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1097,7 +1108,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
@@ -1186,7 +1197,8 @@ class TestParser(unittest.TestCase):
         )
         # Indirect source.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1225,7 +1237,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
@@ -1251,7 +1263,8 @@ class TestParser(unittest.TestCase):
         )
         # Indirect source with multiple callees.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1290,7 +1303,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
@@ -1337,7 +1350,8 @@ class TestParser(unittest.TestCase):
         )
         # Mix of direct and indirect sources.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1391,7 +1405,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
@@ -1438,7 +1452,8 @@ class TestParser(unittest.TestCase):
         )
         # User-declared parameter source.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1458,11 +1473,12 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [],
+            expected=[],
         )
         # Implicit source.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1486,7 +1502,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
@@ -1508,10 +1524,11 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-    def testSinkModel(self) -> None:
+    def testSinkModelV2(self) -> None:
         # User-declared sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1531,11 +1548,12 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [],
+            expected=[],
         )
         # Direct sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1567,7 +1585,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
@@ -1593,7 +1611,8 @@ class TestParser(unittest.TestCase):
         )
         # Direct sink with multiple leaves.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1625,7 +1644,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
@@ -1672,7 +1691,8 @@ class TestParser(unittest.TestCase):
         )
         # Direct sink with ports on leaves (e.g, cross-repo),
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1726,7 +1746,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
@@ -1815,7 +1835,8 @@ class TestParser(unittest.TestCase):
         )
         # Indirect sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1854,7 +1875,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
@@ -1880,7 +1901,8 @@ class TestParser(unittest.TestCase):
         )
         # Indirect sink with multiple callees.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -1920,7 +1942,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
@@ -1967,7 +1989,8 @@ class TestParser(unittest.TestCase):
         )
         # Mix of direct and indirect sinks.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -2021,7 +2044,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
@@ -2068,7 +2091,8 @@ class TestParser(unittest.TestCase):
         )
         # User-declared return sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -2088,11 +2112,12 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [],
+            expected=[],
         )
         # Implicit sink.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -2116,7 +2141,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
+            expected=[
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
@@ -2138,10 +2163,11 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-    def testIgnoreModels(self) -> None:
+    def testIgnoreModelsV2(self) -> None:
         # Ignore modes.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -2149,11 +2175,12 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [],
+            expected=[],
         )
         # Ignore sanitizers.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -2161,11 +2188,12 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [],
+            expected=[],
         )
         # Ignore tito.
         self.assertParsed(
-            """
+            version=2,
+            input="""
             {
               "kind": "model",
               "data": {
@@ -2186,5 +2214,5 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [],
+            expected=[],
         )
