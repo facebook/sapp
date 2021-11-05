@@ -484,12 +484,18 @@ class TraceGraph(object):
         else:
             return leaf_kind.id.local_id
 
-    def get_incoming_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+    def get_callee_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+        """Get leaf kinds expected by frames starting with the callee. In case of
+        transforms, this is the untransformed kinds.
+        """
         leaf_mapping = trace_frame.leaf_mapping
         assert leaf_mapping is not None
         return {leaf_map.callee_leaf for leaf_map in leaf_mapping}
 
-    def get_outgoing_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+    def get_caller_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+        """Get leaf kinds expected by frames starting with the caller. In case of
+        transforms, this is the transformed kinds.
+        """
         leaf_mapping = trace_frame.leaf_mapping
         assert leaf_mapping is not None
         return {leaf_map.caller_leaf for leaf_map in leaf_mapping}

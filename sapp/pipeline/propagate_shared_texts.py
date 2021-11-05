@@ -102,7 +102,7 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
             frame for frame in initial_frames if frame.kind == TraceKind.PRECONDITION
         ]
         source_kind_list = [
-            graph.get_incoming_leaf_kinds_of_frame(frame)
+            graph.get_caller_leaf_kinds_of_frame(frame)
             for frame in initial_source_frames
         ]
 
@@ -122,9 +122,7 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
                     start_frame,
                     {
                         sink_id: new_kinds
-                        for sink_id in graph.get_outgoing_leaf_kinds_of_frame(
-                            start_frame
-                        )
+                        for sink_id in graph.get_caller_leaf_kinds_of_frame(start_frame)
                     },
                     0,
                 )

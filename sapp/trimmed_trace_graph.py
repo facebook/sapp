@@ -230,7 +230,9 @@ class TrimmedTraceGraph(TraceGraph):
         """
         visited: Dict[int, Set[int]] = {}
         que = [
-            (frame, graph.get_incoming_leaf_kinds_of_frame(frame))
+            # We will be using these leaf kinds to look for matching callers. So
+            # we need the caller view of the kinds.
+            (frame, graph.get_caller_leaf_kinds_of_frame(frame))
             for frame in initial_conditions
         ]
 
