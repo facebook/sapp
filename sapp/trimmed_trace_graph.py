@@ -128,7 +128,7 @@ class TrimmedTraceGraph(TraceGraph):
         min_depth = None
         for tf_id in first_hop_tf_ids:
             leaf_depths = self._trace_frame_leaf_assoc[tf_id]
-            for (leaf_id, depth) in leaf_depths:
+            for (leaf_id, depth) in leaf_depths.items():
                 kind = self.get_shared_text_by_local_id(leaf_id).kind
                 if kind == SharedTextKind.source or kind == SharedTextKind.sink:
                     if depth is not None and (min_depth is None or depth < min_depth):
@@ -369,7 +369,7 @@ class TrimmedTraceGraph(TraceGraph):
         self._populate_shared_text(graph, trace_frame.filename_id)
         self._populate_shared_text(graph, trace_frame.caller_id)
         self._populate_shared_text(graph, trace_frame.callee_id)
-        for (leaf_id, depth) in graph._trace_frame_leaf_assoc[trace_frame_id]:
+        for (leaf_id, depth) in graph._trace_frame_leaf_assoc[trace_frame_id].items():
             leaf = graph._shared_texts[leaf_id]
             if leaf_id not in self._shared_texts:
                 self.add_shared_text(leaf)
