@@ -38,12 +38,12 @@ def runs(session: Session) -> List[Run]:
             RunColumn.id.label("run_id"),
             func.count(distinct(IssueInstance.id)).label("count"),
         )
+        .group_by(IssueInstance.run_id)
         .join(IssueInstance, IssueInstance.run_id == RunColumn.id)
         .join(Issue, Issue.id == IssueInstance.issue_id)
         .filter(Issue.status != IssueStatus.UNCATEGORIZED)
         .subquery()
     )
-
     return (
         session.query(
             RunColumn.id.label("run_id"),
@@ -52,9 +52,10 @@ def runs(session: Session) -> List[Run]:
             func.count(distinct(IssueInstance.id)).label("num_issues"),
             triaged_issues.c.count.label("triaged_issues"),
         )
-        .filter(RunColumn.status == "finished")
+        .group_by(RunColumn)
         .join(IssueInstance, IssueInstance.run_id == RunColumn.id, isouter=True)
         .join(triaged_issues, triaged_issues.c.run_id == RunColumn.id, isouter=True)
+        .filter(RunColumn.status == "finished")
         .order_by(RunColumn.id.desc())
         .all()
     )
