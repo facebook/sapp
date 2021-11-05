@@ -97,6 +97,8 @@ class FakeObjectGenerator:
             leaf_mapping={
                 LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)
                 for (leaf, _) in leaves
+                if leaf.kind == SharedTextKind.source
+                or leaf.kind == SharedTextKind.sink
             },
             id=DBID(),
             kind=TraceKind.PRECONDITION,
@@ -140,6 +142,8 @@ class FakeObjectGenerator:
             leaf_mapping={
                 LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)
                 for (leaf, _) in leaves
+                if leaf.kind == SharedTextKind.source
+                or leaf.kind == SharedTextKind.sink
             },
             id=DBID(),
             kind=TraceKind.POSTCONDITION,

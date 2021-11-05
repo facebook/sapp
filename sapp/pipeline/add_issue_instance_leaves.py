@@ -83,9 +83,10 @@ class AddIssueInstanceLeaves(PipelineStep[TraceGraph, TraceGraph]):
         for trace_frame_id, depth in depth_by_frame_id.items():
             trace_frame = graph.get_trace_frame_from_id(trace_frame_id)
             leaf_mapping: Set[LeafMapping] = trace_frame.leaf_mapping
-            leaf_mapping.add(
-                LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)
-            )
+            if leaf.kind == SharedTextKind.source or leaf.kind == SharedTextKind.sink:
+                leaf_mapping.add(
+                    LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)
+                )
             graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
 
         return graph, summary
