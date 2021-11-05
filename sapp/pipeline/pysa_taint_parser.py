@@ -19,7 +19,6 @@ from typing import (
     Set,
     Tuple,
     Union,
-    Literal,
 )
 
 import ujson as json
@@ -46,9 +45,9 @@ from .base_parser import (
 )
 
 if sys.version_info >= (3, 8):
-    from typing import TypedDict
+    from typing import TypedDict, Literal
 else:
-    from typing_extensions import TypedDict
+    from typing_extensions import TypedDict, Literal
 
 
 log: logging.Logger = logging.getLogger("sapp")
