@@ -13,6 +13,7 @@ from .. import (
     ParseIssueConditionTuple,
     ParseIssueTuple,
     SourceLocation,
+    ParseTraceFeature,
 )
 from ..base_parser import ParseType
 from ..mariana_trench_parser import Parser
@@ -150,8 +151,8 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[
-                                "always-via-parameter-field",
-                                "via-parameter-field",
+                                ParseTraceFeature("always-via-parameter-field", []),
+                                ParseTraceFeature("via-parameter-field", []),
                             ],
                             type_interval=None,
                             annotations=[],
@@ -472,7 +473,7 @@ class TestParser(unittest.TestCase):
                     caller_port="result.x.y",
                     callee_port="source",
                     type_interval=None,
-                    features=["via-source"],
+                    features=[ParseTraceFeature("via-source", [])],
                     annotations=[],
                 )
             ],
@@ -708,7 +709,7 @@ class TestParser(unittest.TestCase):
                     caller_port="argument(2)",
                     callee_port="sink",
                     type_interval=None,
-                    features=["via-sink"],
+                    features=[ParseTraceFeature("via-sink", [])],
                     annotations=[],
                 )
             ],

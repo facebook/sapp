@@ -13,6 +13,7 @@ from .. import (
     ParseIssueConditionTuple,
     ParseIssueTuple,
     SourceLocation,
+    ParseTraceFeature,
 )
 from ..base_parser import ParseType
 from ..pysa_taint_parser import Parser
@@ -1003,7 +1004,7 @@ class TestParser(unittest.TestCase):
                                     line_no=17, begin_column=19, end_column=19
                                 ),
                             ],
-                            features=["always-via:source-local"],
+                            features=[ParseTraceFeature("always-via:source-local", [])],
                             type_interval=None,
                             annotations=[],
                         )
@@ -1023,7 +1024,7 @@ class TestParser(unittest.TestCase):
                                     line_no=23, begin_column=25, end_column=25
                                 )
                             ],
-                            features=["always-via:sink-local"],
+                            features=[ParseTraceFeature("always-via:sink-local", [])],
                             type_interval=None,
                             annotations=[],
                         )
@@ -2597,7 +2598,7 @@ class TestParser(unittest.TestCase):
                     caller_port="result",
                     callee_port="source",
                     type_interval=None,
-                    features=["always-via:source-local"],
+                    features=[ParseTraceFeature("always-via:source-local", [])],
                     annotations=[],
                 )
             ],
@@ -3919,7 +3920,7 @@ class TestParser(unittest.TestCase):
                     caller_port="formal(x)",
                     callee_port="sink",
                     type_interval=None,
-                    features=["always-via:local-sink"],
+                    features=[ParseTraceFeature("always-via:local-sink", [])],
                     annotations=[],
                 )
             ],

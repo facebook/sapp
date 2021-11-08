@@ -36,6 +36,7 @@ from . import (
     ParseTypeInterval,
     SourceLocation,
     flatten_features,
+    flatten_features_to_parse_trace_feature,
 )
 from .base_parser import (
     BaseParser,
@@ -204,7 +205,9 @@ class Parser(BaseParser):
                     caller_port=port,
                     callee_port=fragment["port"],
                     type_interval=None,
-                    features=flatten_features(fragment["features"]),
+                    features=flatten_features_to_parse_trace_feature(
+                        fragment["features"]
+                    ),
                     annotations=[],
                 )
 
@@ -227,7 +230,9 @@ class Parser(BaseParser):
                     caller_port=port,
                     callee_port=fragment["port"],
                     type_interval=None,
-                    features=flatten_features(fragment["features"]),
+                    features=flatten_features_to_parse_trace_feature(
+                        fragment["features"]
+                    ),
                     annotations=[],
                 )
 
@@ -319,7 +324,9 @@ class Parser(BaseParser):
                         titos=list(
                             map(SourceLocation.from_typed_dict, fragment["titos"])
                         ),
-                        features=flatten_features(fragment["features"]),
+                        features=flatten_features_to_parse_trace_feature(
+                            fragment["features"]
+                        ),
                         type_interval=None,
                         annotations=[],
                     )

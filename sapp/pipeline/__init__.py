@@ -158,9 +158,46 @@ class ParseTraceAnnotation(NamedTuple):
         )
 
 
+class ParseTraceFeature(NamedTuple):
+    name: str
+    locations: List[SourceLocation]
+
+    @staticmethod
+    def from_json(j: Dict[str, Any]) -> "ParseTraceFeature":
+        return ParseTraceFeature(
+            name=j["name"],
+            locations=list(map(SourceLocation.from_typed_dict, j.get("locations", []))),
+        )
+
+
+def parse_feature(feature: Union[str, Dict[str, Any]]) -> ParseTraceFeature:
+    if isinstance(feature, dict):
+        return ParseTraceFeature.from_json(feature)
+    return ParseTraceFeature(feature, [])
+
+
 ParseFeature = Dict[str, str]
 ParseLeaf = Tuple[str, int]  # (kind, distance)
 ParseIssueLeaf = Tuple[str, str, int]  # (callable, kind, distance)
+
+
+def flatten_feature_to_parse_trace_feature(
+    feature: Dict[str, Any]
+) -> Iterable[ParseTraceFeature]:
+    for key, value in feature.items():
+        if isinstance(value, str) and value:
+            yield ParseTraceFeature(key + ":" + value, [])
+        else:
+            yield ParseTraceFeature(key, [])
+
+
+def flatten_features_to_parse_trace_feature(
+    features: Iterable[Dict[str, Any]]
+) -> List[ParseTraceFeature]:
+    ret = []
+    for feature in features:
+        ret.extend(flatten_feature_to_parse_trace_feature(feature))
+    return ret
 
 
 def flatten_feature(feature: ParseFeature) -> Iterable[str]:
@@ -171,7 +208,7 @@ def flatten_feature(feature: ParseFeature) -> Iterable[str]:
             yield key
 
 
-def flatten_features(features: Iterable[ParseFeature]) -> List[str]:
+def flatten_features(features: Iterable[Dict[str, Any]]) -> List[str]:
     ret = []
     for feature in features:
         ret.extend(flatten_feature(feature))
@@ -208,7 +245,7 @@ class ParseConditionTuple(NamedTuple):
     callee_location: SourceLocation
     leaves: List[ParseLeaf]
     type_interval: Optional[ParseTypeInterval]
-    features: List[str]
+    features: List[ParseTraceFeature]
     titos: Iterable[SourceLocation]
     annotations: Iterable[ParseTraceAnnotation]
 
@@ -224,7 +261,7 @@ class ParseConditionTuple(NamedTuple):
             callee_location=SourceLocation.from_typed_dict(d["callee_location"]),
             leaves=list(d["leaves"]),
             type_interval=d["type_interval"],
-            features=flatten_features(d.get("features", [])),
+            features=flatten_features_to_parse_trace_feature(d["features"]),
             titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
             annotations=list(
                 map(ParseTraceAnnotation.from_json, d.get("annotations", []))
@@ -243,7 +280,7 @@ class ParseConditionTuple(NamedTuple):
             callee_location=self.callee_location,
             leaves=intern_leaves(self.leaves),
             type_interval=self.type_interval,
-            features=list(map(sys.intern, self.features)),
+            features=self.features,
             titos=self.titos,
             annotations=self.annotations,
         )
@@ -266,7 +303,7 @@ class ParseIssueConditionTuple(NamedTuple):
     location: SourceLocation
     leaves: List[ParseLeaf]
     titos: Iterable[SourceLocation]
-    features: List[str]
+    features: List[ParseTraceFeature]
     type_interval: Optional[ParseTypeInterval]
     annotations: Iterable[ParseTraceAnnotation]
 
@@ -278,7 +315,7 @@ class ParseIssueConditionTuple(NamedTuple):
             location=SourceLocation.from_typed_dict(d["location"]),
             leaves=list(d["leaves"]),
             titos=list(map(SourceLocation.from_typed_dict, d.get("titos", []))),
-            features=flatten_features(d.get("features", [])),
+            features=flatten_features_to_parse_trace_feature(d.get("features", [])),
             type_interval=d["type_interval"],
             annotations=list(
                 map(ParseTraceAnnotation.from_json, d.get("annotations", []))
@@ -293,7 +330,7 @@ class ParseIssueConditionTuple(NamedTuple):
             location=self.location,
             leaves=intern_leaves(self.leaves),
             titos=self.titos,
-            features=list(map(sys.intern, self.features)),
+            features=self.features,
             type_interval=self.type_interval,
             annotations=self.annotations,
         )

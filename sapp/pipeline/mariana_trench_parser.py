@@ -197,6 +197,11 @@ class Features(NamedTuple):
     def to_sapp(self) -> List[str]:
         return sorted(self.features)
 
+    def to_sapp_as_parsetracefeature(self) -> List[sapp.ParseTraceFeature]:
+        return [
+            sapp.ParseTraceFeature(feature, []) for feature in sorted(self.features)
+        ]
+
 
 class Condition(NamedTuple):
     caller: Call
@@ -218,7 +223,7 @@ class Condition(NamedTuple):
             callee_port=self.callee.port.value,
             callee_location=self.callee.position.to_sapp(),
             type_interval=None,
-            features=self.features.to_sapp(),
+            features=self.features.to_sapp_as_parsetracefeature(),
             titos=self.local_positions.to_sapp(),
             leaves=[(self.kind, self.distance)],
             annotations=[],
@@ -249,7 +254,7 @@ class IssueCondition(NamedTuple):
             location=self.callee.position.to_sapp(),
             leaves=[(self.kind, self.distance)],
             titos=self.local_positions.to_sapp(),
-            features=self.features.to_sapp(),
+            features=self.features.to_sapp_as_parsetracefeature(),
             type_interval=None,
             annotations=[],
         )
