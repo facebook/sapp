@@ -302,13 +302,15 @@ class TrimmedTraceGraph(TraceGraph):
                 # )
 
                 if self.is_leaf_port(todo.frame.callee_port):
+                    # producer leaves can have initial trace lengths, don't lose that.
                     actual_leaves = {}
-                    for leaf_id in self.get_trace_frame_leaf_ids_by_kind(
-                        todo.frame, leaf_kind
-                    ):
+                    leaf_kinds = self.get_trace_frame_leaf_ids_with_depths(todo.frame)
+                    for leaf_id, trace_length in leaf_kinds.items():
                         leaf = self.get_shared_text_by_local_id(leaf_id)
+                        if leaf.kind != leaf_kind:
+                            continue
                         leaf_id = self.get_transform_normalized_kind_id(leaf)
-                        actual_leaves[leaf_id] = 0
+                        actual_leaves[leaf_id] = trace_length
                     visited[frame_id].update(actual_leaves)
                     # log.info(
                     #     "    leaf result %s",
