@@ -18,7 +18,7 @@ log: logging.Logger = logging.getLogger("sapp")
 
 class PerSinkState:
     def __init__(self) -> None:
-        self.shared_text_depths: Dict[int, int] = defaultdict(lambda: 999999)
+        self.shared_text_trace_lengths: Dict[int, int] = defaultdict(lambda: 999999)
 
 
 FrameID = int
@@ -27,8 +27,9 @@ SinkToState = Dict[int, PerSinkState]
 
 
 class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[13]
-    """For all issues propagate source kinds to all reachable frames leading to
-    sinks and propagate features to leaf sinks."""
+    """For all issues propagate source kinds and features to all reachable frames
+    leading to sinks and propagate features to leaf sinks.
+    """
 
     def __init__(self, propagate_sources: bool, propagate_features: bool) -> None:
         super().__init__()
@@ -43,20 +44,20 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
 
     def _subtract_kinds(
         self,
-        depth: int,
-        kind_map: SinkToSharedTextMap,
-        to_remove: SinkToState,
+        trace_length: int,
+        to_propagate: SinkToSharedTextMap,
+        visited: SinkToState,
     ) -> SinkToSharedTextMap:
         """Prunes the search space by eliminating sources and features that have already
-        been visited at a closer distance than our current depth"""
+        been visited at a closer distance than our current trace length"""
         result = {}
-        for sink_kind, shared_texts in kind_map.items():
-            if sink_kind in to_remove:
-                shared_text_depths = to_remove[sink_kind].shared_text_depths
+        for sink_kind, shared_texts in to_propagate.items():
+            if sink_kind in visited:
+                shared_text_trace_lengths = visited[sink_kind].shared_text_trace_lengths
                 shared_texts = {
-                    shared_text
-                    for shared_text in shared_texts
-                    if shared_text_depths.get(shared_text, depth + 1) > depth
+                    to_propagate
+                    for to_propagate in shared_texts
+                    if trace_length < shared_text_trace_lengths.get(to_propagate, 99999)
                 }
             if len(shared_texts) > 0:
                 result[sink_kind] = shared_texts
@@ -65,13 +66,13 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
     def _update_visited(
         self,
         frame_id: FrameID,
-        depth: int,
+        trace_length: int,
         kind_map: SinkToSharedTextMap,
     ) -> None:
+        visited_frame = self.visited[frame_id]
         for sink_kind, shared_texts in kind_map.items():
-            visited_frame = self.visited[frame_id]
             for shared_text in shared_texts:
-                my_depth = depth
+                trace_length_to_use = trace_length
                 # Normally, when we decrease the distance of a source, we want to keep going
                 # to decrease the distance on all subsequent frames.
                 # But for features, we don't care about this.
@@ -80,8 +81,10 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
                 # work is not wasted propagating such decreases.
                 kind = self.graph.get_shared_text_by_local_id(shared_text).kind
                 if kind is SharedTextKind.FEATURE:
-                    my_depth = 0
-                visited_frame[sink_kind].shared_text_depths[shared_text] = my_depth
+                    trace_length_to_use = 0
+                visited_frame[sink_kind].shared_text_trace_lengths[
+                    shared_text
+                ] = trace_length_to_use
 
     def _propagate_shared_texts(self, instance: IssueInstance) -> None:
         """Propagate the source kinds and features of this issue instance to all
@@ -109,10 +112,16 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
         shared_text_kinds = set.union(*source_kind_list).union(features)
         if len(shared_text_kinds) == 0:
             return
-        self._propagate_kinds_along_traces(initial_sink_frames, shared_text_kinds)
+        initial_trace_length = instance.min_trace_length_to_sources or 0
+        self._propagate_kinds_along_traces(
+            initial_sink_frames, shared_text_kinds, initial_trace_length
+        )
 
     def _propagate_kinds_along_traces(
-        self, start_frames: List[TraceFrame], new_kinds: Set[int]
+        self,
+        start_frames: List[TraceFrame],
+        to_propagate: Set[int],
+        initial_trace_length: int,
     ) -> None:
         graph = self.graph
 
@@ -121,26 +130,28 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
                 (
                     start_frame,
                     {
-                        sink_id: new_kinds
+                        sink_id: to_propagate
                         for sink_id in graph.get_caller_leaf_kinds_of_frame(start_frame)
                     },
-                    0,
+                    initial_trace_length,
                 )
                 for start_frame in start_frames
             ]
         )
         while len(queue) > 0:
-            frame, kind_map, depth = queue.popleft()
+            frame, kind_map, trace_length = queue.popleft()
             if len(kind_map) == 0:
                 continue
 
             frame_id = frame.id.local_id
             if frame_id in self.visited:
-                kind_map = self._subtract_kinds(depth, kind_map, self.visited[frame_id])
+                kind_map = self._subtract_kinds(
+                    trace_length, kind_map, self.visited[frame_id]
+                )
                 if len(kind_map) == 0:
                     continue
 
-            self._update_visited(frame_id, depth, kind_map)
+            self._update_visited(frame_id, trace_length, kind_map)
 
             next_frames = self.graph.get_trace_frames_from_caller(
                 # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
@@ -152,12 +163,13 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
             queue.extend(
                 (
                     frame,
+                    # account for transforms of sinks by this frame here
                     {
                         leaf_map.callee_leaf: kind_map[leaf_map.caller_leaf]
                         for leaf_map in frame.leaf_mapping
                         if leaf_map.caller_leaf in kind_map
                     },
-                    depth + 1,
+                    trace_length + 1,
                 )
                 for frame in next_frames
             )
@@ -188,7 +200,10 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
             trace_frame = graph.get_trace_frame_from_id(trace_frame_id)
             is_anchor_port = trace_frame.callee_port.startswith("anchor:")
             for state in sink_to_state.values():
-                for shared_text, depth in state.shared_text_depths.items():
+                for (
+                    shared_text,
+                    trace_length,
+                ) in state.shared_text_trace_lengths.items():
                     shared_text_kind = graph.get_shared_text_by_local_id(
                         shared_text
                     ).kind
@@ -197,7 +212,7 @@ class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[
                         and shared_text_kind == SharedTextKind.SOURCE
                     ):
                         graph.add_trace_frame_leaf_by_local_id_assoc(
-                            trace_frame, shared_text, depth
+                            trace_frame, shared_text, trace_length
                         )
                         source_count += 1
                     if (
