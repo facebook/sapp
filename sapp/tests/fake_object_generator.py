@@ -87,6 +87,9 @@ class FakeObjectGenerator:
         location=(4, 5, 6),
         leaves=None,
         reachability=FrameReachability.UNREACHABLE,
+        preserves_type_context=False,
+        type_interval_lower=5,
+        type_interval_upper=7,
     ):
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -110,9 +113,9 @@ class FakeObjectGenerator:
             filename_id=filename_record.id,
             titos=[],
             run_id=self.run_id,
-            type_interval_lower=5,
-            type_interval_upper=7,
-            preserves_type_context=False,
+            type_interval_lower=type_interval_lower,
+            type_interval_upper=type_interval_upper,
+            preserves_type_context=preserves_type_context,
             reachability=reachability,
         )
         if self.graph:
@@ -132,6 +135,9 @@ class FakeObjectGenerator:
         filename="lib/server/posts/response.py",
         location=(4, 5, 6),
         leaves=None,
+        preserves_type_context=False,
+        type_interval_lower=5,
+        type_interval_upper=7,
     ):
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -155,9 +161,9 @@ class FakeObjectGenerator:
             filename_id=filename_record.id,
             titos=[],
             run_id=self.run_id,
-            type_interval_lower=5,
-            type_interval_upper=7,
-            preserves_type_context=False,
+            type_interval_lower=type_interval_lower,
+            type_interval_upper=type_interval_upper,
+            preserves_type_context=preserves_type_context,
             reachability=FrameReachability.UNREACHABLE,
         )
         if self.graph:
