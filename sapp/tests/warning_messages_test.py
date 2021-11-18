@@ -33,25 +33,25 @@ class WarningMessagesTest(TestCase):
     def tearDown(self) -> None:
         pathlib.Path("sample_metadata.json").unlink()
 
-    def test_update_warning_messages(self):
+    def test_update_warning_messages(self) -> None:
         with self.db.make_session() as session:
             update_warning_messages(self.db, pathlib.Path("sample_metadata.json"))
             self.assertEqual(
                 session.query(WarningMessage)
                 .filter(WarningMessage.code == "1001")
                 .first()
-                .message,
-                "Updated warning message from test",
+                .__dict__["message"],
+                test_metadata["codes"]["1001"],
             )
             self.assertEqual(
                 session.query(WarningMessage)
                 .filter(WarningMessage.code == "1002")
                 .first()
-                .message,
-                "Updated warning message from test 2",
+                .__dict__["message"],
+                test_metadata["codes"]["1002"],
             )
 
-    def test_upsert_entry(self):
+    def test_upsert_entry(self) -> None:
         warning_messages_table = Table(
             WarningMessage.__tablename__, WarningMessage.metadata
         )
@@ -60,7 +60,7 @@ class WarningMessagesTest(TestCase):
             with session.connection() as database_connection:
                 for code, message in codes.items():
                     upsert_entry(
-                        database_connection, warning_messages_table, code, message
+                        database_connection, warning_messages_table, int(code), message
                     )
                 self.assertEqual(
                     database_connection.execute(
