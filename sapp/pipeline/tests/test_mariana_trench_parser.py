@@ -336,6 +336,114 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.flow:()V",
+              "issues": [
+                {
+                  "rule": 1,
+                  "position": {
+                    "path": "Flow.java",
+                    "line": 10,
+                    "start": 11,
+                    "end": 12
+                  },
+                  "sinks": [
+                    {
+                      "callee": "LSink;.sink:(LData;)V",
+                      "callee_port": "Argument(1)",
+                      "call_position": {
+                        "path": "Flow.java",
+                        "line": 10,
+                        "start": 11,
+                        "end": 12
+                      },
+                      "distance": 2,
+                      "always_features": ["via-parameter-field"],
+                      "kind": "TestSink",
+                      "origins": ["LSink;.sink:(LData;)V"],
+                      "local_positions": [{"line": 13, "start": 14, "end": 15}]
+                    }
+                  ],
+                  "sources": [
+                    {
+                      "callee_port": "Leaf",
+                      "distance": 0,
+                      "kind": "TestSource",
+                      "field_origins": ["LSource;.sourceField:LData;"],
+                      "local_positions": [{"line": 33, "start": 34, "end": 35}]
+                    }
+                  ],
+                  "may_features": ["via-obscure", "via-parameter-field"]
+                }
+              ],
+              "position": {
+                "line": 2,
+                "path": "Flow.java"
+              }
+            }
+            """,
+            [
+                ParseIssueTuple(
+                    code=1,
+                    message="TestRule: Test Rule Description",
+                    callable="LClass;.flow:()V",
+                    handle="LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
+                    filename="Flow.java",
+                    callable_line=2,
+                    line=10,
+                    start=12,
+                    end=13,
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSink;.sink:(LData;)V",
+                            port="argument(1)",
+                            location=SourceLocation(
+                                line_no=10,
+                                begin_column=12,
+                                end_column=13,
+                            ),
+                            leaves=[("TestSink", 2)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=13, begin_column=15, end_column=16
+                                )
+                            ],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        )
+                    ],
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="leaf",
+                            port="source",
+                            location=SourceLocation(
+                                line_no=2,
+                                begin_column=1,
+                                end_column=1,
+                            ),
+                            leaves=[("TestSource", 0)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=33, begin_column=35, end_column=36
+                                )
+                            ],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        )
+                    ],
+                    initial_sources={("LSource;.sourceField:LData;", "TestSource", 0)},
+                    final_sinks={
+                        ("LSink;.sink:(LData;)V", "TestSink", 2),
+                    },
+                    features=["via-obscure", "via-parameter-field"],
+                    fix_info=None,
+                )
+            ],
+        )
 
     def testModelPostconditions(self) -> None:
         # Leaf case.

@@ -349,11 +349,15 @@ class Parser(BaseParser):
             if line.startswith("//"):
                 continue
             model = json.loads(line)
-            yield from self._parse_issues(model)
-            for precondition in self._parse_precondition(model):
-                yield precondition.to_sapp()
-            for postcondition in self._parse_postconditions(model):
-                yield postcondition.to_sapp()
+
+            # Note: Non method models include field models. We don't process those
+            # since traces show methods only.
+            if "method" in model.keys():
+                yield from self._parse_issues(model)
+                for precondition in self._parse_precondition(model):
+                    yield precondition.to_sapp()
+                for postcondition in self._parse_postconditions(model):
+                    yield postcondition.to_sapp()
 
     def _parse_issues(self, model: Dict[str, Any]) -> Iterable[sapp.ParseIssueTuple]:
         for issue in model.get("issues", []):
@@ -425,6 +429,14 @@ class Parser(BaseParser):
                             distance=frame.get("distance", 0),
                         )
                     )
+                for field_origin in frame.get("field_origins", []):
+                    leaves.add(
+                        Leaf(
+                            method=Method(field_origin),
+                            kind=frame["kind"],
+                            distance=frame.get("distance", 0),
+                        ),
+                    )
 
         return conditions, leaves
 
@@ -435,8 +447,8 @@ class Parser(BaseParser):
 
         frames = []
         # Expected format: "canonical_names": [ { "instantiated": "<name>" }, ... ]
-        # Canonical names are used for CRTEX only, and are expected to be the callee name
-        # where traces are concerened. Each instantiated name maps to one frame.
+        # Canonical names are used for CRTEX only, and are expected to be the callee
+        # name where traces are concerened. Each instantiated name maps to one frame.
         for canonical_name in frame["canonical_names"]:
             if "instantiated" not in canonical_name:
                 # Uninstantiated canonical names are user-defined CRTEX leaves
