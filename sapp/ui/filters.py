@@ -126,7 +126,7 @@ def import_filter_from_path(database: DB, input_filter_path: Path) -> None:
             raise
 
 
-def delete_filters(database: DB, filter_names: Tuple[str]) -> None:
+def delete_filters(database: DB, filter_names: Tuple[str, ...]) -> None:
     if len(filter_names) <= 0:
         return
 
