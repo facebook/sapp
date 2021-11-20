@@ -27,6 +27,7 @@ from ..filters import (
     FilterNotFound,
     export_filter,
     ServeExportFilter,
+    Filter,
 )
 
 
@@ -88,35 +89,39 @@ class RunTest(TestCase):
 
     def testSaveFilter(self) -> None:
         filter_kwargs = {"codes": [5000, 6001]}
-        new_filter = FilterRecord(
+        record = FilterRecord(
             name="New filter",
             description="New Test filter description",
             json=json.dumps(filter_kwargs),
         )
+        filter = Filter.from_record(record)
 
         with self.db.make_session() as session:
-            save_filter(session=session, filter=new_filter)
+            save_filter(session=session, filter=filter)
             filters = session.query(FilterRecord).all()
             self.assertEqual(len(filters), 4)
 
     def testSaveExistingFilter(self) -> None:
         filter_kwargs = {"codes": [5000, 6001]}
-        new_filter = FilterRecord(
+        record = FilterRecord(
             name="Test filter",
             description="New Test filter description ++",
             json=json.dumps(filter_kwargs),
         )
+        filter = Filter.from_record(record)
         with self.db.make_session() as session:
-            save_filter(session=session, filter=new_filter)
+            save_filter(session=session, filter=filter)
             filters = session.query(FilterRecord).all()
             self.assertEqual(len(filters), 3)
-            updated_filter = filters = (
+            updated_filter = (
                 session.query(FilterRecord)
                 .filter(FilterRecord.name == "Test filter")
                 .first()
             )
+
             self.assertEqual(
-                updated_filter.description, "New Test filter description ++"
+                updated_filter.description,  # pyre-ignore[16]
+                "New Test filter description ++",
             )
 
     def testDeleteFilter(self) -> None:
@@ -156,14 +161,14 @@ class RunTest(TestCase):
             filters = all_filters(session)
             self.assertEqual(len(filters), 4)
 
-    def testExportFilter(self):
+    def testExportFilter(self) -> None:
         path = pathlib.Path("test_filter1.json")
         export_filter(self.db, "Test filter", path)
 
         self.assertTrue(path.exists())
         pathlib.Path.unlink(path)
 
-    def testServerExportFilter(self):
+    def testServerExportFilter(self) -> None:
         with self.db.make_session() as session:
             serverExportView = ServeExportFilter(session=session)
             result = serverExportView.dispatch_request(filter_name="Test filter")
@@ -181,7 +186,7 @@ class RunTest(TestCase):
                 )
 
     @mock.patch("sys.stdout", new_callable=io.StringIO)
-    def testFilterRun(self, mock_stdout):
+    def testFilterRun(self, mock_stdout: io.StringIO) -> None:
         with open("test_filter.json", "w", encoding="utf-8") as f:
             data = {
                 "name": "A new filter",
@@ -197,7 +202,7 @@ class RunTest(TestCase):
             filter_path = pathlib.Path("test_filter.json")
             filter_run(
                 context,
-                run_id_input=runId,
+                run_id_input=int(runId),
                 filter_path=filter_path,
                 output_format="sapp",
             )
