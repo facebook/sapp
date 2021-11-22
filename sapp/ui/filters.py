@@ -258,7 +258,7 @@ def filter_run(
             LOG.info(total_filtered_issues_output)
         if output_format == "sapp":
             output_json = {"issues": [issue.to_json() for issue in query_results]}
-            print(json.dumps(output_json, indent=2))
+            print(json.dumps(output_json, indent=2, default=str))
         elif output_format == "sarif":
             sarif_output = SARIF(context.tool, session, query_results)
             print(sarif_output.to_json())
