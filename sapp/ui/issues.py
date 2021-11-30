@@ -515,7 +515,6 @@ class Instance:
 
         if filter_instance.callables:
             if not isinstance(filter_instance.callables, List):
-                # pyre-fixme[16]: `List` has no attribute 'get'
                 if filter_instance.callables.get("operation") == "matches":
                     builder = builder.where_callables_matches(
                         filter_instance.callables.get("value", [""])[0]
@@ -533,9 +532,6 @@ class Instance:
                     )
             else:
                 # Backward compatibility
-                # pyre-fixme[6]: Expected `List[str]` for 1st positional only
-                # parameter but got
-                # `Union[Dict[str, Union[List[str], str]], List[str]]`
                 builder = builder.where_callables_is_any_of(filter_instance.callables)
 
         if filter_instance.source_names:
@@ -558,9 +554,6 @@ class Instance:
             else:
                 # Backward compatibility
                 builder = builder.where_source_name_is_any_of(
-                    # pyre-fixme[6]: Expected `List[str]` for 1st positional only
-                    # parameter but got
-                    # `Union[Dict[str, Union[List[str], str]], List[str]]`
                     filter_instance.source_names
                 )
 
@@ -584,9 +577,6 @@ class Instance:
             else:
                 # Backward compatibility
                 builder = builder.where_source_kind_is_any_of(
-                    # pyre-fixme[6]: Expected `List[str]` for 1st positional only
-                    # parameter but got
-                    # `Union[Dict[str, Union[List[str], str]], List[str]]`
                     filter_instance.source_kinds
                 )
 
@@ -609,9 +599,6 @@ class Instance:
                     )
             else:
                 # Backward compatibility
-                # pyre-fixme[6]: Expected `List[str]` for 1st positional only
-                # parameter but got
-                # `Union[Dict[str, Union[List[str], str]], List[str]]`
                 builder = builder.where_sink_name_is_any_of(filter_instance.sink_names)
 
         if filter_instance.sink_kinds:
@@ -633,9 +620,6 @@ class Instance:
                     )
             else:
                 # Backward compatibility if the filter is of the form List[str]
-                # pyre-fixme[6]: Expected `List[str]` for 1st positional only
-                # parameter but got
-                # `Union[Dict[str, Union[List[str], str]], List[str]]`
                 builder = builder.where_sink_kind_is_any_of(filter_instance.sink_kinds)
 
         for feature in filter_instance.format_features_for_query() or []:
