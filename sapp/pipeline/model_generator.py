@@ -453,7 +453,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                         id=DBID(),
                         trace_frame_id=trace_frame.id,
                         location=location,
-                        kind="breadcrumb",
+                        kind=None,
                         message=f.name,
                         leaf_id=feature_record.id,
                         link=None,
