@@ -41,6 +41,14 @@ def _upper_camel_case_to_snake_case(string: str) -> str:
     return re.sub("([a-z])([A-Z])", "\\1_\\2", string).lower()
 
 
+def _get_frame_callee(frame: Dict[str, Any]) -> Optional[str]:
+    """This will return either the method called or field accessed in the
+    frame, or None if neither applies"""
+    if "field_callee" in frame.keys():
+        return frame["field_callee"]
+    return frame.get("callee")
+
+
 class Method(NamedTuple):
     name: str
 
@@ -406,7 +414,7 @@ class Parser(BaseParser):
                 conditions.append(
                     IssueCondition(
                         callee=Call.from_json(
-                            method=frame.get("callee"),
+                            method=_get_frame_callee(frame),
                             port=frame["callee_port"],
                             position=frame.get("call_position"),
                             default_position=callable_position,
@@ -475,7 +483,7 @@ class Parser(BaseParser):
                         position=caller_position,
                     ),
                     callee=Call.from_json(
-                        method=sink.get("callee"),
+                        method=_get_frame_callee(sink),
                         port=sink["callee_port"],
                         position=sink.get("call_position"),
                         default_position=caller_position,
@@ -503,7 +511,7 @@ class Parser(BaseParser):
                         position=caller_position,
                     ),
                     callee=Call.from_json(
-                        method=generation.get("callee"),
+                        method=_get_frame_callee(generation),
                         port=generation["callee_port"],
                         position=generation.get("call_position"),
                         default_position=caller_position,
