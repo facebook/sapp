@@ -1,5 +1,12 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import json
 import pathlib
+import tempfile
+from contextlib import ExitStack
 from unittest import TestCase
 
 from sqlalchemy import Table
@@ -7,7 +14,6 @@ from sqlalchemy import Table
 from ..db import DB, DBType
 from ..models import WarningMessage, create as create_model
 from ..warning_messages import update_warning_messages, upsert_entry
-import tempfile
 
 test_metadata = {
     "codes": {
@@ -27,10 +33,10 @@ class WarningMessagesTest(TestCase):
         create_model(self.db)
 
     def test_update_warning_messages(self) -> None:
-        temp = tempfile.NamedTemporaryFile(mode="w+")
-        json.dump(test_metadata, temp)
-        temp.flush()
-        with self.db.make_session() as session:
+        with ExitStack() as stack:
+            temp = stack.enter_context(tempfile.NamedTemporaryFile(mode="w+"))
+            json.dump(test_metadata, temp)
+            session = stack.enter_context(self.db.make_session())
             update_warning_messages(self.db, pathlib.Path(temp.name))
             code1001 = (
                 session.query(WarningMessage).filter_by(code="1001").one_or_none()
