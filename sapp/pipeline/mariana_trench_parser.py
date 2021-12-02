@@ -133,6 +133,8 @@ class Position(NamedTuple):
     def from_json(position: Dict[str, Any], method: Method) -> "Position":
         path = position.get("path", UNKNOWN_PATH)
         line = position.get("line", UNKNOWN_LINE)
+        if line != UNKNOWN_LINE:
+            line = line + 1
         start = position.get("start", 0) + 1
         end = max(position.get("end", 0) + 1, start)
         if path == UNKNOWN_PATH and not method.is_leaf():
