@@ -34,11 +34,13 @@ class WarningMessagesTest(TestCase):
 
     def test_update_warning_messages(self) -> None:
         with ExitStack() as stack:
-            temp = stack.enter_context(tempfile.NamedTemporaryFile(mode="w+"))
-            json.dump(test_metadata, temp)
-            temp.read()
+            temporary_meta_file = stack.enter_context(
+                tempfile.NamedTemporaryFile(mode="w+")
+            )
+            json.dump(test_metadata, temporary_meta_file)
+            temporary_meta_file.read()
             session = stack.enter_context(self.db.make_session())
-            update_warning_messages(self.db, pathlib.Path(temp.name))
+            update_warning_messages(self.db, pathlib.Path(temporary_meta_file.name))
             code1001 = (
                 session.query(WarningMessage).filter_by(code="1001").one_or_none()
             )
