@@ -36,6 +36,7 @@ class WarningMessagesTest(TestCase):
         with ExitStack() as stack:
             temp = stack.enter_context(tempfile.NamedTemporaryFile(mode="w+"))
             json.dump(test_metadata, temp)
+            temp.read()
             session = stack.enter_context(self.db.make_session())
             update_warning_messages(self.db, pathlib.Path(temp.name))
             code1001 = (
