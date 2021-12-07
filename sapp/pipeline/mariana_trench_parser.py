@@ -33,12 +33,22 @@ else:
 LOG: logging.Logger = logging.getLogger()
 UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1
+PROGRAMMATIC_LEAF_NAME_PLACEHOLDER = "%programmatic_leaf_name%"
+SOURCE_VIA_TYPE_PLACEHOLDER = "%source_via_type_of%"
 
 
 # NOTE: This may or may not produce desired results if there is a number
 # in the field name; need to find an example
 def _upper_camel_case_to_snake_case(string: str) -> str:
     return re.sub("([a-z])([A-Z])", "\\1_\\2", string).lower()
+
+
+def _get_frame_callee(frame: Dict[str, Any]) -> Optional[str]:
+    """This will return either the method called or field accessed in the
+    frame, or None if neither applies"""
+    if "field_callee" in frame.keys():
+        return frame["field_callee"]
+    return frame.get("callee")
 
 
 class Method(NamedTuple):
@@ -197,6 +207,11 @@ class Features(NamedTuple):
     def to_sapp(self) -> List[str]:
         return sorted(self.features)
 
+    def to_sapp_as_parsetracefeature(self) -> List[sapp.ParseTraceFeature]:
+        return [
+            sapp.ParseTraceFeature(feature, []) for feature in sorted(self.features)
+        ]
+
 
 class Condition(NamedTuple):
     caller: Call
@@ -218,7 +233,7 @@ class Condition(NamedTuple):
             callee_port=self.callee.port.value,
             callee_location=self.callee.position.to_sapp(),
             type_interval=None,
-            features=self.features.to_sapp(),
+            features=self.features.to_sapp_as_parsetracefeature(),
             titos=self.local_positions.to_sapp(),
             leaves=[(self.kind, self.distance)],
             annotations=[],
@@ -249,7 +264,7 @@ class IssueCondition(NamedTuple):
             location=self.callee.position.to_sapp(),
             leaves=[(self.kind, self.distance)],
             titos=self.local_positions.to_sapp(),
-            features=self.features.to_sapp(),
+            features=self.features.to_sapp_as_parsetracefeature(),
             type_interval=None,
             annotations=[],
         )
@@ -344,11 +359,15 @@ class Parser(BaseParser):
             if line.startswith("//"):
                 continue
             model = json.loads(line)
-            yield from self._parse_issues(model)
-            for precondition in self._parse_precondition(model):
-                yield precondition.to_sapp()
-            for postcondition in self._parse_postconditions(model):
-                yield postcondition.to_sapp()
+
+            # Note: Non method models include field models. We don't process those
+            # since traces show methods only.
+            if "method" in model.keys():
+                yield from self._parse_issues(model)
+                for precondition in self._parse_precondition(model):
+                    yield precondition.to_sapp()
+                for postcondition in self._parse_postconditions(model):
+                    yield postcondition.to_sapp()
 
     def _parse_issues(self, model: Dict[str, Any]) -> Iterable[sapp.ParseIssueTuple]:
         for issue in model.get("issues", []):
@@ -392,12 +411,12 @@ class Parser(BaseParser):
         leaves = set()
 
         for frame in frames:
-            frames = Parser._normalize_frame(frame)
+            frames = Parser._normalize_frame(frame, callable)
             for frame in frames:
                 conditions.append(
                     IssueCondition(
                         callee=Call.from_json(
-                            method=frame.get("callee"),
+                            method=_get_frame_callee(frame),
                             port=frame["callee_port"],
                             position=frame.get("call_position"),
                             default_position=callable_position,
@@ -420,26 +439,52 @@ class Parser(BaseParser):
                             distance=frame.get("distance", 0),
                         )
                     )
+                for field_origin in frame.get("field_origins", []):
+                    leaves.add(
+                        Leaf(
+                            method=Method(field_origin),
+                            kind=frame["kind"],
+                            distance=frame.get("distance", 0),
+                        ),
+                    )
 
         return conditions, leaves
 
     @staticmethod
-    def _normalize_frame(frame: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _normalize_frame(frame: Dict[str, Any], method: Method) -> List[Dict[str, Any]]:
         if "canonical_names" not in frame:
             return [frame]
 
         frames = []
         # Expected format: "canonical_names": [ { "instantiated": "<name>" }, ... ]
-        # Canonical names are used for CRTEX only, and are expected to be the callee name
-        # where traces are concerened. Each instantiated name maps to one frame.
+        # Canonical names are used for CRTEX only, and are expected to be the callee
+        # name where traces are concerened. Each instantiated name maps to one frame.
         for canonical_name in frame["canonical_names"]:
-            if "instantiated" not in canonical_name:
+            if (
+                "instantiated" not in canonical_name
+                and SOURCE_VIA_TYPE_PLACEHOLDER not in canonical_name["template"]
+            ):
                 # Uninstantiated canonical names are user-defined CRTEX leaves
                 # They do not show up as a frame in the UI.
                 continue
 
             frame_copy = frame.copy()  # Shallow copy is ok, only "callee" is different.
-            frame_copy["callee"] = canonical_name["instantiated"]
+            if "instantiated" in canonical_name:
+                callee = canonical_name["instantiated"]
+            else:
+                callee = canonical_name["template"].replace(
+                    PROGRAMMATIC_LEAF_NAME_PLACEHOLDER, method.name
+                )
+                # If the canonical name is uninstantiated, the canonical port will be
+                # uninstantiated too, so we fill it in here.
+                frame_copy["callee_port"] = "Anchor." + frame.get(
+                    "caller_port",
+                    "Return",  # Frames within the issue won't have a caller port,
+                    # and we know that only Return sinks will reach this logic
+                    # right now, so the default is return
+                )
+
+            frame_copy["callee"] = callee
             frames.append(frame_copy)
 
         return frames
@@ -449,7 +494,7 @@ class Parser(BaseParser):
         caller_position = Position.from_json(model["position"], caller)
 
         for sink in model.get("sinks", []):
-            sinks = Parser._normalize_frame(sink)
+            sinks = Parser._normalize_frame(sink, caller)
             for sink in sinks:
                 yield Precondition(
                     caller=Call(
@@ -458,7 +503,7 @@ class Parser(BaseParser):
                         position=caller_position,
                     ),
                     callee=Call.from_json(
-                        method=sink.get("callee"),
+                        method=_get_frame_callee(sink),
                         port=sink["callee_port"],
                         position=sink.get("call_position"),
                         default_position=caller_position,
@@ -477,7 +522,7 @@ class Parser(BaseParser):
         caller_position = Position.from_json(model["position"], caller)
 
         for generation in model.get("generations", []):
-            generations = Parser._normalize_frame(generation)
+            generations = Parser._normalize_frame(generation, caller)
             for generation in generations:
                 yield Postcondition(
                     caller=Call(
@@ -486,7 +531,7 @@ class Parser(BaseParser):
                         position=caller_position,
                     ),
                     callee=Call.from_json(
-                        method=generation.get("callee"),
+                        method=_get_frame_callee(generation),
                         port=generation["callee_port"],
                         position=generation.get("call_position"),
                         default_position=caller_position,

@@ -26,6 +26,8 @@ from .models import (
 
 log: logging.Logger = logging.getLogger("sapp")
 
+LeafIDToDepthMap = Dict[int, Optional[int]]
+
 
 class TraceGraph(object):
     """Represents a graph of the Zoncolan trace steps. Nodes of the graph are
@@ -60,9 +62,9 @@ class TraceGraph(object):
             DefaultDict[SharedTextKind, Dict[str, int]]
         ) = defaultdict(dict)
 
-        self._trace_frame_leaf_assoc: DefaultDict[
-            int, Set[Tuple[int, Optional[int]]]
-        ] = defaultdict(set)
+        self._trace_frame_leaf_assoc: DefaultDict[int, LeafIDToDepthMap] = defaultdict(
+            lambda: {}
+        )
 
         self._trace_frame_issue_instance_assoc: DefaultDict[
             int, Set[int]
@@ -230,18 +232,16 @@ class TraceGraph(object):
     def add_trace_frame_leaf_assoc(
         self, trace_frame: TraceFrame, leaf: SharedText, depth: Optional[int]
     ) -> None:
-        self._trace_frame_leaf_assoc[trace_frame.id.local_id].add(
-            (leaf.id.local_id, depth)
-        )
+        self._trace_frame_leaf_assoc[trace_frame.id.local_id][leaf.id.local_id] = depth
 
     def add_trace_frame_leaf_by_local_id_assoc(
         self, trace_frame: TraceFrame, leaf_id: int, depth: Optional[int]
     ) -> None:
-        self._trace_frame_leaf_assoc[trace_frame.id.local_id].add((leaf_id, depth))
+        self._trace_frame_leaf_assoc[trace_frame.id.local_id][leaf_id] = depth
 
     def get_trace_frame_leaf_ids(self, trace_frame: TraceFrame) -> Set[int]:
         ids: Set[int] = {
-            id for (id, depth) in self._trace_frame_leaf_assoc[trace_frame.id.local_id]
+            id for id in self._trace_frame_leaf_assoc[trace_frame.id.local_id]
         }
         return ids
 
@@ -250,13 +250,13 @@ class TraceGraph(object):
     ) -> Set[int]:
         return {
             id
-            for (id, depth) in self._trace_frame_leaf_assoc[trace_frame.id.local_id]
+            for id in self._trace_frame_leaf_assoc[trace_frame.id.local_id]
             if self._shared_texts[id].kind == kind
         }
 
     def get_trace_frame_leaf_ids_with_depths(
         self, trace_frame: TraceFrame
-    ) -> Set[Tuple[int, Optional[int]]]:
+    ) -> LeafIDToDepthMap:
         return self._trace_frame_leaf_assoc[trace_frame.id.local_id]
 
     def add_issue_instance_trace_frame_assoc(
@@ -365,7 +365,7 @@ class TraceGraph(object):
         for trace_frame_id, leaf_ids in self._trace_frame_leaf_assoc.items():
             frame = self._trace_frames[trace_frame_id]
             valid_frame_leaf_ids = self._compute_valid_frame_leaves(frame)
-            for (leaf_id, depth) in leaf_ids:
+            for leaf_id, depth in leaf_ids.items():
                 leaf_text = self._shared_texts[leaf_id]
                 if (
                     leaf_text.kind is SharedTextKind.FEATURE
@@ -460,13 +460,16 @@ class TraceGraph(object):
                 next_kinds.add(leaf_map.caller_leaf)
         return next_kinds
 
+    def get_transform_normalized_leaf(self, leaf: str) -> str:
+        return leaf.replace("@", ":", 1)
+
     def get_transform_normalized_kind_id(self, leaf_kind: SharedText) -> int:
         assert (
             leaf_kind.kind == SharedTextKind.SINK
             or leaf_kind.kind == SharedTextKind.SOURCE
         )
         if "@" in leaf_kind.contents:
-            normal_name = leaf_kind.contents.replace("@", ":", 1)
+            normal_name = self.get_transform_normalized_leaf(leaf_kind.contents)
             normal_kind = self.get_or_add_shared_text(leaf_kind.kind, normal_name)
             return normal_kind.id.local_id
         else:
@@ -484,12 +487,18 @@ class TraceGraph(object):
         else:
             return leaf_kind.id.local_id
 
-    def get_incoming_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+    def get_callee_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+        """Get leaf kinds expected by frames starting with the callee. In case of
+        transforms, this is the untransformed kinds.
+        """
         leaf_mapping = trace_frame.leaf_mapping
         assert leaf_mapping is not None
         return {leaf_map.callee_leaf for leaf_map in leaf_mapping}
 
-    def get_outgoing_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+    def get_caller_leaf_kinds_of_frame(self, trace_frame: TraceFrame) -> Set[int]:
+        """Get leaf kinds expected by frames starting with the caller. In case of
+        transforms, this is the transformed kinds.
+        """
         leaf_mapping = trace_frame.leaf_mapping
         assert leaf_mapping is not None
         return {leaf_map.caller_leaf for leaf_map in leaf_mapping}

@@ -27,7 +27,7 @@ Start the web interface with
 [~/example]$ sapp --database-name sapp.db server --source-directory=<WHERE YOUR CODE LIVES>
 ```
 
-and visit http://localhost:5000 in your browser (note: the URL displayed in the code output currently will not work). You will be presented with a list of issues that provide access to example traces.
+and visit http://localhost:13337 in your browser (note: the URL displayed in the code output currently will not work). You will be presented with a list of issues that provide access to example traces.
 
 ### Command Line Interface
 The same information can be accessed through the command line interface:
@@ -295,7 +295,7 @@ Installing dependencies for frontend:
 (sapp) $ cd sapp/ui/frontend && npm install
 ```
 
-To run SAPP with hot reloading of the Web UI, you need have the frontend and backend running simultaneously. In a production environment, the frontend application is compiled and served directly by the backend exposed on port 5000. But in a development environment, the frontend runs in port 3000 and the backend runs in port 5000. You can indicate to SAPP to run in the development environment with the `debug` flag
+To run SAPP with hot reloading of the Web UI, you need have the frontend and backend running simultaneously. In a production environment, the frontend application is compiled and served directly by the backend exposed on port 13337. But in a development environment, the frontend runs in port 3000 and the backend runs in port 13337. You can indicate to SAPP to run in the development environment with the `debug` flag
 
 Run the flask server and react app in development mode:
 ```shell

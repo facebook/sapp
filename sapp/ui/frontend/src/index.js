@@ -29,7 +29,7 @@ const {Text} = Typography;
 
 let uri = '/graphql';
 if (process.env.NODE_ENV === "development") {
-  uri = 'http://localhost:5000/graphql';
+  uri = 'http://localhost:13337/graphql';
 }
 const client = new ApolloClient({
   uri: uri,

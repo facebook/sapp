@@ -3,11 +3,64 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import logging
 from collections import Counter
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
-from .models import SharedTextKind, TraceFrame, TraceFrameAnnotation, TraceKind
+from .models import (
+    DBID,
+    SharedTextKind,
+    TraceFrame,
+    TraceFrameAnnotation,
+    TraceKind,
+    IssueInstance,
+)
 from .trace_graph import TraceGraph
+
+log: logging.Logger = logging.getLogger("sapp")
+
+Interval = Optional[Tuple[int, int]]
+
+# Union for queue to recompute trace lengths
+@dataclass(frozen=True)
+class SearchAction:
+    frame: TraceFrame
+    interval: Interval
+    remaining_length: int
+    leaves: Set[int]
+
+
+@dataclass(frozen=True)
+class ComputeMinAction:
+    frame: TraceFrame
+    interval: Interval
+    leaves: Set[int]
+
+
+infinite_trace_length: int = 9999
+
+Action = Union[SearchAction, ComputeMinAction]
+
+# frame_id -> leaf_id -> distance
+# Represents that we visited the frame_id looking for leaf kind leaf before.
+# There are two cases:
+#   distance >= 0 -> we found the leaf within distance hops
+#   distance < 0 -> we didn't find the leaf within -distance hops
+#
+# NOTE: storing the "negative" distance captures that we did search for leaf
+# before and couldn't find it within that many hops. This means that a future
+# search with a distance remaining that is less or equal to the previously
+# failed distance will also fail. We only revisit if the new visit has more
+# "remaining" hops left.
+#
+# IMPORTANT: The leaf kinds are always the normalized transform kinds, i.e. with
+# '@' replaced by ':'. This means we have to be careful at actual leaf-frames to
+# compare with the normalized kinds, as well as when updating a frame's trace
+# lengths.
+FrameID = int
+LeafID = int
+Visited = Dict[FrameID, Dict[Interval, Dict[LeafID, int]]]
 
 
 class TrimmedTraceGraph(TraceGraph):
@@ -70,7 +123,6 @@ class TrimmedTraceGraph(TraceGraph):
                     for tf_id in first_hop_ids
                     if self._trace_frames[tf_id].kind == TraceKind.PRECONDITION
                 }
-
                 if len(fwd_trace_ids) == 0:
                     self._populate_issue_trace(
                         graph, instance_id, TraceKind.POSTCONDITION
@@ -81,10 +133,10 @@ class TrimmedTraceGraph(TraceGraph):
                         graph, instance_id, TraceKind.PRECONDITION
                     )
 
-        self._recompute_instance_properties()
+        self._recompute_instance_properties(graph)
 
     # pyre-fixme[3]: Return type must be annotated.
-    def _recompute_instance_properties(self):
+    def _recompute_instance_properties(self, graph: TraceGraph):
         """Some properties of issue instances will be affected after trimming
         such as min trace length to leaves. This should be called after the
         trimming to re-compute these values.
@@ -93,49 +145,394 @@ class TrimmedTraceGraph(TraceGraph):
             inst.callable_id.local_id for inst in self._issue_instances.values()
         )
 
+        # frame_id -> interval -> leaf_id -> min_trace
+        # where min_trace is negative k, if we didn't reach the leaf in k hops
+        visited: Visited = {}
+
+        # We may find issues that have no valid traces, then it should be removed.
+        to_remove = []
+
         for inst in self._issue_instances.values():
+            # log.info(
+            #     "recomputing props for %d",
+            #     inst.id.local_id,
+            # )
+
             inst.min_trace_length_to_sources = self._get_min_depth_to_sources(
-                inst.id.local_id
+                visited,
+                inst.id.local_id,
+                inst.min_trace_length_to_sources,
             )
             inst.min_trace_length_to_sinks = self._get_min_depth_to_sinks(
-                inst.id.local_id
+                visited,
+                inst.id.local_id,
+                inst.min_trace_length_to_sinks,
             )
+            if (
+                inst.min_trace_length_to_sources == infinite_trace_length
+                and inst.min_trace_length_to_sinks is not None
+            ) or (
+                inst.min_trace_length_to_sinks == infinite_trace_length
+                and inst.min_trace_length_to_sources is not None
+            ):
+                # Unreachable instance
+                to_remove.append(inst)
+                continue
+
             inst.callable_count = callables_histo[inst.callable_id.local_id]
 
-    def _get_min_depth_to_sources(self, instance_id: int) -> int:
+        for inst in to_remove:
+            self._remove_instance(inst)
+
+    def _remove_instance(self, instance: IssueInstance) -> None:
+        """Remove instance from state that gets saved and cleanup all instance
+        associations too"""
+        instance_id = instance.id.local_id
+        self._issue_instances.pop(instance_id, None)
+        for initial_frame_id in self._issue_instance_trace_frame_assoc[instance_id]:
+            # initial frames are only associated with one issue
+            self._trace_frame_issue_instance_assoc.pop(initial_frame_id, None)
+        self._issue_instance_trace_frame_assoc.pop(instance_id, None)
+        for shared_text_id in self._issue_instance_shared_text_assoc[instance_id]:
+            # remove the instance from the set
+            self._shared_text_issue_instance_assoc[shared_text_id].discard(instance_id)
+        self._issue_instance_shared_text_assoc.pop(instance_id, None)
+
+    def _get_min_depth_to_sources(
+        self, visited: Visited, instance_id: int, prior: Optional[int]
+    ) -> Optional[int]:
         """Returns shortest depth to source from the issue instance. Instances
         have a pre-computed min_trace_length_to_source, but this can change
         after traces get trimmed from the graph. This re-computes it and
         returns the min.
         """
+        if prior is None:
+            return None
+
         first_hop_tf_ids = {
             tf_id
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
             if self.get_trace_frame_from_id(tf_id).kind == TraceKind.POSTCONDITION
         }
-        return self._get_min_leaf_depth(first_hop_tf_ids)
+        return self._recompute_trace_length_association(
+            visited, first_hop_tf_ids, SharedTextKind.source
+        )
 
-    def _get_min_depth_to_sinks(self, instance_id: int) -> int:
+    def _get_min_depth_to_sinks(
+        self, visited: Visited, instance_id: int, prior: Optional[int]
+    ) -> Optional[int]:
         """See get_min_depths_to_sources."""
+        if prior is None:
+            return None
+
         first_hop_tf_ids = {
             tf_id
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
             if self.get_trace_frame_from_id(tf_id).kind == TraceKind.PRECONDITION
         }
-        return self._get_min_leaf_depth(first_hop_tf_ids)
+        return self._recompute_trace_length_association(
+            visited, first_hop_tf_ids, SharedTextKind.sink
+        )
 
-    def _get_min_leaf_depth(self, first_hop_tf_ids: Set[int]) -> int:
-        min_depth = None
-        for tf_id in first_hop_tf_ids:
-            leaf_depths = self._trace_frame_leaf_assoc[tf_id]
-            for (leaf_id, depth) in leaf_depths:
-                kind = self.get_shared_text_by_local_id(leaf_id).kind
-                if kind == SharedTextKind.source or kind == SharedTextKind.sink:
-                    if depth is not None and (min_depth is None or depth < min_depth):
-                        min_depth = depth
-        if min_depth is not None:
-            return min_depth
-        return 0
+    def _map_info(self, v: Dict[LeafID, int]) -> str:
+        return ", ".join(
+            [f"{self._get_local_text(key)} -> {d}" for key, d in v.items()]
+        )
+
+    def _interval_info(self, v: Dict[Interval, Dict[LeafID, int]]) -> str:
+        return "\n".join(
+            [f"{self._interval_string(i)} -> {self._map_info(m)}" for i, m in v.items()]
+        )
+
+    def _remaining_leaves(
+        self,
+        interval: Interval,
+        remaining_length: int,
+        leaves: Set[int],
+        visited: Visited,
+        frame_id: int,
+    ) -> Set[int]:
+        """Given a visit to frame_id with remaining_length and looking for the given
+        leaves, compute whether we already have visited this frame under some of
+        these leaves. Returns the remaining leaves that will need to be visited
+        for the children. There are multiple cases:
+
+        1. we have visited the frame_id before and found a distance to the leaf,
+        remove the leaf.
+
+        2. we have visited the frame_id before but didn't finish the visit
+        because it didn't lead to the leaf before we ran out of trace length (or
+        we are recursively visiting it). In that case, the negative number
+        stored is the length we looked for. If we have more remaining_length
+        left now, we revisit the leaf, otherwise we don't.
+
+        For the leaves we will search in children, we update the visited state
+        to indicate that this is on the stack by adding -remaining_length to the
+        visited state.
+
+        """
+        assert remaining_length > 0
+        if frame_id in visited:
+            visited_intervals = visited[frame_id]
+            # log.info("    old visited: %s", self._interval_info(visited_intervals))
+            if interval in visited_intervals:
+                visited_leaves = visited_intervals[interval]
+                # figure out what needs to be visited still
+                # log.info("    old visited leaves: %s", self._map_info(visited_leaves))
+                visit_leaves = {
+                    leaf_id: -remaining_length
+                    for leaf_id in leaves
+                    if leaf_id not in visited_leaves
+                    or visited_leaves[leaf_id] < 0
+                    and -visited_leaves[leaf_id] < remaining_length
+                }
+                visited[frame_id][interval].update(visit_leaves)
+                # log.info(
+                #     "    new visited: %s", self._map_info(visited[frame_id][interval])
+                # )
+                return set(visit_leaves.keys())
+            # first visit of this interval
+            visited[frame_id][interval] = {
+                leaf_id: -remaining_length for leaf_id in leaves
+            }
+            # log.info(
+            #     "    first visit for interval: %s",
+            #     self._interval_info(visited[frame_id]),
+            # )
+            return leaves
+
+        # first time. Put remaining trace lengths (pending)
+        visited[frame_id] = {
+            interval: {leaf_id: -remaining_length for leaf_id in leaves}
+        }
+        # log.info("    first visit: %s", self._interval_info(visited[frame_id]))
+        return leaves
+
+    def _get_text(self, id: DBID) -> str:
+        return self.get_shared_text_by_local_id(id.local_id).contents
+
+    def _get_local_text(self, id: int) -> str:
+        return self.get_shared_text_by_local_id(id).contents
+
+    def _frame_info(self, frame: TraceFrame) -> str:
+        return (
+            f"frame_id:{frame.id.local_id} "
+            f"caller:{self._get_text(frame.caller_id)} "
+            f"caller_port:{frame.caller_port} "
+            f"callee:{self._get_text(frame.callee_id)} "
+            f"callee_port:{frame.callee_port} "
+            f"interval:[{frame.type_interval_lower},{frame.type_interval_upper}]"
+        )
+
+    def _interval_string(self, interval: Interval) -> str:
+        if interval is None:
+            return "open"
+        (l, u) = interval
+        return f"[{l},{u}]"
+
+    def _intersect_interval(self, left: Interval, right: Interval) -> Interval:
+        if left is None:
+            return right
+        if right is None:
+            return left
+        (left_l, left_u) = left
+        (right_l, right_u) = right
+        return (max(left_l, right_l), min(left_u, right_u))
+
+    def _is_interval_empty(self, interval: Interval) -> bool:
+        if interval is None:
+            return False
+        (l, u) = interval
+        return l > u
+
+    def _frame_interval(self, frame: TraceFrame) -> Interval:
+        if (
+            frame.type_interval_lower is not None
+            and frame.type_interval_upper is not None
+        ):
+            return (frame.type_interval_lower, frame.type_interval_upper)
+        return None
+
+    def _next_interval(self, interval: Interval, next_frame: TraceFrame) -> Interval:
+        frame_interval = self._frame_interval(next_frame)
+        if next_frame.preserves_type_context:
+            return self._intersect_interval(interval, frame_interval)
+        else:
+            return frame_interval
+
+    def _recompute_trace_length_association(
+        self, visited: Visited, initial_frame_ids: Set[int], leaf_kind: SharedTextKind
+    ) -> int:
+
+        """Walks the traces starting at the initial frames with the initial
+        corresponding kinds to recompute and store the minimum trace length from each
+        reachable frame to the corresponding leaf."""
+
+        max_trace_length = 100
+        initial_frames = [
+            self.get_trace_frame_from_id(frame_id) for frame_id in initial_frame_ids
+        ]
+        stack: List[Action] = [
+            SearchAction(
+                frame=frame,
+                interval=self._frame_interval(frame),
+                remaining_length=max_trace_length,
+                leaves=self.get_caller_leaf_kinds_of_frame(frame),
+            )
+            for frame in initial_frames
+        ]
+
+        while len(stack) > 0:
+            todo = stack.pop()
+            if isinstance(todo, SearchAction):
+                # log.info(
+                #     "  search %s, interval: %s remaining %d leaves: %s",
+                #     self._frame_info(todo.frame),
+                #     self._interval_string(todo.interval),
+                #     todo.remaining_length,
+                #     " ".join(
+                #         [self._get_local_text(leaf_id) for leaf_id in todo.leaves]
+                #     ),
+                # )
+                frame_id = todo.frame.id.local_id
+                leaves = self._remaining_leaves(
+                    todo.interval, todo.remaining_length, todo.leaves, visited, frame_id
+                )
+                # log.info(
+                #     "    remaining leaves: %s",
+                #     " ".join([self._get_local_text(leaf_id) for leaf_id in leaves]),
+                # )
+                if len(leaves) == 0 or todo.remaining_length <= 1:
+                    continue
+
+                if self.is_leaf_port(todo.frame.callee_port):
+                    # producer leaves can have initial trace lengths, don't lose that.
+                    actual_leaves = {}
+                    leaf_kinds = self.get_trace_frame_leaf_ids_with_depths(todo.frame)
+                    for leaf_id, trace_length in leaf_kinds.items():
+                        leaf = self.get_shared_text_by_local_id(leaf_id)
+                        if leaf.kind != leaf_kind:
+                            continue
+                        leaf_id = self.get_transform_normalized_kind_id(leaf)
+                        actual_leaves[leaf_id] = trace_length
+                    visited[frame_id][todo.interval].update(actual_leaves)
+                    # log.info(
+                    #     "    leaf result %s",
+                    #     self._map_info(actual_leaves),
+                    # )
+                    continue
+
+                successors = []
+                (successor_frames, succ_leaf_kinds) = self._get_successor_frames(
+                    self,
+                    leaves,
+                    todo.frame,
+                )
+                if len(succ_leaf_kinds) > 0:
+                    for next_frame in successor_frames:
+                        next_interval = self._next_interval(todo.interval, next_frame)
+                        if self._is_interval_empty(next_interval):
+                            continue
+                        successors.append(
+                            SearchAction(
+                                frame=next_frame,
+                                interval=next_interval,
+                                remaining_length=todo.remaining_length - 1,
+                                leaves=succ_leaf_kinds,
+                            )
+                        )
+                # Note: list append/pop both work from the tail, so we have to
+                # append the ComputeMin first before the search on the children.
+                stack.append(
+                    ComputeMinAction(
+                        todo.frame,
+                        todo.interval,
+                        leaves,
+                    )
+                )
+                stack.extend(successors)
+
+            elif isinstance(todo, ComputeMinAction):
+                visit_result = visited[todo.frame.id.local_id][todo.interval]
+                # log.info(
+                #     "  compute min %s, leaves: %s",
+                #     self._frame_info(todo.frame),
+                #     " ".join(
+                #         [f"{self._get_local_text(leaf_id)}" for leaf_id in todo.leaves]
+                #     ),
+                # )
+                for leaf_id in todo.leaves:
+                    # log.info("    looking for %s", self._get_local_text(leaf_id))
+                    (successors, succ_leaves) = self._get_successor_frames(
+                        self,
+                        {leaf_id},
+                        todo.frame,
+                    )
+                    if len(succ_leaves) > 0:
+                        # log.info(
+                        #     "      succ_leaves %s",
+                        #     ", ".join([self._get_local_text(id) for id in succ_leaves]),
+                        # )
+                        for succ in successors:
+                            next_interval = self._next_interval(todo.interval, succ)
+                            if self._is_interval_empty(next_interval):
+                                continue
+                            for succ_leaf_id, length in visited[succ.id.local_id][
+                                next_interval
+                            ].items():
+                                if succ_leaf_id in succ_leaves:
+                                    if length >= 0 and (
+                                        length + 1 < visit_result[leaf_id]
+                                        or visit_result[leaf_id] < 0
+                                    ):
+                                        visit_result[leaf_id] = length + 1
+                                    elif (
+                                        length < 0
+                                        and length - 1 > visit_result[leaf_id]
+                                    ):
+                                        visit_result[leaf_id] = length - 1
+                frame_result = {}
+                frame_leaves = self.get_trace_frame_leaf_ids_with_depths(todo.frame)
+                for frame_leaf_id in frame_leaves:
+                    frame_leaf = self.get_shared_text_by_local_id(frame_leaf_id)
+                    if (
+                        frame_leaf.kind != SharedTextKind.source
+                        and frame_leaf.kind != SharedTextKind.sink
+                    ):
+                        continue
+                    normalized_frame_leaf_id = self.get_transform_normalized_kind_id(
+                        frame_leaf
+                    )
+                    if normalized_frame_leaf_id in todo.leaves:
+                        if visit_result[normalized_frame_leaf_id] < 0:
+                            frame_result[frame_leaf_id] = infinite_trace_length
+                        else:
+                            frame_result[frame_leaf_id] = visit_result[
+                                normalized_frame_leaf_id
+                            ]
+
+                # log.info(
+                #     "    frame_result: %s",
+                #     self._map_info(frame_result),
+                # )
+                # log.info(
+                #     "    visit_result: %s",
+                #     self._map_info(visit_result),
+                # )
+                visited[todo.frame.id.local_id][todo.interval].update(visit_result)
+                self.get_trace_frame_leaf_ids_with_depths(todo.frame).update(
+                    frame_result
+                )
+
+        # compute minimum over all initial frames/leaves
+        result = infinite_trace_length
+        for frame in initial_frames:
+            frame_id = frame.id.local_id
+            frame_interval = self._frame_interval(frame)
+            for _, length in visited[frame_id][frame_interval].items():
+                if length >= 0 and length < result:
+                    result = length
+        return result
 
     def _populate_affected_issues(self, graph: TraceGraph) -> None:
         """Populates the trimmed graph with issues whose locations are in
@@ -209,6 +606,21 @@ class TrimmedTraceGraph(TraceGraph):
             result.append((predecessor, pred_kinds))
         return result
 
+    def _get_successor_frames(
+        self, graph: TraceGraph, leaves: Set[int], trace_frame: TraceFrame
+    ) -> Tuple[List[TraceFrame], Set[int]]:
+        """Returns successor frames and successor leaf_kind pair"""
+        result = []
+        assert trace_frame.leaf_mapping is not None
+        succ_kinds = graph.compute_next_leaf_kinds(leaves, trace_frame.leaf_mapping)
+        # pyre-fixme[6]: Enums and str are the same but Pyre doesn't think so.
+        for trace_frame_id in graph._trace_frames_map[trace_frame.kind][
+            (trace_frame.callee_id.local_id, trace_frame.callee_port)
+        ]:
+            successor = graph._trace_frames[trace_frame_id]
+            result.append(successor)
+        return (result, succ_kinds)
+
     def _populate_issues_from_affected_conditions(
         self,
         # pyre-fixme[2]: Parameter must be annotated.
@@ -229,8 +641,10 @@ class TrimmedTraceGraph(TraceGraph):
         will be copied over to the local state
         """
         visited: Dict[int, Set[int]] = {}
-        que = [
-            (frame, graph.get_incoming_leaf_kinds_of_frame(frame))
+        stack = [
+            # We will be using these leaf kinds to look for matching callers. So
+            # we need the caller view of the kinds.
+            (frame, graph.get_caller_leaf_kinds_of_frame(frame))
             for frame in initial_conditions
         ]
 
@@ -239,8 +653,8 @@ class TrimmedTraceGraph(TraceGraph):
         # analysis time. When visiting each condition, we need to track the
         # leaves that we are visiting it from and only visit parent traces that
         # share common leaves along the path.
-        while len(que) > 0:
-            condition, leaves = que.pop()
+        while len(stack) > 0:
+            condition, leaves = stack.pop()
             cond_id = condition.id.local_id
 
             if cond_id in visited:
@@ -274,7 +688,7 @@ class TrimmedTraceGraph(TraceGraph):
                 graph, leaves, condition
             ):
                 if len(frame_leaves) > 0:
-                    que.append((next_frame, frame_leaves))
+                    stack.append((next_frame, frame_leaves))
 
         # Add traces leading out from initial_conditions, and all visited
         # conditions leading back towards the issues.
@@ -367,7 +781,7 @@ class TrimmedTraceGraph(TraceGraph):
         self._populate_shared_text(graph, trace_frame.filename_id)
         self._populate_shared_text(graph, trace_frame.caller_id)
         self._populate_shared_text(graph, trace_frame.callee_id)
-        for (leaf_id, depth) in graph._trace_frame_leaf_assoc[trace_frame_id]:
+        for (leaf_id, depth) in graph._trace_frame_leaf_assoc[trace_frame_id].items():
             leaf = graph._shared_texts[leaf_id]
             if leaf_id not in self._shared_texts:
                 self.add_shared_text(leaf)

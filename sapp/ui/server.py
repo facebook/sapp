@@ -100,4 +100,4 @@ def start_server(
         application.static_folder = static_resources
     if debug:
         CORS(application, resources={r"/graphql": {"origins": "http://localhost:3000"}})
-    application.run(debug=debug, host="localhost", port=5000)
+    application.run(debug=debug, host="localhost", port=13337)

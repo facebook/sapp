@@ -40,6 +40,7 @@ from . import (
     ParseTypeInterval,
     PipelineStep,
     Summary,
+    ParseTraceFeature,
 )
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -386,7 +387,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         leaves: Iterable[ParseLeaf],
         type_interval: Optional[ParseTypeInterval],
         annotations: Iterable[ParseTraceAnnotation],
-        features: List[str],
+        features: List[ParseTraceFeature],
     ) -> TraceFrame:
         leaf_kind = (
             SharedTextKind.SOURCE
@@ -443,8 +444,22 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         # using "bulk_saver.add_trace_frame_leaf_assoc()" to drop into this table
         # as documented in models.py "class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin)"
         for f in features:
-            feature_record = self._get_shared_text(SharedTextKind.FEATURE, f)
+            feature_record = self._get_shared_text(SharedTextKind.FEATURE, f.name)
             self.graph.add_trace_frame_leaf_assoc(trace_frame, feature_record, 0)
+
+            for location in f.locations:
+                self.graph.add_trace_annotation(
+                    TraceFrameAnnotation.Record(
+                        id=DBID(),
+                        trace_frame_id=trace_frame.id,
+                        location=location,
+                        kind=None,
+                        message=f.name,
+                        leaf_id=None,
+                        link=None,
+                        trace_key=None,
+                    )
+                )
 
         self.graph.add_trace_frame(trace_frame)
         self._generate_trace_annotations(

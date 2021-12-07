@@ -28,9 +28,7 @@ from . import (
     DictEntries,
     DictKey,
     Optional,
-    ParseCondition,
     ParseConditionTuple,
-    ParseIssue,
     ParseIssueTuple,
     ParseType,
     PipelineStep,
@@ -116,18 +114,14 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     # @abstractmethod
     def parse(
         self, input: AnalysisOutput
-    ) -> Iterable[
-        Union[ParseCondition, ParseIssue, ParseConditionTuple, ParseIssueTuple]
-    ]:
+    ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
         """Must return objects with a 'type': ParseType field."""
         raise NotImplementedError("Abstract method called!")
 
     # @abstractmethod
     def parse_handle(
         self, handle: TextIO
-    ) -> Iterable[
-        Union[ParseCondition, ParseIssue, ParseConditionTuple, ParseIssueTuple]
-    ]:
+    ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
         """Must return objects with a 'type': ParseType field."""
         raise NotImplementedError("Abstract method called!")
 
@@ -146,16 +140,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
                 typ = ParseType.ISSUE
                 key = e.handle
             else:
-                # legacy raw dicts
-                typ = e["type"]
-                if typ == ParseType.ISSUE:
-                    e = ParseIssueTuple.from_typed_dict(cast(ParseIssue, e))
-                    key = e.handle
-                elif typ == ParseType.PRECONDITION or typ == ParseType.POSTCONDITION:
-                    e = ParseConditionTuple.from_typed_dict(cast(ParseCondition, e))
-                    key = (e.caller, e.caller_port)
-                else:
-                    raise Exception("Unknown ParseType")
+                raise Exception("Unknown ParseType")
             yield typ, key, e
 
     def analysis_output_to_dict_entries(

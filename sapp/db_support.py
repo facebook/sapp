@@ -433,7 +433,8 @@ class PrimaryKeyGeneratorBase:  # pyre-ignore[13]
                     },
                 )
                 session.commit()
-            except exc.SQLAlchemyError:
+            except exc.SQLAlchemyError as err:
+                log.error("Writing into the primary keys table failed", exc_info=err)
                 session.rollback()
             cls_pk = self._lock_pk_with_retries(session, cls)
 
