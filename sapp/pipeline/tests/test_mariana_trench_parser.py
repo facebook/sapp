@@ -974,6 +974,48 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
+        self.assertParsed(
+            """
+            {
+              "method": {
+                "name": "Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V"
+              },
+              "sinks": [
+                {
+                  "distance": 0,
+                  "kind": "TestSink",
+                  "caller_port": "Argument(1)",
+                  "callee_port": "Anchor",
+                  "canonical_names": [ { "template": "%programmatic_leaf_name%__%source_via_type_of%" } ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "SomeMutation.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
+                    callee="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V__%source_via_type_of%",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="SomeMutation.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1)",
+                    callee_port="anchor:formal(1)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
 
     def testModelWithConnectionPointSource(self) -> None:
         self.assertParsed(

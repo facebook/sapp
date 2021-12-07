@@ -33,6 +33,8 @@ else:
 LOG: logging.Logger = logging.getLogger()
 UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1
+PROGRAMMATIC_LEAF_NAME_PLACEHOLDER = "%programmatic_leaf_name%"
+SOURCE_VIA_TYPE_PLACEHOLDER = "%source_via_type_of%"
 
 
 # NOTE: This may or may not produce desired results if there is a number
@@ -409,7 +411,7 @@ class Parser(BaseParser):
         leaves = set()
 
         for frame in frames:
-            frames = Parser._normalize_frame(frame)
+            frames = Parser._normalize_frame(frame, callable)
             for frame in frames:
                 conditions.append(
                     IssueCondition(
@@ -449,7 +451,7 @@ class Parser(BaseParser):
         return conditions, leaves
 
     @staticmethod
-    def _normalize_frame(frame: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _normalize_frame(frame: Dict[str, Any], method: Method) -> List[Dict[str, Any]]:
         if "canonical_names" not in frame:
             return [frame]
 
@@ -458,13 +460,31 @@ class Parser(BaseParser):
         # Canonical names are used for CRTEX only, and are expected to be the callee
         # name where traces are concerened. Each instantiated name maps to one frame.
         for canonical_name in frame["canonical_names"]:
-            if "instantiated" not in canonical_name:
+            if (
+                "instantiated" not in canonical_name
+                and SOURCE_VIA_TYPE_PLACEHOLDER not in canonical_name["template"]
+            ):
                 # Uninstantiated canonical names are user-defined CRTEX leaves
                 # They do not show up as a frame in the UI.
                 continue
 
             frame_copy = frame.copy()  # Shallow copy is ok, only "callee" is different.
-            frame_copy["callee"] = canonical_name["instantiated"]
+            if "instantiated" in canonical_name:
+                callee = canonical_name["instantiated"]
+            else:
+                callee = canonical_name["template"].replace(
+                    PROGRAMMATIC_LEAF_NAME_PLACEHOLDER, method.name
+                )
+                # If the canonical name is uninstantiated, the canonical port will be
+                # uninstantiated too, so we fill it in here.
+                frame_copy["callee_port"] = "Anchor." + frame.get(
+                    "caller_port",
+                    "Return",  # Frames within the issue won't have a caller port,
+                    # and we know that only Return sinks will reach this logic
+                    # right now, so the default is return
+                )
+
+            frame_copy["callee"] = callee
             frames.append(frame_copy)
 
         return frames
@@ -474,7 +494,7 @@ class Parser(BaseParser):
         caller_position = Position.from_json(model["position"], caller)
 
         for sink in model.get("sinks", []):
-            sinks = Parser._normalize_frame(sink)
+            sinks = Parser._normalize_frame(sink, caller)
             for sink in sinks:
                 yield Precondition(
                     caller=Call(
@@ -502,7 +522,7 @@ class Parser(BaseParser):
         caller_position = Position.from_json(model["position"], caller)
 
         for generation in model.get("generations", []):
-            generations = Parser._normalize_frame(generation)
+            generations = Parser._normalize_frame(generation, caller)
             for generation in generations:
                 yield Postcondition(
                     caller=Call(
