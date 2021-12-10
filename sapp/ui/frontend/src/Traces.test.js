@@ -60,6 +60,7 @@ test("Renders traces", async () => {
         min_trace_length_to_sources: 0,
         min_trace_length_to_sinks: 0,
         first_seen: "2001-02-24 16:31:12.2402201",
+        similar_issues: [{"issue_id": "2", "score": "0.75"}],
       },
     }],
     pageInfo: {

@@ -141,6 +141,7 @@ export type IssueDescription = {
   first_seen: string,
   is_new_issue: boolean,
   warning_message: string,
+  similar_issues: $ReadOnlyArray<$ReadOnlyArray<string>>
 };
 
 export const statusMap = {
@@ -220,6 +221,26 @@ export function Issue(
       </Col>
     );
   };
+  let similar_issues = null;
+
+  if (props.issue.similar_issues !== undefined) {
+    const issues = props.issue.similar_issues.map(
+      similar_issue => `Issue ${similar_issue['issue_id']} (${similar_issue['score']})`
+    );
+    similar_issues = (
+      <Row gutter={gutter}>
+        <Label>Similar Issues</Label>
+        <Item>
+          <div>
+            <ShowMore
+              items={issues.length? issues: ["None"]}
+              maximumElementsToShow={5}
+            />
+          </div>
+        </Item>
+      </Row>
+    );
+  }
 
   return (
     <Card
@@ -336,6 +357,7 @@ export function Issue(
           </DelayedTooltip>
         </Item>
       </Row>
+      {similar_issues}
     </Card>
   );
 }
