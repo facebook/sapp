@@ -88,7 +88,7 @@ class DB(object):
         if self.dbtype == DBType.XDB:
             # Make sure SQL doesn't quit on us after 10s. Sometimes merging data takes
             # longer.
-            session.execute("SET SESSION wait_timeout = %d" % 30)
+            session.execute("SET SESSION wait_timeout = %d" % 60)
 
         return session
 
