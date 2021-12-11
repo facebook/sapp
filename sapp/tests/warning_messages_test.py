@@ -38,7 +38,7 @@ class WarningMessagesTest(TestCase):
                 tempfile.NamedTemporaryFile(mode="w+")
             )
             json.dump(test_metadata, temporary_meta_file)
-            temporary_meta_file.read()  # populates the buffer
+            temporary_meta_file.flush()  # flush the buffer
             session = stack.enter_context(self.db.make_session())
             update_warning_messages(self.db, pathlib.Path(temporary_meta_file.name))
             code1001 = (
