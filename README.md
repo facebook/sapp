@@ -5,7 +5,7 @@
 # SAPP
 
 SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of
-Pysa and makes them explorable both through a command line interface and a web
+Pysa and makes them explorable both through a command-line interface and a web
 UI.
 
 ## Installation
@@ -30,7 +30,7 @@ analyzed function into a format that is more suitable for exploration.
 ```
 
 After the results have been processed we can now explore them through the UI and
-a command line interface. We will briefly look at both of those methods here.
+a command-line interface. We will briefly look at both of those methods here.
 
 ### Web Interface
 
@@ -44,9 +44,9 @@ and visit http://localhost:13337 in your browser (note: the URL displayed in the
 code output currently will not work). You will be presented with a list of
 issues that provide access to example traces.
 
-### Command Line Interface
+### Command-Line Interface
 
-The same information can be accessed through the command line interface:
+The same information can be accessed through the command-line interface:
 
 ```shell
 [~/example]$ sapp --database-name sapp.db explore
@@ -56,7 +56,7 @@ This will launch a custom IPython interface that's connected to the sqlite file.
 In this mode, you can dig into the issues that Pyre surfaces. Following is an
 example of how to use the various commands.
 
-Start out by listing all known issues:
+Start by listing all known issues:
 
 ```text
 ==========================================================
@@ -181,7 +181,7 @@ In source.convert [source.py:8|17|22]
 ```
 
 You can refer to the `help` command to get more information about available
-commands in the command line interface.
+commands in the command-line interface.
 
 ## Terminology
 
@@ -197,12 +197,12 @@ Every invocation of
 will add a single _run_ to the database. An _issue_ can exist over multiple runs
 (we typically call the issue in a single run an _instance_). You can select a
 run from the web UI and look at all the instances of that run. You can also
-chose to only show the instances of issues that are newly introduced in this run
-in the filter menu.
+choose to only show the instances of issues that are newly introduced in this
+run in the filter menu.
 
-Each instance consists of a _data flow_ from a particular source kind (e.g. user
-controlled input) into a _callable_ (i.e. a function or method), and a data flow
-from that callable into a particular sink kind (e.g. RCE).
+Each instance consists of a _data flow_ from a particular source kind (e.g.
+user-controlled input) into a _callable_ (i.e. a function or method), and a data
+flow from that callable into a particular sink kind (e.g. RCE).
 
 _Note: the data can come from different sources of the same kind and flow into
 different sinks of the same kind. The traces view of a single instance
@@ -215,8 +215,8 @@ issue properties you choose. Filters are useful to remove noise from the output
 from your static analysis tool, so you can focus on the particular properties of
 issues you care about.
 
-SAPP functionality can be accessed through the web interface or through a
-subcommand of `sapp filter`.
+SAPP functionality can be accessed through the web interface or a subcommand of
+`sapp filter`.
 
 ### File Format
 
@@ -355,9 +355,10 @@ Installing dependencies for frontend:
 (sapp) $ cd sapp/ui/frontend && npm install
 ```
 
-To run SAPP with hot reloading of the Web UI, you need have the frontend and
+To run SAPP with hot reloading of the Web UI, you need to have the frontend and
 backend running simultaneously. In a production environment, the frontend
-application is compiled and served directly by the backend exposed on port 13337. But in a development environment, the frontend runs in port 3000 and the
+application is compiled and served directly by the backend exposed on port
+13337. But in a development environment, the frontend runs in port 3000 and the
 backend runs in port 13337. You can indicate to SAPP to run in the development
 environment with the `debug` flag
 
@@ -372,7 +373,7 @@ Then visit `http://localhost:3000`
 
 ## FAQ
 
-### Why is SAPP it's own project and not just part of Pysa?
+### Why is SAPP its own project and not part of Pysa?
 
 Stay tuned for future announcements.
 
