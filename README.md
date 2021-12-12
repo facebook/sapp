@@ -3,22 +3,30 @@
 ![pyre](https://github.com/facebook/sapp/workflows/pyre/badge.svg)
 
 # SAPP
-SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of Pysa and makes them explorable both through a command line interface and a web UI.
+SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of
+Pysa and makes them explorable both through a command line interface and a web
+UI.
 
 ## Installation
-To run SAPP, you will need [Python 3.7 or later](https://www.python.org/getit/). SAPP can be installed through [PyPI](https://pypi.org/project/fb-sapp/) with `pip install fb-sapp`.
+To run SAPP, you will need [Python 3.7 or later](https://www.python.org/getit/).
+SAPP can be installed through [PyPI](https://pypi.org/project/fb-sapp/) with
+`pip install fb-sapp`.
 
 ## Getting Started
-This guide assumes that you have results from a Pysa run saved in a `~/example` directory. If you are new to Pysa, you can follow [this tutorial](https://pyre-check.org/docs/pysa-quickstart/) to get started.
+This guide assumes that you have results from a Pysa run saved in a `~/example`
+directory. If you are new to Pysa, you can follow [this
+tutorial](https://pyre-check.org/docs/pysa-quickstart/) to get started.
 
 ### Processing the Results
-The postprocessing will translate the raw output containing models for every analyzed function into a format that is more suitable for exploration.
+The postprocessing will translate the raw output containing models for every
+analyzed function into a format that is more suitable for exploration.
 
 ```shell
 [~/example]$ sapp --database-name sapp.db analyze taint-output.json
 ```
 
-After the results have been processed we can now explore them through the UI and a command line interface. We will briefly look at both of those methods here.
+After the results have been processed we can now explore them through the UI and
+a command line interface. We will briefly look at both of those methods here.
 
 ### Web Interface
 Start the web interface with
@@ -27,7 +35,9 @@ Start the web interface with
 [~/example]$ sapp --database-name sapp.db server --source-directory=<WHERE YOUR CODE LIVES>
 ```
 
-and visit http://localhost:13337 in your browser (note: the URL displayed in the code output currently will not work). You will be presented with a list of issues that provide access to example traces.
+and visit http://localhost:13337 in your browser (note: the URL displayed in the
+code output currently will not work). You will be presented with a list of
+issues that provide access to example traces.
 
 ### Command Line Interface
 The same information can be accessed through the command line interface:
@@ -151,28 +161,43 @@ In source.convert [source.py:8|17|22]
      9      image = get_image(image_link)
 ```
 
-You can refer to the `help` command to get more information about available commands in the command line interface.
+You can refer to the `help` command to get more information about available
+commands in the command line interface.
 
 ## Terminology
-A single SAPP database can keep track of more than just a single run. This opens up the possibility of reasoning about *newly introduced issues* in a codebase.
+A single SAPP database can keep track of more than just a single run. This opens
+up the possibility of reasoning about *newly introduced issues* in a codebase.
 
 Every invocation of
 ```shell
 [~/example]$ sapp --database-name sapp.db analyze taint-output.json
 ```
-will add a single *run* to the database. An *issue* can exist over multiple runs (we typically call the issue in a single run an *instance*). You can select a run from the web UI and look at all the instances of that run. You can also chose to only show the instances of issues that are newly introduced in this run in the filter menu.
+will add a single *run* to the database. An *issue* can exist over multiple runs
+(we typically call the issue in a single run an *instance*). You can select a
+run from the web UI and look at all the instances of that run. You can also
+chose to only show the instances of issues that are newly introduced in this run
+in the filter menu.
 
-Each instance consists of a *data flow* from a particular source kind (e.g. user controlled input) into a *callable* (i.e. a function or method), and a data flow from that callable into a particular sink kind (e.g. RCE).
+Each instance consists of a *data flow* from a particular source kind (e.g. user
+controlled input) into a *callable* (i.e. a function or method), and a data flow
+from that callable into a particular sink kind (e.g. RCE).
 
-*Note: the data can come from different sources of the same kind and flow into different sinks of the same kind. The traces view of a single instance represents a multitude of traces, not just a single trace.*
+*Note: the data can come from different sources of the same kind and flow into
+different sinks of the same kind. The traces view of a single instance
+represents a multitude of traces, not just a single trace.*
 
 ## Filters
-SAPP filters are used to include/exclude which issues are shown to you by the issue properties you choose. Filters are useful to remove noise from the output from your static analysis tool, so you can focus on the particular properties of issues you care about.
+SAPP filters are used to include/exclude which issues are shown to you by the
+issue properties you choose. Filters are useful to remove noise from the output
+from your static analysis tool, so you can focus on the particular properties of
+issues you care about.
 
-SAPP functionality can be accessed through the web interface or through a subcommand of `sapp filter`.
+SAPP functionality can be accessed through the web interface or through a
+subcommand of `sapp filter`.
 
 ### File Format
-A filter is required to have a `name` and at least one other key, excluding `description`. Filters can be stored as JSON in the following format:
+A filter is required to have a `name` and at least one other key, excluding
+`description`. Filters can be stored as JSON in the following format:
 ```json
 {
     "name": "Name of filter",
@@ -219,7 +244,8 @@ A filter is required to have a `name` and at least one other key, excluding `des
 }
 ```
 
-You can find some example filters to reference in the [pyre-check repo](https://github.com/facebook/pyre-check/tree/main/tools/sapp/pysa_filters)
+You can find some example filters to reference in the [pyre-check
+repo](https://github.com/facebook/pyre-check/tree/main/tools/sapp/pysa_filters)
 
 ### Importing filters
 You can import a filter from a file by running:
@@ -250,18 +276,27 @@ You can delete filters by name with:
 ```
 
 ### Filtering list of issues
-You can apply a filter to a list of issues by run number. For example, the following command will show you a list of issues after applying `example-filter` to run `1`:
+You can apply a filter to a list of issues by run number. For example, the
+following command will show you a list of issues after applying `example-filter`
+to run `1`:
 ```shell
 [~/example]$ sapp --database-name sapp.db filter issues 1 example-filter.json
 ```
 
-You can also apply a list of filters to a single list of issues by run number. SAPP will apply each filter individually from the directory you specify to the list of issues and merge results into a single list of issues to show you. For example, the following command will show you a list of issues after applying every filter in `list_of_filters` to run `1`:
+You can also apply a list of filters to a single list of issues by run number.
+SAPP will apply each filter individually from the directory you specify to the
+list of issues and merge results into a single list of issues to show you. For
+example, the following command will show you a list of issues after applying
+every filter in `list_of_filters` to run `1`:
 ```shell
 [~/example]$ sapp --database-name sapp.db filter issues 1 path/to/list_of_filters
 ```
 
 #### SARIF Output
-You can get the output of a filtered run in [SARIF](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/sarif-support-for-code-scanning#about-sarif-support) by first storing warning codes information from the static analysis tool in SAPP:
+You can get the output of a filtered run in
+[SARIF](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/sarif-support-for-code-scanning#about-sarif-support)
+by first storing warning codes information from the static analysis tool in
+SAPP:
 ```shell
 sapp --database-name sapp.db update warning-codes taint-metadata.json
 ```
@@ -295,7 +330,12 @@ Installing dependencies for frontend:
 (sapp) $ cd sapp/ui/frontend && npm install
 ```
 
-To run SAPP with hot reloading of the Web UI, you need have the frontend and backend running simultaneously. In a production environment, the frontend application is compiled and served directly by the backend exposed on port 13337. But in a development environment, the frontend runs in port 3000 and the backend runs in port 13337. You can indicate to SAPP to run in the development environment with the `debug` flag
+To run SAPP with hot reloading of the Web UI, you need have the frontend and
+backend running simultaneously. In a production environment, the frontend
+application is compiled and served directly by the backend exposed on port
+13337. But in a development environment, the frontend runs in port 3000 and the
+backend runs in port 13337. You can indicate to SAPP to run in the development
+environment with the `debug` flag
 
 Run the flask server and react app in development mode:
 ```shell
