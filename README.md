@@ -295,14 +295,14 @@ Installing dependencies for frontend:
 (sapp) $ cd sapp/ui/frontend && npm install
 ```
 
-To run SAPP with hot reloading of the Web UI, you need have the frontend and backend running simultaneously. In a production environment, the frontend application is compiled and served directly by the backend exposed on port 13337. But in a development environment, the frontend runs in port 3000 and the backend runs in port 13337. You can indicate to SAPP to run in the development environment with the `debug` flag
+To run SAPP with hot reloading of the Web UI, you need have the frontend and backend running simultaneously. In a production environment, the frontend application is compiled and served directly by the backend exposed on port `13337`. But in a development environment, the frontend runs in port `3000` by default if the `PORT` environment variable is not set and the backend runs in port `13337`. You can indicate to SAPP to run in the development environment with the `debug` flag.
 
 Run the flask server and react app in development mode:
 ```shell
 (sapp) $ python3 -m sapp.cli server --debug
 (sapp) $ cd sapp/ui/frontend && npm run-script start
 ```
-Then visit `http://localhost:3000`
+Then visit `http://localhost:3000` (or `http://localhost:<PORT>` if you have set the `PORT` environment variable).
 
 ## FAQ
 ### Why is SAPP it's own project and not just part of Pysa?

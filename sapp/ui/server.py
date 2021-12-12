@@ -99,5 +99,12 @@ def start_server(
     if static_resources:
         application.static_folder = static_resources
     if debug:
-        CORS(application, resources={r"/graphql": {"origins": "http://localhost:3000"}})
+        default_port = int(os.environ.get("PORT"), 10) or 3000
+        host = os.environ.get("HOST") or "localhost"
+        CORS(
+            application,
+            resources={
+                r"/graphql": dict(origins="http://" + host + ":" + str(default_port))
+            },
+        )
     application.run(debug=debug, host="localhost", port=13337)
