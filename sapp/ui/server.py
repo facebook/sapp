@@ -99,7 +99,7 @@ def start_server(
     if static_resources:
         application.static_folder = static_resources
     if debug:
-        default_port = int(os.environ.get("PORT"), 10) or 3000
+        default_port = os.environ.get("PORT") or 3000
         host = os.environ.get("HOST") or "localhost"
         CORS(
             application,
