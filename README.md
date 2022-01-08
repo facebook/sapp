@@ -4,7 +4,7 @@
 
 # SAPP
 
-SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of [Pysa](https://developers.facebook.com/blog/post/2021/04/29/eli5-pysa-security-focused-analysis-tool-python/) and makes them explorable both through a command-line interface and a web UI.
+SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of [Pysa](https://developers.facebook.com/blog/post/2021/04/29/eli5-pysa-security-focused-analysis-tool-python/) and [Mariana Trench](https://engineering.fb.com/2021/09/29/security/mariana-trench/), and makes them explorable both through a command-line interface and a web UI.
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/18099289/145729070-f21f699b-22f7-4c3f-a9d3-6f547575c55b.png" width="620px">
