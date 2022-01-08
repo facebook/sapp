@@ -359,12 +359,6 @@ Run the flask server and react app in development mode:
 
 Then visit `http://localhost:3000`
 
-## FAQ
-
-### Why is SAPP its own project and not part of Pysa?
-
-Stay tuned for future announcements.
-
 ## License
 
 SAPP is licensed under the MIT license.
