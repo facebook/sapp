@@ -302,7 +302,7 @@ Run the flask server and react app in development mode:
 (sapp) $ python3 -m sapp.cli server --debug
 (sapp) $ cd sapp/ui/frontend && npm run-script start
 ```
-Then visit `http://localhost:3000` (or `http://localhost:<PORT>` if you have set the `PORT` environment variable).
+Then visit `http://localhost:3000` (or `http://<HOST>:<PORT>` if you have set the `HOST` and/or `PORT` environment variable).
 
 ## FAQ
 ### Why is SAPP it's own project and not just part of Pysa?
