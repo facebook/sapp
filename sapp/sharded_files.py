@@ -6,6 +6,7 @@
 import fnmatch
 import os
 import re
+from typing import List
 
 
 class ShardedFileComponents(object):
@@ -28,23 +29,19 @@ class ShardedFileComponents(object):
         if not m:
             raise ValueError("Not a sharded file: {}".format(filepattern))
 
-        # pyre-fixme[4]: Attribute must be annotated.
         # pyre-fixme[58]: `>=` is not supported for operand types `Optional[int]`
         #  and `int`.
-        self.extension = m.group(3) if m.lastindex >= 3 else ""
-        # pyre-fixme[4]: Attribute must be annotated.
+        self.extension: str = m.group(3) if m.lastindex >= 3 else ""
         # pyre-fixme[58]: `>=` is not supported for operand types `Optional[int]`
         #  and `int`.
-        self.stem = m.group(1) if m.lastindex >= 1 else ""
+        self.stem: str = m.group(1) if m.lastindex >= 1 else ""
 
         # pyre-fixme[58]: `>=` is not supported for operand types `Optional[int]`
         #  and `int`.
         shards = m.group(2) if m.lastindex >= 2 else ""
         if shards == "*":
-            # pyre-fixme[4]: Attribute must be annotated.
-            self.shard_index = -1
-            # pyre-fixme[4]: Attribute must be annotated.
-            self.shard_total = -1
+            self.shard_index: int = -1
+            self.shard_total: int = -1
         else:
             try:
                 self.shard_total = int(shards)
@@ -64,9 +61,7 @@ class ShardedFileComponents(object):
         if self.shard_total == 0:
             raise ValueError("Invalid shard total 0")
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def get_shard_filename(self, index):
+    def get_shard_filename(self, index: int) -> str:
         if index < 0 or index >= self.shard_total:
             raise ValueError("Invalid shard index")
         return os.path.join(
@@ -76,12 +71,10 @@ class ShardedFileComponents(object):
             ),
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def is_at_n_pattern(self):
+    def is_at_n_pattern(self) -> bool:
         return self.shard_total > 0 and self.shard_index == -1
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def is_at_star_pattern(self):
+    def is_at_star_pattern(self) -> bool:
         return self.shard_total == -1 and self.shard_index == -1
 
 
@@ -122,12 +115,10 @@ class ShardedFile(object):
         self._set_shard_file_names(comps)
         self._shard_file_names.sort()
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def get_filenames(self):
+    def get_filenames(self) -> List[str]:
         return self._shard_file_names
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _set_shard_file_names(self, pcomps) -> None:
+    def _set_shard_file_names(self, pcomps: ShardedFileComponents) -> None:
         self._shard_file_names = []
         for i in range(pcomps.shard_total):
             filename = pcomps.get_shard_filename(i)
@@ -135,10 +126,12 @@ class ShardedFile(object):
                 raise ValueError("Shard {} does not exist.".format(filename))
             self._shard_file_names.append(filename)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _find_unambiguous_shard_total(self, pcomps, pattern):
+    def _find_unambiguous_shard_total(
+        self,
+        pcomps: ShardedFileComponents,
+        # pyre-fixme[2]: Parameter must be annotated.
+        pattern,
+    ) -> int:
         dir = pcomps.directory
         if not os.path.isdir(dir):
             raise ValueError("Not a directory {}".format(dir))

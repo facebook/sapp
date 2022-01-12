@@ -4,12 +4,12 @@
 # LICENSE file in the root directory of this source tree.
 
 import itertools
+from typing import Iterable, Iterator, List, TypeVar
+
+T = TypeVar("T")
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def split_every(n, iterable):
+def split_every(n: int, iterable: Iterable[T]) -> Iterator[List[T]]:
     """Yields batches of size 'n' from an iterable:
 
     list(split_every(2, range(10))) => [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]

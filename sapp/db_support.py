@@ -8,12 +8,24 @@ from __future__ import annotations
 import logging
 from collections import namedtuple
 from itertools import tee
-from typing import Dict, List, Optional, Set, Tuple, Type
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from munch import Munch
 from sqlalchemy import Column, String, and_, exc, inspect, or_, types
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects.mysql import BIGINT
+from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import Session
 
 from .db import DB
@@ -50,10 +62,7 @@ class DBID(object):
         self.local_id: int = DBID.next_id
         DBID.next_id += 1
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def resolve(self, id, is_new=True):
+    def resolve(self, id: Union[int, None, DBID], is_new: bool = True) -> DBID:
         self._check_type(id)
         self._id = id
         self.is_new = is_new
@@ -69,20 +78,17 @@ class DBID(object):
 
         return id
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _check_type(self, id) -> None:
+    def _check_type(self, id: Union[int, None, DBID]) -> None:
         if not isinstance(id, (int, type(None), DBID)):
             raise TypeError(
                 "id expected to be type '{}' but was type '{}'".format(int, type(id))
             )
 
     # Allow DBIDs to be added and compared as ints
-    # pyre-fixme[3]: Return type must be annotated.
-    def __int__(self):
+    def __int__(self) -> int:
         return self.resolved()
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.resolved())
 
     # pyre-fixme[2]: Parameter must be annotated.
@@ -116,9 +122,7 @@ class DBIDType(types.TypeDecorator):
     cache_ok = False
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: Optional[Union[int, DBID]], dialect: Dialect):
         # If it is a DBID wrapper, then write the contained value. Otherwise it
         # may be resolved already, or None.
         if isinstance(value, DBID):
@@ -126,14 +130,13 @@ class DBIDType(types.TypeDecorator):
         else:
             return value
 
-    # pyre-fixme[2]: parameter must be annotated.
-    # pyre-fixme[2]: parameter must be annotated.
-    def process_result_value(self, value, dialect) -> DBID:
+    def process_result_value(
+        self, value: Optional[Union[int, DBID]], dialect: Dialect
+    ) -> DBID:
         return DBID(value)
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def load_dialect_impl(self, dialect):
+    def load_dialect_impl(self, dialect: Dialect):
         if dialect.name == "mysql":
             return dialect.type_descriptor(mysql.INTEGER(unsigned=True))
         return self.impl
@@ -143,8 +146,7 @@ class BIGDBIDType(DBIDType):
     impl = types.BigInteger
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def load_dialect_impl(self, dialect):
+    def load_dialect_impl(self, dialect: Dialect):
         if dialect.name == "mysql":
             return dialect.type_descriptor(mysql.BIGINT(unsigned=True))
         return self.impl
@@ -152,31 +154,31 @@ class BIGDBIDType(DBIDType):
 
 class PrepareMixin(object):
     @classmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def prepare(cls, database: DB, pkgen, items):
+    def prepare(
+        cls,
+        database: DB,
+        pkgen: PrimaryKeyGeneratorBase,
+        items: Iterable[PrepareMixin],
+    ) -> Iterator[Dict[str, Any]]:
         """This is called immediately before the items are written to the
         database. pkgen is passed in to allow last-minute resolving of ids.
         """
         for item in cls.merge(database, items):
             if hasattr(item, "id"):
+                # pyre-fixme[16]: `PrepareMixin` has no attribute `id` (we checked)
                 item.id.resolve(id=pkgen.get(cls), is_new=True)
             # pyre-fixme[16]: `PrepareMixin` has no attribute `to_dict`.
             yield cls.to_dict(item)
 
     @classmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def merge(cls, database: DB, items):
+    def merge(
+        cls, database: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         """Models should override this to perform a merge"""
         return items
 
     @classmethod
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def _merge_by_key(cls, database: DB, items, attr):

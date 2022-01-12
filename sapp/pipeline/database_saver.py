@@ -27,26 +27,24 @@ from ..models import (
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
 
-# pyre-fixme[5]: Global expression must be annotated.
-log = logging.getLogger("sapp")
+log: logging.Logger = logging.getLogger("sapp")
 
 
 # pyre-fixme[13]: Attribute `summary` is never initialized.
 class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
     RUN_MODEL = Run
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         database: DB,
         primary_key_generator: Optional[PrimaryKeyGenerator] = None,
         dry_run: bool = False,
-    ):
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.dbname = database.dbname
+    ) -> None:
+        self.dbname: str = database.dbname
         self.database = database
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.primary_key_generator = primary_key_generator or PrimaryKeyGenerator()
+        self.primary_key_generator: PrimaryKeyGenerator = (
+            primary_key_generator or PrimaryKeyGenerator()
+        )
         self.bulk_saver = BulkSaver(self.primary_key_generator)
         self.dry_run = dry_run
         self.graph: TraceGraph
@@ -60,8 +58,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
         self._prep_save()
         return self._save(), self.summary
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _prep_save(self):
+    def _prep_save(self) -> None:
         """Prepares the bulk saver to load the trace graph info into the
         database.
         """

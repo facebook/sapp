@@ -135,8 +135,7 @@ class TrimmedTraceGraph(TraceGraph):
 
         self._recompute_instance_properties(graph)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _recompute_instance_properties(self, graph: TraceGraph):
+    def _recompute_instance_properties(self, graph: TraceGraph) -> None:
         """Some properties of issue instances will be affected after trimming
         such as min trace length to leaves. This should be called after the
         trimming to re-compute these values.
@@ -623,8 +622,7 @@ class TrimmedTraceGraph(TraceGraph):
 
     def _populate_issues_from_affected_conditions(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        initial_conditions,
+        initial_conditions: List[TraceFrame],
         graph: TraceGraph,
     ) -> None:
         """Helper for populating reachable issue instances from the initial
@@ -791,9 +789,7 @@ class TrimmedTraceGraph(TraceGraph):
     def _is_filename_prefixed_with(filename: str, prefixes: Iterable[str]) -> bool:
         return any(filename.startswith(p) for p in prefixes)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _populate_shared_text(self, graph, id) -> None:
+    def _populate_shared_text(self, graph: TraceGraph, id: DBID) -> None:
         text = graph._shared_texts[id.local_id]
         if text.id.local_id not in self._shared_texts:
             self.add_shared_text(text)

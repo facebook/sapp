@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from typing import Any, Iterator, Optional, Type
 
 import sqlalchemy
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.pool import AssertionPool, Pool
@@ -47,11 +48,11 @@ class DB(object):
         self.debug = debug
         self.read_only = read_only
         self.assertions = assertions
+        self.engine: Engine
 
         self.poolclass: Optional[Type[Pool]] = AssertionPool if assertions else None
 
         if dbtype == DBType.MEMORY:
-            # pyre-fixme[4]: Attribute must be annotated.
             self.engine = sqlalchemy.create_engine(
                 sqlalchemy.engine.url.URL("sqlite", database=":memory:"),
                 echo=debug,
