@@ -787,15 +787,6 @@ class Run(Base):
             alarm_counts=self._get_alarm_counts(session),
         )
 
-    def new_issue_instances(self):
-        session = Session.object_session(self)
-        return (
-            session.query(IssueInstance)
-            .filter(IssueInstance.run_id == self.id)
-            .filter(IssueInstance.is_new_issue.is_(True))
-            .all()
-        )
-
     def _get_num_new_issue_instances(self, session) -> int:
         return (
             session.query(IssueInstance)
