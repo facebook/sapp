@@ -16,6 +16,7 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import Session
 
+from .db import DB
 from .iterutil import split_every
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -155,11 +156,11 @@ class PrepareMixin(object):
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def prepare(cls, session, pkgen, items):
+    def prepare(cls, database: DB, pkgen, items):
         """This is called immediately before the items are written to the
         database. pkgen is passed in to allow last-minute resolving of ids.
         """
-        for item in cls.merge(session, items):
+        for item in cls.merge(database, items):
             if hasattr(item, "id"):
                 item.id.resolve(id=pkgen.get(cls), is_new=True)
             # pyre-fixme[16]: `PrepareMixin` has no attribute `to_dict`.
@@ -169,7 +170,7 @@ class PrepareMixin(object):
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def merge(cls, session, items):
+    def merge(cls, database: DB, items):
         """Models should override this to perform a merge"""
         return items
 
@@ -178,9 +179,9 @@ class PrepareMixin(object):
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _merge_by_key(cls, session, items, attr):
+    def _merge_by_key(cls, database: DB, items, attr):
         return cls._merge_by_keys(
-            session, items, lambda item: getattr(item, attr.key), attr
+            database, items, lambda item: getattr(item, attr.key), attr
         )
 
     @classmethod
@@ -189,7 +190,7 @@ class PrepareMixin(object):
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _merge_by_keys(cls, session, items, hash_item, *attrs):
+    def _merge_by_keys(cls, database: DB, items, hash_item, *attrs):
         """An object can have multiple attributes as its key. This merges the
         items to be added with existing items in the database based on their
         key(s).
@@ -232,12 +233,13 @@ class PrepareMixin(object):
                     getattr(cls, attr).__eq__(val) for attr, val in fetch_key.items()
                 ]
                 filters.append(and_(*subfilter))
-            existing_items = (
-                # pyre-fixme[16]: `PrepareMixin` has no attribute `id`.
-                session.query(cls.id, *cls_attrs)
-                .filter(or_(*(filters)))
-                .all()
-            )
+            with database.make_session() as session:
+                existing_items = (
+                    # pyre-fixme[16]: `PrepareMixin` has no attribute `id`.
+                    session.query(cls.id, *cls_attrs)
+                    .filter(or_(*(filters)))
+                    .all()
+                )
             for existing_item in existing_items:
                 item_hash = hash_item(existing_item)
                 existing_ids[item_hash] = existing_item.id
@@ -263,7 +265,7 @@ class PrepareMixin(object):
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _merge_assocs(cls, session, items, id1, id2):
+    def _merge_assocs(cls, database: DB, items, id1, id2):
         new_items = {}
         for i in items:
             r1 = getattr(i, id1.key)

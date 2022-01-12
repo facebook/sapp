@@ -107,11 +107,10 @@ class BulkSaver:
         # We sort keys because bulk insert uses executemany, but it can only
         # group together sequential items with the same keys. If we are scattered
         # then it does far more executemany calls, and it kills performance.
-        with database.make_session() as session:
-            items = sorted(
-                cls.prepare(session, pk_gen, consume(self.saving[cls.__name__])),
-                key=lambda k: list(k.keys()),
-            )
+        items = sorted(
+            cls.prepare(database, pk_gen, consume(self.saving[cls.__name__])),
+            key=lambda k: list(k.keys()),
+        )
 
         # bulk_insert_mappings should only be used for new objects.
         # To update an existing object, just modify its attribute(s)
