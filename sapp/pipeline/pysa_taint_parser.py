@@ -251,7 +251,7 @@ class Parser(BaseParser):
             code=json["code"],
             line=json["line"],
             callable_line=json["callable_line"],
-            start=json["start"],
+            start=self._adjust_start_location(json["start"]),
             end=json["end"],
             callable=json["callable"],
             handle=self._generate_issue_master_handle(json),
@@ -476,7 +476,13 @@ class Parser(BaseParser):
             raise ParseError("Unexpected trace fragment.", received=trace)
 
     def _adjust_location(self, location: ParsePosition) -> ParsePosition:
-        return {**location, "start": location["start"] + 1}  # pyre-ignore[7]
+        return {  # pyre-ignore[7]
+            **location,
+            "start": self._adjust_start_location(location["start"]),
+        }
+
+    def _adjust_start_location(self, start: int) -> int:
+        return start + 1
 
     def _parse_leaves_v2(self, leaves: List[Dict[str, Any]]) -> List[LeafWithPort]:
         return [

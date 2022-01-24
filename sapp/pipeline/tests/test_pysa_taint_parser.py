@@ -164,7 +164,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -335,7 +335,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -504,7 +504,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -686,7 +686,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -844,7 +844,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -987,7 +987,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -1158,7 +1158,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -1325,7 +1325,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -1507,7 +1507,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -1689,7 +1689,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
@@ -1817,7 +1817,7 @@ class TestParser(unittest.TestCase):
                     filename="foo.py",
                     callable_line=10,
                     line=11,
-                    start=12,
+                    start=13,
                     end=13,
                     postconditions=[
                         ParseIssueConditionTuple(
