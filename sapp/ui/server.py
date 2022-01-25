@@ -104,7 +104,7 @@ def start_server(
         CORS(
             application,
             resources={
-                r"/graphql": dict(origins="http://{hostname}:{port}".format(hostname=host, port=default_port)
+                r"/graphql": dict(origins="http://{hostname}:{port}".format(hostname=host, port=default_port))
             },
         )
     application.run(debug=debug, host="localhost", port=13337)
