@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -785,15 +785,6 @@ class Run(Base):
             num_new_issues=self._get_num_new_issue_instances(session),
             num_total_issues=self._get_num_total_issues(session),
             alarm_counts=self._get_alarm_counts(session),
-        )
-
-    def new_issue_instances(self):
-        session = Session.object_session(self)
-        return (
-            session.query(IssueInstance)
-            .filter(IssueInstance.run_id == self.id)
-            .filter(IssueInstance.is_new_issue.is_(True))
-            .all()
         )
 
     def _get_num_new_issue_instances(self, session) -> int:
