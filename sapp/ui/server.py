@@ -10,9 +10,8 @@ import os
 from typing import Optional
 
 import sqlalchemy
-
 # pyre-fixme[21]: `flask` has no attribute `_app_ctx_stack`
-from flask import Flask, send_from_directory, _app_ctx_stack
+from flask import Flask, _app_ctx_stack, send_from_directory
 from flask.wrappers import Response
 from flask_cors import CORS
 from flask_graphql import GraphQLView
@@ -104,11 +103,11 @@ def start_server(
         CORS(
             application,
             resources={
-                r"/graphql": dict(
-                    origins="http://{hostname}:{port}".format(
+                r"/graphql": {
+                    "origins": "http://{hostname}:{port}".format(
                         hostname=host, port=default_port
                     )
-                )
+                }
             },
         )
     application.run(debug=debug, host="localhost", port=13337)
