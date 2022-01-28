@@ -12,12 +12,12 @@ from typing import Optional
 import sqlalchemy
 
 # pyre-fixme[21]: `flask` has no attribute `_app_ctx_stack`
-from flask import Flask, send_from_directory, _app_ctx_stack
+from flask import _app_ctx_stack, Flask, send_from_directory
 from flask.wrappers import Response
 from flask_cors import CORS
 from flask_graphql import GraphQLView
 from pyre_extensions import none_throws
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, Session, sessionmaker
 
 from .. import models
 from ..db import DB
@@ -99,5 +99,16 @@ def start_server(
     if static_resources:
         application.static_folder = static_resources
     if debug:
-        CORS(application, resources={r"/graphql": {"origins": "http://localhost:3000"}})
+        default_port = os.environ.get("PORT") or 3000
+        host = os.environ.get("HOST") or "localhost"
+        CORS(
+            application,
+            resources={
+                r"/graphql": {
+                    "origins": "http://{hostname}:{port}".format(
+                        hostname=host, port=default_port
+                    )
+                }
+            },
+        )
     application.run(debug=debug, host="localhost", port=13337)
