@@ -27,6 +27,7 @@ from ..models import (
     TraceFrame,
     TraceFrameAnnotation,
     TraceKind,
+    Feature,
 )
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
@@ -228,11 +229,34 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             self.graph.add_issue_instance_trace_frame_assoc(instance, trace_frame)
 
         for feature in entry.features:
-            feature = self._get_shared_text(SharedTextKind.FEATURE, feature)
-            self.graph.add_issue_instance_shared_text_assoc(instance, feature)
+            self._process_breadcrumb(instance, feature)
 
         self.graph.add_issue_instance(instance)
         return instance
+
+    def _process_breadcrumb(
+        self, issue_instance: IssueInstance, feature: Union[str, Dict[str, Any]]
+    ) -> None:
+        if isinstance(feature, str):
+            self._process_string_breadcrumb(issue_instance, feature)
+        else:
+            self._process_structured_breadcrumb(issue_instance, feature)
+
+    def _process_structured_breadcrumb(
+        self, issue_instance: IssueInstance, feature: Dict[str, Any]
+    ) -> None:
+        feature_obj = self._get_feature(feature)
+        self.graph.add_issue_instance_feature_assoc(issue_instance, feature_obj)
+
+    def _process_string_breadcrumb(
+        self,
+        issue_instance: IssueInstance,
+        feature: str,
+    ) -> None:
+        feature_shared_text = self._get_shared_text(SharedTextKind.FEATURE, feature)
+        self.graph.add_issue_instance_shared_text_assoc(
+            issue_instance, feature_shared_text
+        )
 
     # We need to thread filename explicitly since the entry might be a callinfo.
     def _generate_tito(
@@ -565,6 +589,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
     def _get_shared_text(self, kind: SharedTextKind, name: str) -> SharedText:
         return self.graph.get_or_add_shared_text(kind, name)
+
+    def _get_feature(self, feature: Dict[str, Any]) -> Feature:
+        return self.graph.get_or_add_feature(feature)
 
     @staticmethod
     def get_location(

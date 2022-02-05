@@ -24,6 +24,8 @@ from .models import (
     TraceFrameAnnotation,
     TraceFrameAnnotationTraceFrameAssoc,
     TraceFrameLeafAssoc,
+    Feature,
+    IssueInstanceFeatureAssoc,
 )
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -44,6 +46,8 @@ class BulkSaver:
         TraceFrameAnnotation,
         TraceFrameLeafAssoc,
         TraceFrameAnnotationTraceFrameAssoc,
+        Feature,
+        IssueInstanceFeatureAssoc,
     ]
 
     BATCH_SIZE = 30000
@@ -141,6 +145,16 @@ class BulkSaver:
         self.add(
             IssueInstanceSharedTextAssoc.Record(
                 issue_instance_id=issue_instance.id, shared_text_id=shared_text.id
+            )
+        )
+
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
+    def add_issue_instance_feature_assoc(self, issue_instance, feature):
+        self.add(
+            IssueInstanceFeatureAssoc.Record(
+                issue_instance_id=issue_instance.id, feature_id=feature.id
             )
         )
 

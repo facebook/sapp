@@ -159,7 +159,7 @@ class ParseTraceFeature(NamedTuple):
         )
 
 
-def parse_feature(feature: Union[str, Dict[str, Any]]) -> ParseTraceFeature:
+def parse_trace_feature(feature: Union[str, Dict[str, Any]]) -> ParseTraceFeature:
     if isinstance(feature, dict):
         return ParseTraceFeature.from_json(feature)
     return ParseTraceFeature(feature, [])
@@ -277,7 +277,7 @@ class ParseIssueTuple(NamedTuple):
     postconditions: Iterable[ParseIssueConditionTuple]
     initial_sources: Iterable[ParseIssueLeaf]
     final_sinks: Iterable[ParseIssueLeaf]
-    features: List[str]
+    features: Union[List[str], List[Dict[str, Any]], List[Union[str, Dict[str, Any]]]]
     callable_line: Optional[int]
     fix_info: Optional[Dict[str, Any]]
 
@@ -300,7 +300,7 @@ class ParseIssueTuple(NamedTuple):
             ),
             initial_sources=self.initial_sources,
             final_sinks=self.final_sinks,
-            features=list(map(sys.intern, self.features)),
+            features=self.features,
             fix_info=self.fix_info,
         )
 

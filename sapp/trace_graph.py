@@ -5,9 +5,10 @@
 
 # pyre-strict
 
+import json
 import logging
 from collections import defaultdict
-from typing import DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
+from typing import DefaultDict, Dict, Iterable, List, Optional, Set, Tuple, Any
 
 from .bulk_saver import BulkSaver
 from .models import (
@@ -22,6 +23,7 @@ from .models import (
     TraceFrame,
     TraceFrameAnnotation,
     TraceKind,
+    Feature,
 )
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -57,6 +59,10 @@ class TraceGraph(object):
 
         self._trace_frames: Dict[int, TraceFrame] = {}
 
+        self._features: Dict[int, Feature] = {}
+
+        self._feature_lookup: Dict[str, int] = {}
+
         self._shared_texts: Dict[int, SharedText] = {}
         self._shared_text_lookup: (
             DefaultDict[SharedTextKind, Dict[str, int]]
@@ -86,6 +92,13 @@ class TraceGraph(object):
         self._shared_text_issue_instance_assoc: DefaultDict[
             int, Set[int]
         ] = defaultdict(set)
+
+        self._issue_instance_feature_assoc: DefaultDict[int, Set[int]] = defaultdict(
+            set
+        )
+        self._feature_issue_instance_assoc: DefaultDict[int, Set[int]] = defaultdict(
+            set
+        )
 
         self._issue_instance_fix_info: Dict[int, IssueInstanceFixInfo] = {}
 
@@ -221,6 +234,28 @@ class TraceGraph(object):
             shared_text.contents
         ] = shared_text.id.local_id
 
+    def add_feature(self, bc: Feature) -> None:
+        self._features[bc.id.local_id] = bc
+        self._feature_lookup[json.dumps(bc.data, sort_keys=True)] = bc.id.local_id
+
+    def get_feature(self, feature: Dict[str, Any]) -> Optional[Feature]:
+        feature_serialized = json.dumps(feature, sort_keys=True)
+        if feature_serialized in self._feature_lookup:
+            if self._feature_lookup[feature_serialized] in self._features:
+                return self._features[self._feature_lookup[feature_serialized]]
+
+        return None
+
+    def get_or_add_feature(self, feature: Dict[str, Any]) -> Feature:
+        feature_object = self.get_feature(feature)
+        if feature_object is None:
+            feature_object = Feature.Record(
+                id=DBID(),
+                data=feature,
+            )
+            self.add_feature(feature_object)
+        return feature_object
+
     def get_or_add_shared_text(self, kind: SharedTextKind, name: str) -> SharedText:
         name = name[:SHARED_TEXT_LENGTH]
         shared_text = self.get_shared_text(kind, name)
@@ -309,6 +344,17 @@ class TraceGraph(object):
     ) -> None:
         self.add_issue_instance_shared_text_assoc_id(instance, shared_text.id.local_id)
 
+    def add_issue_instance_feature_assoc_id(
+        self, instance: IssueInstance, feature_id: int
+    ) -> None:
+        self._issue_instance_feature_assoc[instance.id.local_id].add(feature_id)
+        self._feature_issue_instance_assoc[feature_id].add(instance.id.local_id)
+
+    def add_issue_instance_feature_assoc(
+        self, instance: IssueInstance, feature: Feature
+    ) -> None:
+        self.add_issue_instance_feature_assoc_id(instance, feature.id.local_id)
+
     def get_issue_instance_shared_texts(
         self, instance_id: int, kind: SharedTextKind
     ) -> List[SharedText]:
@@ -325,11 +371,13 @@ class TraceGraph(object):
         bulk_saver.add_all(list(self._issue_instance_fix_info.values()))
         bulk_saver.add_all(list(self._trace_annotations.values()))
         bulk_saver.add_all(list(self._shared_texts.values()))
+        bulk_saver.add_all(list(self._features.values()))
 
         self._save_issue_instance_trace_frame_assoc(bulk_saver)
         self._save_trace_frame_leaf_assoc(bulk_saver)
         self._save_issue_instance_shared_text_assoc(bulk_saver)
         self._save_trace_frame_annotation_trace_frame_assoc(bulk_saver)
+        self._save_issue_instance_feature_assoc(bulk_saver)
 
     def _save_issue_instance_trace_frame_assoc(self, bulk_saver: BulkSaver) -> None:
         for (
@@ -340,6 +388,17 @@ class TraceGraph(object):
                 bulk_saver.add_issue_instance_trace_frame_assoc(
                     self._issue_instances[instance_id],
                     self._trace_frames[trace_frame_id],
+                )
+
+    def _save_issue_instance_feature_assoc(self, bulk_saver: BulkSaver) -> None:
+        for (
+            feature_id,
+            instance_ids,
+        ) in self._feature_issue_instance_assoc.items():
+            for instance_id in instance_ids:
+                bulk_saver.add_issue_instance_feature_assoc(
+                    self._issue_instances[instance_id],
+                    self._features[feature_id],
                 )
 
     def _save_trace_frame_annotation_trace_frame_assoc(

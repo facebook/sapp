@@ -22,11 +22,12 @@ from typing import (
 )
 
 from munch import Munch
-from sqlalchemy import Column, String, and_, exc, inspect, or_, types
+from sqlalchemy import Column, String, and_, exc, inspect, or_, types, JSON
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import cast
 
 from .db import DB
 from .iterutil import split_every
@@ -232,7 +233,10 @@ class PrepareMixin(object):
                 #   SharedText.contents.__eq__("via tito"),
                 # ]
                 subfilter = [
-                    getattr(cls, attr).__eq__(val) for attr, val in fetch_key.items()
+                    getattr(cls, attr).__eq__(val)
+                    if type(val) is not dict
+                    else getattr(cls, attr) == cast(val, JSON)
+                    for attr, val in fetch_key.items()
                 ]
                 filters.append(and_(*subfilter))
             with database.make_session() as session:
