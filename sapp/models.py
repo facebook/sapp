@@ -660,6 +660,32 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         BIGINT(unsigned=True), nullable=True, doc="FBID for EntZoncolanFeedback"
     )
 
+    detected_time: Column[int] = Column(
+        BIGINT(20, unsigned=True),
+        doc="unix timestamp of first detection",
+        nullable=False,
+        index=True,
+        server_default="0",
+    )
+
+    triage_time: Column[Optional[int]] = Column(
+        BIGINT(20, unsigned=True),
+        doc="unix timestamp of triage (typically first triage from history)",
+        nullable=True,
+    )
+
+    start_triage_time: Column[Optional[int]] = Column(
+        BIGINT(20, unsigned=True),
+        doc="unix timestamp of examination leading to triage",
+        nullable=True,
+    )
+
+    triaged_by_fbid: Column[Optional[int]] = Column(
+        BIGINT(unsigned=True),
+        nullable=True,
+        doc="FBID for EntInternUser (typically actor of first triage from history)",
+    )
+
     @classmethod
     def _take(cls, n, iterable):
         "Return first n items of the iterable as a list"

@@ -71,6 +71,7 @@ class FakeObjectGenerator:
             start=1,
             end=2,
             status=status,
+            detected_time=now.timestamp(),
         )
         if self.graph:
             self.graph.add_issue(result)
