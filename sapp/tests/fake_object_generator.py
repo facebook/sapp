@@ -29,11 +29,11 @@ from ..trace_graph import LeafMapping, TraceGraph
 
 
 class FakeObjectGenerator:
-    def __init__(self, graph: Optional[TraceGraph] = None, run_id=0):
+    def __init__(self, graph: Optional[TraceGraph] = None, run_id: int = 0) -> None:
         self.reinit(run_id)
         self.graph = graph
 
-    def reinit(self, run_id):
+    def reinit(self, run_id) -> None:
         self.saver = BulkSaver()
         self.handle = 0
         self.source_name_id = 0
@@ -41,7 +41,7 @@ class FakeObjectGenerator:
         self.shared_text_name_id = 0
         self.run_id = run_id
 
-    def save_all(self, db):
+    def save_all(self, db) -> None:
         if self.graph:
             self.graph.update_bulk_saver(self.saver)
         self.saver.save_all(db)
@@ -49,11 +49,11 @@ class FakeObjectGenerator:
 
     def issue(
         self,
-        filename="/r/lib/server/posts/request.py",
-        callable="lib.server.posts.request.new_post_request",
+        filename: str = "/r/lib/server/posts/request.py",
+        callable: str = "lib.server.posts.request.new_post_request",
         handle=None,
         code=None,
-        status="uncategorized",
+        status: str = "uncategorized",
     ):
         self.handle += 1
         now = datetime.datetime.now()
@@ -74,6 +74,7 @@ class FakeObjectGenerator:
             detected_time=now.timestamp(),
         )
         if self.graph:
+            # pyre-fixme[6]: For 1st param expected `Issue` but got `Munch`.
             self.graph.add_issue(result)
         else:
             self.saver.add(result)
@@ -81,17 +82,17 @@ class FakeObjectGenerator:
 
     def precondition(
         self,
-        caller="double_meh",
-        caller_port="at the end of universe",
-        callee="triple_meh",
-        callee_port="at the beginning of time",
-        filename="lib/server/posts/request.py",
+        caller: str = "double_meh",
+        caller_port: str = "at the end of universe",
+        callee: str = "triple_meh",
+        callee_port: str = "at the beginning of time",
+        filename: str = "lib/server/posts/request.py",
         location=(4, 5, 6),
         leaves=None,
         reachability=FrameReachability.UNREACHABLE,
-        preserves_type_context=False,
-        type_interval_lower=5,
-        type_interval_upper=7,
+        preserves_type_context: bool = False,
+        type_interval_lower: int = 5,
+        type_interval_upper: int = 7,
     ):
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -123,6 +124,8 @@ class FakeObjectGenerator:
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
             for (leaf, depth) in leaves:
+                # pyre-fixme[16]: `Optional` has no attribute
+                #  `add_trace_frame_leaf_assoc`.
                 self.graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
         else:
             self.saver.add(trace_frame)
@@ -130,16 +133,16 @@ class FakeObjectGenerator:
 
     def postcondition(
         self,
-        caller="quadruple_meh",
-        caller_port="caller_meh",
-        callee="quintuple_meh",
-        callee_port="callee_meh",
-        filename="lib/server/posts/response.py",
+        caller: str = "quadruple_meh",
+        caller_port: str = "caller_meh",
+        callee: str = "quintuple_meh",
+        callee_port: str = "callee_meh",
+        filename: str = "lib/server/posts/response.py",
         location=(4, 5, 6),
         leaves=None,
-        preserves_type_context=False,
-        type_interval_lower=5,
-        type_interval_upper=7,
+        preserves_type_context: bool = False,
+        type_interval_lower: int = 5,
+        type_interval_upper: int = 7,
     ):
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -171,6 +174,8 @@ class FakeObjectGenerator:
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
             for (leaf, depth) in leaves:
+                # pyre-fixme[16]: `Optional` has no attribute
+                #  `add_trace_frame_leaf_assoc`.
                 self.graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
         else:
             self.saver.add(trace_frame)
@@ -221,35 +226,35 @@ class FakeObjectGenerator:
             self.saver.add(feature_obj)
         return feature_obj
 
-    def feature(self, name="via:feature"):
+    def feature(self, name: str = "via:feature"):
         return self.shared_text(contents=name, kind=SharedTextKind.FEATURE)
 
-    def source(self, name="source"):
+    def source(self, name: str = "source"):
         return self.shared_text(contents=name, kind=SharedTextKind.SOURCE)
 
-    def source_detail(self, name="source_detail"):
+    def source_detail(self, name: str = "source_detail"):
         return self.shared_text(contents=name, kind=SharedTextKind.SOURCE_DETAIL)
 
-    def sink(self, name="sink"):
+    def sink(self, name: str = "sink"):
         return self.shared_text(contents=name, kind=SharedTextKind.SINK)
 
-    def sink_detail(self, name="sink_detail"):
+    def sink_detail(self, name: str = "sink_detail"):
         return self.shared_text(contents=name, kind=SharedTextKind.SINK_DETAIL)
 
-    def filename(self, name="/r/some/filename.py"):
+    def filename(self, name: str = "/r/some/filename.py"):
         return self.shared_text(contents=name, kind=SharedTextKind.FILENAME)
 
-    def callable(self, name="Foo.barMethod"):
+    def callable(self, name: str = "Foo.barMethod"):
         return self.shared_text(contents=name, kind=SharedTextKind.CALLABLE)
 
-    def message(self, name="this is bad"):
+    def message(self, name: str = "this is bad"):
         return self.shared_text(contents=name, kind=SharedTextKind.MESSAGE)
 
     def instance(
         self,
-        message="this is bad",
-        filename="/r/some/filename.py",
-        callable="Foo.barMethod",
+        message: str = "this is bad",
+        filename: str = "/r/some/filename.py",
+        callable: str = "Foo.barMethod",
         issue_id=None,
         min_trace_length_to_sources=None,
         min_trace_length_to_sinks=None,
@@ -270,6 +275,7 @@ class FakeObjectGenerator:
             min_trace_length_to_sinks=min_trace_length_to_sinks,
         )
         if self.graph:
+            # pyre-fixme[6]: For 1st param expected `IssueInstance` but got `Munch`.
             self.graph.add_issue_instance(result)
         else:
             self.saver.add(result)

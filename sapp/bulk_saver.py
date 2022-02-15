@@ -148,10 +148,9 @@ class BulkSaver:
             )
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def add_issue_instance_feature_assoc(self, issue_instance, feature):
+    def add_issue_instance_feature_assoc(self, issue_instance, feature) -> None:
         self.add(
             IssueInstanceFeatureAssoc.Record(
                 issue_instance_id=issue_instance.id, feature_id=feature.id

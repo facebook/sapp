@@ -60,11 +60,11 @@ class InteractiveTest(TestCase):
         sys.stdout = sys.__stdout__  # reset redirect
         sys.stderr = sys.__stderr__  # reset redirect
 
-    def _clear_stdout(self):
+    def _clear_stdout(self) -> None:
         self.stdout = StringIO()
         sys.stdout = self.stdout
 
-    def _add_to_session(self, session, data):
+    def _add_to_session(self, session, data) -> None:
         if not isinstance(data, list):
             session.add(data)
             return
@@ -121,7 +121,7 @@ class InteractiveTest(TestCase):
         self.assertIn("Sources filter: {'1'}", output)
         self.assertIn("Sinks filter: {'2'}", output)
 
-    def testListIssuesBasic(self):
+    def testListIssuesBasic(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         self.fakes.instance(
@@ -143,7 +143,7 @@ class InteractiveTest(TestCase):
         self.assertIn("Callable: module.function1", output)
         self.assertIn("Location: file.py:6|7|8", output)
 
-    def testListIssuesFromLatestRun(self):
+    def testListIssuesFromLatestRun(self) -> None:
         self.fakes.issue()
         run1 = self.fakes.run()
         self.fakes.instance()  # part of run1
@@ -165,7 +165,7 @@ class InteractiveTest(TestCase):
         self.assertNotIn("Issue 1", output)
         self.assertIn("Issue 2", output)
 
-    def _list_issues_filter_setup(self):
+    def _list_issues_filter_setup(self) -> None:
         run = self.fakes.run()
 
         issue1 = self.fakes.issue(status="do_not_care")
@@ -202,7 +202,7 @@ class InteractiveTest(TestCase):
             session.add(run)
             session.commit()
 
-    def testListIssuesFilterCodes(self):
+    def testListIssuesFilterCodes(self) -> None:
         self._list_issues_filter_setup()
 
         self.interactive.setup()
@@ -223,7 +223,7 @@ class InteractiveTest(TestCase):
         self.assertIn("Issue 2", output)
         self.assertIn("Issue 3", output)
 
-    def testListIssuesFilterCallables(self):
+    def testListIssuesFilterCallables(self) -> None:
         self._list_issues_filter_setup()
 
         self.interactive.setup()
@@ -244,7 +244,7 @@ class InteractiveTest(TestCase):
         self.assertNotIn("Issue 2", output)
         self.assertIn("Issue 3", output)
 
-    def testListIssuesFilterFilenames(self):
+    def testListIssuesFilterFilenames(self) -> None:
         self._list_issues_filter_setup()
 
         self.interactive.setup()
@@ -265,7 +265,7 @@ class InteractiveTest(TestCase):
         self.assertNotIn("Issue 2", output)
         self.assertIn("Issue 3", output)
 
-    def testListIssuesFilterMinTraceLength(self):
+    def testListIssuesFilterMinTraceLength(self) -> None:
         self._list_issues_filter_setup()
 
         self.interactive.setup()
@@ -364,7 +364,7 @@ class InteractiveTest(TestCase):
         self.assertNotIn("Issue 3", output)
         self._clear_stdout()
 
-    def testListIssuesFilterAllFeature(self):
+    def testListIssuesFilterAllFeature(self) -> None:
         self._list_issues_filter_setup()
 
         self.fakes.instance()
@@ -407,7 +407,7 @@ class InteractiveTest(TestCase):
             output = self.stdout.getvalue().strip()
             self.assertNotIn("Issue 1", output)
 
-    def testListIssuesFilterAnyFeature(self):
+    def testListIssuesFilterAnyFeature(self) -> None:
         self._list_issues_filter_setup()
 
         self.fakes.instance()
@@ -450,7 +450,7 @@ class InteractiveTest(TestCase):
             output = self.stdout.getvalue().strip()
             self.assertNotIn("Issue 1", output)
 
-    def testListIssuesFilterExcludeFeature(self):
+    def testListIssuesFilterExcludeFeature(self) -> None:
         self._list_issues_filter_setup()
 
         self.fakes.instance()
@@ -493,7 +493,7 @@ class InteractiveTest(TestCase):
             output = self.stdout.getvalue().strip()
             self.assertIn("Issue 1", output)
 
-    def testListIssuesFilterAllFeatureAndAnyFeature(self):
+    def testListIssuesFilterAllFeatureAndAnyFeature(self) -> None:
         self._list_issues_filter_setup()
 
         feature1 = self.fakes.feature("via:feature1")
@@ -534,7 +534,7 @@ class InteractiveTest(TestCase):
             self.assertIn("Issue 1", output)
             self.assertIn("Issue 2", output)
 
-    def testListIssuesFilterStatuses(self):
+    def testListIssuesFilterStatuses(self) -> None:
         self._list_issues_filter_setup()
 
         self.interactive.setup()
@@ -548,12 +548,12 @@ class InteractiveTest(TestCase):
         self.assertNotIn("Issue 2", output)
         self.assertIn("Issue 3", output)
 
-    def testNoRunsFound(self):
+    def testNoRunsFound(self) -> None:
         self.interactive.setup()
         stderr = self.stderr.getvalue().strip()
         self.assertIn("No runs found.", stderr)
 
-    def testListRuns(self):
+    def testListRuns(self) -> None:
         runs = [
             Run(id=1, date=datetime.now(), status=RunStatus.FINISHED),
             Run(id=2, date=datetime.now(), status=RunStatus.INCOMPLETE),
@@ -572,7 +572,7 @@ class InteractiveTest(TestCase):
         self.assertNotIn("Run 2", output)
         self.assertIn("Run 3", output)
 
-    def testSetRun(self):
+    def testSetRun(self) -> None:
         self.fakes.issue()
         run1 = self.fakes.run()
         self.fakes.instance(message="Issue message")
@@ -595,7 +595,7 @@ class InteractiveTest(TestCase):
         self.assertIn("Issue 1", output)
         self.assertNotIn("Issue 2", output)
 
-    def testSetRunNonExistent(self):
+    def testSetRunNonExistent(self) -> None:
         runs = [
             Run(id=1, date=datetime.now(), status=RunStatus.FINISHED),
             Run(id=2, date=datetime.now(), status=RunStatus.INCOMPLETE),
@@ -613,7 +613,7 @@ class InteractiveTest(TestCase):
         self.assertIn("Run 2 doesn't exist", stderr)
         self.assertIn("Run 3 doesn't exist", stderr)
 
-    def testSetLatestRun(self):
+    def testSetLatestRun(self) -> None:
         runs = [
             Run(id=1, date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
             Run(id=2, date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
@@ -640,7 +640,7 @@ class InteractiveTest(TestCase):
         self.assertEqual(int(self.interactive._current_run_id), 3)
         self.assertIn("No runs with kind 'd'", self.stderr.getvalue())
 
-    def testSetIssue(self):
+    def testSetIssue(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         self.fakes.instance(message="Issue message")
@@ -667,7 +667,7 @@ class InteractiveTest(TestCase):
         self.assertIn("Issue 1", stdout)
         self.assertNotIn("Issue 3", stdout)
 
-    def testSetIssueNonExistent(self):
+    def testSetIssueNonExistent(self) -> None:
         run = self.fakes.run()
 
         with self.db.make_session() as session:
@@ -680,7 +680,7 @@ class InteractiveTest(TestCase):
 
         self.assertIn("Issue 1 doesn't exist", stderr)
 
-    def testSetIssueUpdatesRun(self):
+    def testSetIssueUpdatesRun(self) -> None:
         self.fakes.issue()
         run1 = self.fakes.run()
         self.fakes.instance()
@@ -700,7 +700,7 @@ class InteractiveTest(TestCase):
         self.interactive.issue(1)
         self.assertEqual(int(self.interactive._current_run_id), 1)
 
-    def testGetSources(self):
+    def testGetSources(self) -> None:
         self.fakes.instance()
         source1 = self.fakes.source("source1")
         source2 = self.fakes.source("source2")
@@ -721,14 +721,17 @@ class InteractiveTest(TestCase):
 
             self.interactive.setup()
             sources = self.interactive._get_leaves_issue_instance(
-                session, 1, SharedTextKind.SOURCE
+                session,
+                # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
+                1,
+                SharedTextKind.SOURCE,
             )
 
         self.assertEqual(len(sources), 2)
         self.assertIn("source1", sources)
         self.assertIn("source2", sources)
 
-    def testGetSinks(self):
+    def testGetSinks(self) -> None:
         self.fakes.instance()
         sink1 = self.fakes.sink("sink1")
         sink2 = self.fakes.sink("sink2")
@@ -745,14 +748,17 @@ class InteractiveTest(TestCase):
 
             self.interactive.setup()
             sinks = self.interactive._get_leaves_issue_instance(
-                session, 1, SharedTextKind.SINK
+                session,
+                # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
+                1,
+                SharedTextKind.SINK,
             )
 
         self.assertEqual(len(sinks), 2)
         self.assertIn("sink1", sinks)
         self.assertIn("sink2", sinks)
 
-    def testGetFeatures(self):
+    def testGetFeatures(self) -> None:
         self.fakes.instance()
         feature1 = self.fakes.feature("via:feature1")
         feature2 = self.fakes.feature("via:feature2")
@@ -773,7 +779,10 @@ class InteractiveTest(TestCase):
 
             self.interactive.setup()
             features = self.interactive._get_leaves_issue_instance(
-                session, 1, SharedTextKind.FEATURE
+                session,
+                # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
+                1,
+                SharedTextKind.FEATURE,
             )
 
         self.assertEqual(len(features), 2)
@@ -798,7 +807,7 @@ class InteractiveTest(TestCase):
             ),
         ]
 
-    def testCreateTraceTuples(self):
+    def testCreateTraceTuples(self) -> None:
         # reverse order
         postcondition_traces = [
             (
@@ -849,7 +858,7 @@ class InteractiveTest(TestCase):
             ],
         )
 
-    def testOutputTraceTuples(self):
+    def testOutputTraceTuples(self) -> None:
         features = [
             SharedText(kind=SharedTextKind.FEATURE, contents="one"),
             SharedText(kind=SharedTextKind.FEATURE, contents="two"),
@@ -1017,7 +1026,7 @@ class InteractiveTest(TestCase):
             ],
         )
 
-    def testTraceFromIssue(self):
+    def testTraceFromIssue(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         instance = self.fakes.instance()
@@ -1084,7 +1093,7 @@ class InteractiveTest(TestCase):
             ],
         )
 
-    def testTraceFromFrame(self):
+    def testTraceFromFrame(self) -> None:
         run = self.fakes.run()
         frames = self._basic_trace_frames()
         sink = self.fakes.sink("sink")
@@ -1121,7 +1130,7 @@ class InteractiveTest(TestCase):
             ],
         )
 
-    def testTraceMissingFrames(self):
+    def testTraceMissingFrames(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         instance = self.fakes.instance()
@@ -1174,7 +1183,7 @@ class InteractiveTest(TestCase):
         stdout = self.stdout.getvalue().strip()
         self.assertIn("Missing trace frame: call2:param0", stdout)
 
-    def testTraceCursorLocation(self):
+    def testTraceCursorLocation(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         instance = self.fakes.instance(callable="Issue callable")
@@ -1241,7 +1250,7 @@ class InteractiveTest(TestCase):
         self.interactive.prev_cursor_location()
         self.assertEqual(self.interactive.current_trace_frame_index, 0)
 
-    def testJumpToLocation(self):
+    def testJumpToLocation(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         instance = self.fakes.instance()
@@ -1297,7 +1306,7 @@ class InteractiveTest(TestCase):
         self.interactive.jump(0)
         self.assertEqual(self.interactive.current_trace_frame_index, 2)
 
-    def testTraceNoSinks(self):
+    def testTraceNoSinks(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         instance = self.fakes.instance()
@@ -1421,7 +1430,7 @@ class InteractiveTest(TestCase):
 
         return frames
 
-    def testTraceBranchNumber(self):
+    def testTraceBranchNumber(self) -> None:
         self._set_up_branched_trace()
 
         self.interactive.setup()
@@ -1444,7 +1453,7 @@ class InteractiveTest(TestCase):
             ],
         )
 
-    def testShowBranches(self):
+    def testShowBranches(self) -> None:
         self._set_up_branched_trace()
 
         self.interactive.setup()
@@ -1506,7 +1515,7 @@ class InteractiveTest(TestCase):
             output,
         )
 
-    def testGetTraceFrameBranches(self):
+    def testGetTraceFrameBranches(self) -> None:
         frames = self._set_up_branched_trace()
 
         self.interactive.setup()
@@ -1530,7 +1539,7 @@ class InteractiveTest(TestCase):
             self.assertEqual(int(branches[0].id), int(frames[5].id))
             self.assertEqual(int(branches[1].id), int(frames[4].id))
 
-    def testBranch(self):
+    def testBranch(self) -> None:
         self._set_up_branched_trace()
 
         self.interactive.setup()
@@ -1578,7 +1587,7 @@ class InteractiveTest(TestCase):
         stderr = self.stderr.getvalue().strip()
         self.assertIn("Branch number invalid", stderr)
 
-    def testBranchPrefixLengthChanges(self):
+    def testBranchPrefixLengthChanges(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         instance = self.fakes.instance()
@@ -1687,19 +1696,34 @@ class InteractiveTest(TestCase):
         self.assertIn("[*] prev_call : result", output)
         self.assertIn("        [1 hops: source1]", output)
 
-    def testCurrentBranchIndex(self):
+    def testCurrentBranchIndex(self) -> None:
+        # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
         trace_frames = [TraceFrame(id=1), TraceFrame(id=2), TraceFrame(id=3)]
 
         self.interactive.current_trace_frame_index = 0
+        # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+        #  `TraceFrame`.
+        # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
         self.interactive.trace_tuples = [TraceTuple(trace_frame=TraceFrame(id=1))]
 
+        # pyre-fixme[6]: For 1st param expected `List[TraceFrameQueryResult]` but
+        #  got `List[TraceFrame]`.
         self.assertEqual(0, self.interactive._current_branch_index(trace_frames))
+        # pyre-fixme[41]: Cannot reassign final attribute `id`.
         self.interactive.trace_tuples[0].trace_frame.id = 2
+        # pyre-fixme[6]: For 1st param expected `List[TraceFrameQueryResult]` but
+        #  got `List[TraceFrame]`.
         self.assertEqual(1, self.interactive._current_branch_index(trace_frames))
+        # pyre-fixme[41]: Cannot reassign final attribute `id`.
         self.interactive.trace_tuples[0].trace_frame.id = 3
+        # pyre-fixme[6]: For 1st param expected `List[TraceFrameQueryResult]` but
+        #  got `List[TraceFrame]`.
         self.assertEqual(2, self.interactive._current_branch_index(trace_frames))
 
+        # pyre-fixme[41]: Cannot reassign final attribute `id`.
         self.interactive.trace_tuples[0].trace_frame.id = 4
+        # pyre-fixme[6]: For 1st param expected `List[TraceFrameQueryResult]` but
+        #  got `List[TraceFrame]`.
         self.assertEqual(-1, self.interactive._current_branch_index(trace_frames))
 
     def testVerifyEntrypointSelected(self) -> None:
@@ -1725,10 +1749,16 @@ class InteractiveTest(TestCase):
         with self.assertRaises(AssertionError):
             self.interactive._verify_entrypoint_selected()
 
-    def testVerifyMultipleBranches(self):
+    def testVerifyMultipleBranches(self) -> None:
         self.interactive.current_trace_frame_index = 0
         self.interactive.trace_tuples = [
+            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+            #  `TraceFrame`.
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             TraceTuple(trace_frame=TraceFrame(id=1), branches=1),
+            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+            #  `TraceFrame`.
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             TraceTuple(trace_frame=TraceFrame(id=2), branches=2),
         ]
         with self.assertRaises(UserError):
@@ -1740,22 +1770,42 @@ class InteractiveTest(TestCase):
         except UserError:
             self.fail("Unexpected UserError")
 
-    def testAddListOrElementFilterErrors(self):
+    def testAddListOrElementFilterErrors(self) -> None:
         with self.assertRaises(UserError):
             self.interactive._add_list_or_element_filter_to_query(
-                "not a list", None, None, "arg0", int
+                "not a list",
+                # pyre-fixme[6]: For 2nd param expected `Query[Variable[T]]` but got
+                #  `None`.
+                None,
+                # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute` but
+                #  got `None`.
+                None,
+                "arg0",
+                int,
             )
 
         with self.assertRaises(UserError):
             self.interactive._add_list_or_element_filter_to_query(
-                [], None, None, "arg0", str
+                [],
+                # pyre-fixme[6]: For 2nd param expected `Query[Variable[T]]` but got
+                #  `None`.
+                None,
+                # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute` but
+                #  got `None`.
+                None,
+                "arg0",
+                str,
             )
 
-    def testAddListOrStringFilterToQuery(self):
+    def testAddListOrStringFilterToQuery(self) -> None:
         shared_texts = [
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=1, contents="prefix"),
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=2, contents="suffix"),
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=3, contents="prefix_suffix"),
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=4, contents="fix"),
         ]
 
@@ -1766,26 +1816,43 @@ class InteractiveTest(TestCase):
             query = session.query(SharedText.contents)
             self.assertEqual(
                 self.interactive._add_list_or_string_filter_to_query(
-                    ["prefix", "suffix"], query, SharedText.contents, "contents"
+                    ["prefix", "suffix"],
+                    query,
+                    # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
+                    #  but got `str`.
+                    SharedText.contents,
+                    "contents",
                 ).all(),
                 [("prefix",), ("suffix",)],
             )
             self.assertEqual(
                 self.interactive._add_list_or_string_filter_to_query(
-                    ["%prefix%"], query, SharedText.contents, "contents"
+                    ["%prefix%"],
+                    query,
+                    # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
+                    #  but got `str`.
+                    SharedText.contents,
+                    "contents",
                 ).all(),
                 [("prefix",), ("prefix_suffix",)],
             )
             self.assertEqual(
                 self.interactive._add_list_or_string_filter_to_query(
-                    ["%fix%"], query, SharedText.contents, "contents"
+                    ["%fix%"],
+                    query,
+                    # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
+                    #  but got `str`.
+                    SharedText.contents,
+                    "contents",
                 ).all(),
                 [("prefix",), ("suffix",), ("prefix_suffix",), ("fix",)],
             )
 
-    def testCreateIssueOutputStringNoSourcesNoSinks(self):
+    def testCreateIssueOutputStringNoSourcesNoSinks(self) -> None:
         issue = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
             location=SourceLocation(1, 2, 3),
@@ -1794,22 +1861,40 @@ class InteractiveTest(TestCase):
             message="root",
             min_trace_length_to_sources=1,
             min_trace_length_to_sinks=1,
+            # pyre-fixme[6]: For 10th param expected `frozenset[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `frozenset[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `frozenset[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `frozenset[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `frozenset[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
         sinks = ["sink1", "sink2"]
         features = []
         result = self.interactive._create_issue_output_string(
-            issue, sources, sinks, features
+            issue,
+            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            sources,
+            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
+            sinks,
+            # pyre-fixme[6]: For 4th param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            features,
         )
         self.assertIn("Sources: No sources", result)
         self.assertIn("Sinks: sink1", result)
@@ -1817,14 +1902,24 @@ class InteractiveTest(TestCase):
         sources = ["source1", "source2"]
         sinks = []
         result = self.interactive._create_issue_output_string(
-            issue, sources, sinks, features
+            issue,
+            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got `List[str]`.
+            sources,
+            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            sinks,
+            # pyre-fixme[6]: For 4th param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            features,
         )
         self.assertIn("Sources: source1", result)
         self.assertIn("Sinks: No sinks", result)
 
-    def testCreateIssueOutputStringNoFeatures(self):
+    def testCreateIssueOutputStringNoFeatures(self) -> None:
         issue = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
             location=SourceLocation(1, 2, 3),
@@ -1833,22 +1928,40 @@ class InteractiveTest(TestCase):
             message="root",
             min_trace_length_to_sources=1,
             min_trace_length_to_sinks=1,
+            # pyre-fixme[6]: For 10th param expected `frozenset[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `frozenset[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `frozenset[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `frozenset[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `frozenset[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
         sinks = ["sink1"]
         features = []
         result = self.interactive._create_issue_output_string(
-            issue, sources, sinks, features
+            issue,
+            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            sources,
+            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
+            sinks,
+            # pyre-fixme[6]: For 4th param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            features,
         )
         self.assertIn("Features: No features", result)
 
@@ -1856,13 +1969,22 @@ class InteractiveTest(TestCase):
         sinks = ["sink1"]
         features = ["via:feature1"]
         result = self.interactive._create_issue_output_string(
-            issue, sources, sinks, features
+            issue,
+            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            sources,
+            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
+            sinks,
+            # pyre-fixme[6]: For 4th param expected `Set[str]` but got `List[str]`.
+            features,
         )
         self.assertIn("Features: via:feature1", result)
 
-    def testCreateIssueOutputStringTraceLength(self):
+    def testCreateIssueOutputStringTraceLength(self) -> None:
         issue1 = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
             location=SourceLocation(1, 2, 3),
@@ -1871,27 +1993,47 @@ class InteractiveTest(TestCase):
             message="root",
             min_trace_length_to_sources=0,
             min_trace_length_to_sinks=6,
+            # pyre-fixme[6]: For 10th param expected `frozenset[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `frozenset[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `frozenset[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `frozenset[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `frozenset[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
         sinks = ["sink1", "sink2"]
         features = []
         result = self.interactive._create_issue_output_string(
-            issue1, sources, sinks, features
+            issue1,
+            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            sources,
+            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
+            sinks,
+            # pyre-fixme[6]: For 4th param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            features,
         )
         self.assertIn("Min Trace Length: Source (0) | Sink (6)", result)
 
         issue2 = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
             location=SourceLocation(1, 2, 3),
@@ -1900,31 +2042,50 @@ class InteractiveTest(TestCase):
             message="root",
             min_trace_length_to_sources=3,
             min_trace_length_to_sinks=1,
+            # pyre-fixme[6]: For 10th param expected `frozenset[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `frozenset[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `frozenset[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `frozenset[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `frozenset[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             first_seen="2001-02-24 16:31:27.1234",
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
         sinks = ["sink1", "sink2"]
         result = self.interactive._create_issue_output_string(
-            issue2, sources, sinks, features
+            issue2,
+            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            sources,
+            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
+            sinks,
+            # pyre-fixme[6]: For 4th param expected `Set[str]` but got
+            #  `List[typing.Any]`.
+            features,
         )
         self.assertIn("Min Trace Length: Source (3) | Sink (1)", result)
 
-    def testListSourceCode(self):
+    def testListSourceCode(self) -> None:
         mock_data = """if this_is_true:
     print("This was true")
 else:
     print("This was false")
         """
         self.interactive.setup()
+        # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.
         self.interactive.current_issue_instance_id = 1
 
         self.interactive.current_trace_frame_index = 0
@@ -1977,8 +2138,9 @@ else:
                 ],
             )
 
-    def testListSourceCodeFileNotFound(self):
+    def testListSourceCodeFileNotFound(self) -> None:
         self.interactive.setup()
+        # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.
         self.interactive.current_issue_instance_id = 1
 
         self.interactive.current_trace_frame_index = 0
@@ -2001,7 +2163,7 @@ else:
             self.assertIn("Couldn't open", self.stderr.getvalue())
             self.assertNotIn("file.py", self.stdout.getvalue())
 
-    def testGroupTraceFrames(self):
+    def testGroupTraceFrames(self) -> None:
         trace_frames = [
             TraceFrameQueryResult(
                 id=DBID(1),
@@ -2057,7 +2219,7 @@ else:
             [5], [int(frame.id) for frame in buckets[("caller2", "port3")]]
         )
 
-    def testListTracesBasic(self):
+    def testListTracesBasic(self) -> None:
         self.fakes.run()
         post1 = self.fakes.postcondition(
             caller="caller1", caller_port="port1", callee="callee1", callee_port="port1"
@@ -2076,6 +2238,7 @@ else:
         )
         self.fakes.save_all(self.db)
 
+        # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.
         self.interactive._current_run_id = 1
         self._clear_stdout()
         self.interactive.frames(kind=TraceKind.POSTCONDITION)
@@ -2099,7 +2262,7 @@ else:
         self.interactive.frames(kind=TraceKind.PRECONDITION)
         self.assertEqual(self.stdout.getvalue().strip(), "No trace frames found.")
 
-    def testListTracesFilterCallersCallees(self):
+    def testListTracesFilterCallersCallees(self) -> None:
         run = self.fakes.run()
         frames = self._basic_trace_frames()
         self.fakes.save_all(self.db)
@@ -2108,6 +2271,7 @@ else:
             session.add(run)
             session.commit()
 
+        # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.
         self.interactive._current_run_id = 1
         self._clear_stdout()
         self.interactive.frames(callers=["call2"])
@@ -2133,7 +2297,7 @@ else:
             ],
         )
 
-    def testListFramesWithLimit(self):
+    def testListFramesWithLimit(self) -> None:
         frames = self._set_up_branched_trace()
         self.interactive.run(1)
 
@@ -2154,7 +2318,7 @@ else:
             ],
         )
 
-    def testSetFrame(self):
+    def testSetFrame(self) -> None:
         frames = self._basic_trace_frames()
         sink = self.fakes.sink("sink")
         self.fakes.saver.add_all(
@@ -2184,7 +2348,7 @@ else:
         self.assertNotIn("Trace frame 1", self.stdout.getvalue())
         self.assertIn("Trace frame 2", self.stdout.getvalue())
 
-    def testSetFrameUpdatesRun(self):
+    def testSetFrameUpdatesRun(self) -> None:
         run1 = self.fakes.run()
         frames = [
             self.fakes.precondition(
@@ -2226,9 +2390,13 @@ else:
         self.interactive.frame(int(frames[0].id))
         self.assertEqual(int(self.interactive._current_run_id), 1)
 
-    def testIsBeforeRoot(self):
+    def testIsBeforeRoot(self) -> None:
         self.interactive.trace_tuples = [
+            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+            #  `TraceFrame`.
             TraceTuple(trace_frame=TraceFrame(kind=TraceKind.POSTCONDITION)),
+            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+            #  `TraceFrame`.
             TraceTuple(trace_frame=TraceFrame(kind=TraceKind.PRECONDITION)),
         ]
 
@@ -2238,14 +2406,18 @@ else:
         self.interactive.current_trace_frame_index = 1
         self.assertFalse(self.interactive._is_before_root())
 
-    def testIsRootTraceTuple(self):
+    def testIsRootTraceTuple(self) -> None:
+        # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+        #  `TraceFrame`.
         trace_tuple = TraceTuple(trace_frame=TraceFrame(callee_port="root"))
         self.assertTrue(self.interactive._is_root_trace_tuple(trace_tuple))
 
+        # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+        #  `TraceFrame`.
         trace_tuple = TraceTuple(trace_frame=TraceFrame(callee_port="not_root"))
         self.assertFalse(self.interactive._is_root_trace_tuple(trace_tuple))
 
-    def testParents(self):
+    def testParents(self) -> None:
         self._set_up_branched_trace()
         self.interactive.setup()
 
@@ -2269,7 +2441,7 @@ else:
         self.interactive.parents()
         self.assertIn("Try running from a non-leaf node", self.stderr.getvalue())
 
-    def testParentsSelectParent(self):
+    def testParentsSelectParent(self) -> None:
         self._set_up_branched_trace()
         self.interactive.setup()
 
@@ -2293,7 +2465,7 @@ else:
             ],
         )
 
-    def testUpdateTraceTuplesNewParent(self):
+    def testUpdateTraceTuplesNewParent(self) -> None:
         frames = [
             self.fakes.postcondition(callee="A"),
             self.fakes.postcondition(callee="B"),
@@ -2368,7 +2540,7 @@ else:
         )
         self.assertTrue(self.interactive.trace_tuples[0].placeholder)
 
-    def testDetails(self):
+    def testDetails(self) -> None:
         run = self.fakes.run()
         frames = [
             self.fakes.precondition(
@@ -2401,6 +2573,7 @@ else:
             self.interactive.trace_tuples = [
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[0]))
             ]
+        # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.
         self.interactive.current_issue_instance_id = 1
         self.interactive.current_trace_frame_index = 0
 
@@ -2459,10 +2632,11 @@ else:
         self.assertIn("sink_detail_1", output)
         self.assertIn("sink_detail_2", output)
 
-    def mock_pager(self, output_string):
+    def mock_pager(self, output_string) -> None:
+        # pyre-fixme[16]: `InteractiveTest` has no attribute `pager_calls`.
         self.pager_calls += 1
 
-    def testPager(self):
+    def testPager(self) -> None:
         run = self.fakes.run()
         self.fakes.issue()
         self.fakes.instance()
@@ -2473,6 +2647,7 @@ else:
             session.commit()
 
         # Default is no pager in tests
+        # pyre-fixme[16]: `InteractiveTest` has no attribute `pager_calls`.
         self.pager_calls = 0
         with patch("IPython.core.page.page", self.mock_pager):
             self.interactive.setup()

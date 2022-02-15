@@ -128,7 +128,7 @@ class SourceLocationsType(types.TypeDecorator):
             return None
         return ",".join([SourceLocation.to_string(location) for location in value])
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: str, dialect):
         if value is None or value == "":
             return []
         assert isinstance(value, str), "Invalid SourceLocationsType %s" % str(value)
@@ -208,35 +208,35 @@ class SharedTextKind(enum.Enum):
     sink_detail = enum.auto()
 
     @classproperty
-    def FEATURE(cls):  # noqa
+    def FEATURE(cls) -> "SharedTextKind":  # noqa
         return cls.feature
 
     @classproperty
-    def MESSAGE(cls):  # noqa
+    def MESSAGE(cls) -> "SharedTextKind":  # noqa
         return cls.message
 
     @classproperty
-    def SOURCE(cls):  # noqa
+    def SOURCE(cls) -> "SharedTextKind":  # noqa
         return cls.source
 
     @classproperty
-    def SINK(cls):  # noqa
+    def SINK(cls) -> "SharedTextKind":  # noqa
         return cls.sink
 
     @classproperty
-    def CALLABLE(cls):  # noqa
+    def CALLABLE(cls) -> "SharedTextKind":  # noqa
         return cls.callable
 
     @classproperty
-    def FILENAME(cls):  # noqa
+    def FILENAME(cls) -> "SharedTextKind":  # noqa
         return cls.filename
 
     @classproperty
-    def SOURCE_DETAIL(cls):  # noqa
+    def SOURCE_DETAIL(cls) -> "SharedTextKind":  # noqa
         return cls.source_detail
 
     @classproperty
-    def SINK_DETAIL(cls):  # noqa
+    def SINK_DETAIL(cls) -> "SharedTextKind":  # noqa
         return cls.sink_detail
 
     @classmethod
@@ -410,11 +410,11 @@ class TraceKind(enum.Enum):
     postcondition = enum.auto()
 
     @classproperty
-    def PRECONDITION(cls):  # noqa
+    def PRECONDITION(cls) -> "TraceKind":  # noqa
         return cls.precondition
 
     @classproperty
-    def POSTCONDITION(cls):  # noqa
+    def POSTCONDITION(cls) -> "TraceKind":  # noqa
         return cls.postcondition
 
     @classmethod
@@ -583,23 +583,23 @@ class IssueStatus(enum.Enum):
     do_not_care = enum.auto()
 
     @classproperty
-    def UNCATEGORIZED(cls):  # noqa
+    def UNCATEGORIZED(cls) -> "IssueStatus":  # noqa
         return cls.uncategorized
 
     @classproperty
-    def BAD_PRACTICE(cls):  # noqa
+    def BAD_PRACTICE(cls) -> "IssueStatus":  # noqa
         return cls.bad_practice
 
     @classproperty
-    def FALSE_POSITIVE(cls):  # noqa
+    def FALSE_POSITIVE(cls) -> "IssueStatus":  # noqa
         return cls.false_positive
 
     @classproperty
-    def VALID_BUG(cls):  # noqa
+    def VALID_BUG(cls) -> "IssueStatus":  # noqa
         return cls.valid_bug
 
     @classproperty
-    def DO_NOT_CARE(cls):  # noqa
+    def DO_NOT_CARE(cls) -> "IssueStatus":  # noqa
         return cls.do_not_care
 
 
@@ -707,19 +707,19 @@ class RunStatus(enum.Enum):
     failed = enum.auto()
 
     @classproperty
-    def FINISHED(cls):  # noqa
+    def FINISHED(cls) -> "RunStatus":  # noqa
         return cls.finished
 
     @classproperty
-    def INCOMPLETE(cls):  # noqa
+    def INCOMPLETE(cls) -> "RunStatus":  # noqa
         return cls.incomplete
 
     @classproperty
-    def SKIPPED(cls):  # noqa
+    def SKIPPED(cls) -> "RunStatus":  # noqa
         return cls.skipped
 
     @classproperty
-    def FAILED(cls):  # noqa
+    def FAILED(cls) -> "RunStatus":  # noqa
         return cls.failed
 
 
@@ -1347,11 +1347,11 @@ class WarningCodeCategory(enum.Enum):
     code_smell = enum.auto()
 
     @classproperty
-    def BUG(cls):  # noqa
+    def BUG(cls) -> "WarningCodeCategory":  # noqa
         return cls.bug
 
     @classproperty
-    def CODE_SMELL(cls):  # noqa
+    def CODE_SMELL(cls) -> "WarningCodeCategory":  # noqa
         return cls.code_smell
 
 
