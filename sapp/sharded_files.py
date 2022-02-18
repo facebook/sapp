@@ -129,8 +129,7 @@ class ShardedFile(object):
     def _find_unambiguous_shard_total(
         self,
         pcomps: ShardedFileComponents,
-        # pyre-fixme[2]: Parameter must be annotated.
-        pattern,
+        pattern: str,
     ) -> int:
         dir = pcomps.directory
         if not os.path.isdir(dir):
