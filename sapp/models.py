@@ -683,6 +683,13 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         nullable=True,
     )
 
+    triage_duration: Column[int] = Column(
+        BIGINT(20, unsigned=True),
+        doc="duration in seconds spent triaging",
+        nullable=False,
+        server_default="0",
+    )
+
     triaged_by_fbid: Column[Optional[int]] = Column(
         BIGINT(unsigned=True),
         nullable=True,
