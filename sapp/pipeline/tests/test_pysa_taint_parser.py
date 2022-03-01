@@ -78,6 +78,13 @@ class TestParser(unittest.TestCase):
                 "end": 13,
                 "filename": "foo.py",
                 "message": "[UserControlled] to [RCE]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
                 "traces": [
                   {
                     "name": "forward",
@@ -150,7 +157,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="[UserControlled] to [RCE]",
                     callable="foo.bar",
-                    handle="foo.bar:1|12|13:1:4f2c49226090f13a",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
                     filename="foo.py",
                     callable_line=10,
                     line=11,
@@ -218,6 +225,13 @@ class TestParser(unittest.TestCase):
                 "end": 13,
                 "filename": "foo.py",
                 "message": "[UserControlled] to [RCE]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
                 "traces": [
                   {
                     "name": "forward",
@@ -321,7 +335,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="[UserControlled] to [RCE]",
                     callable="foo.bar",
-                    handle="foo.bar:1|12|13:1:4f2c49226090f13a",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
                     filename="foo.py",
                     callable_line=10,
                     line=11,
@@ -426,6 +440,13 @@ class TestParser(unittest.TestCase):
                 "end": 13,
                 "filename": "foo.py",
                 "message": "[UserControlled] to [RCE]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
                 "traces": [
                   {
                     "name": "forward",
@@ -488,7 +509,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="[UserControlled] to [RCE]",
                     callable="foo.bar",
-                    handle="foo.bar:1|12|13:1:4f2c49226090f13a",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
                     filename="foo.py",
                     callable_line=10,
                     line=11,
@@ -598,6 +619,13 @@ class TestParser(unittest.TestCase):
                 "end": 13,
                 "filename": "foo.py",
                 "message": "[UserControlled] to [RCE]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
                 "traces": [
                   {
                     "name": "forward",
@@ -670,7 +698,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="[UserControlled] to [RCE]",
                     callable="foo.bar",
-                    handle="foo.bar:1|12|13:1:4f2c49226090f13a",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
                     filename="foo.py",
                     callable_line=10,
                     line=11,
@@ -774,6 +802,13 @@ class TestParser(unittest.TestCase):
                 "end": 13,
                 "filename": "foo.py",
                 "message": "[UserControlled, Header] to [RCE, SQL]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
                 "traces": [
                   {
                     "name": "forward",
@@ -852,7 +887,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="[UserControlled, Header] to [RCE, SQL]",
                     callable="foo.bar",
-                    handle="foo.bar:1|12|13:1:4f2c49226090f13a",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
                     filename="foo.py",
                     callable_line=10,
                     line=11,
@@ -926,6 +961,13 @@ class TestParser(unittest.TestCase):
                 "end": 13,
                 "filename": "foo.py",
                 "message": "[UserControlled] to [RCE]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
                 "traces": [
                   {
                     "name": "forward",
@@ -980,7 +1022,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="[UserControlled] to [RCE]",
                     callable="foo.bar",
-                    handle="foo.bar:1|12|13:1:4f2c49226090f13a",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
                     filename="foo.py",
                     callable_line=10,
                     line=11,

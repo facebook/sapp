@@ -266,6 +266,10 @@ class Parser(BaseParser):
         )
 
     def _generate_issue_master_handle(self, issue: Dict[str, Any]) -> str:
+        if "master_handle" in issue:
+            return issue["master_handle"]
+
+        # For backward compatibility.
         line = issue["line"] - issue["callable_line"]
         return self.compute_master_handle(
             callable=issue["callable"],
