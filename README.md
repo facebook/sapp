@@ -10,6 +10,8 @@ SAPP stands for Static Analysis Post Processor. SAPP takes the raw results of [P
   <img src="https://user-images.githubusercontent.com/18099289/145729070-f21f699b-22f7-4c3f-a9d3-6f547575c55b.png" width="620px">
 </p>
 
+SAPP is also available on [GitHub Marketplace as a GitHub Action](https://github.com/marketplace/actions/sapp-action)
+
 ## Installation
 
 To run SAPP, you will need [Python 3.7 or later](https://www.python.org/getit/). SAPP can be installed through [PyPI](https://pypi.org/project/fb-sapp/) with `pip install fb-sapp`.
