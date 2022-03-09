@@ -1168,6 +1168,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
     )
 
     leaves = association_proxy("leaf_assoc", "leaves")
+    lengths = association_proxy("leaf_assoc", "trace_length")
 
     leaf_assoc = relationship(
         "TraceFrameLeafAssoc",
