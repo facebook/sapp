@@ -100,8 +100,7 @@ class ShardedFile(object):
     The list of shards is available in shard_file_names.
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, pattern) -> None:
+    def __init__(self, pattern: str) -> None:
         """
         Determine shards from pattern and record errors.
         """
