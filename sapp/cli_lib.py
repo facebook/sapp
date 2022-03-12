@@ -20,6 +20,7 @@ from .context import Context, pass_context
 from .db import DB
 from .extensions import prompt_extension
 from .filesystem import find_root
+from .json_cmd import json_cmd
 from .models import PrimaryKeyGenerator
 from .pipeline import Pipeline
 from .pipeline.add_features import AddFeatures
@@ -340,4 +341,5 @@ commands: List[Callable[[], None]] = [
     server,
     filter,
     update,
+    json_cmd,
 ]

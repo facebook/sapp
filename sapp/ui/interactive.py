@@ -33,7 +33,7 @@ from IPython import paths
 from IPython.core import page
 from prompt_toolkit import prompt
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit.completion import PathCompleter, WordCompleter
 from prompt_toolkit.history import FileHistory, History
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
@@ -49,6 +49,7 @@ from .. import queries
 from ..analysis_output import AnalysisOutput, AnalysisOutputError
 from ..db import DB
 from ..decorators import UserError, catch_keyboard_interrupt, catch_user_error
+from ..json_diagnostics import JSONDiagnostics, JSONDiagnosticsException
 from ..models import (
     DBID,
     Issue,
@@ -106,7 +107,6 @@ leaves               list all leaves of issues for the selected run
 show                 show info about selected issue or trace frame
 
 == Selection commands ==
-analysis_output DIRS sets the location of the analysis output
 run ID               select a specific run for browsing issues
 latest_run KIND      sets run to the latest of the specified kind
 issue ID             select a specific issue for browsing a trace
@@ -123,6 +123,10 @@ list                 show source code at the current trace frame
 == Debugging commands ==
 parents              show trace frames that call the current trace frame
 details              show additional information about the current trace frame
+
+== Analysis output commands ==
+analysis_output DIRS sets the location of the analysis output
+json CALLABLE        show the original json output for the matching callable
 """
     welcome_message = "Interactive issue exploration. Type 'help' for help."
 
@@ -164,11 +168,14 @@ details              show additional information about the current trace frame
             "details": self.details,
             "analysis_output": self.analysis_output,
             "callable": self.callable,
+            "json": self.json,
             self.SELF_SCOPE_KEY: self,
             self.PARSER_CLASS_SCOPE_KEY: parser_class,
         }
+        self.parser_class: Type[BaseParser] = parser_class
         self.repository_directory: str = repository_directory or os.getcwd()
         self.current_analysis_output: Optional[AnalysisOutput] = None
+        self._current_json_diagnostics: Optional[JSONDiagnostics] = None
 
         self._current_run_id: DBID = DBID(-1)
 
@@ -324,6 +331,7 @@ details              show additional information about the current trace frame
                     )
                 ]
             self.current_analysis_output = AnalysisOutput.from_strs(locations)
+            self._current_json_diagnostics = None
         except AnalysisOutputError as e:
             raise UserError(f"Error loading results: {e}")
 
@@ -1684,3 +1692,85 @@ details              show additional information about the current trace frame
         if trace_tuple.placeholder:
             return trace_frame.caller, trace_frame.caller_port
         return trace_frame.callee, trace_frame.callee_port
+
+    def _get_json_diagnostics(self) -> JSONDiagnostics:
+        if not self.current_analysis_output:
+            self.analysis_output()
+
+        current_output = self.current_analysis_output
+        if current_output is None:
+            raise KeyboardInterrupt()
+
+        diagnostics = self._current_json_diagnostics
+        if (
+            not diagnostics
+            or current_output.directory != diagnostics.analysis_output.directory
+        ):
+            diagnostics = JSONDiagnostics(current_output, self.parser_class)
+            try:
+                diagnostics.load()
+            except JSONDiagnosticsException as e:
+                raise UserError(f"File Error {e.file}: {e.description}")
+            self._current_json_diagnostics = diagnostics
+
+        return diagnostics
+
+    def _get_callables(
+        self,
+        user_callable: Optional[str],
+        candidates: Iterable[str],
+        force_interactive: bool = False,
+    ) -> List[str]:
+        if not force_interactive:
+            if user_callable is not None:
+                return [user_callable]
+
+            current_callable = self.callable()
+            if current_callable is not None:
+                return [current_callable.lstrip("\\")]
+
+        return self.prompt(
+            "Callables: ",
+            history_key="json_callables",
+            completer=WordCompleter(list(candidates)),
+            complete_while_typing=False,
+        ).split()
+
+    @catch_keyboard_interrupt()
+    def json(self, callable: Optional[str] = None) -> None:
+        """Show the original json output for callables.
+
+        If run without arguments, it will display the json for the current trace
+        frame.  If no frame is selected, then the caller will be prompted.
+
+        Parameters (optional):
+            callable: Search term to show models for
+
+        A variable called `_json` will be stored in the environment with the
+        results from the latest invocation.
+
+        Usage example:
+            import json
+            json.dump(_json, open("/tmp/file.json", "w"))
+        """
+        diagnostics = self._get_json_diagnostics()
+        candidates = diagnostics.callables()
+
+        callables = self._get_callables(callable, candidates)
+
+        output_pretty = []
+        output_dict = []
+        for callable in callables:
+            entries = diagnostics.entries(callable, pretty_print=True)
+            if len(entries) == 0:
+                print(f"Missing json for {callable}")
+                continue
+
+            output_dict.extend(diagnostics.entries(callable))
+            output_pretty.extend(entries)
+
+        if len(output_pretty) > 0:
+            page.page("".join(output_pretty))
+
+        # pyre-ignore
+        self.scope_vars["_json"] = output_dict
