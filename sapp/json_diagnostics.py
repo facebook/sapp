@@ -99,8 +99,8 @@ class JSONDiagnostics(object):
         self.lookup_table: Optional[LookupTable] = None
         self.parser_class = parser_class
 
-    def load(self, force: bool = False) -> None:
-        self.lookup_table = self._get_lookup_table(force)
+    def load(self, force_generation: bool = False) -> None:
+        self.lookup_table = self._get_lookup_table(force_generation)
 
     def callables(self) -> Iterable[str]:
         lookup_table = self.lookup_table
@@ -139,20 +139,30 @@ class JSONDiagnostics(object):
 
         return entries
 
-    def _load_lookup_table(self, path: str) -> LookupTable:
-        logger.info(f"Loading lookup table from {path}")
+    def _load_lookup_table(self, path: str) -> Optional[LookupTable]:
+        logger.info(f"Loading lookup table from `{path}`")
 
         with open(path, "rb") as fh:
             compressed = fh.read()
         decompressed = zstd.ZstdDecompressor().decompress(compressed)
         table = pickle.loads(decompressed)
+
         if table.version != TABLE_VERSION:
             raise JSONDiagnosticsException(
                 path, f"Unexpected file version {table.version}"
             )
+
+        # Check cache validity.
+        indexed_files = set(table.file_index.values())
+        filenames = set(map(os.path.abspath, self.analysis_output.file_names()))
+        if not filenames.issubset(indexed_files):
+            logger.info("Lookup table is invalidated, ignoring it.")
+            return None
+
         return table
 
     def _save_lookup_table(self, path: str, table: LookupTable) -> None:
+        logger.info(f"Writing lookup table to `{path}`")
         compressed = zstd.ZstdCompressor(threads=-1).compress(
             pickle.dumps(table, protocol=pickle.HIGHEST_PROTOCOL)
         )
@@ -162,6 +172,7 @@ class JSONDiagnostics(object):
         os.rename(tmp_name, path)
 
     def _generate_lookup_table(self) -> LookupTable:
+        logger.info("Generating lookup table")
         filenames = list(map(os.path.abspath, self.analysis_output.file_names()))
 
         table = LookupTable()
@@ -192,11 +203,12 @@ class JSONDiagnostics(object):
 
         return table
 
-    def _get_lookup_table(self, force: bool) -> LookupTable:
-        if os.path.exists(self.lookup_table_path) and not force:
-            return self._load_lookup_table(self.lookup_table_path)
+    def _get_lookup_table(self, force_generation: bool) -> LookupTable:
+        if os.path.exists(self.lookup_table_path) and not force_generation:
+            table = self._load_lookup_table(self.lookup_table_path)
+            if table is not None:
+                return table
 
-        logger.info(f"Generating lookup table {self.lookup_table_path}")
-        entries = self._generate_lookup_table()
-        self._save_lookup_table(self.lookup_table_path, entries)
-        return entries
+        table = self._generate_lookup_table()
+        self._save_lookup_table(self.lookup_table_path, table)
+        return table
