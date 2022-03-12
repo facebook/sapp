@@ -315,21 +315,23 @@ json CALLABLE        show the original json output for the matching callable
 
     @catch_keyboard_interrupt()
     @catch_user_error()
-    def analysis_output(self, locations: Optional[List[str]] = None) -> None:
+    def analysis_output(
+        self, locations: Optional[Union[str, List[str]]] = None
+    ) -> None:
         """Sets the location of the output from the static analysis tool.
 
         Parameters:
             locations: List[str]   Filesystem locations for the results.
         """
         try:
-            if not locations:
-                locations = [
-                    self.prompt(
-                        "Analysis results: ",
-                        history_key="analysis_results",
-                        completer=PathCompleter(),
-                    )
-                ]
+            if locations is None:
+                locations = self.prompt(
+                    "Analysis results: ",
+                    history_key="analysis_results",
+                    completer=PathCompleter(),
+                )
+            if isinstance(locations, str):
+                locations = [locations]
             self.current_analysis_output = AnalysisOutput.from_strs(locations)
             self._current_json_diagnostics = None
         except AnalysisOutputError as e:
