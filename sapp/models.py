@@ -176,6 +176,7 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
             "foreign(IssueInstance.id)"
         ),
         uselist=False,
+        viewonly=True,
     )
 
     trace_frame = relationship(
@@ -184,6 +185,7 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
             "IssueInstanceTraceFrameAssoc.trace_frame_id == foreign(TraceFrame.id)"
         ),
         uselist=False,
+        viewonly=True,
     )
 
     @classmethod
@@ -260,6 +262,7 @@ class Feature(Base, PrepareMixin, RecordMixin):
     features_issue_instance = relationship(
         "IssueInstanceFeatureAssoc",
         primaryjoin=("Feature.id == foreign(IssueInstanceFeatureAssoc.feature_id)"),
+        viewonly=True,
     )
 
     data: Column[Union[List[Any], Dict[str, Any]]] = Column(
@@ -308,6 +311,7 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         primaryjoin=(
             "SharedText.id == foreign(IssueInstanceSharedTextAssoc.shared_text_id)"
         ),
+        viewonly=True,
     )
 
     trace_frames = association_proxy("shared_text_trace_frame", "trace_frames")
@@ -315,6 +319,7 @@ class SharedText(Base, PrepareMixin, RecordMixin):
     shared_text_trace_frame = relationship(
         "TraceFrameLeafAssoc",
         primaryjoin=("SharedText.id == foreign(TraceFrameLeafAssoc.leaf_id)"),
+        viewonly=True,
     )
 
     @classmethod
@@ -359,6 +364,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
             "foreign(IssueInstance.id)"
         ),
         uselist=False,
+        viewonly=True,
     )
 
     shared_text = relationship(
@@ -367,6 +373,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
             "IssueInstanceSharedTextAssoc.shared_text_id == foreign(SharedText.id)"
         ),
         uselist=False,
+        viewonly=True,
     )
 
     @classmethod
@@ -391,12 +398,14 @@ class IssueInstanceFeatureAssoc(Base, PrepareMixin, RecordMixin):
             "IssueInstanceFeatureAssoc.issue_instance_id ==" "foreign(IssueInstance.id)"
         ),
         uselist=False,
+        viewonly=True,
     )
 
     features = relationship(
         "Feature",
         primaryjoin=("IssueInstanceFeatureAssoc.feature_id == foreign(Feature.id)"),
         uselist=False,
+        viewonly=True,
     )
 
     @classmethod
@@ -449,6 +458,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         "SharedText",
         primaryjoin="foreign(SharedText.id) == IssueInstance.filename_id",
         uselist=False,
+        viewonly=True,
     )
 
     callable_id = Column(BIGDBIDType, nullable=False, server_default="0", default=0)
@@ -457,6 +467,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         "SharedText",
         primaryjoin="foreign(SharedText.id) == IssueInstance.callable_id",
         uselist=False,
+        viewonly=True,
     )
 
     is_new_issue: Column[Optional[bool]] = Column(
@@ -474,6 +485,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         "Issue",
         primaryjoin="foreign(Issue.id) == IssueInstance.issue_id",
         uselist=False,
+        viewonly=True,
     )
 
     fix_info_id = Column(BIGDBIDType, nullable=True)
@@ -482,6 +494,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         "IssueInstanceFixInfo",
         primaryjoin=("foreign(IssueInstanceFixInfo.id) == IssueInstance.fix_info_id"),
         uselist=False,
+        viewonly=True,
     )
 
     message_id = Column(BIGDBIDType, nullable=True)
@@ -490,6 +503,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         "SharedText",
         primaryjoin="foreign(SharedText.id) == IssueInstance.message_id",
         uselist=False,
+        viewonly=True,
     )
 
     trace_frames = association_proxy("issue_instance_trace_frame", "trace_frame")
@@ -500,6 +514,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
             "IssueInstance.id == "
             "foreign(IssueInstanceTraceFrameAssoc.issue_instance_id)"
         ),
+        viewonly=True,
     )
 
     shared_texts = association_proxy("issue_instance_shared_text", "shared_text")
@@ -510,6 +525,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
             "IssueInstance.id == "
             "foreign(IssueInstanceSharedTextAssoc.issue_instance_id)"
         ),
+        viewonly=True,
     )
 
     features = association_proxy("issue_instance_feature", "features")
@@ -519,6 +535,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
             "IssueInstance.id == "
             "foreign(IssueInstanceFeatureAssoc.issue_instance_id)"
         ),
+        viewonly=True,
     )
 
     min_trace_length_to_sources: Column[Optional[int]] = Column(
@@ -631,7 +648,9 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     instances = relationship(
-        "IssueInstance", primaryjoin="Issue.id == foreign(IssueInstance.issue_id)"
+        "IssueInstance",
+        primaryjoin="Issue.id == foreign(IssueInstance.issue_id)",
+        viewonly=True,
     )
 
     first_seen: Column[datetime] = Column(
@@ -839,6 +858,7 @@ class Run(Base):
         "IssueInstance",
         primaryjoin="Run.id == foreign(IssueInstance.run_id)",
         backref="run",
+        viewonly=True,
     )
 
     status: Column[str] = Column(
@@ -1007,11 +1027,13 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
         "MetaRun",
         primaryjoin=("MetaRunToRunAssoc.meta_run_id == foreign(MetaRun.id)"),
         uselist=False,
+        viewonly=True,
     )
     run = relationship(
         "Run",
         primaryjoin=("MetaRunToRunAssoc.run_id == foreign(Run.id)"),
         uselist=False,
+        viewonly=True,
     )
 
     run_label = Column(
@@ -1044,12 +1066,14 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
         "TraceFrame",
         primaryjoin=("TraceFrameLeafAssoc.trace_frame_id == foreign(TraceFrame.id)"),
         uselist=False,
+        viewonly=True,
     )
 
     leaves = relationship(
         "SharedText",
         primaryjoin="TraceFrameLeafAssoc.leaf_id == foreign(SharedText.id)",
         uselist=False,
+        viewonly=True,
     )
 
     @classmethod
@@ -1071,6 +1095,7 @@ class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
         "IssueInstance",
         primaryjoin=("foreign(IssueInstance.fix_info_id) == IssueInstanceFixInfo.id"),
         uselist=False,
+        viewonly=True,
     )
 
 
@@ -1094,6 +1119,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         "SharedText",
         primaryjoin="foreign(SharedText.id) == TraceFrame.caller_id",
         uselist=False,
+        viewonly=True,
     )
 
     # pyre-fixme[8]: Attribute has type `str`; used as `Column[str]`.
@@ -1110,6 +1136,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         "SharedText",
         primaryjoin="foreign(SharedText.id) == TraceFrame.callee_id",
         uselist=False,
+        viewonly=True,
     )
 
     callee_location = Column(
@@ -1165,6 +1192,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         "TraceFrameAnnotation",
         primaryjoin=("TraceFrame.id == foreign(TraceFrameAnnotation.trace_frame_id)"),
         uselist=True,
+        viewonly=True,
     )
 
     leaves = association_proxy("leaf_assoc", "leaves")
@@ -1174,6 +1202,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         "TraceFrameLeafAssoc",
         primaryjoin=("TraceFrame.id == foreign(TraceFrameLeafAssoc.trace_frame_id)"),
         uselist=True,
+        viewonly=True,
     )
 
     issue_instances = association_proxy("trace_frame_issue_instance", "issue_instance")
@@ -1183,6 +1212,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         primaryjoin=(
             "TraceFrame.id == foreign(IssueInstanceTraceFrameAssoc.trace_frame_id)"
         ),
+        viewonly=True,
     )
 
     leaf_mapping: Set[LeafMapping] = set()
@@ -1263,6 +1293,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
         "SharedText",
         primaryjoin="foreign(SharedText.id) == TraceFrameAnnotation.leaf_id",
         uselist=False,
+        viewonly=True,
     )
 
     # pyre-fixme[8]: Attribute has type `Optional[str]`; used as `Column[str]`.
@@ -1285,6 +1316,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
         "TraceFrame",
         primaryjoin=("TraceFrame.id == foreign(TraceFrameAnnotation.trace_frame_id)"),
         uselist=True,
+        viewonly=True,
     )
 
     child_trace_frames = association_proxy(
@@ -1296,6 +1328,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
             "TraceFrameAnnotation.id == "
             "foreign(TraceFrameAnnotationTraceFrameAssoc.trace_frame_annotation_id)"
         ),
+        viewonly=True,
     )
 
 
@@ -1323,6 +1356,7 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
             "foreign(TraceFrameAnnotation.id)"
         ),
         uselist=False,
+        viewonly=True,
     )
 
     trace_frame = relationship(
@@ -1332,6 +1366,7 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
             "foreign(TraceFrame.id)"
         ),
         uselist=False,
+        viewonly=True,
     )
 
     @classmethod
@@ -1489,6 +1524,7 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
         "Run",
         primaryjoin=("RunOrigin.run_id == foreign(Run.id)"),
         uselist=False,
+        viewonly=True,
     )
 
     @classmethod
