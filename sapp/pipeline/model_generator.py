@@ -472,19 +472,24 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             feature_record = self._get_shared_text(SharedTextKind.FEATURE, f.name)
             self.graph.add_trace_frame_leaf_assoc(trace_frame, feature_record, 0)
 
-            for location in f.locations:
-                self.graph.add_trace_annotation(
-                    TraceFrameAnnotation.Record(
-                        id=DBID(),
-                        trace_frame_id=trace_frame.id,
-                        location=location,
-                        kind=None,
-                        message=f.name,
-                        leaf_id=None,
-                        link=None,
-                        trace_key=None,
+            if f.locations:
+                # To make the UI clearer, only annotate a single feature per line
+                loc_dict = {}
+                for loc in f.locations:
+                    loc_dict[loc.line_no] = loc
+                for loc in loc_dict.values():
+                    self.graph.add_trace_annotation(
+                        TraceFrameAnnotation.Record(
+                            id=DBID(),
+                            trace_frame_id=trace_frame.id,
+                            location=loc,
+                            kind=None,
+                            message=f.name,
+                            leaf_id=None,
+                            link=None,
+                            trace_key=None,
+                        )
                     )
-                )
 
         self.graph.add_trace_frame(trace_frame)
         self._generate_trace_annotations(
