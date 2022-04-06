@@ -8,22 +8,22 @@
 import json
 import logging
 from collections import defaultdict
-from typing import DefaultDict, Dict, Iterable, List, Optional, Set, Tuple, Any
+from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 from .bulk_saver import BulkSaver
 from .models import (
     DBID,
-    SHARED_TEXT_LENGTH,
-    LeafMapping,
+    Feature,
     Issue,
     IssueInstance,
     IssueInstanceFixInfo,
+    LeafMapping,
+    SHARED_TEXT_LENGTH,
     SharedText,
     SharedTextKind,
     TraceFrame,
     TraceFrameAnnotation,
     TraceKind,
-    Feature,
 )
 
 log: logging.Logger = logging.getLogger("sapp")

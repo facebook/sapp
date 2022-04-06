@@ -7,8 +7,7 @@ from unittest import TestCase
 
 from ... import queries
 from ...db import DB, DBType
-from ...models import IssueInstanceSharedTextAssoc
-from ...models import create as create_models
+from ...models import create as create_models, IssueInstanceSharedTextAssoc
 from ...tests.fake_object_generator import FakeObjectGenerator
 from ..issues import Instance
 

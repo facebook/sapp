@@ -7,7 +7,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, 
 
 import graphene
 from graphql.execution.base import ResolveInfo
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import aliased, Session
 from sqlalchemy.orm.util import AliasedClass
 
 from ..models import (

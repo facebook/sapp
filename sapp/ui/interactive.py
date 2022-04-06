@@ -38,7 +38,7 @@ from prompt_toolkit.history import FileHistory, History
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import get_lexer_for_filename
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import aliased, Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.query import Query as RawQuery
 from sqlalchemy.orm.util import AliasedClass
@@ -48,9 +48,10 @@ from sqlalchemy.sql.expression import or_
 from .. import queries
 from ..analysis_output import AnalysisOutput, AnalysisOutputError
 from ..db import DB
-from ..decorators import UserError, catch_keyboard_interrupt, catch_user_error
+from ..decorators import catch_keyboard_interrupt, catch_user_error, UserError
 from ..json_diagnostics import JSONDiagnostics, JSONDiagnosticsException
 from ..models import (
+    create as create_models,
     DBID,
     Issue,
     IssueInstance,
@@ -62,10 +63,8 @@ from ..models import (
     TraceFrame,
     TraceKind,
 )
-from ..models import create as create_models
 from ..pipeline.base_parser import BaseParser
-from . import issues as issues_module
-from . import trace
+from . import issues as issues_module, trace
 from .issues import Instance, IssueQueryResult
 from .trace import TraceFrameQueryResult, TraceTuple
 

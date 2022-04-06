@@ -8,9 +8,9 @@ import logging
 import re
 import sys
 from typing import (
-    IO,
     Any,
     Dict,
+    IO,
     Iterable,
     List,
     NamedTuple,

@@ -14,14 +14,8 @@ from graphql.execution.base import ResolveInfo
 
 from ..filter import Filter
 from ..models import DBID, TraceFrame, TraceKind
-from . import filters as filters_module
-from . import issues, run, trace, typeahead
-from .issues import (
-    Instance,
-    IssueQueryResult,
-    IssueQueryResultType,
-    update_status,
-)
+from . import filters as filters_module, issues, run, trace, typeahead
+from .issues import Instance, IssueQueryResult, IssueQueryResultType, update_status
 from .trace import TraceFrameQueryResult, TraceFrameQueryResultType
 
 

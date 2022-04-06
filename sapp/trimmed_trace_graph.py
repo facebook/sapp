@@ -10,11 +10,11 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from .models import (
     DBID,
+    IssueInstance,
     SharedTextKind,
     TraceFrame,
     TraceFrameAnnotation,
     TraceKind,
-    IssueInstance,
 )
 from .trace_graph import TraceGraph
 

@@ -12,8 +12,8 @@ from .. import (
     ParseConditionTuple,
     ParseIssueConditionTuple,
     ParseIssueTuple,
-    SourceLocation,
     ParseTraceFeature,
+    SourceLocation,
 )
 from ..base_parser import ParseType
 from ..mariana_trench_parser import Parser

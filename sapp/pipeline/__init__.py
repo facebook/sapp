@@ -25,9 +25,9 @@ from ..sarif_types import SARIFRegionObject
 
 
 if sys.version_info >= (3, 8):
-    from typing import TypedDict, Literal
+    from typing import Literal, TypedDict
 else:
-    from typing_extensions import TypedDict, Literal
+    from typing_extensions import Literal, TypedDict
 
 
 # pyre-fixme[5]: Global expression must be annotated.

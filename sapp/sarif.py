@@ -8,7 +8,7 @@
 import json
 from dataclasses import dataclass, field
 from json import JSONEncoder
-from typing import Set, Dict, Union, List, Tuple
+from typing import Dict, List, Set, Tuple, Union
 
 from sqlalchemy.orm import Session
 from typing_extensions import TypeAlias

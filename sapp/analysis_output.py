@@ -9,7 +9,7 @@ import json
 import os
 from glob import glob
 from pathlib import Path
-from typing import IO, Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, IO, Iterable, List, NamedTuple, Optional, Tuple
 
 from .sharded_files import ShardedFile
 

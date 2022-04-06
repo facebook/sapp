@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from ...db import DB, DBType
 from ...decorators import UserError
 from ...models import (
+    create as create_models,
     DBID,
     IssueInstanceSharedTextAssoc,
     IssueInstanceTraceFrameAssoc,
@@ -32,7 +33,6 @@ from ...models import (
     TraceFrameLeafAssoc,
     TraceKind,
 )
-from ...models import create as create_models
 from ...pipeline.pysa_taint_parser import Parser
 from ...tests.fake_object_generator import FakeObjectGenerator
 from ..interactive import (

@@ -10,7 +10,7 @@ from typing import Any, Dict, FrozenSet, List, NamedTuple, Optional, Set, Union
 import graphene
 from graphql.execution.base import ResolveInfo
 from sqlalchemy import func
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import aliased, Session
 
 from ..filter import Filter
 from ..models import (
@@ -24,7 +24,7 @@ from ..models import (
     SourceLocation,
 )
 from ..queries import get_warning_message
-from ..sarif_types import SARIFSeverityLevel, SARIFResult
+from ..sarif_types import SARIFResult, SARIFSeverityLevel
 from . import filter_predicates, run
 
 # pyre-fixme[5]: Global expression must be annotated.

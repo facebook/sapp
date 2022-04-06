@@ -6,11 +6,9 @@
 from unittest import TestCase
 
 from ...db import DB, DBType
-from ...models import (
-    create as create_models,
-)
+from ...models import create as create_models
 from ...tests.fake_object_generator import FakeObjectGenerator
-from ..run import EmptyDeletionError, delete_run, runs, latest
+from ..run import delete_run, EmptyDeletionError, latest, runs
 
 
 class RunTest(TestCase):

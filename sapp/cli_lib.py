@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import click
 import click_log
 import IPython
-from click import Parameter, Path, argument, option
+from click import argument, option, Parameter, Path
 from traitlets.config import Config
 
 from .analysis_output import AnalysisOutput

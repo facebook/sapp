@@ -7,7 +7,7 @@
 
 import sys
 from enum import Enum
-from typing import Dict, Union, List
+from typing import Dict, List, Union
 
 
 if sys.version_info >= (3, 10):

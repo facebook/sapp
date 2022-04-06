@@ -22,7 +22,7 @@ from typing import (
 )
 
 from munch import Munch
-from sqlalchemy import Column, String, and_, exc, inspect, or_, types, JSON
+from sqlalchemy import and_, Column, exc, inspect, JSON, or_, String, types
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.engine import Dialect

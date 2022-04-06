@@ -5,14 +5,14 @@
 # LICENSE file in the root directory of this source tree.
 
 from typing import Generator
-from unittest import TestCase, mock
+from unittest import mock, TestCase
 
 from ..decorators import (
-    UserError,
     catch_keyboard_interrupt,
     catch_user_error,
     log_time,
     retryable,
+    UserError,
 )
 
 

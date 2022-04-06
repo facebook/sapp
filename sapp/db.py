@@ -14,7 +14,7 @@ from typing import Any, Iterator, Optional, Type
 import sqlalchemy
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, Session, sessionmaker
 from sqlalchemy.pool import AssertionPool, Pool
 
 from . import errors

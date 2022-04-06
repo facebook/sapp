@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import TYPE_CHECKING, List, Tuple, Optional
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
 import graphene
 import sqlalchemy
@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..context import Context
 from ..db import DB
-from ..filter import StoredFilter, FilterRecord
+from ..filter import FilterRecord, StoredFilter
 from ..models import DBID, Run, RunStatus
 from ..sarif import SARIF
 from .issues import Instance

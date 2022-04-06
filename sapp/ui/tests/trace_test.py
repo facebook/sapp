@@ -9,11 +9,11 @@ from unittest import TestCase
 
 from ...db import DB, DBType
 from ...models import (
+    create as create_models,
     DBID,
     SharedText,
     SharedTextKind,
     TraceFrameLeafAssoc,
-    create as create_models,
 )
 from ...tests.fake_object_generator import FakeObjectGenerator
 from .. import trace as trace_module

@@ -26,23 +26,23 @@ from sqlalchemy import (
     DateTime,
     Enum,
     Float,
+    func,
     Index,
     Integer,
-    String,
-    func,
-    types,
     JSON,
+    String,
+    types,
 )
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship
+from sqlalchemy.orm import relationship, Session
 
 from .db import DB
 from .db_support import (
-    DBID,
     BIGDBIDType,
+    DBID,
     DBIDType,
     MutableRecordMixin,
     PrepareMixin,

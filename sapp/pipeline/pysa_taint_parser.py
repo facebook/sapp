@@ -26,8 +26,10 @@ import ujson as json
 from .. import errors
 from ..analysis_output import AnalysisOutput, Metadata
 from . import (
-    ParseError,
+    flatten_features,
+    flatten_features_to_parse_trace_feature,
     ParseConditionTuple,
+    ParseError,
     ParseFeature,
     ParseIssueConditionTuple,
     ParseIssueLeaf,
@@ -35,20 +37,18 @@ from . import (
     ParsePosition,
     ParseTypeInterval,
     SourceLocation,
-    flatten_features,
-    flatten_features_to_parse_trace_feature,
 )
 from .base_parser import (
     BaseParser,
     EntryPosition,
-    ParseType,
     log_trace_keyerror_in_generator,
+    ParseType,
 )
 
 if sys.version_info >= (3, 8):
-    from typing import TypedDict, Literal
+    from typing import Literal, TypedDict
 else:
-    from typing_extensions import TypedDict, Literal
+    from typing_extensions import Literal, TypedDict
 
 
 log: logging.Logger = logging.getLogger("sapp")

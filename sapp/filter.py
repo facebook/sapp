@@ -11,7 +11,7 @@ import json
 import sys
 from json import JSONEncoder
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
 from sqlalchemy import Column, String
 

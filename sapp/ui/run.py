@@ -7,11 +7,19 @@ from typing import List
 
 import graphene
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import func, distinct
+from sqlalchemy.sql import distinct, func
 
-from ..models import DBID, IssueInstance, Issue, IssueStatus, MetaRunToRunAssoc
-from ..models import Run as RunColumn
-from ..models import RunOrigin, RunStatus, TraceFrame
+from ..models import (
+    DBID,
+    Issue,
+    IssueInstance,
+    IssueStatus,
+    MetaRunToRunAssoc,
+    Run as RunColumn,
+    RunOrigin,
+    RunStatus,
+    TraceFrame,
+)
 
 
 def latest(session: Session) -> DBID:

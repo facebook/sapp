@@ -12,6 +12,7 @@ import ujson as json
 
 from ..models import (
     DBID,
+    Feature,
     FrameReachability,
     Issue,
     IssueDBID,
@@ -27,7 +28,6 @@ from ..models import (
     TraceFrame,
     TraceFrameAnnotation,
     TraceKind,
-    Feature,
 )
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
@@ -38,10 +38,10 @@ from . import (
     ParseIssueTuple,
     ParseLeaf,
     ParseTraceAnnotation,
+    ParseTraceFeature,
     ParseTypeInterval,
     PipelineStep,
     Summary,
-    ParseTraceFeature,
 )
 
 log: logging.Logger = logging.getLogger("sapp")

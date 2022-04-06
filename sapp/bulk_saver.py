@@ -13,8 +13,10 @@ from .db import DB
 from .decorators import log_time
 from .iterutil import split_every
 from .models import (
+    Feature,
     Issue,
     IssueInstance,
+    IssueInstanceFeatureAssoc,
     IssueInstanceFixInfo,
     IssueInstanceSharedTextAssoc,
     IssueInstanceTraceFrameAssoc,
@@ -24,8 +26,6 @@ from .models import (
     TraceFrameAnnotation,
     TraceFrameAnnotationTraceFrameAssoc,
     TraceFrameLeafAssoc,
-    Feature,
-    IssueInstanceFeatureAssoc,
 )
 
 log: logging.Logger = logging.getLogger("sapp")

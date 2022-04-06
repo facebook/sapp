@@ -7,7 +7,7 @@
 # pyre-strict
 from typing import List, Optional
 
-from sqlalchemy.orm import Session, Query
+from sqlalchemy.orm import Query, Session
 from sqlalchemy.sql import func
 
 from .decorators import UserError
@@ -17,9 +17,9 @@ from .models import (
     IssueInstanceSharedTextAssoc,
     Run,
     RunStatus,
-    WarningMessage,
     SharedText,
     SharedTextKind,
+    WarningMessage,
 )
 
 
