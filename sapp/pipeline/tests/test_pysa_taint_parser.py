@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import io
+import sys
 import unittest
 from typing import Iterable, Union
 
@@ -14,6 +15,7 @@ from .. import (
     ParseIssueTuple,
     ParseTraceFeature,
     SourceLocation,
+    ParseTypeInterval,
 )
 from ..base_parser import ParseType
 from ..pysa_taint_parser import Parser
@@ -90,6 +92,8 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
+                        "receiver_interval": { "lower": 23, "upper": 24 },
+                        "is_self_call": false,
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -119,6 +123,11 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
+                        "caller_interval": {
+                          "lower": 10,
+                          "upper": 11
+                        },
+                        "is_self_call": true,
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -179,7 +188,9 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[ParseTraceFeature("always-via:source-local", [])],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=23, finish=24, preserves_type_context=False
+                            ),
                             annotations=[],
                         )
                     ],
@@ -199,7 +210,9 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[ParseTraceFeature("always-via:sink-local", [])],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0, finish=sys.maxsize, preserves_type_context=True
+                            ),
                             annotations=[],
                         )
                     ],
@@ -237,6 +250,7 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
+                        "receiver_interval": { "lower": 20, "upper": 21 },
                         "root": {
                           "filename": "foo.py",
                           "line": 100,
@@ -256,6 +270,7 @@ class TestParser(unittest.TestCase):
                         ]
                       },
                       {
+                        "receiver_interval": { "lower": 22, "upper": 23 },
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -283,6 +298,7 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
+                        "receiver_interval": { "lower": 30, "upper": 31 },
                         "root": {
                           "filename": "foo.py",
                           "line": 200,
@@ -299,6 +315,7 @@ class TestParser(unittest.TestCase):
                         ]
                       },
                       {
+                        "receiver_interval": { "lower": 32, "upper": 33 },
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -360,7 +377,11 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=20,
+                                finish=21,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                         ParseIssueConditionTuple(
@@ -374,7 +395,11 @@ class TestParser(unittest.TestCase):
                             leaves=[("UserControlled", 2)],
                             titos=[],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=22,
+                                finish=23,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -394,7 +419,11 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=30,
+                                finish=31,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                         ParseIssueConditionTuple(
@@ -408,7 +437,11 @@ class TestParser(unittest.TestCase):
                             leaves=[("RCE", 5)],
                             titos=[],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=32,
+                                finish=33,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -531,7 +564,11 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                         ParseIssueConditionTuple(
@@ -549,7 +586,11 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -569,7 +610,11 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                         ParseIssueConditionTuple(
@@ -587,7 +632,11 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -631,6 +680,7 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
+                        "receiver_interval": { "lower": 40, "upper": 41 },
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -660,6 +710,7 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
+                        "receiver_interval": { "lower": 42, "upper": 43 },
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -720,7 +771,11 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=40,
+                                finish=41,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                         ParseIssueConditionTuple(
@@ -738,7 +793,11 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=40,
+                                finish=41,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -758,7 +817,11 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=42,
+                                finish=43,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                         ParseIssueConditionTuple(
@@ -776,7 +839,11 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=42,
+                                finish=43,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -814,6 +881,7 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
+                        "receiver_interval": { "lower": 50, "upper": 51 },
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -909,7 +977,11 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=50,
+                                finish=51,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -929,7 +1001,11 @@ class TestParser(unittest.TestCase):
                                 )
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -1044,7 +1120,11 @@ class TestParser(unittest.TestCase):
                                 ),
                             ],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -1060,7 +1140,11 @@ class TestParser(unittest.TestCase):
                             leaves=[("RCE", 0)],
                             titos=[],
                             features=[],
-                            type_interval=None,
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
                             annotations=[],
                         ),
                     ],
@@ -1142,7 +1226,13 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_user_controlled" } ],
                             "features": [ { "always-via": "other-direct-source" } ]
                           }
-                        ]
+                        ],
+                        "caller_interval": {
+                          "lower": 10,
+                          "upper": 11
+                        },
+                        "receiver_interval": { "lower": 25, "upper": 30 },
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -1168,7 +1258,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0), ("Header", 0)],
                     caller_port="result",
                     callee_port="source",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=25, finish=30, preserves_type_context=False
+                    ),
                     features=[ParseTraceFeature("always-via:source-local", [])],
                     annotations=[],
                 )
@@ -1206,7 +1298,8 @@ class TestParser(unittest.TestCase):
                             ],
                             "features": [ { "always-via": "direct-source" } ]
                           }
-                        ]
+                        ],
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -1232,7 +1325,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0)],
                     caller_port="result[attribute]",
                     callee_port="source",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1253,7 +1350,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0)],
                     caller_port="result[attribute]",
                     callee_port="source",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1315,7 +1416,9 @@ class TestParser(unittest.TestCase):
                             ],
                             "features": [ { "always-via": "direct-source" } ]
                           }
-                        ]
+                        ],
+                        "receiver_interval": { "lower": 26, "upper": 31 },
+                        "is_self_call": true,
                       }
                     ]
                   }
@@ -1341,7 +1444,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
                     callee_port="source",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=26, finish=31, preserves_type_context=True
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1362,7 +1467,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0), ("Header", 0)],
                     caller_port="result",
                     callee_port="producer:1:result",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=26, finish=31, preserves_type_context=True
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1383,7 +1490,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
                     callee_port="producer:1:result",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=26, finish=31, preserves_type_context=True
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1404,7 +1513,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
                     callee_port="producer:2:result",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=26, finish=31, preserves_type_context=True
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1452,7 +1563,12 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_user_controlled" } ],
                             "features": [ { "always-via": "direct-source" } ]
                           }
-                        ]
+                        ],
+                        "caller_interval": {
+                          "lower": 11,
+                          "upper": 12
+                        },
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -1478,7 +1594,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 2), ("Header", 3)],
                     caller_port="result[field]",
                     callee_port="result[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0, finish=sys.maxsize, preserves_type_context=False
+                    ),
                     features=[],
                     annotations=[],
                 )
@@ -1521,7 +1639,12 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_user_controlled" } ],
                             "features": [ { "always-via": "direct-source" } ]
                           }
-                        ]
+                        ],
+                        "caller_interval": {
+                          "lower": 12,
+                          "upper": 13
+                        },
+                        "is_self_call": true,
                       }
                     ]
                   }
@@ -1547,7 +1670,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 2)],
                     caller_port="result",
                     callee_port="result[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0, finish=sys.maxsize, preserves_type_context=True
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1568,7 +1693,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 2)],
                     caller_port="result",
                     callee_port="result[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0, finish=sys.maxsize, preserves_type_context=True
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1603,7 +1730,8 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_user_controlled" } ],
                             "features": [ { "always-via": "direct-source" } ]
                           }
-                        ]
+                        ],
+                        "is_self_call": false,
                       },
                       {
                         "call": {
@@ -1629,7 +1757,8 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_user_controlled" } ],
                             "features": [ { "always-via": "direct-source" } ]
                           }
-                        ]
+                        ],
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -1655,7 +1784,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
                     callee_port="source",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1676,7 +1809,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 2)],
                     caller_port="result",
                     callee_port="result[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1730,7 +1867,8 @@ class TestParser(unittest.TestCase):
                           "start": 2,
                           "end": 3
                         },
-                        "kinds": [ { "kind": "UserControlled" } ]
+                        "kinds": [ { "kind": "UserControlled" } ],
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -1753,7 +1891,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("UserControlled", 0)],
                     caller_port="result",
                     callee_port="source",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1825,7 +1967,13 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_sql" } ],
                             "features": [ { "always-via": "other-direct-sink" } ]
                           }
-                        ]
+                        ],
+                        "caller_interval": {
+                          "lower": 13,
+                          "upper": 14
+                        },
+                        "receiver_interval": { "lower": 27, "upper": 32 },
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -1851,7 +1999,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("SQL", 0), ("RCE", 0)],
                     caller_port="formal(x)",
                     callee_port="sink",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=27, finish=32, preserves_type_context=False
+                    ),
                     features=[ParseTraceFeature("always-via:local-sink", [])],
                     annotations=[],
                 )
@@ -1889,7 +2039,8 @@ class TestParser(unittest.TestCase):
                             ],
                             "features": [ { "always-via": "direct-sink" } ]
                           }
-                        ]
+                        ],
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -1915,7 +2066,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0)],
                     caller_port="formal(x)",
                     callee_port="sink",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1936,7 +2091,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0)],
                     caller_port="formal(x)",
                     callee_port="sink",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -1997,7 +2156,9 @@ class TestParser(unittest.TestCase):
                             ],
                             "features": [ { "always-via": "direct-sink" } ]
                           }
-                        ]
+                        ],
+                        "receiver_interval": { "lower": 28, "upper": 33 },
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -2023,7 +2184,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0)],
                     caller_port="formal(y)[attribute]",
                     callee_port="sink",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=28, finish=33, preserves_type_context=False
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2044,7 +2207,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0), ("SQL", 0)],
                     caller_port="formal(y)[attribute]",
                     callee_port="producer:1:formal(x)",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=28, finish=33, preserves_type_context=False
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2065,7 +2230,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0)],
                     caller_port="formal(y)[attribute]",
                     callee_port="producer:1:formal(x)",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=28, finish=33, preserves_type_context=False
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2086,7 +2253,9 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0)],
                     caller_port="formal(y)[attribute]",
                     callee_port="producer:2:formal(x)",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=28, finish=33, preserves_type_context=False
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2134,7 +2303,12 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_sink_leaf" } ],
                             "features": [ { "always-via": "direct-sink" } ]
                           }
-                        ]
+                        ],
+                        "caller_interval": {
+                          "lower": 17,
+                          "upper": 18
+                        },
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -2160,7 +2334,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 2), ("SQL", 3)],
                     caller_port="formal(x)",
                     callee_port="formal(y)[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 )
@@ -2209,7 +2387,8 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_sink_leaf" } ],
                             "features": [ { "always-via": "direct-sink" } ]
                           }
-                        ]
+                        ],
+                        "is_self_call": true,
                       }
                     ]
                   }
@@ -2235,7 +2414,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 2), ("SQL", 3)],
                     caller_port="formal(x)",
                     callee_port="formal(y)[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=True,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2256,7 +2439,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 2), ("SQL", 3)],
                     caller_port="formal(x)",
                     callee_port="formal(y)[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=True,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2291,7 +2478,8 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_remote_code_execution" } ],
                             "features": [ { "always-via": "direct-sink" } ]
                           }
-                        ]
+                        ],
+                        "is_self_call": false,
                       },
                       {
                         "call": {
@@ -2317,7 +2505,8 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_remote_code_execution" } ],
                             "features": [ { "always-via": "direct-sink" } ]
                           }
-                        ]
+                        ],
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -2343,7 +2532,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0)],
                     caller_port="formal(x)",
                     callee_port="sink",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2364,7 +2557,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 2)],
                     caller_port="formal(x)",
                     callee_port="formal(y)[attribute]",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),
@@ -2418,7 +2615,8 @@ class TestParser(unittest.TestCase):
                           "start": 2,
                           "end": 3
                         },
-                        "kinds": [ { "kind": "RCE" } ]
+                        "kinds": [ { "kind": "RCE" } ],
+                        "is_self_call": false,
                       }
                     ]
                   }
@@ -2441,7 +2639,11 @@ class TestParser(unittest.TestCase):
                     leaves=[("RCE", 0)],
                     caller_port="formal(x)",
                     callee_port="sink",
-                    type_interval=None,
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
                     features=[],
                     annotations=[],
                 ),

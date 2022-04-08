@@ -204,7 +204,7 @@ class Parser(BaseParser):
                     leaves=[(leaf.kind, leaf.distance) for leaf in fragment["leaves"]],
                     caller_port=port,
                     callee_port=fragment["port"],
-                    type_interval=None,
+                    type_interval=fragment["type_interval"],
                     features=flatten_features_to_parse_trace_feature(
                         fragment["features"]
                     ),
@@ -229,7 +229,7 @@ class Parser(BaseParser):
                     leaves=[(leaf.kind, leaf.distance) for leaf in fragment["leaves"]],
                     caller_port=port,
                     callee_port=fragment["port"],
-                    type_interval=None,
+                    type_interval=fragment["type_interval"],
                     features=flatten_features_to_parse_trace_feature(
                         fragment["features"]
                     ),
@@ -331,7 +331,7 @@ class Parser(BaseParser):
                         features=flatten_features_to_parse_trace_feature(
                             fragment["features"]
                         ),
-                        type_interval=None,
+                        type_interval=fragment["type_interval"],
                         annotations=[],
                     )
                 )
@@ -359,6 +359,15 @@ class Parser(BaseParser):
     ) -> Iterable[TraceFragment]:
         tito_positions = list(map(self._adjust_location, trace.get("tito", [])))
         local_features = trace.get("local_features", [])
+        receiver_interval = trace.get(
+            "receiver_interval", {"lower": 0, "upper": sys.maxsize}
+        )
+        preserves_type_context = trace.get("is_self_call", False)
+        type_interval = ParseTypeInterval(
+            start=receiver_interval["lower"],
+            finish=receiver_interval["upper"],
+            preserves_type_context=preserves_type_context,
+        )
 
         if "root" in trace:
             location = self._adjust_location(trace["root"])
@@ -385,7 +394,7 @@ class Parser(BaseParser):
                     "leaves": leaves,
                     "titos": tito_positions,
                     "features": local_features,
-                    "type_interval": None,
+                    "type_interval": type_interval,
                 }
                 yield fragment
         elif "call" in trace:
@@ -405,7 +414,7 @@ class Parser(BaseParser):
                     "leaves": leaves,
                     "titos": tito_positions,
                     "features": local_features,
-                    "type_interval": None,
+                    "type_interval": type_interval,
                 }
                 yield fragment
         elif "decl" in trace:
