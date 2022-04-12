@@ -34,7 +34,7 @@ from sqlalchemy import (
     types,
 )
 from sqlalchemy.dialects.mysql import BIGINT
-from sqlalchemy.exc import NoSuchTableError
+from sqlalchemy.exc import NoSuchTableError, ProgrammingError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Session
@@ -1557,6 +1557,13 @@ def create(db: DB) -> None:
         Base.metadata.create_all(db.engine)
     except NoSuchTableError:
         pass
+    except ProgrammingError as e:
+        if "syntax to use near \\'JSON NOT NULL" in str(e):
+            raise Exception(
+                "Could not create JSON columns. "
+                + "Check that you are using MySQL 8.0 or later."
+            ) from e
+        raise
 
 
 convert_sqlalchemy_type.register(SourceLocationType)(convert_column_to_string)
