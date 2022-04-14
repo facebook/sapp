@@ -269,7 +269,7 @@ class IssueQueryResult(NamedTuple):
                 self.min_trace_length_to_sinks,
                 self.min_trace_length_to_sources,
                 self.features,
-                self.similar_issues,
+                frozenset(self.similar_issues),
             )
         )
 
