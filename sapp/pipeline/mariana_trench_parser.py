@@ -196,9 +196,7 @@ class Features(NamedTuple):
 
     @staticmethod
     def from_json(features: Dict[str, Any]) -> "Features":
-        may_features = set(
-            features.get("may_features", []) + features.get("always_features", [])
-        )
+        may_features = set(features.get("may_features", []))
         always_features = {
             f"always-{feature}" for feature in features.get("always_features", [])
         }

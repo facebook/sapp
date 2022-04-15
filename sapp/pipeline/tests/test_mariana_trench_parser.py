@@ -152,7 +152,6 @@ class TestParser(unittest.TestCase):
                             ],
                             features=[
                                 ParseTraceFeature("always-via-parameter-field", []),
-                                ParseTraceFeature("via-parameter-field", []),
                             ],
                             type_interval=None,
                             annotations=[],
@@ -186,7 +185,6 @@ class TestParser(unittest.TestCase):
                     features=[
                         "always-via-parameter-field",
                         "via-obscure",
-                        "via-parameter-field",
                     ],
                     fix_info=None,
                 )
@@ -249,7 +247,8 @@ class TestParser(unittest.TestCase):
                       "distance": 3,
                       "kind": "TestSource",
                       "origins": ["LSource;.source:(LData;)V"],
-                      "local_positions": [{"line": 33, "start": 34, "end": 35}]
+                      "local_positions": [{"line": 33, "start": 34, "end": 35}],
+                      "local_features": {"always_features": ["via-obscure"]}
                     }
                   ],
                   "may_features": ["via-obscure", "via-parameter-field"]
@@ -321,7 +320,7 @@ class TestParser(unittest.TestCase):
                                     line_no=33, begin_column=35, end_column=36
                                 )
                             ],
-                            features=[],
+                            features=[ParseTraceFeature("always-via-obscure", [])],
                             type_interval=None,
                             annotations=[],
                         )
@@ -453,10 +452,15 @@ class TestParser(unittest.TestCase):
               "method": "LSource;.source:()V",
               "generations": [
                 {
+                  "always_features": ["via-parameter-field"],
                   "kind": "TestSource",
                   "caller_port": "Return",
                   "origins": ["LSource;.source:()V"],
-                  "callee_port": "Leaf"
+                  "callee_port": "Leaf",
+                  "local_features": {
+                    "always_features": ["via-obscure"],
+                    "may_features": ["via-taint-in-taint-out"]
+                    }
                 }
               ],
               "position": {
@@ -481,7 +485,10 @@ class TestParser(unittest.TestCase):
                     caller_port="result",
                     callee_port="source",
                     type_interval=None,
-                    features=[],
+                    features=[
+                        ParseTraceFeature("always-via-obscure", []),
+                        ParseTraceFeature("via-taint-in-taint-out", []),
+                    ],
                     annotations=[],
                 )
             ],
@@ -645,7 +652,9 @@ class TestParser(unittest.TestCase):
                   "kind": "TestSink",
                   "caller_port": "Argument(1)",
                   "origins": ["LSink;.sink:(LData;)V"],
-                  "callee_port": "Leaf"
+                  "callee_port": "Leaf",
+                  "local_features": {"always_features": ["via-taint-in-taint-out"]},
+                  "may_features": ["via-obscure"]
                 }
               ],
               "position": {
@@ -670,7 +679,7 @@ class TestParser(unittest.TestCase):
                     caller_port="argument(1)",
                     callee_port="sink",
                     type_interval=None,
-                    features=[],
+                    features=[ParseTraceFeature("always-via-taint-in-taint-out", [])],
                     annotations=[],
                 )
             ],
