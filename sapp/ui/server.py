@@ -10,8 +10,6 @@ import os
 from typing import Optional
 
 import sqlalchemy
-
-# pyre-fixme[21]: `flask` has no attribute `_app_ctx_stack`
 from flask import _app_ctx_stack, Flask, send_from_directory
 from flask.wrappers import Response
 from flask_cors import CORS
@@ -71,7 +69,6 @@ def start_server(
     )
     session = scoped_session(
         sessionmaker(bind=engine),
-        # pyre-fixme[16]: `flask` has no attribute _app_ctx_stack
         scopefunc=_app_ctx_stack.__ident_func__,
     )
     # pyre-fixme[16]: `Type` has no attribute `query`.
