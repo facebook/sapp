@@ -1,3 +1,4 @@
+werkzeug==2.0
 click
 click-log
 flask
@@ -15,3 +16,4 @@ prompt-toolkit
 traitlets
 typing-extensions
 pyre-extensions
+zstd
