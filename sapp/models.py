@@ -638,6 +638,26 @@ class IssueStatus(enum.Enum):
         return cls.do_not_care
 
 
+class Severity(enum.Enum):
+    """Severity is Null by default, but set when status is triaged to Valid."""
+
+    # Do NOT reorder the enums. Depending on the type of database, existing
+    # DBs may have these enums represented internally as ints based on the
+    # order shown here, and changing it here messes up existing data. This
+    # also means that new enums should be added AT THE END of the list.
+
+    # pyre-fixme[20]: Argument `value` expected.
+    SEV = enum.auto()
+    # pyre-fixme[20]: Argument `value` expected.
+    SEVWorthy = enum.auto()
+    # pyre-fixme[20]: Argument `value` expected.
+    Critical = enum.auto()
+    # pyre-fixme[20]: Argument `value` expected.
+    Serious = enum.auto()
+    # pyre-fixme[20]: Argument `value` expected.
+    Limited = enum.auto()
+
+
 class Issue(Base, PrepareMixin, MutableRecordMixin):
     """An issue coming from the static analysis.
 
@@ -646,6 +666,8 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     """
 
     __tablename__ = "issues"
+
+    __table_args__ = (Index("ix_issues_status_severity", "status", "severity"),)
 
     # pyre-fixme[8]: Attribute has type `IssueDBID`; used as `Column[typing.Any]`.
     id: IssueDBID = Column(IssueBIGDBIDType, primary_key=True, nullable=False)
@@ -680,7 +702,13 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         doc="Shows the issue status from the latest run",
         server_default="uncategorized",
         nullable=False,
-        index=True,
+    )
+
+    severity: Column[Optional[str]] = Column(
+        Enum(Severity),
+        doc="Severity of a Valid issue",
+        server_default=None,
+        nullable=True,
     )
 
     task_number: Column[Optional[int]] = Column(
