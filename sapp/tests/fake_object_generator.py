@@ -49,27 +49,20 @@ class FakeObjectGenerator:
 
     def issue(
         self,
-        filename: str = "/r/lib/server/posts/request.py",
-        callable: str = "lib.server.posts.request.new_post_request",
+        callable: str = "Foo.barMethod",
         handle=None,
         code=None,
         status: str = "uncategorized",
     ):
         self.handle += 1
         now = datetime.datetime.now()
+        callable = self.callable(callable)
         result = Issue.Record(
             id=IssueDBID(),
             handle=str(self.handle) if not handle else handle,
-            callable_line=1,
-            message="Tainted information may eventually flow...",
             code=code or (6015 + self.handle),
-            filename=filename,
-            callable=callable,
+            callable_id=callable.id,
             first_seen=now,
-            last_seen=now,
-            line=1,
-            start=1,
-            end=2,
             status=status,
             detected_time=now.timestamp(),
         )

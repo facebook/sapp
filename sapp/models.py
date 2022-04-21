@@ -680,6 +680,17 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         + "different code revisions",
     )
 
+    callable_id = Column(
+        BIGDBIDType, nullable=False, index=True, server_default="0", default=0
+    )
+
+    callable = relationship(
+        "SharedText",
+        primaryjoin="foreign(SharedText.id) == Issue.callable_id",
+        uselist=False,
+        viewonly=True,
+    )
+
     code: Column[int] = Column(
         Integer, doc="Code identifiying the issue type", nullable=False, index=True
     )

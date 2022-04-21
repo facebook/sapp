@@ -169,11 +169,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             if name
         }
 
+        callable_record = self._get_shared_text(SharedTextKind.CALLABLE, callable)
+
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
         issue: Issue = Issue.Record(
             id=IssueDBID(),
             code=entry.code,
             handle=entry.handle,
+            callable_id=callable_record.id,
             status=IssueStatus.UNCATEGORIZED,
             first_seen=run.date,
             detected_time=run.date.timestamp(),
@@ -192,7 +195,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         message = self._get_shared_text(SharedTextKind.MESSAGE, entry.message)
         filename_record = self._get_shared_text(SharedTextKind.FILENAME, entry.filename)
-        callable_record = self._get_shared_text(SharedTextKind.CALLABLE, callable)
 
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
         instance: IssueInstance = IssueInstance.Record(

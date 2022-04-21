@@ -19,7 +19,9 @@ class QueryTest(TestCase):
         self.fakes = FakeObjectGenerator()
         run = self.fakes.run()
 
-        issue1 = self.fakes.issue(code=6016, status="do_not_care")
+        issue1 = self.fakes.issue(
+            code=6016, status="do_not_care", callable="module.sub.function1"
+        )
         self.fakes.instance(
             issue_id=issue1.id,
             callable="module.sub.function1",
@@ -29,7 +31,9 @@ class QueryTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue2 = self.fakes.issue(code=6017, status="valid_bug")
+        issue2 = self.fakes.issue(
+            code=6017, status="valid_bug", callable="module.sub.function2"
+        )
         self.fakes.instance(
             issue_id=issue2.id,
             callable="module.sub.function2",
@@ -39,7 +43,9 @@ class QueryTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue3 = self.fakes.issue(code=6018, status="bad_practice")
+        issue3 = self.fakes.issue(
+            code=6018, status="bad_practice", callable="module.function3"
+        )
         self.fakes.instance(
             issue_id=issue3.id,
             callable="module.function3",
@@ -49,7 +55,7 @@ class QueryTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue4 = self.fakes.issue(code=6019)
+        issue4 = self.fakes.issue(code=6019, callable="module.function3")
         self.fakes.instance(
             issue_id=issue4.id,
             callable="module.function3",

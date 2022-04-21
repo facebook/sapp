@@ -123,7 +123,7 @@ class InteractiveTest(TestCase):
 
     def testListIssuesBasic(self) -> None:
         run = self.fakes.run()
-        self.fakes.issue()
+        self.fakes.issue(callable="module.function1")
         self.fakes.instance(
             message="message1", filename="file.py", callable="module.function1"
         )
@@ -168,7 +168,7 @@ class InteractiveTest(TestCase):
     def _list_issues_filter_setup(self) -> None:
         run = self.fakes.run()
 
-        issue1 = self.fakes.issue(status="do_not_care")
+        issue1 = self.fakes.issue(status="do_not_care", callable="module.sub.function1")
         self.fakes.instance(
             issue_id=issue1.id,
             callable="module.sub.function1",
@@ -178,7 +178,7 @@ class InteractiveTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue2 = self.fakes.issue(status="valid_bug")
+        issue2 = self.fakes.issue(status="valid_bug", callable="module.sub.function2")
         self.fakes.instance(
             issue_id=issue2.id,
             callable="module.sub.function2",
@@ -188,7 +188,7 @@ class InteractiveTest(TestCase):
         )
         self.fakes.save_all(self.db)
 
-        issue3 = self.fakes.issue(status="bad_practice")
+        issue3 = self.fakes.issue(status="bad_practice", callable="module.function3")
         self.fakes.instance(
             issue_id=issue3.id,
             callable="module.function3",
@@ -1185,7 +1185,7 @@ class InteractiveTest(TestCase):
 
     def testTraceCursorLocation(self) -> None:
         run = self.fakes.run()
-        self.fakes.issue()
+        self.fakes.issue(callable="Issue callable")
         instance = self.fakes.instance(callable="Issue callable")
         source = self.fakes.source()
         frames = [
@@ -2558,7 +2558,11 @@ else:
                 location=(1, 1, 1),
             ),
         ]
-        issues = [self.fakes.issue(), self.fakes.issue(), self.fakes.issue()]
+        issues = [
+            self.fakes.issue(callable="call2"),
+            self.fakes.issue(callable="call3"),
+            self.fakes.issue(callable="call2"),
+        ]
         self.fakes.instance(issue_id=issues[0].id, callable="call2"),
         self.fakes.instance(issue_id=issues[1].id, callable="call3"),
         self.fakes.instance(issue_id=issues[2].id, callable="call2"),
