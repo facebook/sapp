@@ -7,10 +7,11 @@
 
 import logging
 import os
+from threading import get_ident
 from typing import Optional
 
 import sqlalchemy
-from flask import _app_ctx_stack, Flask, send_from_directory
+from flask import Flask, send_from_directory
 from flask.wrappers import Response
 from flask_cors import CORS
 from flask_graphql import GraphQLView
@@ -69,7 +70,7 @@ def start_server(
     )
     session = scoped_session(
         sessionmaker(bind=engine),
-        scopefunc=_app_ctx_stack.__ident_func__,
+        scopefunc=get_ident,
     )
     # pyre-fixme[16]: `Type` has no attribute `query`.
     models.Base.query = session.query_property()
