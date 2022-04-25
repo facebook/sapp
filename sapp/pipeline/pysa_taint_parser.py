@@ -359,15 +359,7 @@ class Parser(BaseParser):
     ) -> Iterable[TraceFragment]:
         tito_positions = list(map(self._adjust_location, trace.get("tito", [])))
         local_features = trace.get("local_features", [])
-        receiver_interval = trace.get(
-            "receiver_interval", {"lower": 0, "upper": sys.maxsize}
-        )
-        preserves_type_context = trace.get("is_self_call", False)
-        type_interval = ParseTypeInterval(
-            start=receiver_interval["lower"],
-            finish=receiver_interval["upper"],
-            preserves_type_context=preserves_type_context,
-        )
+        type_interval = self._parse_type_interval(trace)
 
         if "root" in trace:
             location = self._adjust_location(trace["root"])
@@ -421,6 +413,25 @@ class Parser(BaseParser):
             pass  # User-declared fragment.
         else:
             raise ParseError("Unexpected trace fragment.", received=trace)
+
+    def _parse_type_interval(self, trace: Dict[str, Any]) -> ParseTypeInterval:
+        receiver_interval = trace.get("receiver_interval")
+        start, finish = 0, sys.maxsize
+        if receiver_interval is not None:
+            if isinstance(receiver_interval, list):  # New format
+                if receiver_interval:
+                    start = min(interval["lower"] for interval in receiver_interval)
+                    finish = max(interval["upper"] for interval in receiver_interval)
+            else:  # Old format. TODO(T117934478): Remove this
+                start = receiver_interval["lower"]
+                finish = receiver_interval["upper"]
+        preserves_type_context = trace.get("is_self_call", False)
+        type_interval = ParseTypeInterval(
+            start=start,
+            finish=finish,
+            preserves_type_context=preserves_type_context,
+        )
+        return type_interval
 
     def _adjust_location(self, location: ParsePosition) -> ParsePosition:
         return {  # pyre-ignore[7]

@@ -123,10 +123,10 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
-                        "caller_interval": {
+                        "caller_interval": [{
                           "lower": 10,
                           "upper": 11
-                        },
+                        }],
                         "is_self_call": true,
                         "call": {
                           "position": {
@@ -189,7 +189,10 @@ class TestParser(unittest.TestCase):
                             ],
                             features=[ParseTraceFeature("always-via:source-local", [])],
                             type_interval=ParseTypeInterval(
-                                start=23, finish=24, preserves_type_context=False
+                                # TODO(T117934478): Update to the new format
+                                start=23,
+                                finish=24,
+                                preserves_type_context=False,
                             ),
                             annotations=[],
                         )
@@ -250,7 +253,10 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
-                        "receiver_interval": { "lower": 20, "upper": 21 },
+                        "receiver_interval": [
+                          { "lower": 20, "upper": 21 },
+                          { "lower": 30, "upper": 41 }
+                        ],
                         "root": {
                           "filename": "foo.py",
                           "line": 100,
@@ -270,7 +276,7 @@ class TestParser(unittest.TestCase):
                         ]
                       },
                       {
-                        "receiver_interval": { "lower": 22, "upper": 23 },
+                        "receiver_interval": [{ "lower": 22, "upper": 23 }],
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -298,7 +304,7 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
-                        "receiver_interval": { "lower": 30, "upper": 31 },
+                        "receiver_interval": [{ "lower": 30, "upper": 31 }],
                         "root": {
                           "filename": "foo.py",
                           "line": 200,
@@ -315,7 +321,7 @@ class TestParser(unittest.TestCase):
                         ]
                       },
                       {
-                        "receiver_interval": { "lower": 32, "upper": 33 },
+                        "receiver_interval": [{ "lower": 32, "upper": 33 }],
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -379,7 +385,7 @@ class TestParser(unittest.TestCase):
                             features=[],
                             type_interval=ParseTypeInterval(
                                 start=20,
-                                finish=21,
+                                finish=41,
                                 preserves_type_context=False,
                             ),
                             annotations=[],
@@ -680,7 +686,10 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
-                        "receiver_interval": { "lower": 40, "upper": 41 },
+                        "receiver_interval": [
+                          { "lower": 40, "upper": 41 },
+                          { "lower": 50, "upper": 61 }
+                        ],
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -710,7 +719,7 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
-                        "receiver_interval": { "lower": 42, "upper": 43 },
+                        "receiver_interval": [{ "lower": 42, "upper": 43 }],
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -773,7 +782,7 @@ class TestParser(unittest.TestCase):
                             features=[],
                             type_interval=ParseTypeInterval(
                                 start=40,
-                                finish=41,
+                                finish=61,
                                 preserves_type_context=False,
                             ),
                             annotations=[],
@@ -795,7 +804,7 @@ class TestParser(unittest.TestCase):
                             features=[],
                             type_interval=ParseTypeInterval(
                                 start=40,
-                                finish=41,
+                                finish=61,
                                 preserves_type_context=False,
                             ),
                             annotations=[],
@@ -881,7 +890,10 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
-                        "receiver_interval": { "lower": 50, "upper": 51 },
+                        "receiver_interval": [
+                          { "lower": 50, "upper": 51 },
+                          { "lower": 60, "upper": 71 }
+                        ],
                         "call": {
                           "position": {
                             "filename": "foo.py",
@@ -979,7 +991,7 @@ class TestParser(unittest.TestCase):
                             features=[],
                             type_interval=ParseTypeInterval(
                                 start=50,
-                                finish=51,
+                                finish=71,
                                 preserves_type_context=False,
                             ),
                             annotations=[],
@@ -1227,11 +1239,14 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "other-direct-source" } ]
                           }
                         ],
-                        "caller_interval": {
+                        "caller_interval": [{
                           "lower": 10,
                           "upper": 11
-                        },
-                        "receiver_interval": { "lower": 25, "upper": 30 },
+                        }],
+                        "receiver_interval": [
+                          { "lower": 25, "upper": 30 },
+                          { "lower": 35, "upper": 40 }
+                        ],
                         "is_self_call": false
                       }
                     ]
@@ -1259,7 +1274,7 @@ class TestParser(unittest.TestCase):
                     caller_port="result",
                     callee_port="source",
                     type_interval=ParseTypeInterval(
-                        start=25, finish=30, preserves_type_context=False
+                        start=25, finish=40, preserves_type_context=False
                     ),
                     features=[ParseTraceFeature("always-via:source-local", [])],
                     annotations=[],
@@ -1417,7 +1432,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-source" } ]
                           }
                         ],
-                        "receiver_interval": { "lower": 26, "upper": 31 },
+                        "receiver_interval": [{ "lower": 26, "upper": 31 }],
                         "is_self_call": true,
                       }
                     ]
@@ -1564,10 +1579,16 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-source" } ]
                           }
                         ],
-                        "caller_interval": {
-                          "lower": 11,
-                          "upper": 12
-                        },
+                        "caller_interval": [
+                          {
+                            "lower": 11,
+                            "upper": 12
+                          },
+                          {
+                            "lower": 15,
+                            "upper": 20
+                          }
+                        ],
                         "is_self_call": false,
                       }
                     ]
@@ -1640,10 +1661,12 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-source" } ]
                           }
                         ],
-                        "caller_interval": {
-                          "lower": 12,
-                          "upper": 13
-                        },
+                        "caller_interval": [
+                          {
+                            "lower": 12,
+                            "upper": 13
+                          }
+                        ],
                         "is_self_call": true,
                       }
                     ]
@@ -1968,11 +1991,13 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "other-direct-sink" } ]
                           }
                         ],
-                        "caller_interval": {
-                          "lower": 13,
-                          "upper": 14
-                        },
-                        "receiver_interval": { "lower": 27, "upper": 32 },
+                        "caller_interval": [
+                          {
+                            "lower": 13,
+                            "upper": 14
+                          }
+                        ],
+                        "receiver_interval": [{ "lower": 27, "upper": 32 }],
                         "is_self_call": false,
                       }
                     ]
@@ -2157,7 +2182,10 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-sink" } ]
                           }
                         ],
-                        "receiver_interval": { "lower": 28, "upper": 33 },
+                        "receiver_interval": [
+                          { "lower": 28, "upper": 33 },
+                          { "lower": 40, "upper": 53 }
+                        ],
                         "is_self_call": false,
                       }
                     ]
@@ -2185,7 +2213,7 @@ class TestParser(unittest.TestCase):
                     caller_port="formal(y)[attribute]",
                     callee_port="sink",
                     type_interval=ParseTypeInterval(
-                        start=28, finish=33, preserves_type_context=False
+                        start=28, finish=53, preserves_type_context=False
                     ),
                     features=[],
                     annotations=[],
@@ -2208,7 +2236,7 @@ class TestParser(unittest.TestCase):
                     caller_port="formal(y)[attribute]",
                     callee_port="producer:1:formal(x)",
                     type_interval=ParseTypeInterval(
-                        start=28, finish=33, preserves_type_context=False
+                        start=28, finish=53, preserves_type_context=False
                     ),
                     features=[],
                     annotations=[],
@@ -2231,7 +2259,7 @@ class TestParser(unittest.TestCase):
                     caller_port="formal(y)[attribute]",
                     callee_port="producer:1:formal(x)",
                     type_interval=ParseTypeInterval(
-                        start=28, finish=33, preserves_type_context=False
+                        start=28, finish=53, preserves_type_context=False
                     ),
                     features=[],
                     annotations=[],
@@ -2254,7 +2282,7 @@ class TestParser(unittest.TestCase):
                     caller_port="formal(y)[attribute]",
                     callee_port="producer:2:formal(x)",
                     type_interval=ParseTypeInterval(
-                        start=28, finish=33, preserves_type_context=False
+                        start=28, finish=53, preserves_type_context=False
                     ),
                     features=[],
                     annotations=[],
@@ -2304,10 +2332,16 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-sink" } ]
                           }
                         ],
-                        "caller_interval": {
-                          "lower": 17,
-                          "upper": 18
-                        },
+                        "caller_interval": [
+                          {
+                            "lower": 17,
+                            "upper": 18
+                          },
+                          {
+                            "lower": 20,
+                            "upper": 28
+                          }
+                        ],
                         "is_self_call": false,
                       }
                     ]
