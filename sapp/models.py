@@ -1616,7 +1616,7 @@ def create(db: DB) -> None:
     except NoSuchTableError:
         pass
     except ProgrammingError as e:
-        if "syntax to use near \\'JSON NOT NULL" in str(e):
+        if "'JSON NOT NULL" in str(e):
             raise Exception(
                 "Could not create JSON columns. "
                 + "Check that you are using MySQL 8.0 or later."
