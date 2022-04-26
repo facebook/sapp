@@ -138,7 +138,7 @@ export type IssueDescription = {
   features: $ReadOnlyArray<string>,
   min_trace_length_to_sources: number,
   min_trace_length_to_sinks: number,
-  first_seen: string,
+  detected_time: string,
   is_new_issue: boolean,
   warning_message: string,
   similar_issues: $ReadOnlyArray<$ReadOnlyArray<string>>
@@ -289,7 +289,7 @@ export function Issue(
       <Row gutter={gutter}>
         <Label>First seen</Label>
         <Item>
-          <Text code>{props.issue.first_seen}</Text>
+          <Text code>{props.issue.detected_time}</Text>
         </Item>
       </Row>
       <Row gutter={gutter}>

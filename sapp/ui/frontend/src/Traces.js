@@ -368,7 +368,7 @@ export const IssueQuery = gql`
           features
           min_trace_length_to_sources
           min_trace_length_to_sinks
-          first_seen
+          detected_time
           status
           similar_issues {
             issue_id

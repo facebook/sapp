@@ -1875,7 +1875,7 @@ class InteractiveTest(TestCase):
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
-            first_seen="2001-02-24 16:31:27.1234",
+            detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
@@ -1942,7 +1942,7 @@ class InteractiveTest(TestCase):
             #  `List[str]`.
             sink_kinds=["sink1"],
             status=IssueStatus.UNCATEGORIZED,
-            first_seen="2001-02-24 16:31:27.1234",
+            detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
@@ -2007,7 +2007,7 @@ class InteractiveTest(TestCase):
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
-            first_seen="2001-02-24 16:31:27.1234",
+            detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
@@ -2056,7 +2056,7 @@ class InteractiveTest(TestCase):
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
-            first_seen="2001-02-24 16:31:27.1234",
+            detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},

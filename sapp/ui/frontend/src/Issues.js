@@ -98,7 +98,7 @@ export const IssueQuery = gql`
           is_new_issue
           min_trace_length_to_sources
           min_trace_length_to_sinks
-          first_seen
+          detected_time
           warning_message
         }
       }

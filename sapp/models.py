@@ -701,13 +701,6 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
-    first_seen: Column[datetime] = Column(
-        DateTime,
-        doc="time of the first run that found this issue",
-        nullable=False,
-        index=True,
-    )
-
     status: Column[str] = Column(
         Enum(IssueStatus),
         doc="Shows the issue status from the latest run",

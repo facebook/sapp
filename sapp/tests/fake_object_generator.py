@@ -62,7 +62,6 @@ class FakeObjectGenerator:
             handle=str(self.handle) if not handle else handle,
             code=code or (6015 + self.handle),
             callable_id=callable.id,
-            first_seen=now,
             status=status,
             detected_time=now.timestamp(),
         )

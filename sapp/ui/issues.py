@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import datetime
 from typing import Any, Dict, FrozenSet, List, NamedTuple, Optional, Set, Union
 
 import graphene
@@ -86,7 +87,7 @@ class IssueQueryResultType(graphene.ObjectType):
     features = graphene.List(graphene.String)
 
     is_new_issue = graphene.Boolean()
-    first_seen = graphene.String()
+    detected_time = graphene.DateTime()
 
     min_trace_length_to_sources = graphene.Int()
     min_trace_length_to_sinks = graphene.Int()
@@ -154,8 +155,8 @@ class IssueQueryResult(NamedTuple):
     filename: str
     location: SourceLocation
 
-    first_seen: str
     is_new_issue: bool
+    detected_time: datetime.datetime
 
     min_trace_length_to_sources: int
     min_trace_length_to_sinks: int
@@ -179,7 +180,7 @@ class IssueQueryResult(NamedTuple):
             message=record.message,
             callable=record.callable,
             status=record.status.name.replace("_", " ").capitalize(),
-            first_seen=record.first_seen,
+            detected_time=datetime.datetime.fromtimestamp(record.detected_time),
             filename=record.filename,
             location=record.location,
             is_new_issue=record.is_new_issue,
@@ -223,7 +224,7 @@ class IssueQueryResult(NamedTuple):
             "min_trace_length_to_sinks": self.min_trace_length_to_sinks,
             "features": list(self.features),
             "is_new_issue": self.is_new_issue,
-            "first_seen": self.first_seen,
+            "detected_time": self.detected_time.isoformat(),
             "run_id": self.run_id,
             "similar_issues": [
                 similar_issue.__dict__ for similar_issue in self.similar_issues
@@ -265,7 +266,7 @@ class IssueQueryResult(NamedTuple):
                 self.filename,
                 self.location,
                 self.is_new_issue,
-                self.first_seen,
+                self.detected_time,
                 self.min_trace_length_to_sinks,
                 self.min_trace_length_to_sources,
                 self.features,
@@ -291,7 +292,7 @@ class IssueQueryResult(NamedTuple):
             and self.filename == other.filename
             and self.location == other.location
             and self.is_new_issue == other.is_new_issue
-            and self.first_seen == other.first_seen
+            and self.detected_time == other.detected_time
             and self.min_trace_length_to_sinks == other.min_trace_length_to_sinks
             and self.min_trace_length_to_sources == other.min_trace_length_to_sources
             and self.features == other.features
@@ -433,7 +434,7 @@ class Instance:
                 Issue.id.label("issue_id"),
                 Issue.code,
                 Issue.status,
-                Issue.first_seen,
+                Issue.detected_time,
                 CallableText.contents.label("callable"),
                 MessageText.contents.label("message"),
                 IssueInstance.is_new_issue,
