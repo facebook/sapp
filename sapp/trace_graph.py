@@ -8,7 +8,7 @@
 import json
 import logging
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
+from typing import cast, Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 from .bulk_saver import BulkSaver
 from .models import (
@@ -44,11 +44,17 @@ class TraceGraph(object):
         self._issue_instances: Dict[int, IssueInstance] = {}
         self._trace_annotations: Dict[int, TraceFrameAnnotation] = {}
 
-        # Create a mapping of (caller_id, caller_port) to the corresponding
-        # trace frame's id.
+        # Create a mapping from caller_id -> caller_port -> set of frame ids.
         self._trace_frames_map: DefaultDict[
-            TraceKind, DefaultDict[Tuple[int, str], Set[int]]
-        ] = defaultdict(lambda: defaultdict(set))
+            TraceKind, DefaultDict[int, DefaultDict[str, Set[int]]]
+        ] = defaultdict(
+            lambda: defaultdict(
+                lambda: cast(
+                    DefaultDict[str, Set[int]],
+                    defaultdict(set),
+                )
+            )
+        )
 
         # Similar to _trace_frames_map, but maps the reverse direction
         # of the trace graph, i.e. (callee_id, callee_port) to the
@@ -160,8 +166,10 @@ class TraceGraph(object):
         self, kind: TraceKind, caller_id: DBID, caller_port: str
     ) -> bool:
         if self._trace_frames_map[kind]:
-            key = (caller_id.local_id, caller_port)
-            return key in self._trace_frames_map[kind]
+            return (
+                caller_id.local_id in self._trace_frames_map[kind]
+                and caller_port in self._trace_frames_map[kind][caller_id.local_id]
+            )
         else:
             return False
 
@@ -195,10 +203,11 @@ class TraceGraph(object):
             return []
 
     def add_trace_frame(self, trace_frame: TraceFrame) -> None:
-        key = (trace_frame.caller_id.local_id, trace_frame.caller_port)
         rev_key = (trace_frame.callee_id.local_id, trace_frame.callee_port)
         # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-        self._trace_frames_map[trace_frame.kind][key].add(trace_frame.id.local_id)
+        self._trace_frames_map[trace_frame.kind][trace_frame.caller_id.local_id][
+            trace_frame.caller_port
+        ].add(trace_frame.id.local_id)
         # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
         self._trace_frames_rev_map[trace_frame.kind][rev_key].add(
             trace_frame.id.local_id
@@ -208,10 +217,11 @@ class TraceGraph(object):
     def get_trace_frames_from_caller(
         self, kind: TraceKind, caller_id: DBID, caller_port: str
     ) -> List[TraceFrame]:
-        key = (caller_id.local_id, caller_port)
         return [
             self._trace_frames[trace_frame_id]
-            for trace_frame_id in self._trace_frames_map[kind][key]
+            for trace_frame_id in self._trace_frames_map[kind][caller_id.local_id][
+                caller_port
+            ]
         ]
 
     def get_trace_frame_from_id(self, id: int) -> TraceFrame:

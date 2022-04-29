@@ -614,8 +614,8 @@ class TrimmedTraceGraph(TraceGraph):
         succ_kinds = graph.compute_next_leaf_kinds(leaves, trace_frame.leaf_mapping)
         # pyre-fixme[6]: Enums and str are the same but Pyre doesn't think so.
         for trace_frame_id in graph._trace_frames_map[trace_frame.kind][
-            (trace_frame.callee_id.local_id, trace_frame.callee_port)
-        ]:
+            trace_frame.callee_id.local_id
+        ][trace_frame.callee_port]:
             successor = graph._trace_frames[trace_frame_id]
             result.append(successor)
         return (result, succ_kinds)
