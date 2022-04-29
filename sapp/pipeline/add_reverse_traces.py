@@ -16,19 +16,34 @@ log = logging.getLogger("sapp")
 
 
 class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
-    """For all issues with a given code, adds the given new leaf kind along all
-    reachable reverse traces. The depth increases as the trace
+    """For all issues with a given code and given leaf kind, adds the given new leaf
+    name along all reachable reverse traces. The depth increases as the trace
     frames get further away (in the caller->callee direction) from the issue
-    frame. Useful for queries in the callee->caller direction."""
+    frame. Useful for queries in the callee->caller direction.
+    """
 
-    def __init__(self, code: int, leaf_name: str, leaf_kind: SharedTextKind) -> None:
+    def __init__(
+        self,
+        code: int,
+        orig_leaf_name: str,
+        orig_leaf_kind: SharedTextKind,
+        new_leaf_name: str,
+        new_leaf_kind: SharedTextKind,
+    ) -> None:
         super().__init__()
         self.code = code
-        self.leaf_name = leaf_name
-        self.leaf_kind = leaf_kind
+        self.orig_leaf_name = orig_leaf_name
+        self.orig_leaf_kind = orig_leaf_kind
+        self.new_leaf_name = new_leaf_name
+        self.new_leaf_kind = new_leaf_kind
 
     def run(self, input: TraceGraph, summary: Summary) -> Tuple[TraceGraph, Summary]:
         graph = input
+
+        orig_leaf = graph.get_shared_text(self.orig_leaf_kind, self.orig_leaf_name)
+        if orig_leaf is None:
+            # nothing todo
+            return graph, summary
 
         # Get all the issue instances within this category
         instances = [
@@ -43,7 +58,13 @@ class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
             trace_frames.extend(graph.get_issue_instance_trace_frames(instance))
 
         # Explore forward (caller -> callee; issue -> leaf)
-        queue = deque([(frame, 0) for frame in trace_frames])
+        queue = deque(
+            [
+                (frame, 0)
+                for frame in trace_frames
+                if orig_leaf.id.local_id in graph.get_trace_frame_leaf_ids(frame)
+            ]
+        )
         depth_by_frame_id = {}
         while len(queue) > 0:
             trace_frame, depth = queue.popleft()
@@ -63,13 +84,14 @@ class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
             queue.extend(
                 (next_frame, depth + 1)
                 for next_frame in graph.get_next_trace_frames(trace_frame)
+                if orig_leaf.id.local_id in graph.get_trace_frame_leaf_ids(next_frame)
             )
 
         # Create new leaves based on these depths
-        leaf = graph.get_shared_text(self.leaf_kind, self.leaf_name)
+        leaf = graph.get_shared_text(self.new_leaf_kind, self.new_leaf_name)
         if leaf is None:
             leaf = SharedText.Record(
-                id=DBID(), contents=self.leaf_name, kind=self.leaf_kind
+                id=DBID(), contents=self.new_leaf_name, kind=self.new_leaf_kind
             )
             graph.add_shared_text(leaf)
 
@@ -77,7 +99,7 @@ class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
         log.info(
             'Adding %d "%s" leaves from issues with code %d...',
             len(depth_by_frame_id),
-            self.leaf_name,
+            self.new_leaf_name,
             self.code,
         )
         for trace_frame_id, depth in depth_by_frame_id.items():
