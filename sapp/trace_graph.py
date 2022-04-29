@@ -224,6 +224,17 @@ class TraceGraph(object):
             ]
         ]
 
+    def get_all_trace_frames_from_caller(
+        self,
+        kind: TraceKind,
+        caller_id: DBID,
+    ) -> List[TraceFrame]:
+        frame_ids = []
+        ports = self._trace_frames_map[kind][caller_id.local_id]
+        for port in ports:
+            frame_ids.extend(ports[port])
+        return [self._trace_frames[trace_frame_id] for trace_frame_id in frame_ids]
+
     def get_trace_frame_from_id(self, id: int) -> TraceFrame:
         return self._trace_frames[id]
 
