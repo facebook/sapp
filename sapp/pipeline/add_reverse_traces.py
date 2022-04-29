@@ -15,9 +15,9 @@ from . import PipelineStep, Summary
 log = logging.getLogger("sapp")
 
 
-class AddIssueInstanceLeaves(PipelineStep[TraceGraph, TraceGraph]):
-    """For all issues with a given code, adds a leaf at the issue frame and adds
-    the relevant trace_frame_leaf_assocs. The depth increases as the trace
+class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
+    """For all issues with a given code, adds the given new leaf kind along all
+    reachable reverse traces. The depth increases as the trace
     frames get further away (in the caller->callee direction) from the issue
     frame. Useful for queries in the callee->caller direction."""
 
