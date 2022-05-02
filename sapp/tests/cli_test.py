@@ -6,12 +6,15 @@
 
 import contextlib
 import os
+import traceback
 import unittest
+from functools import partial
+from pathlib import Path
 from typing import Generator
 from unittest import TestCase
 from unittest.mock import patch
 
-from click.testing import CliRunner
+from click.testing import Result, CliRunner
 
 from .. import __name__ as client
 from ..cli import cli
@@ -49,7 +52,7 @@ class TestSappCli(TestCase):
                 ],
             )
             print(result.output)
-            self.assertEqual(result.exit_code, 0)
+            assert_successful_exit(result)
 
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
@@ -64,7 +67,7 @@ class TestSappCli(TestCase):
                     cli, ["--database-name", "sapp.db", "analyze", path]
                 )
                 print(result.output)
-                self.assertEqual(result.exit_code, 0)
+                assert_successful_exit(result)
 
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
@@ -96,7 +99,7 @@ class TestSappCli(TestCase):
                         path,
                     ],
                 )
-                self.assertEqual(result.exit_code, 0)
+                assert_successful_exit(result)
 
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
@@ -120,41 +123,58 @@ class TestSappCli(TestCase):
                 result = self.runner.invoke(
                     cli, ["analyze", "--job-id", "job-id-1", path]
                 )
-                self.assertEqual(result.exit_code, 0)
+                assert_successful_exit(result)
 
         with patch(PIPELINE_RUN, self.verify_option_job_id_none):
             with isolated_fs() as path:
                 result = self.runner.invoke(cli, ["analyze", path])
                 print(result.stdout)
-                self.assertEqual(result.exit_code, 0)
+                assert_successful_exit(result)
 
         with patch(PIPELINE_RUN, self.verify_option_differential_id):
             with isolated_fs() as path:
                 result = self.runner.invoke(
                     cli, ["analyze", "--differential-id", "1234567", path]
                 )
-                self.assertEqual(result.exit_code, 0)
+                assert_successful_exit(result)
+
+    def verify_previous_issue_handles(
+        self,
+        # pyre-fixme[2]: Parameter must be annotated.
+        expected_path,
+        # pyre-fixme[2]: Parameter must be annotated.
+        input_files,
+        # pyre-fixme[2]: Parameter must be annotated.
+        summary_blob,
+    ) -> None:
+        self.assertEqual(summary_blob["previous_issue_handles"], expected_path)
 
     # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def verify_previous_issue_handles(self, input_files, summary_blob) -> None:
-        self.assertEqual(summary_blob["previous_issue_handles"], "fake_analysis_output")
-
-    @patch(
-        f"{client}.analysis_output.AnalysisOutput.from_file",
-        return_value="fake_analysis_output",
-    )
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_previous_input(self, _, mock_analysis_output) -> None:
-        with patch(PIPELINE_RUN, self.verify_previous_issue_handles):
-            with isolated_fs() as path:
+    def test_previous_input(self, mock_analysis_output) -> None:
+        with isolated_fs() as path:
+            previous_handles_path = os.path.join(path, "previous_handles")
+            os.mknod(previous_handles_path)
+            with patch(
+                PIPELINE_RUN,
+                partial(
+                    self.verify_previous_issue_handles, Path(previous_handles_path)
+                ),
+            ):
                 result = self.runner.invoke(
                     cli,
                     [
                         "analyze",
                         "--previous-issue-handles",
-                        path,
+                        previous_handles_path,
                         path,
                     ],
                 )
-            self.assertEqual(result.exit_code, 0)
+            assert_successful_exit(result)
+
+
+def assert_successful_exit(result: Result) -> None:
+    assert result.exit_code == 0, (
+        f"Command did not exit successfully: {result}\n"
+        + f"Command output:\n{result.stdout}\n"
+        + f"{os.linesep.join(traceback.format_exception(*result.exc_info))}"
+    )

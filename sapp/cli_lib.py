@@ -138,7 +138,7 @@ def explore(ctx: Context, ipython_args) -> None:
 @option("--add-feature", type=str, multiple=True)
 @option(
     "--previous-issue-handles",
-    type=Path(exists=True),
+    type=Path(exists=True, path_type=pathlib.Path),
     help=("file containing list of issue handles to compare INPUT_FILE to"),
 )
 @option(
@@ -160,7 +160,7 @@ def analyze(
     commit_hash: Optional[str],
     job_id: Optional[str],
     differential_id: Optional[int],
-    previous_issue_handles: Optional[str],
+    previous_issue_handles: Optional[pathlib.Path],
     linemap: Optional[str],
     store_unused_models: bool,
     dry_run: bool,
@@ -182,9 +182,7 @@ def analyze(
     summary_blob["job_id"] = job_id
 
     if previous_issue_handles:
-        summary_blob["previous_issue_handles"] = AnalysisOutput.from_file(
-            previous_issue_handles
-        )
+        summary_blob["previous_issue_handles"] = previous_issue_handles
 
     # Construct pipeline
     if os.path.isdir(input_file):

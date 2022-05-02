@@ -8,6 +8,7 @@
 import logging
 import pprint
 from collections import defaultdict
+from pathlib import Path
 from typing import (
     Any,
     cast,
@@ -146,7 +147,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     def analysis_output_to_dict_entries(
         self,
         inputfile: AnalysisOutput,
-        previous_issue_handles: Optional[AnalysisOutput],
+        previous_issue_handles: Optional[Path],
         linemapfile: Optional[str],
     ) -> DictEntries:
         """Here we take input generators and return a dict with issues,
@@ -180,9 +181,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         # Save entry info from the parent analysis, if there is one.
         if previous_issue_handles:
             log.info("Parsing previous issue handles")
-            for f in previous_issue_handles.file_handles():
-                handles = f.read().splitlines()
-                previous_handles = set(filter(lambda h: not h.startswith("#"), handles))
+            previous_handles = BaseParser.parse_handles_file(previous_issue_handles)
 
         log.info("Parsing analysis output...")
         for typ, key, e in self._analysis_output_to_parsed_tuples(inputfile):
@@ -270,6 +269,12 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     @staticmethod
     def is_supported(metadata: Metadata) -> bool:
         raise NotImplementedError("Subclasses should implement this!")
+
+    @staticmethod
+    def parse_handles_file(path: Path) -> Set[str]:
+        with open(path) as f:
+            lines = (line.rstrip("\n") for line in f)
+            return set(filter(lambda line: not line.startswith("#"), lines))
 
     # Instead of returning the actual json from the AnalysisOutput, we return
     # location information so it can be retrieved later.
