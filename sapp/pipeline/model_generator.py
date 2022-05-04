@@ -296,7 +296,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             run=run,
             filename=issue.filename,
             caller=caller,
-            caller_port="root",
+            caller_port=callinfo.root_port or "root",
             callee=callinfo.callee,
             callee_port=callinfo.port,
             callee_location=callinfo.location,

@@ -249,6 +249,7 @@ class ParseIssueConditionTuple(NamedTuple):
     features: List[ParseTraceFeature]
     type_interval: Optional[ParseTypeInterval]
     annotations: Iterable[ParseTraceAnnotation]
+    root_port: Optional[str] = None
 
     def interned(self) -> "ParseIssueConditionTuple":
         "Return self, but with certain strings interned"
@@ -261,6 +262,7 @@ class ParseIssueConditionTuple(NamedTuple):
             features=self.features,
             type_interval=self.type_interval,
             annotations=self.annotations,
+            root_port=self.root_port,
         )
 
 
