@@ -456,6 +456,33 @@ class Parser(BaseParser):
             )
         return conditions
 
+    def _normalize_field_callees(self, taint: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Similar to `_normalize_crtex_conditions`, but does it for "field_callee"
+        instead of "canonical_names"."""
+        # TODO(T91357916): The analysis should be able to emit this correctly without
+        # the parser having to post-process it.
+        if taint.get("call") is not None:
+            # Field callees only appear at the leaf. If a "call" exists, this is not
+            # a leaf.
+            return [taint]
+
+        non_field_callee_taint_kinds = []
+        normalized_taints = []
+
+        for kind in taint["kinds"]:
+            field_callee = kind.get("field_callee")
+            if field_callee:
+                normalized_taints.append(
+                    {"call": {"resolves_to": field_callee}, "kinds": [kind]}
+                )
+            else:
+                non_field_callee_taint_kinds.append(kind)
+
+        if len(non_field_callee_taint_kinds) > 0:
+            normalized_taints.append({"kinds": non_field_callee_taint_kinds})
+
+        return normalized_taints
+
     def _parse_precondition(self, model: Dict[str, Any]) -> Iterable[Precondition]:
         caller_method = Method.from_json(model["method"])
         caller_position = Position.from_json(model["position"], caller_method)
@@ -467,9 +494,24 @@ class Parser(BaseParser):
                 position=caller_position,
             )
             for unnormalized_sink_taint in sink["taint"]:
-                normalized_taints = Parser._normalize_crtex_conditions(
-                    unnormalized_sink_taint, caller_method, sink["caller_port"]
+                # The analysis should emit traces where the JSON already conforms to
+                # the way traces are structured in SAPP, i.e.:
+                # caller -> caller_port -> (callee, position, port) -> (kind, distance)
+                # However, it does not do that today for CRTEX and field callees. This
+                # chain of "normalize" operations transforms the JSON into that form
+                # above so all of them can be parsed in the same way.
+                normalized_field_callees = self._normalize_field_callees(
+                    unnormalized_sink_taint
                 )
+
+                normalized_taints = []
+                for sink_taint in normalized_field_callees:
+                    normalized_taints.extend(
+                        Parser._normalize_crtex_conditions(
+                            sink_taint, caller_method, sink["caller_port"]
+                        )
+                    )
+
                 for sink_taint in normalized_taints:
                     callee = Call.from_taint_callee_json(
                         sink_taint.get("call"), caller_position, leaf_kind="sink"

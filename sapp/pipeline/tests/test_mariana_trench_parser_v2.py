@@ -489,8 +489,6 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-    # TODO(T91357916): Add test and support for field_callee
-
     def testModelWithConnectionPointSink(self) -> None:
         self.assertParsed(
             """
@@ -702,5 +700,187 @@ class TestParser(unittest.TestCase):
                     features=[],
                     annotations=[],
                 )
+            ],
+        )
+
+    def testFieldCallee(self) -> None:
+        # Model contains field callee only
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_sink:(LData;LData;)V",
+              "sinks": [
+                {
+                  "caller_port": "Argument(2)",
+                  "taint": [
+                    {
+                      "kinds": [
+                        {
+                          "field_callee": "Lcom/facebook/SinkClass;.field:Ljava/lang/Object;",
+                          "field_origins": ["Lcom/facebook/SinkClass;.field:Ljava/lang/Object;"],
+                          "kind": "TestSink"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "TestEvent.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="Lcom/facebook/SinkClass;.field:Ljava/lang/Object;",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(2)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Model contains field callees, non-field leaves, and other callees
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_sink:(LData;LData;)V",
+              "sinks": [
+                {
+                  "caller_port": "Argument(2)",
+                  "taint": [
+                    {
+                      "kinds": [
+                        {
+                          "field_callee": "Lcom/facebook/SinkClass;.field:Ljava/lang/Object;",
+                          "field_origins": ["Lcom/facebook/SinkClass;.field:Ljava/lang/Object;"],
+                          "kind": "TestSink"
+                        },
+                        {
+                          "field_callee": "Lcom/facebook/SinkClass;.field2:Ljava/lang/Object;",
+                          "field_origins": ["Lcom/facebook/SinkClass;.field2:Ljava/lang/Object;"],
+                          "kind": "TestSink2"
+                        },
+                        {
+                          "origins": ["LSink;.sink:(LData;)V"],
+                          "kind": "TestSink2"
+                        }
+                      ]
+                    },
+                    {
+                      "call": {
+                        "resolves_to": "LSink;.sink2:(LData;)V",
+                        "port": "Argument(1)",
+                        "position": {
+                          "path": "TestEvent.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "origins": ["LSink;.sink:(LData;)V"],
+                          "field_origins": ["Lcom/facebook/SinkClass;.field2:Ljava/lang/Object;"],
+                          "kind": "TestSink2",
+                          "distance": 1
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "TestEvent.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="Lcom/facebook/SinkClass;.field:Ljava/lang/Object;",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(2)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="Lcom/facebook/SinkClass;.field2:Ljava/lang/Object;",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSink2", 0)],
+                    caller_port="argument(2)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSink2", 0)],
+                    caller_port="argument(2)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="LSink;.sink2:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSink2", 1)],
+                    caller_port="argument(2)",
+                    callee_port="argument(1)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
             ],
         )

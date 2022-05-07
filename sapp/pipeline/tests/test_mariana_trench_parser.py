@@ -1167,3 +1167,45 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
+
+    def testFieldCallee(self) -> None:
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_sink:(LData;LData;)V",
+              "sinks": [
+                {
+                  "field_callee": "Lcom/facebook/SinkClass;.field:Ljava/lang/Object;",
+                  "field_origins": ["Lcom/facebook/SinkClass;.field:Ljava/lang/Object;"],
+                  "callee_port": "Leaf",
+                  "kind": "TestSink",
+                  "caller_port": "Argument(2)"
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "TestEvent.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="Lcom/facebook/SinkClass;.field:Ljava/lang/Object;",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(2)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
