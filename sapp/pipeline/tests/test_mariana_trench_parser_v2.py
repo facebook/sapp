@@ -62,6 +62,367 @@ class TestParser(unittest.TestCase):
             [],
         )
 
+    def testModelPostconditions(self) -> None:
+        # Leaf case.
+        self.assertParsed(
+            """
+            {
+              "method": "LSource;.source:()V",
+              "generations": [
+                {
+                  "caller_port": "Return",
+                  "taint": [
+                    {
+                      "kinds": [
+                        {
+                          "always_features": ["via-parameter-field"],
+                          "kind": "TestSource",
+                          "origins": ["LSource;.source:()V"],
+                          "local_features": {
+                            "always_features": ["via-obscure"],
+                            "may_features": ["via-taint-in-taint-out"]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Source.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:()V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[
+                        ParseTraceFeature("always-via-obscure", []),
+                        ParseTraceFeature("via-taint-in-taint-out", []),
+                    ],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Node case.
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_source:()V",
+              "generations": [
+                {
+                  "caller_port": "Return",
+                  "taint": [
+                    {
+                      "call": {
+                        "resolves_to": "LSource;.source:()LData;",
+                        "port": "Return",
+                        "position": {
+                          "path": "Class.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "distance": 1,
+                          "kind": "TestSource",
+                          "origins": ["LSource;.source:()V"],
+                          "local_positions": [
+                            {"line": 13, "start": 14, "end": 15},
+                            {"line": 16, "start": 17, "end": 18}
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Class.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LClass;.indirect_source:()V",
+                    callee="LSource;.source:()LData;",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Class.java",
+                    titos=[
+                        SourceLocation(line_no=13, begin_column=15, end_column=16),
+                        SourceLocation(line_no=16, begin_column=18, end_column=19),
+                    ],
+                    leaves=[("TestSource", 1)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Test with a complex port.
+        self.assertParsed(
+            """
+            {
+              "method": "LSource;.source:()V",
+              "generations": [
+                {
+                  "caller_port": "Return.x.y",
+                  "taint": [
+                    {
+                      "kinds": [
+                        {
+                          "kind": "TestSource",
+                          "origins": ["LSource;.source:()V"],
+                          "local_features": {
+                            "may_features": ["via-source"]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Source.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:()V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result.x.y",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[ParseTraceFeature("via-source", [])],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Test with a parameter source (contains callee position but not callee/port).
+        self.assertParsed(
+            """
+            {
+              "method": "LSource;.source:()V",
+              "generations": [
+                {
+                  "caller_port": "Return",
+                  "taint": [
+                    {
+                      "call": {
+                        "position": {
+                          "path": "Source.java",
+                          "line": 2,
+                          "start": 3,
+                          "end": 4
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "kind": "TestSource",
+                          "origins": ["LSource;.source:()V"]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Source.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:()V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=2,
+                        begin_column=4,
+                        end_column=5,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Test multiple caller ports, callees and kinds (leaves)
+        self.assertParsed(
+            """
+            {
+              "method": "LSource;.source:(I)V",
+              "generations": [
+                {
+                  "caller_port": "Return",
+                  "taint": [
+                    {
+                      "kinds": [
+                        {
+                          "kind": "TestSource"
+                        },
+                        {
+                          "kind": "TestSource2"
+                        }
+                      ]
+                    },
+                    {
+                      "call": {
+                        "resolves_to": "LSource;.source1:()LData;",
+                        "port": "Return",
+                        "position": {
+                          "path": "Class.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "kind": "TestSource",
+                          "distance": 1
+                        },
+                        {
+                          "kind": "TestSource2",
+                          "distance": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "caller_port": "Argument(1)",
+                  "taint": [
+                    {
+                      "call": {
+                        "resolves_to": "LSource;.source2:()LData;",
+                        "port": "Return",
+                        "position": {
+                          "path": "Class.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "kind": "TestSource",
+                          "distance": 3
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Source.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:(I)V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 0), ("TestSource2", 0)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:(I)V",
+                    callee="LSource;.source1:()LData;",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 1), ("TestSource2", 2)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source:(I)V",
+                    callee="LSource;.source2:()LData;",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource", 3)],
+                    caller_port="argument(1)",
+                    callee_port="result",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+            ],
+        )
+
     def testModelPreconditions(self) -> None:
         # Leaf case.
         self.assertParsed(
@@ -482,6 +843,116 @@ class TestParser(unittest.TestCase):
                     leaves=[("TestSink", 0)],
                     caller_port="argument(1)",
                     callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
+    def testModelWithConnectionPointSource(self) -> None:
+        self.assertParsed(
+            """
+            {
+              "method": {
+                "name": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+              },
+              "generations": [
+                {
+                  "caller_port": "Return",
+                  "taint": [
+                    {
+                      "call": {
+                        "port": "Anchor.Return"
+                      },
+                      "kinds": [
+                        {
+                          "kind": "TestSource",
+                          "origins": [
+                            "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+                          ],
+                          "canonical_names": [ { "instantiated": "TestEvent:field_a" } ]
+                        }
+                      ]
+                    }
+                  ]
+               }
+              ],
+              "position": {
+                "line": 1,
+                "path": "TestEvent.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
+                    callee="TestEvent:field_a",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="anchor:result",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+        self.assertParsed(
+            """
+            {
+              "method": {
+                "name": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+              },
+              "generations": [
+                {
+                  "caller_port": "Return",
+                  "taint": [
+                    {
+                      "call": {
+                        "port": "Producer.1234.Argument(2)"
+                      },
+                      "kinds": [
+                        {
+                          "kind": "TestSource",
+                          "origins": [
+                           "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+                          ],
+                          "canonical_names": [ { "instantiated": "LClass;.method:(I)V" }]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "TestEvent.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
+                    callee="LClass;.method:(I)V",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="TestEvent.java",
+                    titos=[],
+                    leaves=[("TestSource", 0)],
+                    caller_port="result",
+                    callee_port="producer:1234:formal(2)",
                     type_interval=None,
                     features=[],
                     annotations=[],

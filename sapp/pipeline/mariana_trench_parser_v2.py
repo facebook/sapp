@@ -8,6 +8,8 @@ import logging
 import re
 import sys
 from typing import (
+    Type,
+    TypeVar,
     Any,
     Dict,
     IO,
@@ -260,6 +262,9 @@ class Condition(NamedTuple):
         )
 
 
+ConditionType = TypeVar("ConditionType", bound="Condition", covariant=True)
+
+
 class Precondition(Condition):
     def to_sapp(self) -> sapp.ParseConditionTuple:
         return super().convert_to_sapp(sapp.ParseType.PRECONDITION)
@@ -318,10 +323,10 @@ class Parser(BaseParser):
             if "method" in model.keys():
                 # TODO(T91357916): Implement parse issues and postconditions
                 # yield from self._parse_issues(model)
-                for precondition in self._parse_precondition(model):
+                for precondition in self._parse_preconditions(model):
                     yield precondition.to_sapp()
-                # for postcondition in self._parse_postconditions(model):
-                #     yield postcondition.to_sapp()
+                for postcondition in self._parse_postconditions(model):
+                    yield postcondition.to_sapp()
 
     @staticmethod
     def _normalize_crtex_condition(
@@ -483,17 +488,39 @@ class Parser(BaseParser):
 
         return normalized_taints
 
-    def _parse_precondition(self, model: Dict[str, Any]) -> Iterable[Precondition]:
+    def _parse_preconditions(self, model: Dict[str, Any]) -> Iterable[Precondition]:
+        return self._parse_condition(
+            model,
+            condition_model_key="sinks",
+            leaf_kind="sink",
+            condition_class=Precondition,
+        )
+
+    def _parse_postconditions(self, model: Dict[str, Any]) -> Iterable[Postcondition]:
+        return self._parse_condition(
+            model,
+            condition_model_key="generations",
+            leaf_kind="source",
+            condition_class=Postcondition,
+        )
+
+    def _parse_condition(
+        self,
+        model: Dict[str, Any],
+        condition_model_key: str,
+        leaf_kind: str,
+        condition_class: Type[ConditionType],
+    ) -> Iterable[ConditionType]:
         caller_method = Method.from_json(model["method"])
         caller_position = Position.from_json(model["position"], caller_method)
 
-        for sink in model.get("sinks", []):
+        for leaf_model in model.get(condition_model_key, []):
             caller = Call(
                 method=caller_method,
-                port=Port.from_json(sink["caller_port"], "sink"),
+                port=Port.from_json(leaf_model["caller_port"], leaf_kind),
                 position=caller_position,
             )
-            for unnormalized_sink_taint in sink["taint"]:
+            for unnormalized_leaf_taint in leaf_model["taint"]:
                 # The analysis should emit traces where the JSON already conforms to
                 # the way traces are structured in SAPP, i.e.:
                 # caller -> caller_port -> (callee, position, port) -> (kind, distance)
@@ -501,23 +528,23 @@ class Parser(BaseParser):
                 # chain of "normalize" operations transforms the JSON into that form
                 # above so all of them can be parsed in the same way.
                 normalized_field_callees = self._normalize_field_callees(
-                    unnormalized_sink_taint
+                    unnormalized_leaf_taint
                 )
 
                 normalized_taints = []
-                for sink_taint in normalized_field_callees:
+                for leaf_taint in normalized_field_callees:
                     normalized_taints.extend(
                         Parser._normalize_crtex_conditions(
-                            sink_taint, caller_method, sink["caller_port"]
+                            leaf_taint, caller_method, leaf_model["caller_port"]
                         )
                     )
 
-                for sink_taint in normalized_taints:
+                for leaf_taint in normalized_taints:
                     callee = Call.from_taint_callee_json(
-                        sink_taint.get("call"), caller_position, leaf_kind="sink"
+                        leaf_taint.get("call"), caller_position, leaf_kind
                     )
                     leaves = [
-                        ConditionLeaf.from_json(kind) for kind in sink_taint["kinds"]
+                        ConditionLeaf.from_json(kind) for kind in leaf_taint["kinds"]
                     ]
 
                     # TODO(T91357916): LocalPositions and LocalFeatures are not unique
@@ -525,18 +552,18 @@ class Parser(BaseParser):
                     # Therefore, these are read from the first kind in the list. The
                     # analysis should update its (TaintV2) storage and JSON format.
                     local_positions = LocalPositions.from_json(
-                        sink_taint["kinds"][0].get("local_positions", [])
-                        if len(sink_taint["kinds"]) > 0
+                        leaf_taint["kinds"][0].get("local_positions", [])
+                        if len(leaf_taint["kinds"]) > 0
                         else [],
                         caller_method,
                     )
                     local_features = Features.from_json(
-                        sink_taint["kinds"][0].get("local_features", {})
-                        if len(sink_taint["kinds"]) > 0
+                        leaf_taint["kinds"][0].get("local_features", {})
+                        if len(leaf_taint["kinds"]) > 0
                         else {}
                     )
 
-                    yield Precondition(
+                    yield condition_class(
                         caller=caller,
                         callee=callee,
                         leaves=leaves,
