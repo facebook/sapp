@@ -33,6 +33,7 @@ class TestParser(unittest.TestCase):
             file_handle=io.StringIO(output),
             metadata=Metadata(
                 analysis_root="/analysis/root",
+                analysis_tool_version="0.1",
                 rules={1: {"name": "TestRule", "description": "Test Rule Description"}},
             ),
         )

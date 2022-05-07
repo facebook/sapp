@@ -328,7 +328,10 @@ class Parser(BaseParser):
 
     @staticmethod
     def is_supported(metadata: Metadata) -> bool:
-        return metadata.tool == "mariana_trench"
+        return (
+            metadata.tool == "mariana_trench"
+            and metadata.analysis_tool_version == "0.1"
+        )
 
     def initialize(self, metadata: Optional[Metadata]) -> None:
         if self._initialized:
