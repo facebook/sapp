@@ -33,6 +33,8 @@ else:
 LOG: logging.Logger = logging.getLogger()
 UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1
+PROGRAMMATIC_LEAF_NAME_PLACEHOLDER = "%programmatic_leaf_name%"
+SOURCE_VIA_TYPE_PLACEHOLDER = "%source_via_type_of%"
 
 
 class Method(NamedTuple):
@@ -321,6 +323,139 @@ class Parser(BaseParser):
                 # for postcondition in self._parse_postconditions(model):
                 #     yield postcondition.to_sapp()
 
+    @staticmethod
+    def _normalize_crtex_condition(
+        callee: Dict[str, Any],
+        kind: Dict[str, Any],
+        caller_method: Method,
+        caller_port: Optional[str],
+    ) -> List[Dict[str, Any]]:
+        if "canonical_names" not in kind:
+            return [{"call": callee, "kinds": [kind]}]
+
+        conditions = []
+        # Expected format: "canonical_names": [ { "instantiated": "<name>" }, ... ]
+        # Canonical names are used for CRTEX only, and are expected to be the callee
+        # name where traces are concerned. Each instantiated name maps to one frame.
+        for canonical_name in kind["canonical_names"]:
+            if (
+                "instantiated" not in canonical_name
+                and SOURCE_VIA_TYPE_PLACEHOLDER not in canonical_name["template"]
+            ):
+                # Uninstantiated canonical names are user-defined CRTEX leaves
+                # They do not show up as a frame in the UI.
+                continue
+
+            # Shallow copy is ok, only "callee"/"resolves_to" field is different.
+            callee_copy = callee.copy()
+
+            if "instantiated" in canonical_name:
+                resolves_to = canonical_name["instantiated"]
+            else:
+                resolves_to = canonical_name["template"].replace(
+                    PROGRAMMATIC_LEAF_NAME_PLACEHOLDER, caller_method.name
+                )
+                # If the canonical name is uninstantiated, the canonical port will be
+                # uninstantiated too, so we fill it in here.
+                # Frames within the issue won't have a caller port,
+                # and we know that only Return sinks will reach this logic
+                # right now, so the default is return
+                callee_copy["port"] = "Anchor." + (caller_port or "Return")
+
+            callee_copy["resolves_to"] = resolves_to
+            kind_copy = kind.copy()
+            kind_copy.pop("canonical_names")
+            conditions.append({"call": callee_copy, "kinds": [kind_copy]})
+
+        return conditions
+
+    @staticmethod
+    def _normalize_crtex_conditions(
+        taint: Dict[str, Any], caller_method: Method, caller_port: Optional[str]
+    ) -> List[Dict[str, Any]]:
+        """CRTEX frames contain the callee information (instantiated canonical name)
+        within the kinds field. Each of these maps to a unique callee and should be
+        represented as such. This performs the following transformation on the JSON.
+
+        From:
+        {
+          "call": {
+            "port": "Anchor.Argument(0)"
+          },
+          "kinds": [
+            {
+              "kind": "CRTEXSink1",
+              "canonical_names": [
+                { "instantiated" : "Instantiated1" },
+                { "instantiated" : "Instantiated2" }
+              ],
+              ...
+            },
+            {
+              "kind": "CRTEXSink2",
+              "canonical_names": [
+                { "instantiated" : "Instantiated3" },
+              ],
+              ...
+            }
+          ]
+        }
+
+        To:
+        [
+          {
+            "call": {
+              "resolves_to": "Instantiated1",
+              "port": "Anchor.Argument(0)",
+            },
+            "kinds": [
+              { "kind": "CRTEXSink1", ... }
+            ]
+          },
+          {
+            "call": {
+              "resolves_to": "Instantiated2",
+              "port": "Anchor.Argument(0)",
+            },
+            "kinds": [
+              { "kind": "CRTEXSink1", ... }
+            ]
+          },
+          {
+            "call": {
+              "resolves_to": "Instantiated3",
+              "port": "Anchor.Argument(0)",
+            },
+            "kinds": [
+              { "kind": "CRTEXSink2", ... }
+            ]
+          }
+        ]
+
+        The idea is that each canonical name should translate into a unique callee.
+        """
+        # TODO(T91357916): Similar to local positions and features, canonical names do
+        # not need to be stored in "kinds". The analysis should update its internal
+        # representation and output JSON. Doing the transformation here is messy.
+        callee = taint.get("call")
+        if callee is None:
+            # CRTEX frames always have a "call" indicating the callee.
+            return [taint]
+
+        port = callee.get("port", "")
+        if not (port.startswith("Anchor") or port.startswith("Producer")):
+            # CRTEX frames have port anchor/producer.
+            return [taint]
+
+        conditions = []
+        for kind in taint["kinds"]:
+            conditions.extend(
+                Parser._normalize_crtex_condition(
+                    callee, kind, caller_method, caller_port
+                )
+            )
+        return conditions
+
     def _parse_precondition(self, model: Dict[str, Any]) -> Iterable[Precondition]:
         caller_method = Method.from_json(model["method"])
         caller_position = Position.from_json(model["position"], caller_method)
@@ -331,33 +466,38 @@ class Parser(BaseParser):
                 port=Port.from_json(sink["caller_port"], "sink"),
                 position=caller_position,
             )
-            for sink_taint in sink["taint"]:
-                # TODO(T91357916): Handle CRTEX (see _normalize_frame in v1 parser)
-                callee = Call.from_taint_callee_json(
-                    sink_taint.get("call"), caller_position, leaf_kind="sink"
+            for unnormalized_sink_taint in sink["taint"]:
+                normalized_taints = Parser._normalize_crtex_conditions(
+                    unnormalized_sink_taint, caller_method, sink["caller_port"]
                 )
-                leaves = [ConditionLeaf.from_json(kind) for kind in sink_taint["kinds"]]
+                for sink_taint in normalized_taints:
+                    callee = Call.from_taint_callee_json(
+                        sink_taint.get("call"), caller_position, leaf_kind="sink"
+                    )
+                    leaves = [
+                        ConditionLeaf.from_json(kind) for kind in sink_taint["kinds"]
+                    ]
 
-                # TODO(T91357916): LocalPositions and LocalFeatures are not unique
-                # to a kind even though it is currently stored within one. Therefore,
-                # these are read from the first kind in the list. The analysis should
-                # update its inner (TaintV2) storage and JSON format.
-                local_positions = LocalPositions.from_json(
-                    sink_taint["kinds"][0].get("local_positions", [])
-                    if len(sink_taint["kinds"]) > 0
-                    else [],
-                    caller_method,
-                )
-                local_features = Features.from_json(
-                    sink_taint["kinds"][0].get("local_features", {})
-                    if len(sink_taint["kinds"]) > 0
-                    else {}
-                )
+                    # TODO(T91357916): LocalPositions and LocalFeatures are not unique
+                    # to a kind even though it is currently stored within one.
+                    # Therefore, these are read from the first kind in the list. The
+                    # analysis should update its (TaintV2) storage and JSON format.
+                    local_positions = LocalPositions.from_json(
+                        sink_taint["kinds"][0].get("local_positions", [])
+                        if len(sink_taint["kinds"]) > 0
+                        else [],
+                        caller_method,
+                    )
+                    local_features = Features.from_json(
+                        sink_taint["kinds"][0].get("local_features", {})
+                        if len(sink_taint["kinds"]) > 0
+                        else {}
+                    )
 
-                yield Precondition(
-                    caller=caller,
-                    callee=callee,
-                    leaves=leaves,
-                    local_positions=local_positions,
-                    features=local_features,
-                )
+                    yield Precondition(
+                        caller=caller,
+                        callee=callee,
+                        leaves=leaves,
+                        local_positions=local_positions,
+                        features=local_features,
+                    )
