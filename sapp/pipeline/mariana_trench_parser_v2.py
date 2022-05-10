@@ -35,8 +35,6 @@ else:
 LOG: logging.Logger = logging.getLogger()
 UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1
-PROGRAMMATIC_LEAF_NAME_PLACEHOLDER = "%programmatic_leaf_name%"
-SOURCE_VIA_TYPE_PLACEHOLDER = "%source_via_type_of%"
 
 
 class Method(NamedTuple):
@@ -474,7 +472,7 @@ class Parser(BaseParser):
 
         for condition_taint in condition_taints:
             normalized_conditions = Parser._normalize_conditions(
-                taint=condition_taint, caller_method=callable, caller_port=None
+                taint=condition_taint, caller_method=callable
             )
             for normalized_condition in normalized_conditions:
                 conditions.append(
@@ -517,7 +515,7 @@ class Parser(BaseParser):
 
     @staticmethod
     def _normalize_conditions(
-        taint: Dict[str, Any], caller_method: Method, caller_port: Optional[str]
+        taint: Dict[str, Any], caller_method: Method
     ) -> List[Dict[str, Any]]:
         # The analysis should emit traces where the JSON already conforms to
         # the way traces are structured in SAPP, i.e.:
@@ -530,9 +528,7 @@ class Parser(BaseParser):
         normalized_taints = []
         for leaf_taint in normalized_field_callees:
             normalized_taints.extend(
-                Parser._normalize_crtex_conditions(
-                    leaf_taint, caller_method, caller_port
-                )
+                Parser._normalize_crtex_conditions(leaf_taint, caller_method)
             )
 
         return normalized_taints
@@ -542,7 +538,6 @@ class Parser(BaseParser):
         callee: Dict[str, Any],
         kind: Dict[str, Any],
         caller_method: Method,
-        caller_port: Optional[str],
     ) -> List[Dict[str, Any]]:
         if "canonical_names" not in kind:
             return [{"call": callee, "kinds": [kind]}]
@@ -552,31 +547,15 @@ class Parser(BaseParser):
         # Canonical names are used for CRTEX only, and are expected to be the callee
         # name where traces are concerned. Each instantiated name maps to one frame.
         for canonical_name in kind["canonical_names"]:
-            if (
-                "instantiated" not in canonical_name
-                and SOURCE_VIA_TYPE_PLACEHOLDER not in canonical_name["template"]
-            ):
+            if "instantiated" not in canonical_name:
                 # Uninstantiated canonical names are user-defined CRTEX leaves
                 # They do not show up as a frame in the UI.
                 continue
 
-            # Shallow copy is ok, only "callee"/"resolves_to" field is different.
+            # Shallow copy is ok, only "resolves_to" field is different.
             callee_copy = callee.copy()
-
-            if "instantiated" in canonical_name:
-                resolves_to = canonical_name["instantiated"]
-            else:
-                resolves_to = canonical_name["template"].replace(
-                    PROGRAMMATIC_LEAF_NAME_PLACEHOLDER, caller_method.name
-                )
-                # If the canonical name is uninstantiated, the canonical port will be
-                # uninstantiated too, so we fill it in here.
-                # Frames within the issue won't have a caller port,
-                # and we know that only Return sinks will reach this logic
-                # right now, so the default is return
-                callee_copy["port"] = "Anchor." + (caller_port or "Return")
-
-            callee_copy["resolves_to"] = resolves_to
+            callee_copy["resolves_to"] = canonical_name["instantiated"]
+            # Same for kind. We are just removing a key/field.
             kind_copy = kind.copy()
             kind_copy.pop("canonical_names")
             conditions.append({"call": callee_copy, "kinds": [kind_copy]})
@@ -585,7 +564,7 @@ class Parser(BaseParser):
 
     @staticmethod
     def _normalize_crtex_conditions(
-        taint: Dict[str, Any], caller_method: Method, caller_port: Optional[str]
+        taint: Dict[str, Any], caller_method: Method
     ) -> List[Dict[str, Any]]:
         """CRTEX frames contain the callee information (instantiated canonical name)
         within the kinds field. Each of these maps to a unique callee and should be
@@ -664,9 +643,7 @@ class Parser(BaseParser):
         conditions = []
         for kind in taint["kinds"]:
             conditions.extend(
-                Parser._normalize_crtex_condition(
-                    callee, kind, caller_method, caller_port
-                )
+                Parser._normalize_crtex_condition(callee, kind, caller_method)
             )
         return conditions
 
@@ -732,7 +709,7 @@ class Parser(BaseParser):
             )
             for unnormalized_leaf_taint in leaf_model["taint"]:
                 normalized_taints = Parser._normalize_conditions(
-                    unnormalized_leaf_taint, caller_method, leaf_model["port"]
+                    unnormalized_leaf_taint, caller_method
                 )
 
                 for leaf_taint in normalized_taints:
