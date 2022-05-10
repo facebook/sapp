@@ -727,12 +727,12 @@ class Parser(BaseParser):
         for leaf_model in model.get(condition_model_key, []):
             caller = Call(
                 method=caller_method,
-                port=Port.from_json(leaf_model["caller_port"], leaf_kind),
+                port=Port.from_json(leaf_model["port"], leaf_kind),
                 position=caller_position,
             )
             for unnormalized_leaf_taint in leaf_model["taint"]:
                 normalized_taints = Parser._normalize_conditions(
-                    unnormalized_leaf_taint, caller_method, leaf_model["caller_port"]
+                    unnormalized_leaf_taint, caller_method, leaf_model["port"]
                 )
 
                 for leaf_taint in normalized_taints:

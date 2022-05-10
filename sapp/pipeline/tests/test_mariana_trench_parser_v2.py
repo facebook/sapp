@@ -711,7 +711,7 @@ class TestParser(unittest.TestCase):
               "method": "LSource;.source:()V",
               "generations": [
                 {
-                  "caller_port": "Return",
+                  "port": "Return",
                   "taint": [
                     {
                       "kinds": [
@@ -767,7 +767,7 @@ class TestParser(unittest.TestCase):
               "method": "LClass;.indirect_source:()V",
               "generations": [
                 {
-                  "caller_port": "Return",
+                  "port": "Return",
                   "taint": [
                     {
                       "call": {
@@ -833,7 +833,7 @@ class TestParser(unittest.TestCase):
               "method": "LSource;.source:()V",
               "generations": [
                 {
-                  "caller_port": "Return.x.y",
+                  "port": "Return.x.y",
                   "taint": [
                     {
                       "kinds": [
@@ -884,7 +884,7 @@ class TestParser(unittest.TestCase):
               "method": "LSource;.source:()V",
               "generations": [
                 {
-                  "caller_port": "Return",
+                  "port": "Return",
                   "taint": [
                     {
                       "call": {
@@ -940,7 +940,7 @@ class TestParser(unittest.TestCase):
               "method": "LSource;.source:(I)V",
               "generations": [
                 {
-                  "caller_port": "Return",
+                  "port": "Return",
                   "taint": [
                     {
                       "kinds": [
@@ -977,7 +977,7 @@ class TestParser(unittest.TestCase):
                   ]
                 },
                 {
-                  "caller_port": "Argument(1)",
+                  "port": "Argument(1)",
                   "taint": [
                     {
                       "call": {
@@ -1072,7 +1072,7 @@ class TestParser(unittest.TestCase):
               "method": "LSink;.sink:(LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(1)",
+                  "port": "Argument(1)",
                   "taint": [
                     {
                       "kinds": [
@@ -1122,7 +1122,7 @@ class TestParser(unittest.TestCase):
               "method": "LClass;.indirect_sink:(LData;LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(2)",
+                  "port": "Argument(2)",
                   "taint": [
                     {
                       "call": {
@@ -1188,7 +1188,7 @@ class TestParser(unittest.TestCase):
               "method": "LSink;.sink:(LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(1).x.y",
+                  "port": "Argument(1).x.y",
                   "taint": [
                     {
                       "kinds": [
@@ -1236,7 +1236,7 @@ class TestParser(unittest.TestCase):
               "method": "LSink;.sink:(LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(2)",
+                  "port": "Argument(2)",
                   "taint": [
                     {
                       "call": {
@@ -1295,7 +1295,7 @@ class TestParser(unittest.TestCase):
               "method": "LSink;.sink:(LData;LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(2)",
+                  "port": "Argument(2)",
                   "taint": [
                     {
                       "kinds": [
@@ -1332,7 +1332,7 @@ class TestParser(unittest.TestCase):
                   ]
                 },
                 {
-                  "caller_port": "Argument(1)",
+                  "port": "Argument(1)",
                   "taint": [
                     {
                       "call": {
@@ -1438,7 +1438,7 @@ class TestParser(unittest.TestCase):
               },
               "sinks": [
                 {
-                  "caller_port": "Argument(1)",
+                  "port": "Argument(1)",
                   "taint": [
                     {
                       "kinds": [
@@ -1500,7 +1500,7 @@ class TestParser(unittest.TestCase):
               },
               "generations": [
                 {
-                  "caller_port": "Return",
+                  "port": "Return",
                   "taint": [
                     {
                       "call": {
@@ -1554,7 +1554,7 @@ class TestParser(unittest.TestCase):
               },
               "generations": [
                 {
-                  "caller_port": "Return",
+                  "port": "Return",
                   "taint": [
                     {
                       "call": {
@@ -1610,7 +1610,7 @@ class TestParser(unittest.TestCase):
               },
               "sinks": [
                 {
-                  "caller_port": "Argument(1)",
+                  "port": "Argument(1)",
                   "taint": [
                     {
                       "call": {
@@ -1661,7 +1661,7 @@ class TestParser(unittest.TestCase):
               },
               "sinks": [
                 {
-                  "caller_port": "Argument(1)",
+                  "port": "Argument(1)",
                   "taint": [
                     {
                       "call": {
@@ -1712,7 +1712,7 @@ class TestParser(unittest.TestCase):
               },
               "sinks": [
                 {
-                  "caller_port": "Argument(1)",
+                  "port": "Argument(1)",
                   "taint": [
                     {
                       "call": {
@@ -1763,7 +1763,7 @@ class TestParser(unittest.TestCase):
               "method": "LClass;.indirect_sink:(LData;LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(2)",
+                  "port": "Argument(2)",
                   "taint": [
                     {
                       "call": {
@@ -1823,7 +1823,7 @@ class TestParser(unittest.TestCase):
               "method": "LClass;.indirect_sink:(LData;LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(2)",
+                  "port": "Argument(2)",
                   "taint": [
                     {
                       "kinds": [
@@ -1872,7 +1872,7 @@ class TestParser(unittest.TestCase):
               "method": "LClass;.indirect_sink:(LData;LData;)V",
               "sinks": [
                 {
-                  "caller_port": "Argument(2)",
+                  "port": "Argument(2)",
                   "taint": [
                     {
                       "kinds": [
