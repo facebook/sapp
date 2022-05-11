@@ -418,13 +418,8 @@ class Parser(BaseParser):
         receiver_interval = trace.get("receiver_interval")
         start, finish = 0, sys.maxsize
         if receiver_interval is not None:
-            if isinstance(receiver_interval, list):  # New format
-                if receiver_interval:
-                    start = min(interval["lower"] for interval in receiver_interval)
-                    finish = max(interval["upper"] for interval in receiver_interval)
-            else:  # Old format. TODO(T117934478): Remove this
-                start = receiver_interval["lower"]
-                finish = receiver_interval["upper"]
+            start = min(interval["lower"] for interval in receiver_interval)
+            finish = max(interval["upper"] for interval in receiver_interval)
         preserves_type_context = trace.get("is_self_call", False)
         type_interval = ParseTypeInterval(
             start=start,

@@ -92,7 +92,7 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
-                        "receiver_interval": { "lower": 23, "upper": 24 },
+                        "receiver_interval": [{ "lower": 23, "upper": 24 }],
                         "is_self_call": false,
                         "call": {
                           "position": {
@@ -189,7 +189,6 @@ class TestParser(unittest.TestCase):
                             ],
                             features=[ParseTraceFeature("always-via:source-local", [])],
                             type_interval=ParseTypeInterval(
-                                # TODO(T117934478): Update to the new format
                                 start=23,
                                 finish=24,
                                 preserves_type_context=False,
