@@ -296,10 +296,7 @@ class TraceGraph(object):
         self._trace_frame_leaf_assoc[trace_frame.id.local_id][leaf_id] = depth
 
     def get_trace_frame_leaf_ids(self, trace_frame: TraceFrame) -> Set[int]:
-        ids: Set[int] = {
-            id for id in self._trace_frame_leaf_assoc[trace_frame.id.local_id]
-        }
-        return ids
+        return set(self._trace_frame_leaf_assoc[trace_frame.id.local_id])
 
     def get_trace_frame_leaf_ids_by_kind(
         self, trace_frame: TraceFrame, kind: SharedTextKind
