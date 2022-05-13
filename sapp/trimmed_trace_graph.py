@@ -22,6 +22,7 @@ log: logging.Logger = logging.getLogger("sapp")
 
 Interval = Optional[Tuple[int, int]]
 
+
 # Union for queue to recompute trace lengths
 @dataclass(frozen=True)
 class SearchAction:
