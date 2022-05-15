@@ -30,7 +30,7 @@ jobs:
       - uses: actions/setup-python@v2
 
       - name: Install usort
-        run: pip install usort==0.6.4
+        run: pip install usort==1.0.2
 
       - name: Run usort
         run: usort diff . && usort check .
