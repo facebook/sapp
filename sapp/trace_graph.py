@@ -8,7 +8,7 @@
 import json
 import logging
 from collections import defaultdict
-from typing import cast, Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, cast, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 from .bulk_saver import BulkSaver
 from .models import (

@@ -14,7 +14,7 @@ from typing import Generator
 from unittest import TestCase
 from unittest.mock import patch
 
-from click.testing import Result, CliRunner
+from click.testing import CliRunner, Result
 
 from .. import __name__ as client
 from ..cli import cli

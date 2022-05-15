@@ -14,8 +14,8 @@ from .. import (
     ParseIssueConditionTuple,
     ParseIssueTuple,
     ParseTraceFeature,
-    SourceLocation,
     ParseTypeInterval,
+    SourceLocation,
 )
 from ..base_parser import ParseType
 from ..pysa_taint_parser import Parser

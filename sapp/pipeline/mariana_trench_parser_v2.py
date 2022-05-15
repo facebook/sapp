@@ -8,8 +8,6 @@ import logging
 import re
 import sys
 from typing import (
-    Type,
-    TypeVar,
     Any,
     Dict,
     IO,
@@ -19,6 +17,8 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Type,
+    TypeVar,
     Union,
 )
 
