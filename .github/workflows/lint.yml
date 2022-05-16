@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v2
 
       - name: Install black
-        run: pip install black==21.4b2
+        run: pip install black==22.3.0
 
       - name: Run black
         run: black --exclude 'stubs\/' --check --diff .
