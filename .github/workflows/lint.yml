@@ -58,4 +58,5 @@ jobs:
         run: |
           cd sapp/ui/frontend
           npm install
+          npm install -g eslint
           npm run lint
