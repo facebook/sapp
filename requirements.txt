@@ -15,4 +15,4 @@ prompt-toolkit
 traitlets
 typing-extensions
 pyre-extensions
-zstd
+zstandard
