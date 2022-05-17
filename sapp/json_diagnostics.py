@@ -35,7 +35,7 @@ from functools import partial
 from multiprocessing import Pool
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Type
 
-import zstd
+import zstandard as zstd
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import JsonLexer
