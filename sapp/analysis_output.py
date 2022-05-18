@@ -30,7 +30,7 @@ class Metadata(NamedTuple):
     # Mapping from code to rule metadata.
     # pyre-ignore: we don't have a shape for rules yet.
     rules: Dict[int, Any] = {}
-    type_intervals: Dict[Tuple[int, int], str] = {}
+    class_type_intervals_filenames: List[str] = []
 
     def merge(self, o: "Metadata") -> "Metadata":
         return Metadata(
@@ -43,7 +43,8 @@ class Metadata(NamedTuple):
             job_instance=self.job_instance or o.job_instance,
             project=self.project or o.project,
             rules={**self.rules, **o.rules},
-            type_intervals={**self.type_intervals, **o.type_intervals},
+            class_type_intervals_filenames=self.class_type_intervals_filenames
+            + o.class_type_intervals_filenames,
         )
 
 
@@ -134,14 +135,16 @@ class AnalysisOutput(object):
                 with open(file) as f:
                     metadata.update(json.load(f))
 
-            if "filename_spec" in metadata:
-                filename_specs.append(
-                    os.path.join(directory, os.path.basename(metadata["filename_spec"]))
-                )
+            filename_specs.extend(
+                _get_remapped_filename(metadata, "filename_spec", directory)
+            )
 
             repo_root = metadata.get("repo_root")
             analysis_root = metadata["root"]
             rules = {rule["code"]: rule for rule in metadata.get("rules", [])}
+            class_type_intervals_filenames = _get_remapped_filename(
+                metadata, "class_type_intervals_filename", directory
+            )
             this_metadata = Metadata(
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
@@ -152,7 +155,7 @@ class AnalysisOutput(object):
                 repository_name=metadata.get("repository_name"),
                 project=metadata.get("project"),
                 rules=rules,
-                type_intervals=cls._get_interval_dict(metadata),
+                class_type_intervals_filenames=class_type_intervals_filenames,
             )
             if not main_metadata:
                 main_metadata = this_metadata
@@ -170,12 +173,11 @@ class AnalysisOutput(object):
             with open(file) as f:
                 metadata.update(json.load(f))
 
-        filename_specs = []
+        filename_specs = _get_remapped_filename(metadata, "filename_spec", directory)
         filename_glob = None
-        if "filename_spec" in metadata:
-            filename_specs = [
-                os.path.join(directory, os.path.basename(metadata["filename_spec"]))
-            ]
+        if filename_specs:
+            # Ingore all other fallbacks below
+            pass
         elif "filename_glob" in metadata:
             filename_glob = metadata["filename_glob"]
             if not filename_glob:
@@ -194,7 +196,9 @@ class AnalysisOutput(object):
         analysis_root = metadata["root"]
 
         rules = {rule["code"]: rule for rule in metadata.get("rules", [])}
-
+        class_type_intervals_filenames = _get_remapped_filename(
+            metadata, "class_type_intervals_filename", directory
+        )
         return cls(
             directory=directory,
             filename_specs=filename_specs,
@@ -209,7 +213,7 @@ class AnalysisOutput(object):
                 repository_name=metadata.get("repository_name"),
                 project=metadata.get("project"),
                 rules=rules,
-                type_intervals=cls._get_interval_dict(metadata),
+                class_type_intervals_filenames=class_type_intervals_filenames,
             ),
         )
 
@@ -263,12 +267,20 @@ class AnalysisOutput(object):
     def has_sharded(self) -> bool:
         return any(self._is_sharded(spec) for spec in self.filename_specs)
 
-    @classmethod
-    def _get_interval_dict(cls, metadata: Dict[str, Any]) -> Dict[Tuple[int, int], str]:
-        ret_dict = {}
-        for entry in metadata.get("intervals", []):
-            interval = entry["interval"]
-            if not interval:
-                continue
-            ret_dict[(interval["start"], interval["finish"])] = entry["type"]
-        return ret_dict
+
+def _get_remapped_filename(
+    metadata_json: Dict[str, Any], key: str, bundle_directory: str
+) -> List[str]:
+    """
+    When bundles are created on a different host or moved before processing,
+    any absolute paths inside the metadata json are no longer valid.
+
+    This function pulls a path from the metadata json and corrects the path
+    to be within a bundle directory.
+    """
+    filename = metadata_json.get(key)
+    if filename:
+        filename = os.path.join(bundle_directory, os.path.basename(filename))
+        return [filename]
+    else:
+        return []

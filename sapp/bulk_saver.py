@@ -13,6 +13,7 @@ from .db import DB
 from .decorators import log_time
 from .iterutil import split_every
 from .models import (
+    ClassTypeInterval,
     Feature,
     Issue,
     IssueInstance,
@@ -48,6 +49,7 @@ class BulkSaver:
         TraceFrameAnnotationTraceFrameAssoc,
         Feature,
         IssueInstanceFeatureAssoc,
+        ClassTypeInterval,
     ]
 
     BATCH_SIZE = 30000

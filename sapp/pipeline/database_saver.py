@@ -9,6 +9,8 @@ import collections
 import logging
 from typing import Optional, Tuple
 
+from tools.sapp.sapp.models import ClassTypeInterval
+
 from ..bulk_saver import BulkSaver
 from ..db import DB
 from ..decorators import log_time
@@ -79,11 +81,13 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
 
         trace_frames = self.bulk_saver.get_items_to_add(TraceFrame)
         log.info(
-            "Saving %d issues, %d trace frames, %d trace annotations, %d trace frame leaf assocs",
+            "Saving %d issues, %d trace frames, %d trace annotations, "
+            + "%d trace frame leaf assocs, %d class type intervals",
             len(self.bulk_saver.get_items_to_add(Issue)),
             len(self.bulk_saver.get_items_to_add(TraceFrame)),
             len(self.bulk_saver.get_items_to_add(TraceFrameAnnotation)),
             len(self.bulk_saver.get_items_to_add(TraceFrameLeafAssoc)),
+            len(self.bulk_saver.get_items_to_add(ClassTypeInterval)),
         )
 
         num_pre = 0

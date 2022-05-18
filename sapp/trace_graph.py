@@ -12,6 +12,7 @@ from typing import Any, cast, DefaultDict, Dict, Iterable, List, Optional, Set, 
 
 from .bulk_saver import BulkSaver
 from .models import (
+    ClassTypeInterval,
     DBID,
     Feature,
     Issue,
@@ -108,6 +109,8 @@ class TraceGraph(object):
 
         self._issue_instance_fix_info: Dict[int, IssueInstanceFixInfo] = {}
 
+        self._class_type_intervals: Dict[str, ClassTypeInterval] = {}
+
         # !!!!! IMPORTANT !!!!!
         # IF YOU ARE ADDING MORE FIELDS/EDGES TO THIS GRAPH, CHECK IF
         # TrimmedTraceGraph NEEDS TO BE UPDATED AS WELL.
@@ -146,6 +149,12 @@ class TraceGraph(object):
             instance.id.local_id not in self._issue_instance_fix_info
         ), "Instance fix info already exists"
         self._issue_instance_fix_info[instance.id.local_id] = fix_info
+
+    def add_class_type_interval(self, interval: ClassTypeInterval) -> None:
+        assert (
+            interval.class_name not in self._class_type_intervals
+        ), "Class name already exists"
+        self._class_type_intervals[interval.class_name] = interval
 
     def get_text(self, shared_text_id: DBID) -> str:
         return self._shared_texts[shared_text_id.local_id].contents
@@ -390,6 +399,7 @@ class TraceGraph(object):
         bulk_saver.add_all(list(self._trace_annotations.values()))
         bulk_saver.add_all(list(self._shared_texts.values()))
         bulk_saver.add_all(list(self._features.values()))
+        bulk_saver.add_all(list(self._class_type_intervals.values()))
 
         self._save_issue_instance_trace_frame_assoc(bulk_saver)
         self._save_trace_frame_leaf_assoc(bulk_saver)

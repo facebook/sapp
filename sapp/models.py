@@ -1559,6 +1559,31 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
         return cls._merge_by_key(session, items, cls.run_id)
 
 
+class ClassTypeInterval(Base, PrepareMixin, RecordMixin):
+    """This table can store the class names for type intervals within a run"""
+
+    __tablename__ = "class_type_intervals"
+
+    __table_args__ = (
+        Index(
+            "ix_class_type_intervals_run_id_class_name",
+            "run_id",
+            "class_name",
+            unique=True,
+        ),
+        Index("ix_class_type_intervals_bounds", "run_id", "lower_bound", "upper_bound"),
+    )
+
+    # Synthetic primary key allows easier pagination when compared to
+    # using (run_id, class_name) as a composite primary key
+    id = Column("id", BIGDBIDType, nullable=False, primary_key=True)
+
+    run_id = Column(BIGDBIDType, nullable=False)
+    class_name = Column(String(length=INNODB_MAX_INDEX_LENGTH), nullable=False)
+    lower_bound = Column(Integer, nullable=False)
+    upper_bound = Column(Integer, nullable=False)
+
+
 class PrimaryKey(Base, PrimaryKeyBase):
     pass
 
@@ -1576,6 +1601,7 @@ class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
         TraceFrame,
         TraceFrameAnnotation,
         Feature,
+        ClassTypeInterval,
     }
 
 

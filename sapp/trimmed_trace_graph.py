@@ -184,6 +184,8 @@ class TrimmedTraceGraph(TraceGraph):
         for inst in to_remove:
             self._remove_instance(inst)
 
+        self._class_type_intervals = graph._class_type_intervals
+
     def _remove_instance(self, instance: IssueInstance) -> None:
         """Remove instance from state that gets saved and cleanup all instance
         associations too"""

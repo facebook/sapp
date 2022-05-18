@@ -9,6 +9,8 @@
 import datetime
 from typing import Any, Dict, Optional
 
+from tools.sapp.sapp.models import ClassTypeInterval
+
 from ..bulk_saver import BulkSaver
 from ..models import (
     DBID,
@@ -280,3 +282,19 @@ class FakeObjectGenerator:
         else:
             self.saver.add(result)
         return result
+
+    def class_type_interval(
+        self, class_name: str = "\\Foo", lower_bound: int = 0, upper_bound: int = 100
+    ) -> ClassTypeInterval:
+        interval = ClassTypeInterval.Record(
+            id=DBID(),
+            run_id=self.run_id,
+            class_name=class_name,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+        )
+        if self.graph:
+            self.graph.add_class_type_interval(interval)
+        else:
+            self.saver.add(interval)
+        return interval
