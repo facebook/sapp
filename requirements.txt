@@ -3,7 +3,7 @@ click-log
 flask
 flask_graphql
 flask-cors
-graphene
+graphene<3.0
 graphene_sqlalchemy
 ipython
 munch
