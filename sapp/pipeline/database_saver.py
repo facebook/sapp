@@ -9,12 +9,11 @@ import collections
 import logging
 from typing import Optional, Tuple
 
-from tools.sapp.sapp.models import ClassTypeInterval
-
 from ..bulk_saver import BulkSaver
 from ..db import DB
 from ..decorators import log_time
 from ..models import (
+    ClassTypeInterval,
     Issue,
     MetaRunToRunAssoc,
     PrimaryKeyGenerator,

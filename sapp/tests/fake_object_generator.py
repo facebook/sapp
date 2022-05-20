@@ -9,10 +9,9 @@
 import datetime
 from typing import Any, Dict, Optional
 
-from tools.sapp.sapp.models import ClassTypeInterval
-
 from ..bulk_saver import BulkSaver
 from ..models import (
+    ClassTypeInterval,
     DBID,
     Feature,
     FrameReachability,
