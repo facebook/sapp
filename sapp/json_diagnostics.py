@@ -14,7 +14,7 @@
 # already been created. If not, we have to generate it.  The parser provides
 # a shard number and file offset when parsing each json entry. We create an
 # instance of LookupTable, which is primarily a mapping from callables to a list
-# of shard nummbers and file offsets.  We pickle and compress this file, saving
+# of shard nummbers and file offsets.  We write this into a file, saving
 # it into LOOKUP_TABLE.  The next time someone runs the command, LOOKUP_TABLE
 # will be loaded from disk and re-used.
 #
@@ -28,7 +28,6 @@
 import json
 import logging
 import os
-import pickle
 import sys
 from collections import defaultdict
 from functools import partial
@@ -70,6 +69,16 @@ class LookupTable(NamedTuple):
     version: int = TABLE_VERSION
     file_index: Dict[FileID, str] = {}
     entries: LookupEntries = {}
+
+    def to_json(self) -> str:
+        return json.dumps((self.version, self.file_index, self.entries))
+
+    @classmethod
+    def from_json(cls, value: str) -> "LookupTable":
+        version, file_index, entries = json.loads(value)
+        # JSON does not allow integers as object keys
+        file_index = {int(index): filename for index, filename in file_index.items()}
+        return cls(version=version, file_index=file_index, entries=entries)
 
 
 def _parse_file(
@@ -145,7 +154,7 @@ class JSONDiagnostics(object):
         with open(path, "rb") as fh:
             compressed = fh.read()
         decompressed = zstd.ZstdDecompressor().decompress(compressed)
-        table = pickle.loads(decompressed)
+        table = LookupTable.from_json(decompressed.decode("utf8"))
 
         if table.version != TABLE_VERSION:
             raise JSONDiagnosticsException(
@@ -164,7 +173,7 @@ class JSONDiagnostics(object):
     def _save_lookup_table(self, path: str, table: LookupTable) -> None:
         logger.info(f"Writing lookup table to `{path}`")
         compressed = zstd.ZstdCompressor(threads=-1).compress(
-            pickle.dumps(table, protocol=pickle.HIGHEST_PROTOCOL)
+            table.to_json().encode("utf8")
         )
         tmp_name = path + ".tmp"
         with open(tmp_name, "wb") as fh:
