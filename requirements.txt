@@ -5,7 +5,7 @@ Flask-Cors==3.0.10
 Flask-GraphQL==2.0.1
 graphene<3.0
 graphene-sqlalchemy==2.3.0
-ipython==8.4.0
+ipython<8.4.0
 munch==2.5.0
 prompt-toolkit==3.0.29
 Pygments==2.12.0
