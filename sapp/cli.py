@@ -15,7 +15,7 @@ from .context import Context
 from .db import DB, DBType
 from .lint import lint
 from .pipeline.base_parser import BaseParser
-from .pipeline.mariana_trench_parser import Parser as MarianaTrenchParser
+from .pipeline.mariana_trench_parser_v2 import Parser as MarianaTrenchParser
 from .pipeline.pysa_taint_parser import Parser as PysaParser
 
 LOG: logging.Logger = logging.getLogger("sapp")
