@@ -339,6 +339,8 @@ class Issue(NamedTuple):
     code: int
     message: str
     callable: Method
+    callee_signature: str
+    sink_index: int
     callable_position: Position
     issue_position: Position
     preconditions: List[IssueCondition]
@@ -348,17 +350,12 @@ class Issue(NamedTuple):
     features: Features
 
     def to_sapp(self, parser: "Parser") -> sapp.ParseIssueTuple:
+        master_handle = f"{self.callable.name}:{self.callee_signature}:{self.sink_index}:{self.code}"
         return sapp.ParseIssueTuple(
             code=self.code,
             message=self.message,
             callable=self.callable.name,
-            handle=parser.compute_master_handle(
-                callable=self.callable.name,
-                line=self.issue_position.line - self.callable_position.line,
-                start=self.issue_position.start,
-                end=self.issue_position.end,
-                code=self.code,
-            ),
+            handle=BaseParser.compute_handle_from_key(master_handle),
             filename=self.callable_position.path,
             callable_line=self.callable_position.line,
             line=self.issue_position.line,
@@ -449,6 +446,8 @@ class Parser(BaseParser):
                 code=code,
                 message=f"{rule['name']}: {rule['description']}",
                 callable=callable,
+                callee_signature=issue["callee"],
+                sink_index=issue["sink_index"],
                 callable_position=callable_position,
                 issue_position=issue_position,
                 preconditions=preconditions,

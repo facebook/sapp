@@ -77,6 +77,8 @@ class TestParser(unittest.TestCase):
                     "start": 11,
                     "end": 12
                   },
+                  "callee": "LSink;.sink:(LData;)V",
+                  "sink_index": 0,
                   "sinks": [
                     {
                       "call": {
@@ -142,7 +144,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="TestRule: Test Rule Description",
                     callable="LClass;.flow:()V",
-                    handle="LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
+                    handle="LClass;.flow:()V:LSink;.sink:(LData;)V:0:1:1ef9022f932a64d0",
                     filename="Flow.java",
                     callable_line=2,
                     line=10,
@@ -216,6 +218,8 @@ class TestParser(unittest.TestCase):
                     "start": 11,
                     "end": 12
                   },
+                  "callee": "LSink;.sink:(LData;)V",
+                  "sink_index": 1,
                   "sinks": [
                     {
                       "call": {
@@ -296,7 +300,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="TestRule: Test Rule Description",
                     callable="LClass;.flow:()V",
-                    handle="LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
+                    handle="LClass;.flow:()V:LSink;.sink:(LData;)V:1:1:e7653955345a4ce9",
                     filename="Flow.java",
                     callable_line=2,
                     line=10,
@@ -379,6 +383,8 @@ class TestParser(unittest.TestCase):
                     "start": 11,
                     "end": 12
                   },
+                  "callee": "LSink;.sink:(LData;)V",
+                  "sink_index": 2,
                   "sinks": [
                     {
                       "call": {
@@ -428,7 +434,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="TestRule: Test Rule Description",
                     callable="LClass;.flow:()V",
-                    handle="LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
+                    handle="LClass;.flow:()V:LSink;.sink:(LData;)V:2:1:4a78c3ad238e0bf7",
                     filename="Flow.java",
                     callable_line=2,
                     line=10,
@@ -499,6 +505,8 @@ class TestParser(unittest.TestCase):
                     "start": 11,
                     "end": 12
                   },
+                  "callee": "LSink;.sink:(LData;)V",
+                  "sink_index": 3,
                   "sinks": [
                     {
                       "call": {
@@ -609,7 +617,7 @@ class TestParser(unittest.TestCase):
                     code=1,
                     message="TestRule: Test Rule Description",
                     callable="LClass;.flow:()V",
-                    handle="LClass;.flow:()V:8|12|13:1:f75a532726260b3b",
+                    handle="LClass;.flow:()V:LSink;.sink:(LData;)V:3:1:4172bb4962984471",
                     filename="Flow.java",
                     callable_line=2,
                     line=10,
