@@ -711,6 +711,59 @@ class TestParser(unittest.TestCase):
             ],
         )
 
+    def testIssueMasterHandles(self) -> None:
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                callee_signature="LSink;.sink:(LData;)V",
+                sink_index=1,
+                code=4,
+                callable_line=2,
+                issue_line=10,
+            ),
+            "LClass;.flow:()V:LSink;.sink:(LData;)V:1:4:794639b3826f7c38",
+        )
+
+        # Replace anonymous class callee numbers with the relative line
+        # in the issue handle
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                callee_signature="LSink$2$10;.sink:(LData;)V",
+                sink_index=2,
+                code=1,
+                callable_line=2,
+                issue_line=10,
+            ),
+            "LClass;.flow:()V:LSink$$#8;.sink:(LData;)V:2:1:67e997f12486978a",
+        )
+
+        # Don't replace an inner class that is named rather than numbered and ignore $'s in the method name
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                callee_signature="LSink$Inner;.sink$default:(LData;)V",
+                sink_index=0,
+                code=1,
+                callable_line=2,
+                issue_line=10,
+            ),
+            "LClass;.flow:()V:LSink$Inner;.sink$default:(LData;)V:0:1:62c60c27a623a6f2",
+        )
+
+        # If the callable has an unknown line then default to replacement with -1
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                callee_signature="LSink$1;.sink:(LData;)V",
+                sink_index=1,
+                code=5,
+                callable_line=-1,
+                issue_line=-1,
+            ),
+            "LClass;.flow:()V:LSink$#-1;.sink:(LData;)V:1:5:c8fdde661b3ae0f5",
+        )
+
     def testModelPostconditions(self) -> None:
         # Leaf case.
         self.assertParsed(

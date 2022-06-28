@@ -350,12 +350,18 @@ class Issue(NamedTuple):
     features: Features
 
     def to_sapp(self, parser: "Parser") -> sapp.ParseIssueTuple:
-        master_handle = f"{self.callable.name}:{self.callee_signature}:{self.sink_index}:{self.code}"
         return sapp.ParseIssueTuple(
             code=self.code,
             message=self.message,
             callable=self.callable.name,
-            handle=BaseParser.compute_handle_from_key(master_handle),
+            handle=Parser.get_master_handle(
+                self.callable.name,
+                self.callee_signature,
+                self.sink_index,
+                self.code,
+                self.callable_position.line,
+                self.issue_position.line,
+            ),
             filename=self.callable_position.path,
             callable_line=self.callable_position.line,
             line=self.issue_position.line,
@@ -386,6 +392,58 @@ class Parser(BaseParser):
         return (
             metadata.tool == "mariana_trench"
             and metadata.analysis_tool_version == "0.2"
+        )
+
+    # This is meant to remove the compiler-generated anonymous class numbers within
+    # the sink callee signature to be included in an issue master handle. The number
+    # is replaced with the relative line of the issue within the root callable. This
+    # is done because the anonymous class number is more susceptible to changing with
+    # unrelated changes in a diff rather than the relative line number of the issue
+    # in the root callable.
+    @staticmethod
+    def strip_anonymous_class_numbers(
+        callee_signature: str, callable_line: int, issue_line: int
+    ) -> str:
+        first_semicolon = callee_signature.find(";")
+        if first_semicolon < 0:
+            return callee_signature
+        class_name = callee_signature[:first_semicolon]
+        class_name_length = len(class_name)
+        stripped_classname = ""
+        index = 0
+        while index < class_name_length:
+            character = class_name[index]
+            stripped_classname += character
+            index += 1
+            if (
+                character != "$"
+                or index == class_name_length
+                or not class_name[index].isdigit()
+            ):
+                continue
+            while index < class_name_length and class_name[index].isdigit():
+                index += 1
+        if stripped_classname == class_name:
+            return callee_signature
+
+        relative_line = -1
+        if issue_line > -1 and issue_line >= callable_line:
+            relative_line = issue_line - callable_line
+        return (
+            f"{stripped_classname}#{relative_line}{callee_signature[first_semicolon:]}"
+        )
+
+    @staticmethod
+    def get_master_handle(
+        callable: str,
+        callee_signature: str,
+        sink_index: int,
+        code: int,
+        callable_line: int,
+        issue_line: int,
+    ) -> str:
+        return BaseParser.compute_handle_from_key(
+            f"{callable}:{Parser.strip_anonymous_class_numbers(callee_signature, callable_line, issue_line)}:{sink_index}:{code}"
         )
 
     def initialize(self, metadata: Optional[Metadata]) -> None:
