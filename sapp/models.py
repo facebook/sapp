@@ -634,8 +634,9 @@ class Severity(enum.Enum):
     SEV = enum.auto()
     SEVWorthy = enum.auto()
     Critical = enum.auto()
-    Serious = enum.auto()
+    Serious = enum.auto()  # Deprecated: replaced by "Significant"
     Limited = enum.auto()
+    Significant = enum.auto()
 
 
 class Issue(Base, PrepareMixin, MutableRecordMixin):
