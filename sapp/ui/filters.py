@@ -234,6 +234,7 @@ def filter_run(
         query_results = set()
         for filter_instance in filter_instances:
             query_result = (
+                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 Instance(session, DBID(run_id_input))
                 .where_filter(filter_instance)
                 .get()

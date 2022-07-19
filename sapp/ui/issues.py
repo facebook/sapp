@@ -123,6 +123,7 @@ class IssueQueryResultType(graphene.ObjectType):
         return ""
 
     def resolve_similar_issues(self, info: ResolveInfo) -> Set[SimilarIssue]:
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         other_issues = Instance(info.context["session"], DBID(self.run_id)).get()
 
         for other_issue in other_issues:

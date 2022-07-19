@@ -176,10 +176,13 @@ json CALLABLE        show the original json output for the matching callable
         self.current_analysis_output: Optional[AnalysisOutput] = None
         self._current_json_diagnostics: Optional[JSONDiagnostics] = None
 
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self._current_run_id: DBID = DBID(-1)
 
         # Trace exploration relies on either of these
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.current_issue_instance_id: DBID = DBID(-1)
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.current_frame_id: DBID = DBID(-1)
 
         self.sources: Set[str] = set()
@@ -401,6 +404,7 @@ json CALLABLE        show the original json output for the matching callable
             )
 
         self.current_issue_instance_id = selected_issue.id
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.current_frame_id = DBID(-1)
         self.current_trace_frame_index = 1  # first one after the source
 
@@ -740,6 +744,7 @@ json CALLABLE        show the original json output for the matching callable
                 self.sources = set()
 
         self.current_frame_id = selected_frame.id
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.current_issue_instance_id = DBID(-1)
 
         print(f"Set trace frame to {frame_id}.")
@@ -886,6 +891,7 @@ json CALLABLE        show the original json output for the matching callable
             + [
                 TraceTuple(
                     trace_frame=TraceFrameQueryResult(
+                        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                         id=DBID(0),
                         caller="",
                         caller_port="",

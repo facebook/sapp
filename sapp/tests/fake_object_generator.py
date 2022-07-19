@@ -94,17 +94,20 @@ class FakeObjectGenerator:
         trace_frame = TraceFrame.Record(
             extra_fields=["leaf_mapping"],
             leaf_mapping={
+                # pyre-fixme[16]: Module `trace_graph` has no attribute `LeafMapping`.
                 LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)
                 for (leaf, _) in leaves
                 if leaf.kind == SharedTextKind.source
                 or leaf.kind == SharedTextKind.sink
             },
+            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(),
             kind=TraceKind.PRECONDITION,
             caller_id=caller_record.id,
             caller_port=caller_port,
             callee_id=callee_record.id,
             callee_port=callee_port,
+            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             callee_location=SourceLocation(location[0], location[1], location[2]),
             filename_id=filename_record.id,
             titos=[],
@@ -144,17 +147,20 @@ class FakeObjectGenerator:
         trace_frame = TraceFrame.Record(
             extra_fields=["leaf_mapping"],
             leaf_mapping={
+                # pyre-fixme[16]: Module `trace_graph` has no attribute `LeafMapping`.
                 LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)
                 for (leaf, _) in leaves
                 if leaf.kind == SharedTextKind.source
                 or leaf.kind == SharedTextKind.sink
             },
+            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(),
             kind=TraceKind.POSTCONDITION,
             caller_id=caller_record.id,
             caller_port=caller_port,
             callee_id=callee_record.id,
             callee_port=callee_port,
+            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             callee_location=SourceLocation(location[0], location[1], location[2]),
             filename_id=filename_record.id,
             titos=[],
@@ -212,6 +218,7 @@ class FakeObjectGenerator:
             if feature_obj is not None:
                 return feature_obj
 
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         feature_obj = Feature.Record(id=DBID(), data=feature)
         if self.graph:
             self.graph.add_feature(feature_obj)
@@ -252,12 +259,15 @@ class FakeObjectGenerator:
         min_trace_length_to_sources=None,
         min_trace_length_to_sinks=None,
     ):
+        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         issue_id = issue_id if issue_id is not None else DBID(1)
         filename = self.filename(filename)
         message = self.message(message)
         callable = self.callable(callable)
         result = IssueInstance.Record(
+            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(),
+            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             location=SourceLocation(6, 7, 8),
             filename_id=filename.id,
             message_id=message.id,
@@ -286,6 +296,7 @@ class FakeObjectGenerator:
         self, class_name: str = "\\Foo", lower_bound: int = 0, upper_bound: int = 100
     ) -> ClassTypeInterval:
         interval = ClassTypeInterval.Record(
+            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(),
             run_id=self.run_id,
             class_name=class_name,

@@ -280,6 +280,7 @@ class TraceGraph(object):
         feature_object = self.get_feature(feature)
         if feature_object is None:
             feature_object = Feature.Record(
+                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(),
                 data=feature,
             )
@@ -290,6 +291,7 @@ class TraceGraph(object):
         name = name[:SHARED_TEXT_LENGTH]
         shared_text = self.get_shared_text(kind, name)
         if shared_text is None:
+            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             shared_text = SharedText.Record(id=DBID(), contents=name, kind=kind)
             self.add_shared_text(shared_text)
         return shared_text

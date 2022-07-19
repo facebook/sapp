@@ -23,6 +23,7 @@ from ..models import (
 
 
 def latest(session: Session) -> DBID:
+    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
     return DBID(
         (
             session.query(func.max(RunColumn.id))

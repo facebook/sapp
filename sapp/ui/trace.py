@@ -252,6 +252,7 @@ def navigate_trace_frames(
             trace_frames.append(
                 (
                     TraceFrameQueryResult(
+                        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                         id=DBID(0),
                         callee=trace_frame.callee,
                         callee_port=trace_frame.callee_port,

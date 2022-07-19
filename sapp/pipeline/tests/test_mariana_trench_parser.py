@@ -472,6 +472,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="LSource;.source:()V",
                     callee="leaf",
@@ -528,6 +529,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="LClass;.indirect_source:()V",
                     callee="LSource;.source:()LData;",
@@ -575,6 +577,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="LSource;.source:()V",
                     callee="leaf",
@@ -622,6 +625,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="LSource;.source:()V",
                     callee="leaf",
@@ -666,6 +670,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="LSink;.sink:(LData;)V",
                     callee="leaf",
@@ -719,6 +724,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="LClass;.indirect_sink:(LData;LData;)V",
                     callee="LSink;.sink:(LData;)V",
@@ -763,6 +769,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="LSink;.sink:(LData;)V",
                     callee="leaf",
@@ -813,6 +820,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="LSink;.sink:(LData;)V",
                     callee="leaf",
@@ -879,6 +887,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="LSink;.sink:(LData;)V[0: LAnonymous$0;, 1: LAnonymous$1;]",
                     callee="leaf",
@@ -923,6 +932,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
                     callee="SomeMutation:some_field",
@@ -965,6 +975,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
                     callee="SomeMutation:some_field",
@@ -1007,6 +1018,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V",
                     callee="Lcom/facebook/graphql/calls/SomeMutation;.setSomeField:(LData;)V__%source_via_type_of%",
@@ -1054,6 +1066,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
                     callee="TestEvent:field_a",
@@ -1099,6 +1112,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
                     callee="LClass;.method:(I)V",
@@ -1148,6 +1162,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="LClass;.indirect_sink:(LData;LData;)V",
                     callee="Lcom/facebook/Sink$4;.sink:(LData;)V",
@@ -1190,6 +1205,7 @@ class TestParser(unittest.TestCase):
             """,
             [
                 ParseConditionTuple(
+                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="LClass;.indirect_sink:(LData;LData;)V",
                     callee="Lcom/facebook/SinkClass;.field:Ljava/lang/Object;",
