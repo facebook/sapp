@@ -69,7 +69,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         self.graph = TraceGraph()
         self.summary["run"] = self._create_empty_run(status=RunStatus.INCOMPLETE)
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.summary["run"].id = DBID()
 
         self.summary["trace_entries"][TraceKind.precondition] = input["preconditions"]
@@ -192,7 +191,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         fix_info_id = None
         if entry.fix_info is not None:
             fix_info = IssueInstanceFixInfo.Record(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(),
                 fix_info=json.dumps(entry.fix_info),
             )
@@ -203,7 +201,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
         instance: IssueInstance = IssueInstance.Record(
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(),
             issue_id=issue.id,
             location=self.get_location(entry),
@@ -438,7 +435,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             caller_leaf_id = self.graph.get_transform_normalized_kind_id(leaf_record)
             callee_leaf_id = self.graph.get_transformed_kind_id(leaf_record)
             leaf_mapping_ids.add(
-                # pyre-fixme[16]: Module `trace_graph` has no attribute `LeafMapping`.
                 LeafMapping(
                     caller_leaf=caller_leaf_id,
                     callee_leaf=callee_leaf_id,
@@ -449,7 +445,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         trace_frame: TraceFrame = TraceFrame.Record(
             extra_fields=["leaf_mapping"],
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(),
             kind=kind,
             caller_id=caller_record.id,
@@ -489,7 +484,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 for loc in loc_dict.values():
                     self.graph.add_trace_annotation(
                         TraceFrameAnnotation.Record(
-                            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                             id=DBID(),
                             trace_frame_id=trace_frame.id,
                             location=loc,
@@ -544,7 +538,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 else (SharedTextKind.SOURCE, TraceKind.POSTCONDITION)
             )
             annotation_record = TraceFrameAnnotation.Record(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(),
                 trace_frame_id=parent_id,
                 location=location,
@@ -617,5 +610,4 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         line = entry.line
         if is_relative and entry.callable_line:
             line -= entry.callable_line
-        # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
         return SourceLocation(line, entry.start, entry.end)

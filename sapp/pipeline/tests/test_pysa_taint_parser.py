@@ -1256,7 +1256,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_user_controlled",
@@ -1324,7 +1323,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_user_controlled",
@@ -1350,7 +1348,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_other_user_controlled",
@@ -1445,7 +1442,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_user_controlled",
@@ -1469,7 +1465,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_cross_repo",
@@ -1493,7 +1488,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_cross_repo_other",
@@ -1517,7 +1511,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_cross_repo",
@@ -1605,7 +1598,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="foo.source",
@@ -1684,7 +1676,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="foo.source",
@@ -1708,7 +1699,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="foo.other_source",
@@ -1800,7 +1790,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="_user_controlled",
@@ -1826,7 +1815,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="foo.source",
@@ -1912,7 +1900,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller="foo.bar",
                     callee="leaf",
@@ -2020,7 +2007,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_sql",
@@ -2088,7 +2074,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_remote_code_execution",
@@ -2114,7 +2099,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_other_remote_code_execution",
@@ -2211,7 +2195,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_remote_code_execution",
@@ -2235,7 +2218,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_cross_repo",
@@ -2259,7 +2241,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_cross_repo_other",
@@ -2283,7 +2264,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_cross_repo",
@@ -2371,7 +2351,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="foo.sink",
@@ -2452,7 +2431,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="foo.sink",
@@ -2478,7 +2456,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="foo.other_sink",
@@ -2572,7 +2549,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="_remote_code_execution",
@@ -2598,7 +2574,6 @@ class TestParser(unittest.TestCase):
                     annotations=[],
                 ),
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="foo.sink",
@@ -2684,7 +2659,6 @@ class TestParser(unittest.TestCase):
             """,
             expected=[
                 ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller="foo.bar",
                     callee="leaf",

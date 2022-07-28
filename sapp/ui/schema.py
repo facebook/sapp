@@ -207,7 +207,6 @@ class Query(graphene.ObjectType):
         )
 
         issues = (
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             Instance(session, DBID(run_id))
             .where_filter(filter_instance)
             .where_issue_instance_id_is(issue_instance_id)
@@ -222,7 +221,6 @@ class Query(graphene.ObjectType):
         session = info.context.get("session")
         return trace.initial_frames(
             session,
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             DBID(issue_instance_id),
             TraceKind.create_from_string(kind),
         )
@@ -234,10 +232,8 @@ class Query(graphene.ObjectType):
 
         trace_kind = TraceKind.create_from_string(kind)
         if trace_kind == TraceKind.POSTCONDITION:
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             leaf_kind = issues.sources(session, DBID(issue_instance_id))
         elif trace_kind == TraceKind.PRECONDITION:
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             leaf_kind = issues.sinks(session, DBID(issue_instance_id))
 
         trace_frame = session.query(TraceFrame).get(frame_id)

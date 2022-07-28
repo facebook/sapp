@@ -91,7 +91,6 @@ class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
         leaf = graph.get_shared_text(self.new_leaf_kind, self.new_leaf_name)
         if leaf is None:
             leaf = SharedText.Record(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(),
                 contents=self.new_leaf_name,
                 kind=self.new_leaf_kind,
@@ -110,8 +109,6 @@ class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
             leaf_mapping: Set[LeafMapping] = trace_frame.leaf_mapping
             if leaf.kind == SharedTextKind.source or leaf.kind == SharedTextKind.sink:
                 leaf_mapping.add(
-                    # pyre-fixme[16]: Module `trace_graph` has no attribute
-                    #  `LeafMapping`.
                     LeafMapping(leaf.id.local_id, leaf.id.local_id, leaf.id.local_id)
                 )
             graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)

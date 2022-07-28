@@ -193,7 +193,6 @@ class Parser(BaseParser):
                 "source", source_trace["taint"]
             ):
                 yield ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.POSTCONDITION,
                     caller=callable,
                     callee=fragment["callee"],
@@ -219,7 +218,6 @@ class Parser(BaseParser):
             port = sink_trace["port"]
             for fragment in self._parse_trace_fragments("sink", sink_trace["taint"]):
                 yield ParseConditionTuple(
-                    # pyre-fixme[16]: Module `base_parser` has no attribute `ParseType`.
                     type=ParseType.PRECONDITION,
                     caller=callable,
                     callee=fragment["callee"],

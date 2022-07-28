@@ -90,7 +90,6 @@ class InteractiveTest(TestCase):
             .filter(SharedText.id == trace_frame.filename_id)
             .scalar()
         )
-        # pyre-fixme[16]: Module `interactive` has no attribute `TraceFrameQueryResult`.
         return TraceFrameQueryResult(
             id=trace_frame.id,
             caller=caller,
@@ -100,16 +99,14 @@ class InteractiveTest(TestCase):
             caller_id=trace_frame.caller_id,
             callee_id=trace_frame.callee_id,
             callee_location=trace_frame.callee_location,
+            # pyre-fixme[6]: For 9th param expected `Optional[TraceKind]` but got `str`.
             kind=trace_frame.kind,
             filename=filename,
         )
 
     def testState(self) -> None:
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive._current_run_id = DBID(1)
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_issue_instance_id = DBID(2)
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_frame_id = DBID(3)
         self.interactive.sources = {"1"}
         self.interactive.sinks = {"2"}
@@ -814,15 +811,11 @@ class InteractiveTest(TestCase):
         # reverse order
         postcondition_traces = [
             (
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(1),
                     callee="call3",
                     callee_port="result",
                     filename="file3.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 3),
                     caller="main",
                     caller_port="root",
@@ -830,33 +823,25 @@ class InteractiveTest(TestCase):
                 1,
             ),
             (
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(2),
                     callee="call2",
                     callee_port="result",
                     caller="dummy caller",
                     caller_port="dummy caller",
                     filename="file2.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 2),
                 ),
                 2,
             ),
             (
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(3),
                     callee="leaf",
                     callee_port="source",
                     caller="dummy caller",
                     caller_port="dummy caller",
                     filename="file1.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 1),
                 ),
                 3,
@@ -867,11 +852,8 @@ class InteractiveTest(TestCase):
         self.assertEqual(
             trace_tuples,
             [
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(postcondition_traces[0][0], 1),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(postcondition_traces[1][0], 2),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(postcondition_traces[2][0], 3),
             ],
         )
@@ -883,118 +865,83 @@ class InteractiveTest(TestCase):
             SharedText(kind=SharedTextKind.FEATURE, contents="three"),
         ]
         trace_tuples = [
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(1),
                     caller="unused",
                     caller_port="unused",
                     callee="leaf",
                     callee_port="source",
                     filename="file1.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 1),
                 )
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(2),
                     caller="unused",
                     caller_port="unused",
                     callee="call2",
                     callee_port="result",
                     filename="file2.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 2),
                     shared_texts=[features[0], features[1]],
                 )
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(3),
                     caller="unused",
                     caller_port="unused",
                     callee="call3",
                     callee_port="result",
                     filename="file3.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 3),
                 )
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(4),
                     caller="unused",
                     caller_port="unused",
                     callee="main",
                     callee_port="root",
                     filename="file4.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 4),
                     shared_texts=[features[1], features[2]],
                 )
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(5),
                     caller="unused",
                     caller_port="unused",
                     callee="call4",
                     callee_port="param0",
                     filename="file4.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 4),
                 )
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(6),
                     caller="unused",
                     caller_port="unused",
                     callee="call5",
                     callee_port="param1",
                     filename="file5.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 5),
                     shared_texts=[features[0], features[1], features[2]],
                 )
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(7),
                     caller="unused",
                     caller_port="unused",
                     callee="leaf",
                     callee_port="sink",
                     filename="file6.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(1, 1, 6),
                 )
             ),
@@ -1757,7 +1704,6 @@ class InteractiveTest(TestCase):
         # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
         #  `TraceFrame`.
         # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
-        # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
         self.interactive.trace_tuples = [TraceTuple(trace_frame=TraceFrame(id=1))]
 
         # pyre-fixme[6]: For 1st param expected `List[TraceFrameQueryResult]` but
@@ -1781,30 +1727,24 @@ class InteractiveTest(TestCase):
         self.assertEqual(-1, self.interactive._current_branch_index(trace_frames))
 
     def testVerifyEntrypointSelected(self) -> None:
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_issue_instance_id = DBID(-1)
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_frame_id = DBID(-1)
         with self.assertRaises(UserError):
             self.interactive._verify_entrypoint_selected()
 
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_issue_instance_id = DBID(1)
         try:
             self.interactive._verify_entrypoint_selected()
         except UserError:
             self.fail("Unexpected UserError")
 
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_issue_instance_id = DBID(-1)
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_frame_id = DBID(1)
         try:
             self.interactive._verify_entrypoint_selected()
         except UserError:
             self.fail("Unexpected UserError")
 
-        # pyre-fixme[16]: Module `models` has no attribute `DBID`.
         self.interactive.current_issue_instance_id = DBID(1)
         with self.assertRaises(AssertionError):
             self.interactive._verify_entrypoint_selected()
@@ -1815,12 +1755,10 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
             #  `TraceFrame`.
             # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(trace_frame=TraceFrame(id=1), branches=1),
             # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
             #  `TraceFrame`.
             # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(trace_frame=TraceFrame(id=2), branches=2),
         ]
         with self.assertRaises(UserError):
@@ -1911,27 +1849,37 @@ class InteractiveTest(TestCase):
             )
 
     def testCreateIssueOutputStringNoSourcesNoSinks(self) -> None:
-        # pyre-fixme[16]: Module `interactive` has no attribute `IssueQueryResult`.
         issue = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
-            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             location=SourceLocation(1, 2, 3),
             code=1000,
             callable="module.function1",
             message="root",
             min_trace_length_to_sources=1,
             min_trace_length_to_sinks=1,
+            # pyre-fixme[6]: For 10th param expected `FrozenSet[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `FrozenSet[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `FrozenSet[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `FrozenSet[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             detected_time=datetime.today(),
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
@@ -1968,27 +1916,37 @@ class InteractiveTest(TestCase):
         self.assertIn("Sinks: No sinks", result)
 
     def testCreateIssueOutputStringNoFeatures(self) -> None:
-        # pyre-fixme[16]: Module `interactive` has no attribute `IssueQueryResult`.
         issue = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
-            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             location=SourceLocation(1, 2, 3),
             code=1000,
             callable="module.function1",
             message="root",
             min_trace_length_to_sources=1,
             min_trace_length_to_sinks=1,
+            # pyre-fixme[6]: For 10th param expected `FrozenSet[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `FrozenSet[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `FrozenSet[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `FrozenSet[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1"],
             status=IssueStatus.UNCATEGORIZED,
             detected_time=datetime.today(),
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
@@ -2023,27 +1981,37 @@ class InteractiveTest(TestCase):
         self.assertIn("Features: via:feature1", result)
 
     def testCreateIssueOutputStringTraceLength(self) -> None:
-        # pyre-fixme[16]: Module `interactive` has no attribute `IssueQueryResult`.
         issue1 = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
-            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             location=SourceLocation(1, 2, 3),
             code=1000,
             callable="module.function1",
             message="root",
             min_trace_length_to_sources=0,
             min_trace_length_to_sinks=6,
+            # pyre-fixme[6]: For 10th param expected `FrozenSet[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `FrozenSet[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `FrozenSet[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `FrozenSet[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             detected_time=datetime.today(),
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
@@ -2062,27 +2030,37 @@ class InteractiveTest(TestCase):
         )
         self.assertIn("Min Trace Length: Source (0) | Sink (6)", result)
 
-        # pyre-fixme[16]: Module `interactive` has no attribute `IssueQueryResult`.
         issue2 = IssueQueryResult(
+            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             issue_id=1,
+            # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
-            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             location=SourceLocation(1, 2, 3),
             code=1000,
             callable="module.function1",
             message="root",
             min_trace_length_to_sources=3,
             min_trace_length_to_sinks=1,
+            # pyre-fixme[6]: For 10th param expected `FrozenSet[str]` but got
+            #  `Set[Variable[_T]]`.
             features=set(),
             is_new_issue=False,
+            # pyre-fixme[6]: For 12th param expected `FrozenSet[str]` but got `None`.
             source_names=None,
+            # pyre-fixme[6]: For 13th param expected `FrozenSet[str]` but got `None`.
             source_kinds=None,
+            # pyre-fixme[6]: For 14th param expected `FrozenSet[str]` but got `None`.
             sink_names=None,
+            # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
+            #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
             status=IssueStatus.UNCATEGORIZED,
             detected_time=datetime.today(),
+            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
+            #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
+            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
         sources = []
@@ -2112,19 +2090,14 @@ else:
 
         self.interactive.current_trace_frame_index = 0
         self.interactive.trace_tuples = [
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(0),
                     filename="file.py",
                     caller="",
                     caller_port="",
                     callee="callee",
                     callee_port="",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(2, 10, 25),
                 ),
                 placeholder=True,
@@ -2172,19 +2145,14 @@ else:
 
         self.interactive.current_trace_frame_index = 0
         self.interactive.trace_tuples = [
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
             TraceTuple(
-                # pyre-fixme[16]: Module `interactive` has no attribute
-                #  `TraceFrameQueryResult`.
                 trace_frame=TraceFrameQueryResult(
-                    # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                     id=DBID(0),
                     caller="",
                     caller_port="",
                     callee="",
                     callee_port="",
                     filename="file.py",
-                    # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
                     callee_location=SourceLocation(2, 1, 1),
                 )
             )
@@ -2197,50 +2165,35 @@ else:
 
     def testGroupTraceFrames(self) -> None:
         trace_frames = [
-            # pyre-fixme[16]: Module `interactive` has no attribute
-            #  `TraceFrameQueryResult`.
             TraceFrameQueryResult(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(1),
                 caller="caller1",
                 caller_port="port1",
                 callee="",
                 callee_port="",
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute
-            #  `TraceFrameQueryResult`.
             TraceFrameQueryResult(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(2),
                 caller="caller1",
                 caller_port="port1",
                 callee="",
                 callee_port="",
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute
-            #  `TraceFrameQueryResult`.
             TraceFrameQueryResult(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(3),
                 caller="caller2",
                 caller_port="port2",
                 callee="",
                 callee_port="",
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute
-            #  `TraceFrameQueryResult`.
             TraceFrameQueryResult(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(4),
                 caller="caller2",
                 caller_port="port2",
                 callee="",
                 callee_port="",
             ),
-            # pyre-fixme[16]: Module `interactive` has no attribute
-            #  `TraceFrameQueryResult`.
             TraceFrameQueryResult(
-                # pyre-fixme[16]: Module `models` has no attribute `DBID`.
                 id=DBID(5),
                 caller="caller2",
                 caller_port="port3",
@@ -2439,9 +2392,11 @@ else:
 
     def testIsBeforeRoot(self) -> None:
         self.interactive.trace_tuples = [
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
+            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+            #  `TraceFrame`.
             TraceTuple(trace_frame=TraceFrame(kind=TraceKind.POSTCONDITION)),
-            # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
+            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+            #  `TraceFrame`.
             TraceTuple(trace_frame=TraceFrame(kind=TraceKind.PRECONDITION)),
         ]
 
@@ -2452,11 +2407,13 @@ else:
         self.assertFalse(self.interactive._is_before_root())
 
     def testIsRootTraceTuple(self) -> None:
-        # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
+        # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+        #  `TraceFrame`.
         trace_tuple = TraceTuple(trace_frame=TraceFrame(callee_port="root"))
         self.assertTrue(self.interactive._is_root_trace_tuple(trace_tuple))
 
-        # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
+        # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
+        #  `TraceFrame`.
         trace_tuple = TraceTuple(trace_frame=TraceFrame(callee_port="not_root"))
         self.assertFalse(self.interactive._is_root_trace_tuple(trace_tuple))
 
@@ -2523,28 +2480,20 @@ else:
         self.interactive.current_trace_frame_index = 2
         with self.db.make_session() as session:
             self.interactive.trace_tuples = [
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[0])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[1])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[2])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[3])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[4])),
             ]
 
-        # pyre-fixme[16]: Module `interactive` has no attribute `TraceFrameQueryResult`.
         trace_frame = TraceFrameQueryResult(
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(0),
             caller="caller",
             caller_port="caller_port",
             callee="F",
             callee_port="callee_port",
             filename="file.py",
-            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             callee_location=SourceLocation(1, 1, 1),
             kind=TraceKind.POSTCONDITION,
         )
@@ -2563,28 +2512,20 @@ else:
         self.interactive.current_trace_frame_index = 2
         with self.db.make_session() as session:
             self.interactive.trace_tuples = [
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[0])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[1])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[2])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[3])),
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[4])),
             ]
 
-        # pyre-fixme[16]: Module `interactive` has no attribute `TraceFrameQueryResult`.
         trace_frame = TraceFrameQueryResult(
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             id=DBID(0),
             caller="caller",
             caller_port="caller_port",
             callee="F",
             callee_port="callee_port",
             filename="file.py",
-            # pyre-fixme[16]: Module `models` has no attribute `SourceLocation`.
             callee_location=SourceLocation(1, 1, 1),
             kind=TraceKind.PRECONDITION,
         )
@@ -2634,7 +2575,6 @@ else:
         self.interactive.setup()
         with self.db.make_session() as session:
             self.interactive.trace_tuples = [
-                # pyre-fixme[16]: Module `interactive` has no attribute `TraceTuple`.
                 TraceTuple(trace_frame=self._frame_to_query_result(session, frames[0]))
             ]
         # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.

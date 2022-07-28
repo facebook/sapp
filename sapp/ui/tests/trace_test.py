@@ -47,15 +47,10 @@ class QueryTest(TestCase):
 
     def testLeafLookup(self) -> None:
         shared_texts = [
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             SharedText(id=DBID(1), contents="source1", kind=SharedTextKind.SOURCE),
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             SharedText(id=DBID(2), contents="source2", kind=SharedTextKind.SOURCE),
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             SharedText(id=DBID(3), contents="source3", kind=SharedTextKind.SOURCE),
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             SharedText(id=DBID(4), contents="sink4", kind=SharedTextKind.SINK),
-            # pyre-fixme[16]: Module `models` has no attribute `DBID`.
             SharedText(id=DBID(5), contents="sink5", kind=SharedTextKind.SINK),
         ]
         with self.db.make_session() as session:
