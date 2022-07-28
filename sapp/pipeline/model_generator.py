@@ -82,8 +82,11 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         if self.summary.get("store_unused_models"):
             for trace_kind, traces in self.summary["trace_entries"].items():
-                for _key, entry in traces:
-                    self._generate_trace_frame(trace_kind, self.summary["run"], entry)
+                for entries in traces.values():
+                    for entry in entries:
+                        self._generate_trace_frame(
+                            trace_kind, self.summary["run"], entry
+                        )
 
         return self.graph, self.summary
 
@@ -134,7 +137,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
     def _generate_issue(
         self, run: Run, entry: ParseIssueTuple, callablesCount: Dict[str, int]
-    ) -> IssueInstance:
+    ) -> None:
         """Insert the issue instance into a run. This includes creating (for
         new issues) or finding (for existing issues) Issue objects to associate
         with the instances.
@@ -238,7 +241,6 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             self._process_breadcrumb(instance, feature)
 
         self.graph.add_issue_instance(instance)
-        return instance
 
     def _process_breadcrumb(
         self, issue_instance: IssueInstance, feature: Union[str, Dict[str, Any]]

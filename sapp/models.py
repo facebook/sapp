@@ -322,15 +322,25 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # by default, merge shared texts.
+    perform_merging: bool = True
+
+    @classmethod
+    def performMerging(cls, merge: bool) -> None:
+        cls.perform_merging = merge
+
     @classmethod
     def merge(cls, session, items):
-        return cls._merge_by_keys(
-            session,
-            items,
-            lambda item: "%s:%s" % (item.contents, item.kind),
-            cls.contents,
-            cls.kind,
-        )
+        if cls.perform_merging:
+            return cls._merge_by_keys(
+                session,
+                items,
+                lambda item: "%s:%s" % (item.contents, item.kind),
+                cls.contents,
+                cls.kind,
+            )
+        else:
+            return items
 
 
 class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
