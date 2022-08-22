@@ -5,6 +5,7 @@
 
 """Parse Pysa/Taint output for Zoncolan processing"""
 
+import json
 import logging
 import sys
 from collections import defaultdict
@@ -20,8 +21,6 @@ from typing import (
     Tuple,
     Union,
 )
-
-import ujson as json
 
 from .. import errors
 from ..analysis_output import AnalysisOutput, Metadata

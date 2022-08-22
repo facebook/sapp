@@ -4,11 +4,11 @@
 # LICENSE file in the root directory of this source tree.
 
 import datetime
+
+import json
 import logging
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
-
-import ujson as json
 
 from ..models import (
     DBID,

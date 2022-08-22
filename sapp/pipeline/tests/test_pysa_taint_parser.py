@@ -1313,7 +1313,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-source" } ]
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -1432,7 +1432,7 @@ class TestParser(unittest.TestCase):
                           }
                         ],
                         "receiver_interval": [{ "lower": 26, "upper": 31 }],
-                        "is_self_call": true,
+                        "is_self_call": true
                       }
                     ]
                   }
@@ -1588,7 +1588,7 @@ class TestParser(unittest.TestCase):
                             "upper": 20
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -1666,7 +1666,7 @@ class TestParser(unittest.TestCase):
                             "upper": 13
                           }
                         ],
-                        "is_self_call": true,
+                        "is_self_call": true
                       }
                     ]
                   }
@@ -1753,7 +1753,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-source" } ]
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       },
                       {
                         "call": {
@@ -1780,7 +1780,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-source" } ]
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -1890,7 +1890,7 @@ class TestParser(unittest.TestCase):
                           "end": 3
                         },
                         "kinds": [ { "kind": "UserControlled" } ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -1997,7 +1997,7 @@ class TestParser(unittest.TestCase):
                           }
                         ],
                         "receiver_interval": [{ "lower": 27, "upper": 32 }],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -2064,7 +2064,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-sink" } ]
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -2185,7 +2185,7 @@ class TestParser(unittest.TestCase):
                           { "lower": 28, "upper": 33 },
                           { "lower": 40, "upper": 53 }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -2341,7 +2341,7 @@ class TestParser(unittest.TestCase):
                             "upper": 28
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -2421,7 +2421,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-sink" } ]
                           }
                         ],
-                        "is_self_call": true,
+                        "is_self_call": true
                       }
                     ]
                   }
@@ -2512,7 +2512,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-sink" } ]
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       },
                       {
                         "call": {
@@ -2539,7 +2539,7 @@ class TestParser(unittest.TestCase):
                             "features": [ { "always-via": "direct-sink" } ]
                           }
                         ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -2649,7 +2649,7 @@ class TestParser(unittest.TestCase):
                           "end": 3
                         },
                         "kinds": [ { "kind": "RCE" } ],
-                        "is_self_call": false,
+                        "is_self_call": false
                       }
                     ]
                   }

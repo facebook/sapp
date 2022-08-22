@@ -13,6 +13,5 @@ pyre-extensions==0.0.27
 SQLAlchemy<1.4
 traitlets==5.2.2.post1
 typing-extensions==4.2.0
-ujson==5.3.0
 xxhash==3.0.0
 zstd==1.5.2.5

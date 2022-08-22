@@ -5,6 +5,7 @@
 
 """Abstract Parser for Zoncolan like output"""
 
+import json
 import logging
 import pprint
 from collections import defaultdict
@@ -35,12 +36,6 @@ from . import (
     PipelineStep,
     Summary,
 )
-
-# if these imports have the same name we get a linter error
-try:
-    import ujson as json
-except ImportError:
-    import json  # noqa
 
 
 log: logging.Logger = logging.getLogger("sapp")
