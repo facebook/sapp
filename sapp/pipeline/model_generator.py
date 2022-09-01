@@ -19,6 +19,7 @@ from ..models import (
     IssueInstance,
     IssueInstanceFixInfo,
     IssueStatus,
+    MetaRunIssueInstanceIndex,
     PurgeStatus,
     Run,
     RunStatus,
@@ -32,6 +33,7 @@ from ..models import (
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
     DictEntries,
+    meta_run_issue_duplicate_filter,
     ParseConditionTuple,
     ParseFeature,
     ParseIssueConditionTuple,
@@ -50,11 +52,17 @@ log: logging.Logger = logging.getLogger("sapp")
 # pyre-fixme[13]: Attribute `graph` is never initialized.
 # pyre-fixme[13]: Attribute `summary` is never initialized.
 class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        record_meta_run_issue_instances: bool = False,
+        meta_run_identifier: Optional[int] = None,
+    ) -> None:
         super().__init__()
         self.summary: Summary
         self.graph: TraceGraph
         self.visited_frames: Dict[int, Set[int]] = {}  # frame id -> leaf ids
+        self.record_meta_run_issue_instances: bool = record_meta_run_issue_instances
+        self.meta_run_identifier: Optional[int] = meta_run_identifier
 
     def run(self, input: DictEntries, summary: Summary) -> Tuple[TraceGraph, Summary]:
         self.summary = summary
@@ -238,6 +246,20 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             self._process_breadcrumb(instance, feature)
 
         self.graph.add_issue_instance(instance)
+
+        meta_run_identifier = self.meta_run_identifier
+        if self.record_meta_run_issue_instances and meta_run_identifier is not None:
+            # Used to deduplicate issue instances across meta runs,
+            # see `MetaRunIssueDuplicateFilter`.
+            issue_instance_hash = (
+                meta_run_issue_duplicate_filter.compute_issue_instance_hash(entry)
+            )
+            meta_run_issue_instance = MetaRunIssueInstanceIndex.Record(
+                issue_instance_id=instance.id,
+                meta_run_id=meta_run_identifier,
+                issue_instance_hash=issue_instance_hash,
+            )
+            self.graph.add_meta_run_issue_instance(meta_run_issue_instance)
 
     def _process_breadcrumb(
         self, issue_instance: IssueInstance, feature: Union[str, Dict[str, Any]]

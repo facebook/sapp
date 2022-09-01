@@ -61,6 +61,7 @@ INNODB_MAX_INDEX_LENGTH = 767
 HANDLE_LENGTH = 255
 MESSAGE_LENGTH = 4096
 SHARED_TEXT_LENGTH = 4096
+META_RUN_ISSUE_INSTANCE_HASH_LENGTH = 16
 
 """Models used to represent DB entries
 
@@ -1593,6 +1594,28 @@ class ClassTypeInterval(Base, PrepareMixin, RecordMixin):
     class_name = Column(String(length=INNODB_MAX_INDEX_LENGTH), nullable=False)
     lower_bound = Column(Integer, nullable=False)
     upper_bound = Column(Integer, nullable=False)
+
+
+class MetaRunIssueInstanceIndex(Base, PrepareMixin, RecordMixin):
+    """This table is used by the (optional) pipeline step `MetaRunIssueDuplicateFilter`
+    to deduplicate issue instances within a meta run."""
+
+    __tablename__ = "metarun_issue_instance_index"
+
+    __table_args__ = (
+        Index("ix_metarun_issue_instance_index", "meta_run_id", "issue_instance_hash"),
+    )
+
+    issue_instance_id = Column(BIGDBIDType, nullable=False, primary_key=True)
+    meta_run_id = Column(BIGDBIDType, nullable=False)
+    issue_instance_hash: Column[str] = Column(
+        String(length=META_RUN_ISSUE_INSTANCE_HASH_LENGTH),
+        nullable=False,
+        doc=(
+            "This hash should uniquely identify an issue instance "
+            "across a given metarun"
+        ),
+    )
 
 
 class PrimaryKey(Base, PrimaryKeyBase):

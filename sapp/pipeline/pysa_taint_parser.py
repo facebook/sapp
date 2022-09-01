@@ -334,9 +334,6 @@ class Parser(BaseParser):
                         annotations=[],
                     )
                 )
-                # pyre-fixme[6]: Expected `Iterable[Tuple[str, str, int]]` for 1st
-                #  param but got `Generator[Tuple[Optional[str], str, int], None,
-                #  None]`.
                 leaf_distances.update(
                     (leaf.name, leaf.kind, leaf.distance) for leaf in leaves
                 )

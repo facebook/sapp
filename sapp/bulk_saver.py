@@ -21,6 +21,7 @@ from .models import (
     IssueInstanceFixInfo,
     IssueInstanceSharedTextAssoc,
     IssueInstanceTraceFrameAssoc,
+    MetaRunIssueInstanceIndex,
     PrimaryKeyGenerator,
     SharedText,
     TraceFrame,
@@ -50,6 +51,7 @@ class BulkSaver:
         Feature,
         IssueInstanceFeatureAssoc,
         ClassTypeInterval,
+        MetaRunIssueInstanceIndex,
     ]
 
     BATCH_SIZE = 30000

@@ -19,6 +19,7 @@ from .models import (
     IssueInstance,
     IssueInstanceFixInfo,
     LeafMapping,
+    MetaRunIssueInstanceIndex,
     SHARED_TEXT_LENGTH,
     SharedText,
     SharedTextKind,
@@ -111,6 +112,8 @@ class TraceGraph(object):
 
         self._class_type_intervals: Dict[str, ClassTypeInterval] = {}
 
+        self._meta_run_issue_instances: Dict[int, MetaRunIssueInstanceIndex] = {}
+
         # !!!!! IMPORTANT !!!!!
         # IF YOU ARE ADDING MORE FIELDS/EDGES TO THIS GRAPH, CHECK IF
         # TrimmedTraceGraph NEEDS TO BE UPDATED AS WELL.
@@ -155,6 +158,15 @@ class TraceGraph(object):
             interval.class_name not in self._class_type_intervals
         ), "Class name already exists"
         self._class_type_intervals[interval.class_name] = interval
+
+    def add_meta_run_issue_instance(
+        self, meta_run_issue_instance: MetaRunIssueInstanceIndex
+    ) -> None:
+        local_id = meta_run_issue_instance.issue_instance_id.local_id
+        assert (
+            local_id not in self._meta_run_issue_instances
+        ), "Meta run issue instance already exists"
+        self._meta_run_issue_instances[local_id] = meta_run_issue_instance
 
     def get_text(self, shared_text_id: DBID) -> str:
         return self._shared_texts[shared_text_id.local_id].contents
@@ -400,6 +412,7 @@ class TraceGraph(object):
         bulk_saver.add_all(list(self._shared_texts.values()))
         bulk_saver.add_all(list(self._features.values()))
         bulk_saver.add_all(list(self._class_type_intervals.values()))
+        bulk_saver.add_all(list(self._meta_run_issue_instances.values()))
 
         self._save_issue_instance_trace_frame_assoc(bulk_saver)
         self._save_trace_frame_leaf_assoc(bulk_saver)

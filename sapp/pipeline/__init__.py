@@ -167,7 +167,7 @@ def parse_trace_feature(feature: Union[str, Dict[str, Any]]) -> ParseTraceFeatur
 
 ParseFeature = Dict[str, str]
 ParseLeaf = Tuple[str, int]  # (kind, distance)
-ParseIssueLeaf = Tuple[str, str, int]  # (callable, kind, distance)
+ParseIssueLeaf = Tuple[Optional[str], str, int]  # (callable, kind, distance)
 
 
 def flatten_feature_to_parse_trace_feature(
@@ -313,7 +313,7 @@ DictKey = Union[str, Tuple[str, str]]  # handle or (caller, caller_port)
 class DictEntries(TypedDict):
     preconditions: Dict[DictKey, List[ParseConditionTuple]]
     postconditions: Dict[DictKey, List[ParseConditionTuple]]
-    issues: Iterable[ParseIssueTuple]
+    issues: List[ParseIssueTuple]
 
 
 Summary = Dict[str, Any]  # blob of objects that gets passed through the pipeline

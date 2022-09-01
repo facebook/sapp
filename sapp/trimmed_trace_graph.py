@@ -739,6 +739,10 @@ class TrimmedTraceGraph(TraceGraph):
             issue_fix_info = graph._issue_instance_fix_info[instance_id]
             self.add_issue_instance_fix_info(instance, issue_fix_info)
 
+        if instance_id in graph._meta_run_issue_instances:
+            meta_run_issue_instance = graph._meta_run_issue_instances[instance_id]
+            self.add_meta_run_issue_instance(meta_run_issue_instance)
+
         for shared_text_id in graph._issue_instance_shared_text_assoc[instance_id]:
             shared_text = graph._shared_texts[shared_text_id]
             if shared_text_id not in self._shared_texts:

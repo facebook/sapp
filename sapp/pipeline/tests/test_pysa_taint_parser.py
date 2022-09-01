@@ -1160,7 +1160,6 @@ class TestParser(unittest.TestCase):
                         ),
                     ],
                     initial_sources={("_user_controlled", "UserControlled", 0)},
-                    # pyre-fixme[6]: Expected `str` but got `None`
                     final_sinks={(None, "RCE", 0)},
                     features=[
                         "has:first-index",
