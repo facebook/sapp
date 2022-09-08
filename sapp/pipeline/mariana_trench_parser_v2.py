@@ -107,6 +107,8 @@ class Port(NamedTuple):
                 ".".join(elements[2:]), "unreachable_leaf_kind_producer"
             )
             return Port(f"{root}:{producer_id}:{Port.to_crtex(canonical_port.value)}")
+        elif elements[0] == "CallEffect":
+            elements[0] = "call-effect"
 
         return Port(".".join(elements))
 
@@ -481,6 +483,8 @@ class Parser(BaseParser):
                 yield from self._parse_issues(model)
                 for precondition in self._parse_preconditions(model):
                     yield precondition.to_sapp()
+                for effect_precondition in self._parse_effect_preconditions(model):
+                    yield effect_precondition.to_sapp()
                 for postcondition in self._parse_postconditions(model):
                     yield postcondition.to_sapp()
 
@@ -736,6 +740,16 @@ class Parser(BaseParser):
         return self._parse_condition(
             model,
             condition_model_key="sinks",
+            leaf_kind="sink",
+            condition_class=Precondition,
+        )
+
+    def _parse_effect_preconditions(
+        self, model: Dict[str, Any]
+    ) -> Iterable[Precondition]:
+        return self._parse_condition(
+            model,
+            condition_model_key="effect_sinks",
             leaf_kind="sink",
             condition_class=Precondition,
         )
