@@ -861,7 +861,10 @@ class Run(Base):
     job_id: Column[Optional[str]] = Column(String(length=255), index=True)
 
     date: Column[datetime] = Column(
-        DateTime, doc="The date/time the analysis was run", nullable=False
+        DateTime,
+        doc="The date/time the analysis was run",
+        nullable=False,
+        index=True,
     )
 
     commit_hash: Column[Optional[str]] = Column(
@@ -936,8 +939,12 @@ class Run(Base):
         Enum(PurgeStatus),
         server_default="unpurged",
         nullable=False,
-        doc="Tracks whether Internal deletion jobs have purged unnecessary issue instances "
-        + "and trace frames from this run. Should NOT be set to anything but the default in SAPP code.",
+        doc=(
+            "Tracks whether Internal deletion jobs have purged "
+            "unnecessary issue instances and trace frames from this run. "
+            "Should NOT be set to anything but the default in SAPP code."
+        ),
+        index=True,
     )
 
     def get_summary(self, **kwargs) -> RunSummary:
