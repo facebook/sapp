@@ -106,7 +106,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "result"
                         },
-                        "tito": [ { "line": 17, "start": 18, "end": 19 } ],
+                        "tito_positions": [ { "line": 17, "start": 18, "end": 19 } ],
                         "local_features": [ { "always-via": "source-local" } ],
                         "kinds": [
                           {
@@ -140,7 +140,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "formal(x)[parameter]"
                         },
-                        "tito": [ { "line": 23, "start": 24, "end": 25 } ],
+                        "tito_positions": [ { "line": 23, "start": 24, "end": 25 } ],
                         "local_features": [ { "always-via": "sink-local" } ],
                         "kinds": [
                           {
@@ -256,13 +256,13 @@ class TestParser(unittest.TestCase):
                           { "lower": 20, "upper": 21 },
                           { "lower": 30, "upper": 41 }
                         ],
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 100,
                           "start": 101,
                           "end": 102
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 110, "start": 111, "end": 112 },
                           { "line": 113, "start": 114, "end": 115 }
                         ],
@@ -304,13 +304,13 @@ class TestParser(unittest.TestCase):
                     "roots": [
                       {
                         "receiver_interval": [{ "lower": 30, "upper": 31 }],
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 200,
                           "start": 201,
                           "end": 202
                         },
-                        "tito": [ { "line": 210, "start": 211, "end": 212 } ],
+                        "tito_positions": [ { "line": 210, "start": 211, "end": 212 } ],
                         "kinds": [
                           {
                             "kind": "RCE",
@@ -490,13 +490,13 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 100,
                           "start": 101,
                           "end": 102
                         },
-                        "tito": [ { "line": 110, "start": 111, "end": 112 } ],
+                        "tito_positions": [ { "line": 110, "start": 111, "end": 112 } ],
                         "kinds": [
                           {
                             "kind": "UserControlled",
@@ -514,13 +514,13 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 200,
                           "start": 201,
                           "end": 202
                         },
-                        "tito": [ { "line": 210, "start": 211, "end": 212 } ],
+                        "tito_positions": [ { "line": 210, "start": 211, "end": 212 } ],
                         "kinds": [
                           {
                             "kind": "RCE",
@@ -702,7 +702,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "result"
                         },
-                        "tito": [ { "line": 17, "start": 18, "end": 19 } ],
+                        "tito_positions": [ { "line": 17, "start": 18, "end": 19 } ],
                         "kinds": [
                           {
                             "kind": "UserControlled",
@@ -732,7 +732,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "formal(x)[parameter]"
                         },
-                        "tito": [ { "line": 23, "start": 24, "end": 25 } ],
+                        "tito_positions": [ { "line": 23, "start": 24, "end": 25 } ],
                         "kinds": [
                           {
                             "kind": "RCE",
@@ -903,7 +903,7 @@ class TestParser(unittest.TestCase):
                           "resolves_to": ["foo.source"],
                           "port": "result"
                         },
-                        "tito": [ { "line": 17, "start": 18, "end": 19 } ],
+                        "tito_positions": [ { "line": 17, "start": 18, "end": 19 } ],
                         "kinds": [
                           {
                             "kind": "UserControlled",
@@ -935,7 +935,7 @@ class TestParser(unittest.TestCase):
                           "resolves_to": ["foo.sink"],
                           "port": "formal(x)[parameter]"
                         },
-                        "tito": [ { "line": 23, "start": 24, "end": 25 } ],
+                        "tito_positions": [ { "line": 23, "start": 24, "end": 25 } ],
                         "kinds": [
                           {
                             "kind": "RCE",
@@ -1060,13 +1060,13 @@ class TestParser(unittest.TestCase):
                     "name": "forward",
                     "roots": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 20,
                           "start": 21,
                           "end": 22
                         },
-                        "tito": [ { "line": 30, "start": 31, "end": 32 } ],
+                        "tito_positions": [ { "line": 30, "start": 31, "end": 32 } ],
                         "kinds": [
                           {
                             "kind": "UserControlled",
@@ -1085,7 +1085,7 @@ class TestParser(unittest.TestCase):
                     "name": "backward",
                     "roots": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 100,
                           "start": 101,
@@ -1185,7 +1185,7 @@ class TestParser(unittest.TestCase):
                     "port": "result",
                     "taint": [
                       {
-                        "decl": null,
+                        "declaration": null,
                         "kinds": [
                           {
                             "kind": "UserControlled",
@@ -1214,13 +1214,13 @@ class TestParser(unittest.TestCase):
                     "port": "result",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -1292,13 +1292,13 @@ class TestParser(unittest.TestCase):
                     "port": "result[attribute]",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -1386,13 +1386,13 @@ class TestParser(unittest.TestCase):
                     "port": "result",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -1559,7 +1559,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "result[attribute]"
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -1647,7 +1647,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "result[attribute]"
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -1735,13 +1735,13 @@ class TestParser(unittest.TestCase):
                     "port": "result",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -1767,7 +1767,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "result[attribute]"
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 110, "start": 111, "end": 112 },
                           { "line": 113, "start": 114, "end": 115 }
                         ],
@@ -1853,7 +1853,7 @@ class TestParser(unittest.TestCase):
                     "port": "formal(x)",
                     "taint": [
                       {
-                        "decl": null,
+                        "declaration": null,
                         "kinds": [
                           {
                             "kind": "UserControlled",
@@ -1882,7 +1882,7 @@ class TestParser(unittest.TestCase):
                     "port": "result",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
@@ -1937,7 +1937,7 @@ class TestParser(unittest.TestCase):
                     "port": "formal(x)",
                     "taint": [
                       {
-                        "decl": null,
+                        "declaration": null,
                         "kinds": [
                           {
                             "kind": "RCE",
@@ -1966,13 +1966,13 @@ class TestParser(unittest.TestCase):
                     "port": "formal(x)",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -2043,13 +2043,13 @@ class TestParser(unittest.TestCase):
                     "port": "formal(x)",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -2137,13 +2137,13 @@ class TestParser(unittest.TestCase):
                     "port": "formal(y)[attribute]",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -2312,7 +2312,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "formal(y)[attribute]"
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -2402,7 +2402,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "formal(y)[attribute]"
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -2494,13 +2494,13 @@ class TestParser(unittest.TestCase):
                     "port": "formal(x)",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 10, "start": 11, "end": 12 },
                           { "line": 13, "start": 14, "end": 15 }
                         ],
@@ -2526,7 +2526,7 @@ class TestParser(unittest.TestCase):
                           ],
                           "port": "formal(y)[attribute]"
                         },
-                        "tito": [
+                        "tito_positions": [
                           { "line": 110, "start": 111, "end": 112 },
                           { "line": 113, "start": 114, "end": 115 }
                         ],
@@ -2612,7 +2612,7 @@ class TestParser(unittest.TestCase):
                     "port": "result",
                     "taint": [
                       {
-                        "decl": null,
+                        "declaration": null,
                         "kinds": [
                           {
                             "kind": "RCE",
@@ -2641,7 +2641,7 @@ class TestParser(unittest.TestCase):
                     "port": "formal(x)",
                     "taint": [
                       {
-                        "root": {
+                        "origin": {
                           "filename": "foo.py",
                           "line": 1,
                           "start": 2,
@@ -2721,7 +2721,7 @@ class TestParser(unittest.TestCase):
                     "port": "formal(value)",
                     "taint": [
                       {
-                        "decl": null,
+                        "tito": null,
                         "kinds": [
                           {
                             "kind": "LocalReturn",

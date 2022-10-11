@@ -353,12 +353,21 @@ class Parser(BaseParser):
         leaf_port: Union[Literal["source"], Literal["sink"]],
         trace: Dict[str, Any],
     ) -> Iterable[TraceFragment]:
-        tito_positions = list(map(self._adjust_location, trace.get("tito", [])))
+        # TODO(T134354417): Deprecate the use of "tito"
+        tito_positions = list(
+            map(
+                self._adjust_location,
+                trace.get("tito", []) + trace.get("tito_positions", []),
+            )
+        )
         local_features = trace.get("local_features", [])
         type_interval = self._parse_type_interval(trace)
 
-        if "root" in trace:
-            location = self._adjust_location(trace["root"])
+        # TODO(T134354417): Deprecate the use of "root"
+        if "root" in trace or "origin" in trace:
+            location = self._adjust_location(
+                trace["root"] if "root" in trace else trace["origin"]
+            )
 
             # Turn leaves into direct callees and group by (callee, port)
             leaf_name_and_port_to_leaves: defaultdict[
@@ -405,7 +414,8 @@ class Parser(BaseParser):
                     "type_interval": type_interval,
                 }
                 yield fragment
-        elif "decl" in trace:
+        elif "decl" in trace or "declaration" in trace:
+            # TODO(T134354417): Deprecate the use of "decl"
             pass  # User-declared fragment.
         else:
             raise ParseError("Unexpected trace fragment.", received=trace)
