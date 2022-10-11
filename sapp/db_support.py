@@ -38,6 +38,13 @@ log: logging.Logger = logging.getLogger("sapp")
 """Number of variables that can safely be set on a single DB call"""
 BATCH_SIZE = 450
 
+BASE_TABLE_ARGS = (
+    {
+        "mysql_engine": "InnoDB",
+        "mysql_charset": "latin1",
+        "mysql_collate": "latin1_bin",
+    },
+)
 
 # The following three DBID classes require some explanation. Normally models
 # will reference each other by their id. But we do bulk insertion at the end
@@ -330,6 +337,7 @@ class PrimaryKeyBase(PrepareMixin, RecordMixin):  # noqa
     """Subclass this and include your declarative_base mixin"""
 
     __tablename__ = "primary_keys"
+    __table_args__: Tuple[Dict[str, str]] = BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `str`; used as `Column[str]`.
     table_name: str = Column(

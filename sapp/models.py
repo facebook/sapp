@@ -41,6 +41,7 @@ from sqlalchemy.orm import relationship, Session
 
 from .db import DB
 from .db_support import (
+    BASE_TABLE_ARGS,
     BIGDBIDType,
     DBID,
     DBIDType,
@@ -161,6 +162,7 @@ class IssueBIGDBIDType(BIGDBIDType):
 class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "issue_instance_trace_frame_assoc"
+    __table_args__ = BASE_TABLE_ARGS
 
     issue_instance_id = Column(
         "issue_instance_id", BIGDBIDType, primary_key=True, nullable=False
@@ -256,6 +258,7 @@ class Feature(Base, PrepareMixin, RecordMixin):
     """
 
     __tablename__ = "features"
+    __table_args__ = BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
     id: DBID = Column(BIGDBIDType, primary_key=True)
@@ -286,10 +289,9 @@ class SharedText(Base, PrepareMixin, RecordMixin):
     to legacy reasons."""
 
     __tablename__ = "messages"
-
     __table_args__ = (
         Index("ix_messages_handle", "contents", "kind", mysql_length={"contents": 767}),
-    )
+    ) + BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
     id: DBID = Column(BIGDBIDType, primary_key=True)
@@ -361,6 +363,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
     """
 
     __tablename__ = "issue_instance_feature_assoc"
+    __table_args__ = BASE_TABLE_ARGS
 
     issue_instance_id = Column(
         "issue_instance_id", BIGDBIDType, primary_key=True, nullable=False
@@ -396,6 +399,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
 
 class IssueInstanceFeatureAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_structured_features_assoc"
+    __table_args__ = BASE_TABLE_ARGS
 
     issue_instance_id = Column(
         "issue_instance_id", BIGDBIDType, primary_key=True, nullable=False
@@ -453,6 +457,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     """A particularly instance of an issue found in a run"""
 
     __tablename__ = "issue_instances"
+    __table_args__ = BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
     id: DBID = Column(BIGDBIDType, primary_key=True)
@@ -658,8 +663,9 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     """
 
     __tablename__ = "issues"
-
-    __table_args__ = (Index("ix_issues_status_severity", "status", "severity"),)
+    __table_args__ = (
+        Index("ix_issues_status_severity", "status", "severity"),
+    ) + BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `IssueDBID`; used as `Column[typing.Any]`.
     id: IssueDBID = Column(IssueBIGDBIDType, primary_key=True, nullable=False)
@@ -855,6 +861,7 @@ class Run(Base):
     run has multiple IssueInstances."""
 
     __tablename__ = "runs"
+    __table_args__ = BASE_TABLE_ARGS
 
     id = Column(BIGDBIDType, primary_key=True)
 
@@ -991,6 +998,7 @@ class MetaRun(Base):
     browse each of them separately."""
 
     __tablename__ = "metaruns"
+    __table_args__ = BASE_TABLE_ARGS
 
     id = Column(BIGDBIDType, primary_key=True, autoincrement=False)
 
@@ -1066,6 +1074,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
     """
 
     __tablename__ = "metarun_run_assoc"
+    __table_args__ = BASE_TABLE_ARGS
 
     meta_run_id = Column(BIGDBIDType, nullable=False, primary_key=True)
     run_id = Column(BIGDBIDType, nullable=False, primary_key=True)
@@ -1096,6 +1105,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
 class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frame_message_assoc"
+    __table_args__ = BASE_TABLE_ARGS
 
     trace_frame_id = Column(BIGDBIDType, nullable=False, primary_key=True)
 
@@ -1129,6 +1139,7 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
 
 class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_fix_info"
+    __table_args__ = BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
     id: DBID = Column(BIGDBIDType, nullable=False, primary_key=True)
@@ -1148,11 +1159,10 @@ class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
 class TraceFrame(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frames"
-
     __table_args__ = (
         Index("ix_traceframe_run_caller_port", "run_id", "caller_id", "caller_port"),
         Index("ix_traceframe_run_callee_port", "run_id", "callee_id", "callee_port"),
-    )
+    ) + BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
     id: DBID = Column(BIGDBIDType, nullable=False, primary_key=True)
@@ -1317,6 +1327,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
 class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frame_annotations"
+    __table_args__ = BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
     id: DBID = Column(BIGDBIDType, nullable=False, primary_key=True)
@@ -1386,6 +1397,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
 class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "trace_frame_annotation_trace_frame_assoc"
+    __table_args__ = BASE_TABLE_ARGS
 
     trace_frame_annotation_id = Column(
         "trace_frame_annotation_id", BIGDBIDType, primary_key=True, nullable=False
@@ -1424,6 +1436,7 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
 class WarningMessage(Base):
     __tablename__ = "warning_messages"
+    __table_args__ = BASE_TABLE_ARGS
 
     code: Column[int] = Column(Integer, autoincrement=False, primary_key=True)
 
@@ -1451,6 +1464,7 @@ class WarningCodeProperties(Base):
     """Contains properties describing each warning code"""
 
     __tablename__ = "warning_code_properties"
+    __table_args__ = BASE_TABLE_ARGS
 
     code: Column[int] = Column(
         Integer,
@@ -1561,6 +1575,7 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
     call run origins. An example of run origins is Buck targets."""
 
     __tablename__ = "run_origins"
+    __table_args__ = BASE_TABLE_ARGS
 
     id = Column(BIGDBIDType, nullable=False, primary_key=True)
     run_id = Column(BIGDBIDType, nullable=False, index=True)
@@ -1582,7 +1597,6 @@ class ClassTypeInterval(Base, PrepareMixin, RecordMixin):
     """This table can store the class names for type intervals within a run"""
 
     __tablename__ = "class_type_intervals"
-
     __table_args__ = (
         Index(
             "ix_class_type_intervals_run_id_class_name",
@@ -1591,7 +1605,7 @@ class ClassTypeInterval(Base, PrepareMixin, RecordMixin):
             unique=True,
         ),
         Index("ix_class_type_intervals_bounds", "run_id", "lower_bound", "upper_bound"),
-    )
+    ) + BASE_TABLE_ARGS
 
     # Synthetic primary key allows easier pagination when compared to
     # using (run_id, class_name) as a composite primary key
@@ -1608,10 +1622,9 @@ class MetaRunIssueInstanceIndex(Base, PrepareMixin, RecordMixin):
     to deduplicate issue instances within a meta run."""
 
     __tablename__ = "metarun_issue_instance_index"
-
     __table_args__ = (
         Index("ix_metarun_issue_instance_index", "meta_run_id", "issue_instance_hash"),
-    )
+    ) + BASE_TABLE_ARGS
 
     issue_instance_id = Column(BIGDBIDType, nullable=False, primary_key=True)
     meta_run_id = Column(BIGDBIDType, nullable=False)
