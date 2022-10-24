@@ -9,7 +9,7 @@ import json
 import os
 from glob import glob
 from pathlib import Path
-from typing import Any, Dict, IO, Iterable, List, NamedTuple, Optional
+from typing import Any, Dict, IO, Iterable, List, NamedTuple, Optional, Set
 
 from .sharded_files import ShardedFile
 
@@ -20,7 +20,7 @@ METADATA_GLOB = "*metadata.json"
 class Metadata(NamedTuple):
     analysis_root: str
     # Used to relativize paths in the results
-    repo_roots: List[str] = []
+    repo_roots: Set[str] = set()
     repository_name: Optional[str] = None
     tool: Optional[str] = None
     analysis_tool_version: Optional[str] = None
@@ -35,7 +35,7 @@ class Metadata(NamedTuple):
     def merge(self, o: "Metadata") -> "Metadata":
         return Metadata(
             analysis_root=self.analysis_root,
-            repo_roots=self.repo_roots + o.repo_roots,
+            repo_roots=self.repo_roots | o.repo_roots,
             repository_name=self.repository_name or o.repository_name,
             tool=self.tool or o.tool,
             analysis_tool_version=self.analysis_tool_version or o.analysis_tool_version,
@@ -149,7 +149,7 @@ class AnalysisOutput(object):
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
                 analysis_root=analysis_root,
-                repo_roots=[repo_root],
+                repo_roots={repo_root},
                 job_instance=metadata.get("job_instance"),
                 tool=metadata.get("tool"),
                 repository_name=metadata.get("repository_name"),
@@ -207,7 +207,7 @@ class AnalysisOutput(object):
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
                 analysis_root=analysis_root,
-                repo_roots=[repo_root],
+                repo_roots={repo_root},
                 job_instance=metadata.get("job_instance"),
                 tool=metadata.get("tool"),
                 repository_name=metadata.get("repository_name"),

@@ -5,7 +5,7 @@
 
 import logging
 from multiprocessing import Pool
-from typing import Iterable, List, Tuple, Type, Union
+from typing import Iterable, List, Set, Tuple, Type, Union
 
 from ..analysis_output import AnalysisOutput, Metadata
 from . import ParseConditionTuple, ParseIssueTuple
@@ -19,7 +19,7 @@ logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
 # serializable data. And as a single arg, as far as I can tell. Which is why the
 # args type looks so silly.
 def parse(
-    args: Tuple[Tuple[Type[BaseParser], List[str], Metadata], str]
+    args: Tuple[Tuple[Type[BaseParser], Set[str], Metadata], str]
 ) -> List[Union[ParseConditionTuple, ParseIssueTuple]]:
     (base_parser, repo_dirs, metadata), path = args
 
@@ -31,7 +31,7 @@ def parse(
 
 
 class ParallelParser(BaseParser):
-    def __init__(self, parser_class: Type[BaseParser], repo_dirs: List[str]) -> None:
+    def __init__(self, parser_class: Type[BaseParser], repo_dirs: Set[str]) -> None:
         super().__init__(repo_dirs)
         self.parser: Type[BaseParser] = parser_class
 

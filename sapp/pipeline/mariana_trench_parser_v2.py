@@ -383,7 +383,7 @@ class Issue(NamedTuple):
 
 
 class Parser(BaseParser):
-    def __init__(self, repo_dirs: Optional[List[str]] = None) -> None:
+    def __init__(self, repo_dirs: Optional[Set[str]] = None) -> None:
         super().__init__(repo_dirs)
         # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
         self._rules: Dict[int, Any] = {}

@@ -97,12 +97,13 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     for the Processor.
     """
 
-    def __init__(self, repo_dirs: Optional[List[str]] = None) -> None:
+    def __init__(self, repo_dirs: Optional[Set[str]] = None) -> None:
         """
-        repo_dirs: Possible absolute paths analyzed during the run. This is used to relativize
-        paths in the input. These paths are NOT guaranteed to exist on the current machine disk!
+        repo_dirs: Possible absolute paths analyzed during the run. This is used
+        to relativize paths in the input. These paths are NOT guaranteed to exist
+        on the current machine disk!
         """
-        self.repo_dirs: List[str] = repo_dirs or []
+        self.repo_dirs: Set[str] = repo_dirs or set()
 
     def initialize(self, metadata: Optional[Metadata]) -> None:
         return
