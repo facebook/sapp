@@ -13,6 +13,7 @@ from .. import (
     ParseConditionTuple,
     ParseIssueConditionTuple,
     ParseIssueTuple,
+    ParseTraceAnnotation,
     ParseTraceFeature,
     ParseTypeInterval,
     SourceLocation,
@@ -1431,7 +1432,17 @@ class TestParser(unittest.TestCase):
                           }
                         ],
                         "receiver_interval": [{ "lower": 26, "upper": 31 }],
-                        "is_self_call": true
+                        "is_self_call": true,
+                        "extra_traces": [
+                          {
+                            "call": {
+                              "position": { "line": 59, "start": 32, "end": 34 },
+                              "resolves_to": [ "extra_trace.nested_transform_x" ],
+                              "port": "formal(arg)"
+                            },
+                            "kind": "TransformX:ExtraTraceSink"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -1461,7 +1472,28 @@ class TestParser(unittest.TestCase):
                         start=26, finish=31, preserves_type_context=True
                     ),
                     features=[],
-                    annotations=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=59, begin_column=32, end_column=34
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                {
+                                    "callee": "extra_trace.nested_transform_x",
+                                    "port": "formal(arg)",
+                                    "position": {"line": 59, "start": 32, "end": 34},
+                                }
+                            ],
+                        )
+                    ],
                 ),
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
@@ -1484,7 +1516,28 @@ class TestParser(unittest.TestCase):
                         start=26, finish=31, preserves_type_context=True
                     ),
                     features=[],
-                    annotations=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=59, begin_column=32, end_column=34
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                {
+                                    "callee": "extra_trace.nested_transform_x",
+                                    "port": "formal(arg)",
+                                    "position": {"line": 59, "start": 32, "end": 34},
+                                }
+                            ],
+                        )
+                    ],
                 ),
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
@@ -1507,7 +1560,28 @@ class TestParser(unittest.TestCase):
                         start=26, finish=31, preserves_type_context=True
                     ),
                     features=[],
-                    annotations=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=59, begin_column=32, end_column=34
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                {
+                                    "callee": "extra_trace.nested_transform_x",
+                                    "port": "formal(arg)",
+                                    "position": {"line": 59, "start": 32, "end": 34},
+                                }
+                            ],
+                        )
+                    ],
                 ),
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
@@ -1530,7 +1604,28 @@ class TestParser(unittest.TestCase):
                         start=26, finish=31, preserves_type_context=True
                     ),
                     features=[],
-                    annotations=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=59, begin_column=32, end_column=34
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                {
+                                    "callee": "extra_trace.nested_transform_x",
+                                    "port": "formal(arg)",
+                                    "position": {"line": 59, "start": 32, "end": 34},
+                                }
+                            ],
+                        )
+                    ],
                 ),
             ],
         )
@@ -1996,7 +2091,17 @@ class TestParser(unittest.TestCase):
                           }
                         ],
                         "receiver_interval": [{ "lower": 27, "upper": 32 }],
-                        "is_self_call": false
+                        "is_self_call": false,
+                        "extra_traces": [
+                          {
+                            "call": {
+                              "position": { "line": 59, "start": 32, "end": 34 },
+                              "resolves_to": [ "extra_trace.nested_transform_x" ],
+                              "port": "formal(arg)"
+                            },
+                            "kind": "TransformX:ExtraTraceSink"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -2026,7 +2131,28 @@ class TestParser(unittest.TestCase):
                         start=27, finish=32, preserves_type_context=False
                     ),
                     features=[ParseTraceFeature("always-via:local-sink", [])],
-                    annotations=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=59, begin_column=32, end_column=34
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                {
+                                    "callee": "extra_trace.nested_transform_x",
+                                    "port": "formal(arg)",
+                                    "position": {"line": 59, "start": 32, "end": 34},
+                                }
+                            ],
+                        )
+                    ],
                 )
             ],
         )

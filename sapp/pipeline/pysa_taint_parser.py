@@ -34,6 +34,7 @@ from . import (
     ParseIssueLeaf,
     ParseIssueTuple,
     ParsePosition,
+    ParseTraceAnnotation,
     ParseTypeInterval,
     SourceLocation,
 )
@@ -83,6 +84,7 @@ class TraceFragment(TypedDict):
     titos: Iterable[ParsePosition]
     features: Iterable[ParseFeature]
     type_interval: Optional[ParseTypeInterval]
+    trace_annotations: List[ParseTraceAnnotation]
 
 
 class Parser(BaseParser):
@@ -207,7 +209,7 @@ class Parser(BaseParser):
                     features=flatten_features_to_parse_trace_feature(
                         fragment["features"]
                     ),
-                    annotations=[],
+                    annotations=fragment["trace_annotations"],
                 )
 
     def _parse_model_sinks(
@@ -232,7 +234,7 @@ class Parser(BaseParser):
                     features=flatten_features_to_parse_trace_feature(
                         fragment["features"]
                     ),
-                    annotations=[],
+                    annotations=fragment["trace_annotations"],
                 )
 
     @log_trace_keyerror_in_generator
@@ -362,6 +364,7 @@ class Parser(BaseParser):
         )
         local_features = trace.get("local_features", [])
         type_interval = self._parse_type_interval(trace)
+        trace_annotations = self._parse_extra_traces(trace)
 
         # TODO(T134354417): Deprecate the use of "root"
         if "root" in trace or "origin" in trace:
@@ -392,6 +395,7 @@ class Parser(BaseParser):
                     "titos": tito_positions,
                     "features": local_features,
                     "type_interval": type_interval,
+                    "trace_annotations": trace_annotations,
                 }
                 yield fragment
         elif "call" in trace:
@@ -412,6 +416,7 @@ class Parser(BaseParser):
                     "titos": tito_positions,
                     "features": local_features,
                     "type_interval": type_interval,
+                    "trace_annotations": trace_annotations,
                 }
                 yield fragment
         elif "decl" in trace or "declaration" in trace:
@@ -433,6 +438,34 @@ class Parser(BaseParser):
             preserves_type_context=preserves_type_context,
         )
         return type_interval
+
+    def _parse_extra_traces(self, trace: Dict[str, Any]) -> List[ParseTraceAnnotation]:
+        trace_annotations = []
+        for extra_trace in trace.get("extra_traces", []):
+            call = extra_trace["call"]
+            first_hops = [
+                {"callee": resolved, "port": call["port"], "position": call["position"]}
+                for resolved in call["resolves_to"]
+            ]
+            if len(first_hops) == 0:
+                continue
+            location = call["position"]
+            source_location = SourceLocation.from_typed_dict(location)
+            trace_annotations.append(
+                ParseTraceAnnotation(
+                    location=source_location,
+                    kind="tito_transform",
+                    msg="",
+                    leaf_kind=extra_trace["kind"],
+                    leaf_depth=0,
+                    type_interval=None,
+                    link=None,
+                    trace_key=None,
+                    titos=[],
+                    subtraces=first_hops,
+                )
+            )
+        return trace_annotations
 
     def _adjust_location(self, location: ParsePosition) -> ParsePosition:
         return {  # pyre-ignore[7]
