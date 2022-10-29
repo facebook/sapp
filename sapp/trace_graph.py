@@ -560,29 +560,36 @@ class TraceGraph(object):
                 next_kinds.add(leaf_map.caller_leaf)
         return next_kinds
 
-    def get_transform_normalized_leaf(self, leaf: str) -> str:
-        return leaf.replace("@", ":", 1)
+    def get_transform_normalized_caller_kind(self, leaf: str) -> str:
+        # split off resolved conditional kinds
+        splits = leaf.split("!", 1)
+        # remove localized aspect of transform
+        return splits[0].replace("@", ":", 1)
 
-    def get_transform_normalized_kind_id(self, leaf_kind: SharedText) -> int:
+    def get_transform_normalized_caller_kind_id(self, leaf_kind: SharedText) -> int:
         assert (
             leaf_kind.kind == SharedTextKind.SINK
             or leaf_kind.kind == SharedTextKind.SOURCE
         )
-        if "@" in leaf_kind.contents:
-            normal_name = self.get_transform_normalized_leaf(leaf_kind.contents)
+        if "@" in leaf_kind.contents or "!" in leaf_kind.contents:
+            normal_name = self.get_transform_normalized_caller_kind(leaf_kind.contents)
             normal_kind = self.get_or_add_shared_text(leaf_kind.kind, normal_name)
             return normal_kind.id.local_id
         else:
             return leaf_kind.id.local_id
 
-    def get_transformed_kind_id(self, leaf_kind: SharedText) -> int:
+    def get_transformed_callee_kind_id(self, leaf_kind: SharedText) -> int:
         assert (
             leaf_kind.kind == SharedTextKind.SINK
             or leaf_kind.kind == SharedTextKind.SOURCE
         )
-        if "@" in leaf_kind.contents:
-            splits = leaf_kind.contents.split("@", 1)
-            remaining_kind = self.get_or_add_shared_text(leaf_kind.kind, splits[1])
+        if "@" in leaf_kind.contents or "!" in leaf_kind.contents:
+            if "@" in leaf_kind.contents:
+                rest = leaf_kind.contents.split("@", 1)[1]
+            else:
+                rest = leaf_kind.contents
+            rest = rest.replace("!", "?", 1)
+            remaining_kind = self.get_or_add_shared_text(leaf_kind.kind, rest)
             return remaining_kind.id.local_id
         else:
             return leaf_kind.id.local_id

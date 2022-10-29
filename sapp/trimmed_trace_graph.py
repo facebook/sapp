@@ -415,7 +415,7 @@ class TrimmedTraceGraph(TraceGraph):
                         leaf = self.get_shared_text_by_local_id(leaf_id)
                         if leaf.kind != leaf_kind:
                             continue
-                        leaf_id = self.get_transform_normalized_kind_id(leaf)
+                        leaf_id = self.get_transform_normalized_caller_kind_id(leaf)
                         actual_leaves[leaf_id] = trace_length
                     visited[frame_id][todo.interval].update(actual_leaves)
                     # log.info(
@@ -502,8 +502,8 @@ class TrimmedTraceGraph(TraceGraph):
                         and frame_leaf.kind != SharedTextKind.sink
                     ):
                         continue
-                    normalized_frame_leaf_id = self.get_transform_normalized_kind_id(
-                        frame_leaf
+                    normalized_frame_leaf_id = (
+                        self.get_transform_normalized_caller_kind_id(frame_leaf)
                     )
                     if normalized_frame_leaf_id in todo.leaves:
                         if visit_result[normalized_frame_leaf_id] < 0:

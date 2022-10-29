@@ -454,8 +454,10 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         leaf_mapping_ids: Set[LeafMapping] = set()
         for (leaf, depth) in leaves:
             leaf_record = self._get_shared_text(leaf_kind, leaf)
-            caller_leaf_id = self.graph.get_transform_normalized_kind_id(leaf_record)
-            callee_leaf_id = self.graph.get_transformed_kind_id(leaf_record)
+            caller_leaf_id = self.graph.get_transform_normalized_caller_kind_id(
+                leaf_record
+            )
+            callee_leaf_id = self.graph.get_transformed_callee_kind_id(leaf_record)
             leaf_mapping_ids.add(
                 LeafMapping(
                     caller_leaf=caller_leaf_id,
