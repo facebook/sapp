@@ -813,6 +813,8 @@ class PurgeStatus(enum.Enum):
     # Trace frames not reachable by an issue instance whose issue is triaged have been
     # marked UNREACHABLE.
     ready_to_purge = enum.auto()
+    # Runs with archive are never purged
+    archive = enum.auto()
 
     @classproperty
     def UNPURGED(cls) -> str:  # noqa
@@ -828,6 +830,11 @@ class PurgeStatus(enum.Enum):
     def PURGED(cls) -> str:  # noqa
         # pyre-ignore[7]: Coerce to string for SQLAlchemy
         return cls.purged
+
+    @classproperty
+    def ARCHIVE(cls) -> str:  # noqa
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.archive
 
 
 class FrameReachability(enum.Enum):
