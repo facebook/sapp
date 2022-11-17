@@ -7,6 +7,7 @@
 
 import json
 import logging
+import re
 from collections import defaultdict
 from typing import Any, cast, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
@@ -561,10 +562,15 @@ class TraceGraph(object):
         return next_kinds
 
     def get_transform_normalized_caller_kind(self, leaf: str) -> str:
-        # split off resolved conditional kinds
-        splits = leaf.split("!", 1)
+        # remove resolved conditional kinds
+        splits = [
+            part
+            for part in re.split(r"([!?][0-9a-zA-Z]+)", leaf)
+            if not part.startswith("!")
+        ]
+        trimmed = "".join(splits)
         # remove localized aspect of transform
-        return splits[0].replace("@", ":", 1)
+        return trimmed.replace("@", ":", 1)
 
     def get_transform_normalized_caller_kind_id(self, leaf_kind: SharedText) -> int:
         assert (
@@ -578,17 +584,20 @@ class TraceGraph(object):
         else:
             return leaf_kind.id.local_id
 
+    def get_transformed_callee_kind(self, leaf: str) -> str:
+        if "@" in leaf:
+            rest = leaf.split("@", 1)[1]
+        else:
+            rest = leaf
+        return rest.replace("!", "?")
+
     def get_transformed_callee_kind_id(self, leaf_kind: SharedText) -> int:
         assert (
             leaf_kind.kind == SharedTextKind.SINK
             or leaf_kind.kind == SharedTextKind.SOURCE
         )
         if "@" in leaf_kind.contents or "!" in leaf_kind.contents:
-            if "@" in leaf_kind.contents:
-                rest = leaf_kind.contents.split("@", 1)[1]
-            else:
-                rest = leaf_kind.contents
-            rest = rest.replace("!", "?", 1)
+            rest = self.get_transformed_callee_kind(leaf_kind.contents)
             remaining_kind = self.get_or_add_shared_text(leaf_kind.kind, rest)
             return remaining_kind.id.local_id
         else:
