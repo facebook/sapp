@@ -116,6 +116,22 @@ class TestParser(unittest.TestCase):
                             "leaves": [ { "name": "_user_controlled" } ],
                             "features": [ { "always-via": "source-feature" } ]
                           }
+                        ],
+                        "extra_traces": [
+                          {
+                            "call": {
+                              "position": {
+                                "line": 117,
+                                "start": 22,
+                                "end": 24
+                              },
+                              "resolves_to": [
+                                "extra_trace.transform_yz"
+                              ],
+                              "port": "formal(arg)"
+                            },
+                            "kind": "TransformY:TransformZ:ExtraTraceSink"
+                          }
                         ]
                       }
                     ]
@@ -149,6 +165,22 @@ class TestParser(unittest.TestCase):
                             "length": 2,
                             "leaves": [ { "name": "_remote_code_execution" } ],
                             "features": [ { "always-via": "sink-feature" } ]
+                          }
+                        ],
+                        "extra_traces": [
+                          {
+                            "call": {
+                              "position": {
+                                "line": 117,
+                                "start": 22,
+                                "end": 24
+                              },
+                              "resolves_to": [
+                                "extra_trace.transform_yz"
+                              ],
+                              "port": "formal(arg)"
+                            },
+                            "kind": "TransformY:TransformZ:ExtraTraceSink"
                           }
                         ]
                       }
@@ -194,7 +226,32 @@ class TestParser(unittest.TestCase):
                                 finish=24,
                                 preserves_type_context=False,
                             ),
-                            annotations=[],
+                            annotations=[
+                                ParseTraceAnnotation(
+                                    location=SourceLocation(
+                                        line_no=117, begin_column=22, end_column=24
+                                    ),
+                                    kind="tito_transform",
+                                    msg="",
+                                    leaf_kind="TransformY:TransformZ:ExtraTraceSink",
+                                    leaf_depth=0,
+                                    type_interval=None,
+                                    link=None,
+                                    trace_key=None,
+                                    titos=[],
+                                    subtraces=[
+                                        {
+                                            "callee": "extra_trace.transform_yz",
+                                            "port": "formal(arg)",
+                                            "position": {
+                                                "line": 117,
+                                                "start": 22,
+                                                "end": 24,
+                                            },
+                                        }
+                                    ],
+                                )
+                            ],
                         )
                     ],
                     preconditions=[
@@ -216,7 +273,32 @@ class TestParser(unittest.TestCase):
                             type_interval=ParseTypeInterval(
                                 start=0, finish=sys.maxsize, preserves_type_context=True
                             ),
-                            annotations=[],
+                            annotations=[
+                                ParseTraceAnnotation(
+                                    location=SourceLocation(
+                                        line_no=117, begin_column=22, end_column=24
+                                    ),
+                                    kind="tito_transform",
+                                    msg="",
+                                    leaf_kind="TransformY:TransformZ:ExtraTraceSink",
+                                    leaf_depth=0,
+                                    type_interval=None,
+                                    link=None,
+                                    trace_key=None,
+                                    titos=[],
+                                    subtraces=[
+                                        {
+                                            "callee": "extra_trace.transform_yz",
+                                            "port": "formal(arg)",
+                                            "position": {
+                                                "line": 117,
+                                                "start": 22,
+                                                "end": 24,
+                                            },
+                                        }
+                                    ],
+                                )
+                            ],
                         )
                     ],
                     initial_sources={("_user_controlled", "UserControlled", 1)},

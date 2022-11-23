@@ -333,7 +333,7 @@ class Parser(BaseParser):
                             fragment["features"]
                         ),
                         type_interval=fragment["type_interval"],
-                        annotations=[],
+                        annotations=fragment["trace_annotations"],
                     )
                 )
                 leaf_distances.update(
