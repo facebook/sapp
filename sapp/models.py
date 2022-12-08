@@ -453,11 +453,44 @@ class TraceKind(enum.Enum):
         raise ValueError(f"`{value}` is not a valid `TraceKind`")
 
 
+class PurgeStatusForInstance(enum.Enum):
+    "Purge status for an instance"
+
+    # Do NOT reorder the enums. Depending on the type of database, existing
+    # DBs may have these enums represented internally as ints based on the
+    # order shown here, and changing it here messes up existing data. This
+    # also means that new enums should be added AT THE END of the list.
+
+    # No purge status set
+    none = enum.auto()
+    # We want this instance to not be purged
+    archive = enum.auto()
+    # The instance's dependencies have been marked for archiving
+    marked = enum.auto()
+
+    @classproperty
+    def NONE(cls) -> str:  # noqa
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.none
+
+    @classproperty
+    def ARCHIVE(cls) -> str:  # noqa
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.archive
+
+    @classproperty
+    def MARKED(cls) -> str:  # noqa
+        # pyre-ignore[7]: Coerce to string for SQLAlchemy
+        return cls.marked
+
+
 class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     """A particularly instance of an issue found in a run"""
 
     __tablename__ = "issue_instances"
-    __table_args__ = BASE_TABLE_ARGS
+    __table_args__ = (
+        Index("ix_issue_instances_run_id_purge_status", "run_id", "purge_status"),
+    ) + BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
     id: DBID = Column(BIGDBIDType, primary_key=True)
@@ -493,7 +526,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         doc="True if the issue did not exist before this instance",
     )
 
-    run_id = Column(BIGDBIDType, nullable=False, index=True)
+    run_id = Column(BIGDBIDType, nullable=False, index=False)
 
     issue_id = Column(BIGDBIDType, nullable=False, index=True)
 
@@ -576,6 +609,18 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
 
     min_trace_length_to_entrypoints: Column[Optional[int]] = Column(
         Integer, nullable=True, doc="The minimum trace length to entrypoints"
+    )
+
+    purge_status: Column[str] = Column(
+        Enum(PurgeStatusForInstance),
+        server_default="none",
+        nullable=False,
+        doc=(
+            "Tracks whether Internal deletion jobs have purged "
+            "unnecessary trace frames from this instance. "
+            "Should NOT be set to anything but the default in SAPP code."
+        ),
+        index=False,
     )
 
     def get_shared_texts_by_kind(self, kind: SharedTextKind) -> List[SharedText]:
