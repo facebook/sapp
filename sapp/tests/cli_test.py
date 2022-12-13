@@ -6,6 +6,7 @@
 
 import contextlib
 import os
+import tempfile
 import traceback
 import unittest
 from functools import partial
@@ -73,7 +74,7 @@ class TestSappCli(TestCase):
     # pyre-fixme[2]: Parameter must be annotated.
     def verify_base_summary_blob(self, input_files, summary_blob) -> None:
         self.assertEqual(summary_blob["run_kind"], "master")
-        self.assertEqual(summary_blob["repository"][:4], "/tmp")
+        self.assertTrue(tempfile.gettempdir() in summary_blob["repository"])
         self.assertEqual(summary_blob["branch"], "master")
         self.assertEqual(summary_blob["commit_hash"], "abc123")
         self.assertEqual(summary_blob["old_linemap_file"][:4], "/tmp")
