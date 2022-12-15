@@ -19,6 +19,7 @@ from ..models import (
     IssueDBID,
     IssueInstance,
     IssueInstanceFixInfo,
+    PurgeStatusForInstance,
     Run,
     SharedText,
     SharedTextKind,
@@ -251,6 +252,7 @@ class FakeObjectGenerator:
         issue_id=None,
         min_trace_length_to_sources=None,
         min_trace_length_to_sinks=None,
+        purge_status=PurgeStatusForInstance.none,
     ):
         issue_id = issue_id if issue_id is not None else DBID(1)
         filename = self.filename(filename)
@@ -266,6 +268,7 @@ class FakeObjectGenerator:
             issue_id=issue_id,
             min_trace_length_to_sources=min_trace_length_to_sources,
             min_trace_length_to_sinks=min_trace_length_to_sinks,
+            purge_status=purge_status,
         )
         if self.graph:
             # pyre-fixme[6]: For 1st param expected `IssueInstance` but got `Munch`.
