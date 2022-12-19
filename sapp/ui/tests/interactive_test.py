@@ -2308,9 +2308,9 @@ else:
             [
                 "[id] [caller:caller_port -> callee:callee_port]",
                 "---- call1:root ->",
-                f"{frames[3].id}        call2:param2",
                 f"{frames[2].id}        call2:param2",
-                f"{frames[1].id}        leaf:source",
+                f"{frames[3].id}        call2:param2",
+                f"{frames[0].id}        leaf:source",
                 "...",
                 "Showing 3/6 matching frames. To see more, call 'frames' with "
                 "the 'limit' argument.",

@@ -113,7 +113,7 @@ class BulkSaver:
         # group together sequential items with the same keys. If we are scattered
         # then it does far more executemany calls, and it kills performance.
         items = sorted(
-            cls.prepare(database, pk_gen, consume(self.saving[cls.__name__])),
+            cls.prepare(database, pk_gen, self.saving[cls.__name__]),
             key=lambda k: list(k.keys()),
         )
 
@@ -178,11 +178,3 @@ class BulkSaver:
         for cls in self.SAVING_CLASSES_ORDER:
             stat_str += "%s: %d\n" % (cls.__name__, len(self.saving[cls.__name__]))
         return stat_str
-
-
-T = TypeVar("T")
-
-
-def consume(lst: List[T]) -> Iterator[T]:
-    while len(lst) > 0:
-        yield lst.pop()
