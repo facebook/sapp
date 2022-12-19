@@ -103,12 +103,16 @@ class BulkSaver:
             )
 
         for cls in saving_classes:
+            log.info("Merging and generating ids for %s...", cls.__name__)
+            self._prepare(database, cls, pk_gen)
+
+        for cls in saving_classes:
             log.info("Saving %s...", cls.__name__)
             self._save(database, cls, pk_gen)
 
     @log_time
     # pyre-fixme[2]: Parameter must be annotated.
-    def _save(self, database: DB, cls, pk_gen: PrimaryKeyGenerator) -> None:
+    def _prepare(self, database: DB, cls, pk_gen: PrimaryKeyGenerator) -> None:
         # We sort keys because bulk insert uses executemany, but it can only
         # group together sequential items with the same keys. If we are scattered
         # then it does far more executemany calls, and it kills performance.
@@ -116,6 +120,13 @@ class BulkSaver:
             cls.prepare(database, pk_gen, self.saving[cls.__name__]),
             key=lambda k: list(k.keys()),
         )
+        self.saving[cls.__name__] = items
+
+    @log_time
+    # pyre-fixme[2]: Parameter must be annotated.
+    def _save(self, database: DB, cls, pk_gen: PrimaryKeyGenerator) -> None:
+        items = self.saving[cls.__name__]
+        self.saving[cls.__name__] = []  # allow GC after we are done
 
         # bulk_insert_mappings should only be used for new objects.
         # To update an existing object, just modify its attribute(s)
