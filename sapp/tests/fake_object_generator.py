@@ -87,6 +87,7 @@ class FakeObjectGenerator:
         preserves_type_context: bool = False,
         type_interval_lower: int = 5,
         type_interval_upper: int = 7,
+        run_id=None,
     ):
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -109,7 +110,7 @@ class FakeObjectGenerator:
             callee_location=SourceLocation(location[0], location[1], location[2]),
             filename_id=filename_record.id,
             titos=[],
-            run_id=self.run_id,
+            run_id=run_id or self.run_id,
             type_interval_lower=type_interval_lower,
             type_interval_upper=type_interval_upper,
             preserves_type_context=preserves_type_context,
@@ -137,6 +138,7 @@ class FakeObjectGenerator:
         preserves_type_context: bool = False,
         type_interval_lower: int = 5,
         type_interval_upper: int = 7,
+        run_id=None,
     ):
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -159,7 +161,7 @@ class FakeObjectGenerator:
             callee_location=SourceLocation(location[0], location[1], location[2]),
             filename_id=filename_record.id,
             titos=[],
-            run_id=self.run_id,
+            run_id=run_id or self.run_id,
             type_interval_lower=type_interval_lower,
             type_interval_upper=type_interval_upper,
             preserves_type_context=preserves_type_context,
@@ -253,6 +255,7 @@ class FakeObjectGenerator:
         min_trace_length_to_sources=None,
         min_trace_length_to_sinks=None,
         purge_status=PurgeStatusForInstance.none,
+        run_id=None,
     ):
         issue_id = issue_id if issue_id is not None else DBID(1)
         filename = self.filename(filename)
@@ -264,7 +267,7 @@ class FakeObjectGenerator:
             filename_id=filename.id,
             message_id=message.id,
             callable_id=callable.id,
-            run_id=self.run_id,
+            run_id=run_id or self.run_id,
             issue_id=issue_id,
             min_trace_length_to_sources=min_trace_length_to_sources,
             min_trace_length_to_sinks=min_trace_length_to_sinks,
@@ -286,11 +289,15 @@ class FakeObjectGenerator:
         return result
 
     def class_type_interval(
-        self, class_name: str = "\\Foo", lower_bound: int = 0, upper_bound: int = 100
+        self,
+        class_name: str = "\\Foo",
+        lower_bound: int = 0,
+        upper_bound: int = 100,
+        run_id=None,
     ) -> ClassTypeInterval:
         interval = ClassTypeInterval.Record(
             id=DBID(),
-            run_id=self.run_id,
+            run_id=run_id or self.run_id,
             class_name=class_name,
             lower_bound=lower_bound,
             upper_bound=upper_bound,

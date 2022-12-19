@@ -636,6 +636,10 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
             # that we still may need RunDiffer, because issues that disappeared
             # for a while and then came back are also marked new.
             i.is_new_issue = i.issue_id.is_new
+            # New issue instances should also be archived (unless we set the archive
+            # status explicitly)
+            if i.is_new_issue:
+                i.purge_status = PurgeStatusForInstance.archive
             yield i
 
 
@@ -804,6 +808,10 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         nullable=True,
         doc="FBID for EntInternUser (typically actor of first triage from history)",
     )
+
+    first_instance_id = Column(BIGDBIDType, nullable=True, index=False)
+
+    triaged_instance_id = Column(BIGDBIDType, nullable=True, index=False)
 
     @classmethod
     def _take(cls, n, iterable):

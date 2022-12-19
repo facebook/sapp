@@ -182,6 +182,11 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         callable_record = self._get_shared_text(SharedTextKind.CALLABLE, callable)
 
+        # create id ahead so we can link the issue below. Note, issues are only saved if
+        # first seen, i.e., their handle hasn't been seen before. So we can always set
+        # first_instance_id, because it will only be saved when it is indeed new.
+        instance_id = DBID()
+
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
         issue: Issue = Issue.Record(
             id=IssueDBID(),
@@ -191,6 +196,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             status=IssueStatus.UNCATEGORIZED,
             detected_time=run.date.timestamp(),
             run_id=run.id,
+            first_instance_id=instance_id,
         )
 
         self.graph.add_issue(issue)
@@ -209,7 +215,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
         instance: IssueInstance = IssueInstance.Record(
-            id=DBID(),
+            id=instance_id,
             issue_id=issue.id,
             location=self.get_location(entry),
             filename_id=filename_record.id,
