@@ -180,7 +180,8 @@ class TestParser(unittest.TestCase):
                               ],
                               "port": "formal(arg)"
                             },
-                            "kind": "TransformY:TransformZ:ExtraTraceSink"
+                            "leaf_kind": "TransformY:TransformZ:ExtraTraceSink",
+                            "trace_kind": "sink"
                           }
                         ]
                       }
@@ -278,7 +279,7 @@ class TestParser(unittest.TestCase):
                                     location=SourceLocation(
                                         line_no=117, begin_column=22, end_column=24
                                     ),
-                                    kind="tito_transform",
+                                    kind="sink",
                                     msg="",
                                     leaf_kind="TransformY:TransformZ:ExtraTraceSink",
                                     leaf_depth=0,
@@ -1522,7 +1523,8 @@ class TestParser(unittest.TestCase):
                               "resolves_to": [ "extra_trace.nested_transform_x" ],
                               "port": "formal(arg)"
                             },
-                            "kind": "TransformX:ExtraTraceSink"
+                            "leaf_kind": "TransformX:ExtraTraceSink",
+                            "trace_kind": "tito_transform"
                           }
                         ]
                       }
@@ -2181,7 +2183,8 @@ class TestParser(unittest.TestCase):
                               "resolves_to": [ "extra_trace.nested_transform_x" ],
                               "port": "formal(arg)"
                             },
-                            "kind": "TransformX:ExtraTraceSink"
+                            "leaf_kind": "TransformX:ExtraTraceSink",
+                            "trace_kind": "tito_transform"
                           }
                         ]
                       }

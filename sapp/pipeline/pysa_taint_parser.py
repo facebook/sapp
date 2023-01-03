@@ -451,12 +451,15 @@ class Parser(BaseParser):
                 continue
             location = call["position"]
             source_location = SourceLocation.from_typed_dict(location)
+            # The default values are used for backwards compatibility
+            trace_kind = extra_trace.get("trace_kind", "tito_transform")
+            leaf_kind = extra_trace.get("leaf_kind", extra_trace.get("kind"))
             trace_annotations.append(
                 ParseTraceAnnotation(
                     location=source_location,
-                    kind="tito_transform",
+                    kind=trace_kind,
                     msg="",
-                    leaf_kind=extra_trace["kind"],
+                    leaf_kind=leaf_kind,
                     leaf_depth=0,
                     type_interval=None,
                     link=None,
