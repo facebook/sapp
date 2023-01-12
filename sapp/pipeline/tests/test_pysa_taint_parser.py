@@ -230,7 +230,7 @@ class TestParser(unittest.TestCase):
                             annotations=[
                                 ParseTraceAnnotation(
                                     location=SourceLocation(
-                                        line_no=117, begin_column=22, end_column=24
+                                        line_no=117, begin_column=23, end_column=24
                                     ),
                                     kind="tito_transform",
                                     msg="",
@@ -246,7 +246,7 @@ class TestParser(unittest.TestCase):
                                             "port": "formal(arg)",
                                             "position": {
                                                 "line": 117,
-                                                "start": 22,
+                                                "start": 23,
                                                 "end": 24,
                                             },
                                         }
@@ -277,7 +277,7 @@ class TestParser(unittest.TestCase):
                             annotations=[
                                 ParseTraceAnnotation(
                                     location=SourceLocation(
-                                        line_no=117, begin_column=22, end_column=24
+                                        line_no=117, begin_column=23, end_column=24
                                     ),
                                     kind="sink",
                                     msg="",
@@ -293,7 +293,7 @@ class TestParser(unittest.TestCase):
                                             "port": "formal(arg)",
                                             "position": {
                                                 "line": 117,
-                                                "start": 22,
+                                                "start": 23,
                                                 "end": 24,
                                             },
                                         }
@@ -1329,7 +1329,15 @@ class TestParser(unittest.TestCase):
                           { "lower": 25, "upper": 30 },
                           { "lower": 35, "upper": 40 }
                         ],
-                        "is_self_call": false
+                        "is_self_call": false,
+                        "extra_traces": [
+                          {
+                            "origin": { "line": 97, "start": 27, "end": 33 },
+                            "leaf_kind": "TransformX:ExtraTraceSink",
+                            "trace_kind": "sink",
+                            "message": "TransformX"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -1359,7 +1367,22 @@ class TestParser(unittest.TestCase):
                         start=25, finish=40, preserves_type_context=False
                     ),
                     features=[ParseTraceFeature("always-via:source-local", [])],
-                    annotations=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=97, begin_column=28, end_column=33
+                            ),
+                            kind="sink",
+                            msg="TransformX",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[],
+                        )
+                    ],
                 )
             ],
         )
@@ -1559,7 +1582,7 @@ class TestParser(unittest.TestCase):
                     annotations=[
                         ParseTraceAnnotation(
                             location=SourceLocation(
-                                line_no=59, begin_column=32, end_column=34
+                                line_no=59, begin_column=33, end_column=34
                             ),
                             kind="tito_transform",
                             msg="",
@@ -1573,7 +1596,7 @@ class TestParser(unittest.TestCase):
                                 {
                                     "callee": "extra_trace.nested_transform_x",
                                     "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 32, "end": 34},
+                                    "position": {"line": 59, "start": 33, "end": 34},
                                 }
                             ],
                         )
@@ -1603,7 +1626,7 @@ class TestParser(unittest.TestCase):
                     annotations=[
                         ParseTraceAnnotation(
                             location=SourceLocation(
-                                line_no=59, begin_column=32, end_column=34
+                                line_no=59, begin_column=33, end_column=34
                             ),
                             kind="tito_transform",
                             msg="",
@@ -1617,7 +1640,7 @@ class TestParser(unittest.TestCase):
                                 {
                                     "callee": "extra_trace.nested_transform_x",
                                     "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 32, "end": 34},
+                                    "position": {"line": 59, "start": 33, "end": 34},
                                 }
                             ],
                         )
@@ -1647,7 +1670,7 @@ class TestParser(unittest.TestCase):
                     annotations=[
                         ParseTraceAnnotation(
                             location=SourceLocation(
-                                line_no=59, begin_column=32, end_column=34
+                                line_no=59, begin_column=33, end_column=34
                             ),
                             kind="tito_transform",
                             msg="",
@@ -1661,7 +1684,7 @@ class TestParser(unittest.TestCase):
                                 {
                                     "callee": "extra_trace.nested_transform_x",
                                     "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 32, "end": 34},
+                                    "position": {"line": 59, "start": 33, "end": 34},
                                 }
                             ],
                         )
@@ -1691,7 +1714,7 @@ class TestParser(unittest.TestCase):
                     annotations=[
                         ParseTraceAnnotation(
                             location=SourceLocation(
-                                line_no=59, begin_column=32, end_column=34
+                                line_no=59, begin_column=33, end_column=34
                             ),
                             kind="tito_transform",
                             msg="",
@@ -1705,7 +1728,7 @@ class TestParser(unittest.TestCase):
                                 {
                                     "callee": "extra_trace.nested_transform_x",
                                     "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 32, "end": 34},
+                                    "position": {"line": 59, "start": 33, "end": 34},
                                 }
                             ],
                         )
@@ -2219,7 +2242,7 @@ class TestParser(unittest.TestCase):
                     annotations=[
                         ParseTraceAnnotation(
                             location=SourceLocation(
-                                line_no=59, begin_column=32, end_column=34
+                                line_no=59, begin_column=33, end_column=34
                             ),
                             kind="tito_transform",
                             msg="",
@@ -2233,7 +2256,7 @@ class TestParser(unittest.TestCase):
                                 {
                                     "callee": "extra_trace.nested_transform_x",
                                     "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 32, "end": 34},
+                                    "position": {"line": 59, "start": 33, "end": 34},
                                 }
                             ],
                         )

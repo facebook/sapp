@@ -437,15 +437,27 @@ class Parser(BaseParser):
     def _parse_extra_traces(self, trace: Dict[str, Any]) -> List[ParseTraceAnnotation]:
         trace_annotations = []
         for extra_trace in trace.get("extra_traces", []):
-            call = extra_trace["call"]
-            first_hops = [
-                {"callee": resolved, "port": call["port"], "position": call["position"]}
-                for resolved in call["resolves_to"]
-            ]
-            if len(first_hops) == 0:
-                continue
-            location = call["position"]
-            source_location = SourceLocation.from_typed_dict(location)
+            if "call" in extra_trace:
+                call = extra_trace["call"]
+                first_hops = [
+                    {
+                        "callee": resolved,
+                        "port": call["port"],
+                        "position": self._adjust_location(call["position"]),
+                    }
+                    for resolved in call["resolves_to"]
+                ]
+                if len(first_hops) == 0:
+                    continue
+                location = call["position"]
+            elif "origin" in extra_trace:
+                location = extra_trace["origin"]
+                first_hops = []  # There is no subtrace to show
+            else:
+                raise ParseError('Expect key "call" or "origin" in "extra_traces".')
+            source_location = SourceLocation.from_typed_dict(
+                self._adjust_location(location)
+            )
             # The default values are used for backwards compatibility
             trace_kind = extra_trace.get("trace_kind", "tito_transform")
             leaf_kind = extra_trace.get("leaf_kind", extra_trace.get("kind"))
@@ -453,7 +465,7 @@ class Parser(BaseParser):
                 ParseTraceAnnotation(
                     location=source_location,
                     kind=trace_kind,
-                    msg="",
+                    msg=extra_trace.get("message", ""),
                     leaf_kind=leaf_kind,
                     leaf_depth=0,
                     type_interval=None,
