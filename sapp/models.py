@@ -813,6 +813,21 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
 
     triaged_instance_id = Column(BIGDBIDType, nullable=True, index=False)
 
+    update_time: Column[int] = Column(
+        BIGINT(20, unsigned=True),
+        doc="unix timestamp of last update. Not set during initial construction",
+        nullable=False,
+        index=True,
+        server_default="0",
+    )
+
+    issue_group_id: Column[Optional[int]] = Column(
+        BIGINT(20, unsigned=True),
+        doc="issue group id when issue is grouped with others",
+        nullable=True,
+        server_default=None,
+    )
+
     @classmethod
     def _take(cls, n, iterable):
         "Return first n items of the iterable as a list"
