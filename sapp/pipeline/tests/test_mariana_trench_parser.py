@@ -16,7 +16,7 @@ from .. import (
     SourceLocation,
 )
 from ..base_parser import ParseType
-from ..mariana_trench_parser_v2 import Parser
+from ..mariana_trench_parser import Parser
 
 
 class TestParser(unittest.TestCase):
