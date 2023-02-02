@@ -19,6 +19,8 @@ from ..ui.interactive import Interactive
 
 
 class CustomPrompt(Prompts, Magics):
+    # pyre-fixme[14]: `in_prompt_tokens` overrides method defined in `Prompts`
+    #  inconsistently.
     def in_prompt_tokens(
         self, cli: Optional[CommandLineInterface] = None
     ) -> List[Tuple[_TokenType, str]]:

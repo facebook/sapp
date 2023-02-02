@@ -178,6 +178,8 @@ class ServeExportFilter(View):
     def __init__(self, session: Session) -> None:
         self.session = session
 
+    # pyre-fixme[14]: `dispatch_request` overrides method defined in `View`
+    #  inconsistently.
     def dispatch_request(self, filter_name: str) -> str:
         try:
             record = (
