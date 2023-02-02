@@ -166,13 +166,14 @@ class Call(NamedTuple):
         return Call(call_method, call_port, call_position)
 
     @staticmethod
-    def from_taint_callee_json(
+    def _from_taint_callee_json(
         callee_json: Union[None, Dict[str, Any]],
         caller_position: Position,
         leaf_kind: str,
     ) -> "Call":
         """Creates Call object from JSON representing a pre/postcondition's taint.
-        This represents the condition's callee."""
+        This represents the condition's callee.
+        """
         if callee_json:
             return Call.from_json(
                 method=callee_json.get("resolves_to"),
@@ -190,6 +191,76 @@ class Call(NamedTuple):
                 leaf_kind=leaf_kind,
             )
 
+    @staticmethod
+    def _from_taint_origin_json(
+        origin_json: Dict[str, Any],
+        caller_position: Position,
+        leaf_kind: str,
+    ) -> "Call":
+        """Creates Call object from JSON an origin of taint. Mariana Trench
+        distinguishes leaves from call sites by having an "origin" structure of
+        the following form:
+
+        "origin": {
+            "position": {
+                 "path": ...,
+                 "line": 42,
+                 "start": 123,
+                 "end": 456
+            }
+        }
+        """
+        return Call.from_json(
+            method=None,
+            port="Leaf",
+            position=origin_json.get("position"),
+            default_position=caller_position,
+            leaf_kind=leaf_kind,
+        )
+
+    @staticmethod
+    def from_taint_frame_json(
+        frame_json: Dict[str, Any],
+        caller_position: Position,
+        leaf_kind: str,
+    ) -> "Call":
+        """Creates Call object from JSON representing a pre/postcondition's taint.
+        This represents the condition's callee. There are two potential forms of taint:
+
+        Non-leaf frames will have a "call" structure representing a hop to the next
+        frame, of the following form:
+
+        "call": {
+            "position": {
+                 "path": ...,
+                 "line": 42,
+                 "start": 123,
+                 "end": 456
+            },
+            "port": "Return",
+            "resolves_to": "Lcom/facebook/marianatrench/integrationtests/Origin;"
+        }
+
+        Leaf frames, on the other hand, do not have a port or a call they
+        resolve to, so they have a different form and the underlying position.
+
+        "origin": {
+            "position": {
+                 "path": ...,
+                 "line": 42,
+                 "start": 123,
+                 "end": 456
+            }
+        }
+        """
+        if "origin" in frame_json:
+            return Call._from_taint_origin_json(
+                frame_json["origin"], caller_position, leaf_kind
+            )
+        return Call._from_taint_callee_json(
+            frame_json.get("call"), caller_position, leaf_kind
+        )
+
 
 class LocalPositions(NamedTuple):
     positions: List[Position]
@@ -204,7 +275,7 @@ class LocalPositions(NamedTuple):
     def from_taint_json(
         taint: Dict[str, Any], caller_method: Method
     ) -> "LocalPositions":
-        """The `taint` json should be of the form:
+        """The `taint` json should be of the following form:
         {
             "call": {...},  --> Optional field in `taint`
             "kinds": [
@@ -538,8 +609,8 @@ class Parser(BaseParser):
             for normalized_condition in normalized_conditions:
                 conditions.append(
                     IssueCondition(
-                        callee=Call.from_taint_callee_json(
-                            normalized_condition.get("call"),
+                        callee=Call.from_taint_frame_json(
+                            normalized_condition,
                             callable_position,
                             leaf_kind,
                         ),
@@ -714,9 +785,10 @@ class Parser(BaseParser):
         instead of "canonical_names"."""
         # TODO(T91357916): The analysis should be able to emit this correctly without
         # the parser having to post-process it.
-        if taint.get("call") is not None:
+        if "call" in taint or "origin" in taint:
             # Field callees only appear at the leaf. If a "call" exists, this is not
-            # a leaf.
+            # a leaf. Similarly, "origin"'s only appear for actual calls, not field
+            # callees.
             return [taint]
 
         non_field_callee_taint_kinds = []
@@ -782,10 +854,9 @@ class Parser(BaseParser):
                 normalized_taints = Parser._normalize_conditions(
                     unnormalized_leaf_taint, caller_method
                 )
-
                 for leaf_taint in normalized_taints:
-                    callee = Call.from_taint_callee_json(
-                        leaf_taint.get("call"), caller_position, leaf_kind
+                    callee = Call.from_taint_frame_json(
+                        leaf_taint, caller_position, leaf_kind
                     )
                     leaves = [
                         ConditionLeaf.from_json(kind) for kind in leaf_taint["kinds"]

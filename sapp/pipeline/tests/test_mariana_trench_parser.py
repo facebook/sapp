@@ -821,6 +821,70 @@ class TestParser(unittest.TestCase):
             ],
         )
 
+        # Origin case.
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_source:()V",
+              "generations": [
+                {
+                  "port": "Return",
+                  "taint": [
+                    {
+                      "origin": {
+                        "position": {
+                          "path": "Class.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "distance": 1,
+                          "kind": "TestSource",
+                          "origins": ["LSource;.source:()V"],
+                          "local_positions": [
+                            {"line": 13, "start": 14, "end": 15},
+                            {"line": 16, "start": 17, "end": 18}
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Class.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LClass;.indirect_source:()V",
+                    callee="leaf",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Class.java",
+                    titos=[
+                        SourceLocation(line_no=13, begin_column=15, end_column=16),
+                        SourceLocation(line_no=16, begin_column=18, end_column=19),
+                    ],
+                    leaves=[("TestSource", 1)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
         # Node case.
         self.assertParsed(
             """
