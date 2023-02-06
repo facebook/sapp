@@ -203,21 +203,13 @@ class SharedTextKind(enum.Enum):
     # DBs may have these enums represented internally as ints based on the
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
-    # pyre-fixme[20]: Argument `value` expected.
     feature = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     message = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     source = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     sink = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     callable = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     filename = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     source_detail = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     sink_detail = enum.auto()
 
     @classproperty
@@ -441,9 +433,7 @@ class TraceKind(enum.Enum):
     # DBs may have these enums represented internally as ints based on the
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
-    # pyre-fixme[20]: Argument `value` expected.
     precondition = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     postcondition = enum.auto()
 
     @classproperty
@@ -472,13 +462,10 @@ class PurgeStatusForInstance(enum.Enum):
     # also means that new enums should be added AT THE END of the list.
 
     # No purge status set
-    # pyre-fixme[20]: Argument `value` expected.
     none = enum.auto()
     # We want this instance to not be purged
-    # pyre-fixme[20]: Argument `value` expected.
     archive = enum.auto()
     # The instance's dependencies have been marked for archiving
-    # pyre-fixme[20]: Argument `value` expected.
     marked = enum.auto()
 
     @classproperty
@@ -665,24 +652,19 @@ class IssueStatus(enum.Enum):
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
     """An issue that hasn't been marked as a bug or FP"""
-    # pyre-fixme[20]: Argument `value` expected.
     uncategorized = enum.auto()
 
     """Not a security bug, but a bad practice. Still needs fixing."""
-    # pyre-fixme[20]: Argument `value` expected.
     bad_practice = enum.auto()
 
     """False positive from analysis"""
-    # pyre-fixme[20]: Argument `value` expected.
     false_positive = enum.auto()
 
     """Reviewed and seen to be a valid bug that needs fixing"""
-    # pyre-fixme[20]: Argument `value` expected.
     valid_bug = enum.auto()
 
     """I don't care about this particular issue,
     but still want to see issues of this kind."""
-    # pyre-fixme[20]: Argument `value` expected.
     do_not_care = enum.auto()
 
     @classproperty
@@ -714,17 +696,11 @@ class Severity(enum.Enum):
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
 
-    # pyre-fixme[20]: Argument `value` expected.
     SEV = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     SEVWorthy = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     Critical = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     Serious = enum.auto()  # Deprecated: replaced by "Significant"
-    # pyre-fixme[20]: Argument `value` expected.
     Limited = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     Significant = enum.auto()
 
 
@@ -867,13 +843,9 @@ class RunStatus(enum.Enum):
     # DBs may have these enums represented internally as ints based on the
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
-    # pyre-fixme[20]: Argument `value` expected.
     finished = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     incomplete = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     skipped = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     failed = enum.auto()
 
     @classproperty
@@ -902,18 +874,14 @@ class PurgeStatus(enum.Enum):
     # also means that new enums should be added AT THE END of the list.
 
     # Run has not been touched by purging automation
-    # pyre-fixme[20]: Argument `value` expected.
     unpurged = enum.auto()
     # Issue instances associated with an untriaged issue have been deleted
     # Trace frames marked as UNREACHABLE have been deleted
-    # pyre-fixme[20]: Argument `value` expected.
     purged = enum.auto()
     # Trace frames not reachable by an issue instance whose issue is triaged have been
     # marked UNREACHABLE.
-    # pyre-fixme[20]: Argument `value` expected.
     ready_to_purge = enum.auto()
     # Runs with archive are never purged
-    # pyre-fixme[20]: Argument `value` expected.
     archive = enum.auto()
 
     @classproperty
@@ -944,9 +912,7 @@ class FrameReachability(enum.Enum):
     # DBs may have these enums represented internally as ints based on the
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
-    # pyre-fixme[20]: Argument `value` expected.
     unreachable = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     reachable = enum.auto()
 
     @classproperty
@@ -1557,9 +1523,7 @@ class WarningCodeCategory(enum.Enum):
     # DBs may have these enums represented internally as ints based on the
     # order shown here, and changing it here messes up existing data. This
     # also means that new enums should be added AT THE END of the list.
-    # pyre-fixme[20]: Argument `value` expected.
     bug = enum.auto()
-    # pyre-fixme[20]: Argument `value` expected.
     code_smell = enum.auto()
 
     @classproperty
