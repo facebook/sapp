@@ -129,7 +129,9 @@ class ParseTraceAnnotation(NamedTuple):
     link: Optional[str]
     trace_key: Optional[str]
     titos: List[SourceLocation]
-    subtraces: List[Dict[str, Any]]  # TODO figure what exactly this shape is
+    subtraces: List[
+        Dict[str, Any]
+    ]  # callee, port, features, annotations (TODO figure what exactly this shape is)
 
     @staticmethod
     def from_json(j: Dict[str, Any]) -> "ParseTraceAnnotation":

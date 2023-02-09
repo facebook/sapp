@@ -606,6 +606,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         # and depth are specified.
         callee = trace["callee"]
         callee_port = trace["port"]
+        features = trace.get("features", [])
+        nested_annotations = trace.get("annotations", [])
         titos = self._generate_tito(parent_filename, annotation, parent_caller)
         call_tf = self._generate_raw_trace_frame(
             trace_kind,
@@ -619,8 +621,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             titos,
             [(annotation.leaf_kind or "", annotation.leaf_depth)],
             annotation.type_interval,
-            [],  # no more annotations for a precond coming from an annotation
-            [],  # no breadcrumbs / features associated with the traces for annotations
+            nested_annotations,
+            features,
         )
         self._generate_transitive_trace_frames(
             run, call_tf, {leaf_map.callee_leaf for leaf_map in call_tf.leaf_mapping}
