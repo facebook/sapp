@@ -56,6 +56,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         self,
         record_meta_run_issue_instances: bool = False,
         meta_run_identifier: Optional[int] = None,
+        archive_issue_instances_of_new_issues: bool = True,
     ) -> None:
         super().__init__()
         self.summary: Summary
@@ -63,6 +64,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         self.visited_frames: Dict[int, Set[int]] = {}  # frame id -> leaf ids
         self.record_meta_run_issue_instances: bool = record_meta_run_issue_instances
         self.meta_run_identifier: Optional[int] = meta_run_identifier
+        self.archive_issue_instances_of_new_issues = (
+            archive_issue_instances_of_new_issues
+        )
 
     def run(self, input: DictEntries, summary: Summary) -> Tuple[TraceGraph, Summary]:
         self.summary = summary
@@ -231,6 +235,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 entry.preconditions
             ),
             callable_count=callablesCount[callable],
+            archive_if_new_issue=self.archive_issue_instances_of_new_issues,
         )
 
         for sink in final_sink_kinds:

@@ -636,9 +636,12 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
             # that we still may need RunDiffer, because issues that disappeared
             # for a while and then came back are also marked new.
             i.is_new_issue = i.issue_id.is_new
-            # New issue instances should also be archived (unless we set the archive
-            # status explicitly)
-            if i.is_new_issue:
+            # `archive_if_new_issue` is True when we wish to preserve the first
+            # instance of all new issues by marking them as `archive`.
+            #
+            # It is False if we wish instead to save database space and allow
+            # the first instance of an issue to be purged.
+            if i.archive_if_new_issue and i.is_new_issue:
                 i.purge_status = PurgeStatusForInstance.archive
             yield i
 

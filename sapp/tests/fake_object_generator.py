@@ -256,6 +256,7 @@ class FakeObjectGenerator:
         min_trace_length_to_sinks=None,
         purge_status=PurgeStatusForInstance.none,
         run_id=None,
+        archive_if_new_issue=True,
     ):
         issue_id = issue_id if issue_id is not None else DBID(1)
         filename = self.filename(filename)
@@ -272,6 +273,7 @@ class FakeObjectGenerator:
             min_trace_length_to_sources=min_trace_length_to_sources,
             min_trace_length_to_sinks=min_trace_length_to_sinks,
             purge_status=purge_status,
+            archive_if_new_issue=archive_if_new_issue,
         )
         if self.graph:
             # pyre-fixme[6]: For 1st param expected `IssueInstance` but got `Munch`.
