@@ -769,12 +769,6 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         Integer, doc="Task number (not fbid) that is tracking this issue"
     )
 
-    triage_history_fbid: Column[Optional[int]] = Column(
-        BIGINT(unsigned=True),
-        nullable=True,
-        doc="FBID for EntZoncolanIssueTriageHistory",
-    )
-
     feedback_fbid: Column[Optional[int]] = Column(
         BIGINT(unsigned=True), nullable=True, doc="FBID for EntZoncolanFeedback"
     )
