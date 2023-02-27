@@ -119,6 +119,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
                 session.commit()
 
                 run_id = self.summary["run"].id.resolved()
+                log.info("Created run: %d", run_id)
                 self.summary["run"] = None  # Invalidate it
 
             self.bulk_saver.save_all(self.database)
