@@ -207,11 +207,12 @@ class Call(NamedTuple):
                  "line": 42,
                  "start": 123,
                  "end": 456
-            }
+            },
+           ?"method": "methodA" | { "name": "methodA", "parameter_type_overrides": ... }
         }
         """
         return Call.from_json(
-            method=None,
+            method=origin_json.get("method"),
             port="Leaf",
             position=origin_json.get("position"),
             default_position=caller_position,
@@ -255,7 +256,9 @@ class Call(NamedTuple):
         """
         if "origin" in frame_json:
             return Call._from_taint_origin_json(
-                frame_json["origin"], caller_position, leaf_kind
+                frame_json["origin"],
+                caller_position,
+                leaf_kind,
             )
         return Call._from_taint_callee_json(
             frame_json.get("call"), caller_position, leaf_kind
