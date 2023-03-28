@@ -23,7 +23,7 @@ from typing import (
 
 from munch import Munch
 from sqlalchemy import and_, Column, exc, inspect, JSON, or_, String, types
-from sqlalchemy.dialects import mysql
+from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import Session
@@ -157,6 +157,12 @@ class BIGDBIDType(DBIDType):
     def load_dialect_impl(self, dialect: Dialect):
         if dialect.name == "mysql":
             return dialect.type_descriptor(mysql.BIGINT(unsigned=True))
+        elif dialect.name == "sqlite":
+            # SQLite only supports auto-increment for INTEGER not BIGINT.
+            # INTEGER in SQLite also natively supports 64-bit values.
+            # - https://www.sqlite.org/datatype3.html
+            # - https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#sqlite-autoincrement  # noqa: B950
+            return dialect.type_descriptor(sqlite.INTEGER())
         return self.impl
 
 
