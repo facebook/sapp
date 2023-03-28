@@ -250,11 +250,7 @@ def filter_run(
         total_filtered_issues_output = (
             f"Total number of issues after filtering: {len(query_results)}"
         )
-        if len(query_results) <= 0:
-            LOG.error(total_filtered_issues_output)
-            return
-        else:
-            LOG.info(total_filtered_issues_output)
+        LOG.info(total_filtered_issues_output)
         if output_format == "sapp":
             output_json = {"issues": [issue.to_json() for issue in query_results]}
             print(json.dumps(output_json, indent=2, default=str))
