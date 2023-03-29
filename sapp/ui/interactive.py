@@ -1230,9 +1230,8 @@ json CALLABLE        show the original json output for the matching callable
         # pyre-fixme[7]: Expected `RawQuery[Variable[T]]` but got `RawQuery[str]`.
         return self._add_list_or_element_filter_to_query(
             filter,
-            # pyre-fixme[3002]: For 2nd argument expected
-            #  `Query[Variable[tools.sapp.sapp.ui.interactive.T]]` but got
-            #  `Query[Variable[tools.sapp.sapp.ui.interactive.T]]`.
+            # pyre-fixme[6]: For 2nd argument expected `RawQuery[Variable[T]]` but
+            #  got `RawQuery[Variable[T]]`.
             query,
             column,
             argument_name,
@@ -1249,9 +1248,8 @@ json CALLABLE        show the original json output for the matching callable
         # pyre-fixme[7]: Expected `RawQuery[Variable[T]]` but got `RawQuery[int]`.
         return self._add_list_or_element_filter_to_query(
             filter,
-            # pyre-fixme[3002]: For 2nd argument expected
-            #  `Query[Variable[tools.sapp.sapp.ui.interactive.T]]` but got
-            #  `Query[Variable[tools.sapp.sapp.ui.interactive.T]]`.
+            # pyre-fixme[6]: For 2nd argument expected `RawQuery[Variable[T]]` but
+            #  got `RawQuery[Variable[T]]`.
             query,
             column,
             argument_name,
