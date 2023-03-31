@@ -235,10 +235,10 @@ class ParseConditionTuple(NamedTuple):
         "Return self, but with certain strings interned"
         return ParseConditionTuple(
             type=self.type,
-            caller=self.caller,
+            caller=sys.intern(self.caller),
             caller_port=sys.intern(self.caller_port),
-            filename=self.filename,
-            callee=self.callee,
+            filename=sys.intern(self.filename),
+            callee=sys.intern(self.callee),
             callee_port=sys.intern(self.callee_port),
             callee_location=self.callee_location,
             leaves=intern_leaves(self.leaves),
@@ -263,7 +263,7 @@ class ParseIssueConditionTuple(NamedTuple):
     def interned(self) -> "ParseIssueConditionTuple":
         "Return self, but with certain strings interned"
         return ParseIssueConditionTuple(
-            callee=self.callee,
+            callee=sys.intern(self.callee),
             port=sys.intern(self.port),
             location=self.location,
             leaves=intern_leaves(self.leaves),
@@ -296,9 +296,9 @@ class ParseIssueTuple(NamedTuple):
         return ParseIssueTuple(
             code=self.code,
             message=self.message,
-            callable=self.callable,
+            callable=sys.intern(self.callable),
             handle=self.handle,
-            filename=self.filename,
+            filename=sys.intern(self.filename),
             callable_line=self.callable_line,
             line=self.line,
             start=self.start,
