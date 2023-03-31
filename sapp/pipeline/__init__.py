@@ -160,6 +160,13 @@ class ParseTraceFeature(NamedTuple):
             locations=list(map(SourceLocation.from_typed_dict, j.get("locations", []))),
         )
 
+    def interned(self) -> "ParseTraceFeature":
+        "Return self, but with certain strings interned"
+        return ParseTraceFeature(
+            name=sys.intern(self.name),
+            locations=self.locations,
+        )
+
 
 def parse_trace_feature(feature: Union[str, Dict[str, Any]]) -> ParseTraceFeature:
     if isinstance(feature, dict):
@@ -236,7 +243,7 @@ class ParseConditionTuple(NamedTuple):
             callee_location=self.callee_location,
             leaves=intern_leaves(self.leaves),
             type_interval=self.type_interval,
-            features=self.features,
+            features=list(map(ParseTraceFeature.interned, self.features)),
             titos=self.titos,
             annotations=self.annotations,
         )
@@ -261,7 +268,7 @@ class ParseIssueConditionTuple(NamedTuple):
             location=self.location,
             leaves=intern_leaves(self.leaves),
             titos=self.titos,
-            features=self.features,
+            features=list(map(ParseTraceFeature.interned, self.features)),
             type_interval=self.type_interval,
             annotations=self.annotations,
             root_port=self.root_port,
