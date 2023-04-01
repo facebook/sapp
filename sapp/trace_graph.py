@@ -512,6 +512,9 @@ class TraceGraph(object):
             or port == "sink"
             or port.startswith("anchor:")
             or port.startswith("producer:")
+            or port.startswith("leaf:")
+            or port.startswith("source:")
+            or port.startswith("sink:")
         )
 
     def _save_issue_instance_shared_text_assoc(self, bulk_saver: BulkSaver) -> None:
