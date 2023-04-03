@@ -52,8 +52,8 @@ class ParallelParser(BaseParser):
             for idx, f in enumerate(pool.imap_unordered(parse, args)):
                 if idx % 10 == 0:
                     cur = idx + 1
-                    pct = round((cur / num_files) * 100, 2)
-                    log.info(f"{cur}/{num_files} ({pct}%) files parsed")
+                    pct = (cur / num_files) * 100
+                    log.info(f"{cur}/{num_files} ({pct:.2f}) files parsed")
                 yield from f
 
         rss_after = get_rss_in_gb()
