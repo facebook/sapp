@@ -8,6 +8,7 @@ from multiprocessing import Pool
 from typing import Iterable, List, Set, Tuple, Type, Union
 
 from ..analysis_output import AnalysisOutput, Metadata
+from ..operating_system import get_rss_in_gb
 from . import ParseConditionTuple, ParseIssueTuple
 from .base_parser import BaseParser
 
@@ -44,6 +45,8 @@ class ParallelParser(BaseParser):
         # Pair up the arguments with each file.
         num_files = len(files)
         args = zip([(self.parser, self.repo_dirs, input.metadata)] * num_files, files)
+        initial_rss = get_rss_in_gb()
+        log.info(f"RSS before parsing: {initial_rss:.2f} GB")
 
         with Pool(processes=None) as pool:
             for idx, f in enumerate(pool.imap_unordered(parse, args)):
@@ -52,3 +55,8 @@ class ParallelParser(BaseParser):
                     pct = round((cur / num_files) * 100, 2)
                     log.info(f"{cur}/{num_files} ({pct}%) files parsed")
                 yield from f
+
+        rss_after = get_rss_in_gb()
+        log.info(
+            f"RSS after parsing: {rss_after:.2f} GB, change: {rss_after - initial_rss:.2f} GB"
+        )
