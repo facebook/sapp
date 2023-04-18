@@ -287,14 +287,8 @@ class LocalPositions(NamedTuple):
             ]
         }
         """
-        # TODO(T91357916): LocalPositions (and LocalFeatures) are not unique
-        # to a kind even though it is currently stored within one. Therefore,
-        # these are read from the first kind in the list. The analysis should
-        # update its (TaintV2) storage and JSON format.
         return LocalPositions.from_json(
-            taint["kinds"][0].get("local_positions", [])
-            if len(taint["kinds"]) > 0
-            else [],
+            taint.get("local_positions", []),
             caller_method,
         )
 
@@ -316,12 +310,7 @@ class Features(NamedTuple):
     @staticmethod
     def from_taint_json(taint: Dict[str, Any]) -> "Features":
         """Similar to `LocalPositions.from_taint_json`."""
-        # TODO(T91357916): See comments in LocalPositions
-        return Features.from_json(
-            taint["kinds"][0].get("local_features", {})
-            if len(taint["kinds"]) > 0
-            else {}
-        )
+        return Features.from_json(taint.get("local_features", {}))
 
     def to_sapp(self) -> List[str]:
         return sorted(self.features)
@@ -670,12 +659,13 @@ class Parser(BaseParser):
 
     @staticmethod
     def _normalize_crtex_condition(
+        taint: Dict[str, Any],
         callee: Dict[str, Any],
         kind: Dict[str, Any],
         caller_method: Method,
     ) -> List[Dict[str, Any]]:
         if "canonical_names" not in kind:
-            return [{"call": callee, "kinds": [kind]}]
+            return [taint]
 
         conditions = []
         # Expected format: "canonical_names": [ { "instantiated": "<name>" }, ... ]
@@ -693,7 +683,12 @@ class Parser(BaseParser):
             # Same for kind. We are just removing a key/field.
             kind_copy = kind.copy()
             kind_copy.pop("canonical_names")
-            conditions.append({"call": callee_copy, "kinds": [kind_copy]})
+            # Same for the whole taint object. Needs to be copied to preserve
+            # any other fields in it.
+            taint_copy = taint.copy()
+            taint_copy["call"] = callee_copy
+            taint_copy["kinds"] = [kind_copy]
+            conditions.append(taint_copy)
 
         return conditions
 
@@ -778,7 +773,7 @@ class Parser(BaseParser):
         conditions = []
         for kind in taint["kinds"]:
             conditions.extend(
-                Parser._normalize_crtex_condition(callee, kind, caller_method)
+                Parser._normalize_crtex_condition(taint, callee, kind, caller_method)
             )
         return conditions
 
@@ -807,7 +802,11 @@ class Parser(BaseParser):
                 non_field_callee_taint_kinds.append(kind)
 
         if len(non_field_callee_taint_kinds) > 0:
-            normalized_taints.append({"kinds": non_field_callee_taint_kinds})
+            # Copy the taint object to preserve any other fields in it.
+            # Shallow copy is fine since we are just overwriting "kinds".
+            taint_copy = taint.copy()
+            taint_copy["kinds"] = non_field_callee_taint_kinds
+            normalized_taints.append(taint_copy)
 
         return normalized_taints
 

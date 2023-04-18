@@ -96,11 +96,11 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
-                          "local_positions": [{"line": 13, "start": 14, "end": 15}],
-                          "local_features": { "always_features": ["via-parameter-field"] }
+                          "origins": ["LSink;.sink:(LData;)V"]
                         }
-                      ]
+                      ],
+                      "local_positions": [{"line": 13, "start": 14, "end": 15}],
+                      "local_features": { "always_features": ["via-parameter-field"] }
                     }
                   ],
                   "sources": [
@@ -120,12 +120,12 @@ class TestParser(unittest.TestCase):
                           "distance": 3,
                           "may_features": ["via-obscure"],
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:(LData;)V"],
-                          "local_positions": [
-                            {"line": 23, "start": 24, "end": 25},
-                            {"line": 26, "start": 27, "end": 28}
-                          ]
+                          "origins": ["LSource;.source:(LData;)V"]
                         }
+                      ],
+                      "local_positions": [
+                        {"line": 23, "start": 24, "end": 25},
+                        {"line": 26, "start": 27, "end": 28}
                       ]
                     }
                   ],
@@ -237,10 +237,10 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
-                          "local_positions": [{"line": 13, "start": 14, "end": 15}]
+                          "origins": ["LSink;.sink:(LData;)V"]
                         }
-                      ]
+                      ],
+                      "local_positions": [{"line": 13, "start": 14, "end": 15}]
                     },
                     {
                       "call": {
@@ -279,11 +279,11 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 3,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:(LData;)V"],
-                          "local_positions": [{"line": 33, "start": 34, "end": 35}],
-                          "local_features": {"always_features": ["via-obscure"]}
+                          "origins": ["LSource;.source:(LData;)V"]
                         }
-                      ]
+                      ],
+                      "local_positions": [{"line": 33, "start": 34, "end": 35}],
+                      "local_features": {"always_features": ["via-obscure"]}
                    }
                   ],
                   "may_features": ["via-obscure", "via-parameter-field"]
@@ -402,11 +402,11 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
-                          "local_positions": [{"line": 13, "start": 14, "end": 15}]
+                          "origins": ["LSink;.sink:(LData;)V"]
                         }
-                      ]
-                    }
+                      ],
+                      "local_positions": [{"line": 13, "start": 14, "end": 15}]
+                  }
                   ],
                   "sources": [
                     {
@@ -414,10 +414,10 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 0,
                           "kind": "TestSource",
-                          "field_origins": ["LSource;.sourceField:LData;"],
-                          "local_positions": [{"line": 33, "start": 34, "end": 35}]
+                          "field_origins": ["LSource;.sourceField:LData;"]
                         }
-                      ]
+                      ],
+                      "local_positions": [{"line": 33, "start": 34, "end": 35}]
                     }
                   ],
                   "may_features": ["via-obscure", "via-parameter-field"]
@@ -524,10 +524,10 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
-                          "local_positions": [{"line": 13, "start": 14, "end": 15}]
+                          "origins": ["LSink;.sink:(LData;)V"]
                         }
-                      ]
+                      ],
+                      "local_positions": [{"line": 13, "start": 14, "end": 15}]
                     },
                     {
                       "call": {
@@ -544,16 +544,15 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 3,
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
-                          "local_positions": [{"line": 14, "start": 14, "end": 15}]
+                          "origins": ["LSink;.sink:(LData;)V"]
                         },
                         {
                           "distance": 1,
                           "kind": "TestSink2",
-                          "origins": ["LSink;.sink3:(LData;)V"],
-                          "local_positions": [{"line": 14, "start": 14, "end": 15}]
+                          "origins": ["LSink;.sink3:(LData;)V"]
                         }
-                      ]
+                      ],
+                      "local_positions": [{"line": 14, "start": 14, "end": 15}]
                     }
                   ],
                   "sources": [
@@ -572,11 +571,11 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 3,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:(LData;)V"],
-                          "local_positions": [{"line": 33, "start": 34, "end": 35}],
-                          "local_features": {"always_features": ["via-obscure"]}
+                          "origins": ["LSource;.source:(LData;)V"]
                         }
-                      ]
+                      ],
+                      "local_positions": [{"line": 33, "start": 34, "end": 35}],
+                      "local_features": {"always_features": ["via-obscure"]}
                     },
                     {
                       "call": {
@@ -779,13 +778,13 @@ class TestParser(unittest.TestCase):
                         {
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"],
-                          "local_features": {
-                            "always_features": ["via-obscure"],
-                            "may_features": ["via-taint-in-taint-out"]
-                          }
+                          "origins": ["LSource;.source:()V"]
                         }
-                      ]
+                      ],
+                      "local_features": {
+                        "always_features": ["via-obscure"],
+                        "may_features": ["via-taint-in-taint-out"]
+                      }
                     }
                   ]
                 }
@@ -843,12 +842,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"],
-                          "local_positions": [
-                            {"line": 13, "start": 14, "end": 15},
-                            {"line": 16, "start": 17, "end": 18}
-                          ]
+                          "origins": ["LSource;.source:()V"]
                         }
+                      ],
+                      "local_positions": [
+                        {"line": 13, "start": 14, "end": 15},
+                        {"line": 16, "start": 17, "end": 18}
                       ]
                     }
                   ]
@@ -908,12 +907,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"],
-                          "local_positions": [
-                            {"line": 13, "start": 14, "end": 15},
-                            {"line": 16, "start": 17, "end": 18}
-                          ]
+                          "origins": ["LSource;.source:()V"]
                         }
+                      ],
+                      "local_positions": [
+                        {"line": 13, "start": 14, "end": 15},
+                        {"line": 16, "start": 17, "end": 18}
                       ]
                     }
                   ]
@@ -985,12 +984,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"],
-                          "local_positions": [
-                            {"line": 13, "start": 14, "end": 15},
-                            {"line": 16, "start": 17, "end": 18}
-                          ]
+                          "origins": ["LSource;.source:()V"]
                         }
+                      ],
+                      "local_positions": [
+                        {"line": 13, "start": 14, "end": 15},
+                        {"line": 16, "start": 17, "end": 18}
                       ]
                     }
                   ]
@@ -1051,12 +1050,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"],
-                          "local_positions": [
-                            {"line": 13, "start": 14, "end": 15},
-                            {"line": 16, "start": 17, "end": 18}
-                          ]
+                          "origins": ["LSource;.source:()V"]
                         }
+                      ],
+                      "local_positions": [
+                        {"line": 13, "start": 14, "end": 15},
+                        {"line": 16, "start": 17, "end": 18}
                       ]
                     }
                   ]
@@ -1106,12 +1105,12 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"],
-                          "local_features": {
-                            "may_features": ["via-source"]
-                          }
+                          "origins": ["LSource;.source:()V"]
                         }
-                      ]
+                      ],
+                      "local_features": {
+                        "may_features": ["via-source"]
+                      }
                     }
                   ]
                 }
@@ -1346,10 +1345,10 @@ class TestParser(unittest.TestCase):
                         {
                           "kind": "TestSink",
                           "origins": ["LSink;.sink:(LData;)V"],
-                          "local_features": {"always_features": ["via-taint-in-taint-out"]},
                           "may_features": ["via-obscure"]
                         }
-                      ]
+                      ],
+                      "local_features": {"always_features": ["via-taint-in-taint-out"]}
                     }
                   ]
                 }
@@ -1406,12 +1405,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
-                          "local_positions": [
-                            {"line": 13, "start": 14, "end": 15},
-                            {"line": 16, "start": 17, "end": 18}
-                          ]
+                          "origins": ["LSink;.sink:(LData;)V"]
                         }
+                      ],
+                      "local_positions": [
+                        {"line": 13, "start": 14, "end": 15},
+                        {"line": 16, "start": 17, "end": 18}
                       ]
                     }
                   ]
@@ -1517,12 +1516,12 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
-                          "local_features": {
-                            "may_features": ["via-sink"]
-                          }
+                          "origins": ["LSink;.sink:(LData;)V"]
                         }
-                      ]
+                      ],
+                      "local_features": {
+                        "may_features": ["via-sink"]
+                      }
                     }
                   ]
                 }
