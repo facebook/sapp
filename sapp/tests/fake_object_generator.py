@@ -9,6 +9,8 @@
 import datetime
 from typing import Any, Dict, Optional
 
+from tools.sapp.sapp.models import RunStatus
+
 from ..bulk_saver import BulkSaver
 from ..models import (
     ClassTypeInterval,
@@ -19,6 +21,7 @@ from ..models import (
     IssueDBID,
     IssueInstance,
     IssueInstanceFixInfo,
+    MetaRun,
     PurgeStatusForInstance,
     Run,
     SharedText,
@@ -201,6 +204,16 @@ class FakeObjectGenerator:
             differential_id=differential_id,
             job_id=job_id,
             kind=kind,
+        )
+
+    def metarun(self, status=RunStatus.FINISHED, kind="test_metarun"):
+        self.metarun_id += 1
+        # Not added to bulksaver or graph
+        return MetaRun(
+            id=DBID(self.metarun_id),
+            date=datetime.datetime.now(),
+            kind=kind,
+            status=status,
         )
 
     def structured_feature(self, feature: Optional[Dict[str, Any]] = None):
