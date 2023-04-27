@@ -8,12 +8,11 @@
 from __future__ import annotations
 
 import enum
-import json
 import logging
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Type, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Type
 
 from graphene_sqlalchemy.converter import (
     convert_column_to_int_or_id,
@@ -29,7 +28,6 @@ from sqlalchemy import (
     func,
     Index,
     Integer,
-    JSON,
     String,
     types,
 )
@@ -249,40 +247,6 @@ class SharedTextKind(enum.Enum):
         return cls.__members__.get(string)
 
 
-class Feature(Base, PrepareMixin, RecordMixin):
-    """
-    Features (also known as breadcrumbs) are structured
-    output from SAPP tools that allow for tagging issues and
-    traces with metadata, that can later be used for querying
-    and filtering said issues and traces.
-    """
-
-    __tablename__ = "features"
-    __table_args__ = BASE_TABLE_ARGS
-
-    # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
-    id: DBID = Column(BIGDBIDType, primary_key=True)
-
-    features_issue_instance = relationship(
-        "IssueInstanceFeatureAssoc",
-        primaryjoin=("Feature.id == foreign(IssueInstanceFeatureAssoc.feature_id)"),
-        viewonly=True,
-    )
-
-    data: Column[Union[List[Any], Dict[str, Any]]] = Column(
-        JSON(), nullable=False, index=False
-    )
-
-    @classmethod
-    def merge(cls, session, features):
-        return cls._merge_by_keys(
-            session,
-            features,
-            lambda feature: json.dumps(getattr(feature, cls.data.key), sort_keys=True),
-            cls.data,
-        )
-
-
 class SharedText(Base, PrepareMixin, RecordMixin):
     """Any string-ish type that can be shared as a property of some other
     object. (e.g. features, sources, sinks). The table name 'messages' is due
@@ -395,37 +359,6 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
         return cls._merge_assocs(
             session, items, cls.issue_instance_id, cls.shared_text_id
         )
-
-
-class IssueInstanceFeatureAssoc(Base, PrepareMixin, RecordMixin):
-    __tablename__ = "issue_instance_structured_features_assoc"
-    __table_args__ = BASE_TABLE_ARGS
-
-    issue_instance_id = Column(
-        "issue_instance_id", BIGDBIDType, primary_key=True, nullable=False
-    )
-
-    feature_id = Column("feature_id", BIGDBIDType, primary_key=True, nullable=False)
-
-    issue_instance = relationship(
-        "IssueInstance",
-        primaryjoin=(
-            "IssueInstanceFeatureAssoc.issue_instance_id ==" "foreign(IssueInstance.id)"
-        ),
-        uselist=False,
-        viewonly=True,
-    )
-
-    features = relationship(
-        "Feature",
-        primaryjoin=("IssueInstanceFeatureAssoc.feature_id == foreign(Feature.id)"),
-        uselist=False,
-        viewonly=True,
-    )
-
-    @classmethod
-    def merge(cls, session, items):
-        return cls._merge_assocs(session, items, cls.issue_instance_id, cls.feature_id)
 
 
 class TraceKind(enum.Enum):
@@ -573,16 +506,6 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         primaryjoin=(
             "IssueInstance.id == "
             "foreign(IssueInstanceSharedTextAssoc.issue_instance_id)"
-        ),
-        viewonly=True,
-    )
-
-    features = association_proxy("issue_instance_feature", "features")
-    issue_instance_feature = relationship(
-        "IssueInstanceFeatureAssoc",
-        primaryjoin=(
-            "IssueInstance.id == "
-            "foreign(IssueInstanceFeatureAssoc.issue_instance_id)"
         ),
         viewonly=True,
     )
@@ -1728,7 +1651,6 @@ class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
         Run,
         TraceFrame,
         TraceFrameAnnotation,
-        Feature,
         ClassTypeInterval,
     }
 

@@ -288,7 +288,7 @@ class ParseIssueTuple(NamedTuple):
     postconditions: Iterable[ParseIssueConditionTuple]
     initial_sources: Iterable[ParseIssueLeaf]
     final_sinks: Iterable[ParseIssueLeaf]
-    features: Union[List[str], List[Dict[str, Any]], List[Union[str, Dict[str, Any]]]]
+    features: List[str]
     callable_line: Optional[int]
     fix_info: Optional[Dict[str, Any]]
 
@@ -311,7 +311,7 @@ class ParseIssueTuple(NamedTuple):
             ),
             initial_sources=self.initial_sources,
             final_sinks=self.final_sinks,
-            features=self.features,
+            features=list(map(sys.intern, self.features)),
             fix_info=self.fix_info,
         )
 

@@ -7,7 +7,7 @@
 # pyre-unsafe
 
 import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from tools.sapp.sapp.models import RunStatus
 
@@ -15,7 +15,6 @@ from ..bulk_saver import BulkSaver
 from ..models import (
     ClassTypeInterval,
     DBID,
-    Feature,
     FrameReachability,
     Issue,
     IssueDBID,
@@ -215,25 +214,6 @@ class FakeObjectGenerator:
             kind=kind,
             status=status,
         )
-
-    def structured_feature(self, feature: Optional[Dict[str, Any]] = None):
-        if feature is None:
-            feature = {
-                "always": True,
-                "interval": ["-2147483648", "2147483647"],
-                "op": "bound",
-            }
-        if self.graph:
-            feature_obj = self.graph.get_feature(feature)
-            if feature_obj is not None:
-                return feature_obj
-
-        feature_obj = Feature.Record(id=DBID(), data=feature)
-        if self.graph:
-            self.graph.add_feature(feature_obj)
-        else:
-            self.saver.add(feature_obj)
-        return feature_obj
 
     def feature(self, name: str = "via:feature"):
         return self.shared_text(contents=name, kind=SharedTextKind.FEATURE)
