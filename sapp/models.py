@@ -933,7 +933,9 @@ class Run(Base):
     run has multiple IssueInstances."""
 
     __tablename__ = "runs"
-    __table_args__ = BASE_TABLE_ARGS
+    __table_args__ = (
+        Index("ix_runs_purge_status_run_status_date", "purge_status", "status", "date"),
+    ) + BASE_TABLE_ARGS
 
     id = Column(BIGDBIDType, primary_key=True)
 
@@ -1023,7 +1025,7 @@ class Run(Base):
             "unnecessary issue instances and trace frames from this run. "
             "Should NOT be set to anything but the default in SAPP code."
         ),
-        index=True,
+        index=False,
     )
 
     def get_summary(self, **kwargs) -> RunSummary:
