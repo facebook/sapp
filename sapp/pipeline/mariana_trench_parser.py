@@ -107,8 +107,6 @@ class Port(NamedTuple):
                 ".".join(elements[2:]), "unreachable_leaf_kind_producer"
             )
             return Port(f"{root}:{producer_id}:{Port.to_crtex(canonical_port.value)}")
-        elif elements[0] == "CallEffect":
-            elements[0] = "call-effect"
 
         return Port(".".join(elements))
 
