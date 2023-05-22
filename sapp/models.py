@@ -1175,8 +1175,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
-    # pyre-fixme[8]: Attribute has type `str`; used as `Column[str]`.
-    caller_port: str = Column(
+    caller_port: Column[str] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH),
         nullable=False,
         server_default="",
@@ -1198,8 +1197,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         doc="The location of the callee in the source code (line|start|end)",
     )
 
-    # pyre-fixme[8]: Attribute has type `str`; used as `Column[str]`.
-    callee_port: str = Column(
+    callee_port: Column[str] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH),
         nullable=False,
         server_default="",
