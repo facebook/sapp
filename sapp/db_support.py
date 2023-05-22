@@ -446,7 +446,7 @@ class PrimaryKeyGeneratorBase:  # pyre-ignore[13]
                     VALUES (:table_name, :current_id)",
                     {
                         "table_name": cls.__name__,
-                        "current_id": (row.id) if row else 0,
+                        "current_id": (row.id.resolved()) if row else 0,
                     },
                 )
                 session.commit()

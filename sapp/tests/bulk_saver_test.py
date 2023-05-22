@@ -9,7 +9,7 @@ from pyre_extensions import none_throws
 
 from ..db import DB, DBType
 
-from ..models import create as create_tables, Issue, IssueInstance
+from ..models import create as create_tables, Issue, IssueInstance, PrimaryKey
 
 from .fake_object_generator import FakeObjectGenerator
 
@@ -71,3 +71,18 @@ class BulkSaverTest(TestCase):
             ValueError, "was not resolved by ClassTypeInterval.merge"
         ):
             self.fakes.save_all(self.db)
+
+    def test_backfill_primary_keys(self) -> None:
+        # PrimaryKeyGenerator should be able to backfill the `primary_keys` table
+        # with the highest existing ID values after the table is deleted
+        issue1 = self.fakes.issue()
+        self.fakes.instance(issue_id=issue1.id)
+        self.fakes.save_all(self.db)
+
+        with self.db.make_session() as session:
+            session.query(PrimaryKey).delete()
+            session.commit()
+
+        issue2 = self.fakes.issue()
+        self.fakes.instance(issue_id=issue2.id)
+        self.fakes.save_all(self.db)
