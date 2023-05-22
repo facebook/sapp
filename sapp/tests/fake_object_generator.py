@@ -7,7 +7,7 @@
 # pyre-unsafe
 
 import datetime
-from typing import Optional
+from typing import Callable, Optional
 
 from tools.sapp.sapp.models import RunStatus
 
@@ -45,10 +45,10 @@ class FakeObjectGenerator:
         self.shared_text_name_id = 0
         self.run_id = run_id
 
-    def save_all(self, db) -> None:
+    def save_all(self, db, before_save: Optional[Callable[[], None]] = None) -> None:
         if self.graph:
             self.graph.update_bulk_saver(self.saver)
-        self.saver.save_all(db)
+        self.saver.save_all(db, before_save=before_save)
         self.saver = BulkSaver()
 
     def issue(

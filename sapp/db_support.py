@@ -172,7 +172,7 @@ class PrepareMixin(object):
         database: DB,
         pkgen: PrimaryKeyGeneratorBase,
         items: Iterable[PrepareMixin],
-    ) -> Iterator[Dict[str, Any]]:
+    ) -> Iterator[PrepareMixin]:
         """This is called immediately before the items are written to the
         database. pkgen is passed in to allow last-minute resolving of ids.
         """
@@ -180,8 +180,7 @@ class PrepareMixin(object):
             if hasattr(item, "id"):
                 # pyre-fixme[16]: `PrepareMixin` has no attribute `id` (we checked)
                 item.id.resolve(id=pkgen.get(cls), is_new=True)
-            # pyre-fixme[16]: `PrepareMixin` has no attribute `to_dict`.
-            yield cls.to_dict(item)
+            yield item
 
     @classmethod
     def merge(

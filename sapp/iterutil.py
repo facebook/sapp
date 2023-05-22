@@ -14,6 +14,9 @@ def split_every(n: int, iterable: Iterable[T]) -> Iterator[List[T]]:
 
     list(split_every(2, range(10))) => [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]
     """
+    if n <= 0:
+        # Without this guard, we would return an empty iterator when n is 0
+        raise ValueError(f"Cannot split into size {n}")
     i = iter(iterable)
     piece = list(itertools.islice(i, n))
     while piece:
