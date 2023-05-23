@@ -55,7 +55,7 @@ BASE_TABLE_ARGS = (
 
 
 class DBID(object):
-    __slots__ = ["_id", "is_new", "local_id"]
+    __slots__ = ["_id", "_frozen", "is_new", "local_id"]
 
     # Temporary IDs that are local per run (local_id) are assigned for each
     # DBID object on creation. This acts as a key for the object in map-like
@@ -63,20 +63,29 @@ class DBID(object):
     # each of them. next_id tracks the next available int to act as an id.
     next_id: int = 0
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, id=None) -> None:
+    def __init__(self, id: Union[int, None, DBID] = None) -> None:
+        self._frozen = False
         self.resolve(id)
         self.local_id: int = DBID.next_id
         DBID.next_id += 1
 
     def resolve(self, id: Union[int, None, DBID], is_new: bool = True) -> DBID:
+        # Allow setting the id more than once, in case BulkSaver needs to
+        # reassign an ID due to a duplicate key race.
+        # However, do not allow setting it if we have reason to suspect it
+        # may have already been persisted or used in a query.
+        if self._frozen:
+            raise ValueError(
+                f"can not reassign {repr(self)} to {id} because `resolved()` "
+                f"has already been called"
+            )
         self._check_type(id)
         self._id = id
         self.is_new = is_new
         return self
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def resolved(self):
+    def resolved(self) -> Optional[int]:
+        self._frozen = True
         id = self._id
 
         # We allow one level of a DBID pointing to another DBID
@@ -93,29 +102,27 @@ class DBID(object):
 
     # Allow DBIDs to be added and compared as ints
     def __int__(self) -> int:
-        return self.resolved()
+        resolved = self.resolved()
+        if resolved is None:
+            raise TypeError(f"cannot convert unset {repr(self)} to int")
+        return resolved
 
     def __str__(self) -> str:
         return str(self.resolved())
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __add__(self, other) -> int:
+    def __add__(self, other: Union[DBID, int]) -> int:
         return int(self) + int(other)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Union[DBID, int]) -> bool:
         return int(self) < int(other)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __gt__(self, other) -> bool:
+    def __gt__(self, other: Union[DBID, int]) -> bool:
         return int(self) > int(other)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __ge__(self, other) -> bool:
+    def __ge__(self, other: Union[DBID, int]) -> bool:
         return int(self) >= int(other)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __le__(self, other) -> bool:
+    def __le__(self, other: Union[DBID, int]) -> bool:
         return int(self) <= int(other)
 
     def __repr__(self) -> str:

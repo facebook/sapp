@@ -46,7 +46,7 @@ class QueryPredicate(Predicate):
 class InRange(Generic[_T], QueryPredicate):
     def __init__(
         self,
-        column: Union[Column[_T], DBID],
+        column: Column[_T],
         *,
         lower: Optional[_T] = None,
         upper: Optional[_T] = None,

@@ -123,6 +123,7 @@ class IssueQueryResultType(graphene.ObjectType):
         return ""
 
     def resolve_similar_issues(self, info: ResolveInfo) -> Set[SimilarIssue]:
+        # pyre-ignore[6]: graphene too dynamic.
         other_issues = Instance(info.context["session"], DBID(self.run_id)).get()
 
         for other_issue in other_issues:
@@ -205,7 +206,9 @@ class IssueQueryResult(NamedTuple):
             run_id=record.run_id,
         )
 
-    def to_json(self) -> Dict[str, Union[str, int, List[str], bool]]:
+    def to_json(
+        self,
+    ) -> Dict[str, Union[List[Dict[str, Any]], str, int, List[str], bool, None]]:
         return {
             "issue_id": self.issue_id.resolved(),
             "filename": self.filename,
@@ -225,7 +228,7 @@ class IssueQueryResult(NamedTuple):
             "features": list(self.features),
             "is_new_issue": self.is_new_issue,
             "detected_time": self.detected_time.isoformat(),
-            "run_id": self.run_id,
+            "run_id": self.run_id.resolved(),
             "similar_issues": [
                 similar_issue.__dict__ for similar_issue in self.similar_issues
             ],
