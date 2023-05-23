@@ -55,7 +55,7 @@ BASE_TABLE_ARGS = (
 
 
 class DBID(object):
-    __slots__ = ["_id", "_frozen", "is_new", "local_id"]
+    __slots__ = ["_id", "is_new", "local_id"]
 
     # Temporary IDs that are local per run (local_id) are assigned for each
     # DBID object on creation. This acts as a key for the object in map-like
@@ -64,28 +64,17 @@ class DBID(object):
     next_id: int = 0
 
     def __init__(self, id: Union[int, None, DBID] = None) -> None:
-        self._frozen = False
         self.resolve(id)
         self.local_id: int = DBID.next_id
         DBID.next_id += 1
 
     def resolve(self, id: Union[int, None, DBID], is_new: bool = True) -> DBID:
-        # Allow setting the id more than once, in case BulkSaver needs to
-        # reassign an ID due to a duplicate key race.
-        # However, do not allow setting it if we have reason to suspect it
-        # may have already been persisted or used in a query.
-        if self._frozen:
-            raise ValueError(
-                f"can not reassign {repr(self)} to {id} because `resolved()` "
-                f"has already been called"
-            )
         self._check_type(id)
         self._id = id
         self.is_new = is_new
         return self
 
     def resolved(self) -> Optional[int]:
-        self._frozen = True
         id = self._id
 
         # We allow one level of a DBID pointing to another DBID

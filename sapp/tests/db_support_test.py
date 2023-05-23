@@ -30,8 +30,8 @@ class DBSupportTest(TestCase):
         primary_key.resolve(1)
         self.assertEqual(primary_key.resolved(), 1)
 
-        with self.assertRaisesRegexp(ValueError, "can not reassign"):
-            primary_key.resolve(42)
+        primary_key.resolve(42)
+        self.assertEqual(primary_key.resolved(), 42)
 
     def test_dbid_resolved_to_none(self) -> None:
         primary_key = DBID()
