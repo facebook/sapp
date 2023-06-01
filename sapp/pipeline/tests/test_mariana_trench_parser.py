@@ -32,7 +32,7 @@ class TestParser(unittest.TestCase):
             filename_specs=["models.json"],
             file_handle=io.StringIO(output),
             metadata=Metadata(
-                analysis_root="/analysis/root",
+                repo_roots={"/analysis/root"},
                 analysis_tool_version="0.2",
                 rules={1: {"name": "TestRule", "description": "Test Rule Description"}},
             ),

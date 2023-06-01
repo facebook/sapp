@@ -5,22 +5,23 @@
 
 # pyre-strict
 
+import dataclasses
 import json
 import os
+from dataclasses import dataclass
 from glob import glob
 from pathlib import Path
-from typing import Any, Dict, IO, Iterable, List, NamedTuple, Optional, Set
+from typing import Any, Dict, IO, Iterable, List, Optional, Set
 
 from .sharded_files import ShardedFile
 
 METADATA_GLOB = "*metadata.json"
 
 
-# pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-class Metadata(NamedTuple):
-    analysis_root: str
+@dataclass
+class Metadata:
     # Used to relativize paths in the results
-    repo_roots: Set[str] = set()
+    repo_roots: Set[str] = dataclasses.field(default_factory=set)
     repository_name: Optional[str] = None
     tool: Optional[str] = None
     analysis_tool_version: Optional[str] = None
@@ -29,12 +30,11 @@ class Metadata(NamedTuple):
     project: Optional[str] = None
     # Mapping from code to rule metadata.
     # pyre-ignore: we don't have a shape for rules yet.
-    rules: Dict[int, Any] = {}
-    class_type_intervals_filenames: List[str] = []
+    rules: Dict[int, Any] = dataclasses.field(default_factory=dict)
+    class_type_intervals_filenames: List[str] = dataclasses.field(default_factory=list)
 
     def merge(self, o: "Metadata") -> "Metadata":
         return Metadata(
-            analysis_root=self.analysis_root,
             repo_roots=self.repo_roots | o.repo_roots,
             repository_name=self.repository_name or o.repository_name,
             tool=self.tool or o.tool,
@@ -140,7 +140,8 @@ class AnalysisOutput(object):
             )
 
             repo_root = metadata.get("repo_root")
-            analysis_root = metadata["root"]
+            repo_roots = {repo_root if repo_root is not None else metadata["root"]}
+
             rules = {rule["code"]: rule for rule in metadata.get("rules", [])}
             class_type_intervals_filenames = _get_remapped_filename(
                 metadata, "class_type_intervals_filename", directory
@@ -148,8 +149,7 @@ class AnalysisOutput(object):
             this_metadata = Metadata(
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
-                analysis_root=analysis_root,
-                repo_roots={repo_root},
+                repo_roots=repo_roots,
                 job_instance=metadata.get("job_instance"),
                 tool=metadata.get("tool"),
                 repository_name=metadata.get("repository_name"),
@@ -193,7 +193,7 @@ class AnalysisOutput(object):
             ]
 
         repo_root = metadata.get("repo_root")
-        analysis_root = metadata["root"]
+        repo_roots = {repo_root if repo_root is not None else metadata["root"]}
 
         rules = {rule["code"]: rule for rule in metadata.get("rules", [])}
         class_type_intervals_filenames = _get_remapped_filename(
@@ -206,8 +206,7 @@ class AnalysisOutput(object):
             metadata=Metadata(
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
-                analysis_root=analysis_root,
-                repo_roots={repo_root},
+                repo_roots=repo_roots,
                 job_instance=metadata.get("job_instance"),
                 tool=metadata.get("tool"),
                 repository_name=metadata.get("repository_name"),

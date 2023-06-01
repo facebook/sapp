@@ -37,7 +37,7 @@ class TestParser(unittest.TestCase):
             filename_specs=["taint-output.json"],
             file_handle=io.StringIO(input),
             metadata=Metadata(
-                analysis_root="/analysis/root",
+                repo_roots={"/analysis/root"},
                 rules={1: {"name": "TestRule", "description": "Test Rule Description"}},
             ),
         )
