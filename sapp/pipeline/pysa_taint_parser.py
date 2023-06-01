@@ -156,12 +156,14 @@ class Parser(BaseParser):
         try:
             json_first_line = json.loads(first_line)
             version = json_first_line["file_version"]
-        except ValueError:
-            raise ParseError("First line is not valid JSON.", received=first_line)
-        except KeyError:
+        except ValueError as e:
+            raise ParseError(
+                "First line is not valid JSON.", received=first_line
+            ) from e
+        except KeyError as e:
             raise ParseError(
                 "First entry must have a `file_version` attribute.", received=first_line
-            )
+            ) from e
 
         return version
 
@@ -288,6 +290,8 @@ class Parser(BaseParser):
             # already relative
             return complete_filename
         for repo_dir in repo_dirs:
+            if not repo_dir:
+                continue
             repo_dir = repo_dir.rstrip("/")
             if repo_dir != "" and complete_filename.startswith(repo_dir):
                 return complete_filename[len(repo_dir) + 1 :]
