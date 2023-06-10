@@ -254,7 +254,12 @@ class SharedText(Base, PrepareMixin, RecordMixin):
 
     __tablename__ = "messages"
     __table_args__ = (
-        Index("ix_messages_handle", "contents", "kind", mysql_length={"contents": 767}),
+        Index(
+            "ix_messages_kind_contents",
+            "kind",
+            "contents",
+            mysql_length={"contents": 767},
+        ),
     ) + BASE_TABLE_ARGS
 
     # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
@@ -268,7 +273,7 @@ class SharedText(Base, PrepareMixin, RecordMixin):
 
     # pyre-fixme[8]: Attribute has type `SharedTextKind`; used as `Column[str]`.
     kind: SharedTextKind = Column(
-        Enum(SharedTextKind), server_default="feature", nullable=False, index=True
+        Enum(SharedTextKind), server_default="feature", nullable=False
     )
 
     issue_instances = association_proxy("shared_text_issue_instance", "issue_instance")
