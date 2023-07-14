@@ -36,3 +36,10 @@ SARIFResult: TypeAlias = Dict[
         str,
     ],
 ]
+SARIFPhyicalLocationObject: TypeAlias = Dict[
+    str, Union[SARIFRegionObject, Dict[str, str]]
+]
+SARIFCodeflowLocationObject: TypeAlias = Dict[
+    str, Union[SARIFPhyicalLocationObject, Dict[str, str]]
+]
+SARIFCodeflowsObject: TypeAlias = List[Dict[str, List[Dict[str, List]]]]

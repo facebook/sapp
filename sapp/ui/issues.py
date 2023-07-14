@@ -234,7 +234,9 @@ class IssueQueryResult(NamedTuple):
             ],
         }
 
-    def to_sarif(self, severity_level: str = "warning") -> SARIFResult:
+    def to_sarif(
+        self, session: Session, tool: str, severity_level: str = "warning"
+    ) -> SARIFResult:
         sarif_result = {
             "ruleId": str(self.code),
             "level": str(SARIFSeverityLevel(severity_level)),
@@ -250,6 +252,9 @@ class IssueQueryResult(NamedTuple):
                 }
             ],
         }
+        from . import trace
+
+        sarif_result["codeFlows"] = trace.to_sarif(session, self, tool, True)
         return sarif_result
 
     def __hash__(self) -> int:

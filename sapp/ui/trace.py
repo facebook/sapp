@@ -3,7 +3,18 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import graphene
 from graphql.execution.base import ResolveInfo
@@ -20,7 +31,13 @@ from ..models import (
     TraceFrameLeafAssoc,
     TraceKind,
 )
+from ..sarif_types import (
+    SARIFCodeflowLocationObject,
+    SARIFCodeflowsObject,
+    SARIFPhyicalLocationObject,
+)
 from . import run
+from .issues import IssueQueryResult
 
 FilenameText: AliasedClass = aliased(SharedText)
 CallableText: AliasedClass = aliased(SharedText)
@@ -103,6 +120,25 @@ class TraceFrameQueryResult(NamedTuple):
     def is_leaf(self) -> bool:
         return self.callee_port in LEAF_NAMES
 
+    def get_clean_caller(self, tool: str) -> str:
+        return self._clean_callable_name(self.caller, tool)
+
+    def get_clean_callee(self, tool: str) -> str:
+        return self._clean_callable_name(self.callee, tool)
+
+    def _clean_callable_name(self, name: str, tool: str, depth: int = 1) -> str:
+        if name in LEAF_NAMES:
+            return name
+        if tool == "mariana-trench":
+            package_and_class, method_name = name.split(".")
+            method_name = method_name.split(":")[0]  # parse
+            package_and_class = package_and_class.strip(";").split("/")[
+                depth * -1
+            ]  # parse Lpackage1/package2/class;.
+            return f"{package_and_class}.{method_name}"
+        else:
+            return name
+
 
 class TraceTuple(NamedTuple):
     trace_frame: TraceFrameQueryResult
@@ -168,7 +204,6 @@ def initial_frames(
     issue_id: DBID,
     kind: TraceKind,
 ) -> List[TraceFrameQueryResult]:
-
     records = list(
         session.query(
             TraceFrame.id,
@@ -403,3 +438,94 @@ def trace_kind_to_shared_text_kind(trace_kind: Optional[TraceKind]) -> SharedTex
         return SharedTextKind.SINK
 
     raise AssertionError(f"{trace_kind} is invalid")
+
+
+def to_sarif(
+    session: Session, issue: IssueQueryResult, tool: str, output_features: bool = False
+) -> SARIFCodeflowsObject:
+    postcondition_initial_frames = initial_frames(
+        session,
+        issue.issue_instance_id,
+        TraceKind.POSTCONDITION,
+    )
+    precondition_initial_frames = initial_frames(
+        session,
+        issue.issue_instance_id,
+        TraceKind.PRECONDITION,
+    )
+    postcondition_navigation = navigate_trace_frames(
+        session,
+        postcondition_initial_frames,
+        set(issue.source_kinds),
+        set(issue.sink_kinds),
+    )
+    precondition_navigation = navigate_trace_frames(
+        session,
+        precondition_initial_frames,
+        set(issue.source_kinds),
+        set(issue.sink_kinds),
+    )
+    trace_tuples = _create_trace_tuples(
+        reversed(postcondition_navigation)
+    ) + _create_trace_tuples(precondition_navigation)
+    codeflows = [{"threadFlows": [{"locations": []}]}]
+    nesting_level = 0
+    for t in trace_tuples:
+        location = _sarif_codeflow_location_from_trace_tuple(
+            t.trace_frame, tool, nesting_level, True
+        )
+        codeflows[0]["threadFlows"][0]["locations"].append(location)
+        nesting_level += 1
+
+    return codeflows
+
+
+def _create_trace_tuples(
+    navigation: Iterable[Tuple[TraceFrameQueryResult, int]]
+) -> List[TraceTuple]:
+    return [
+        TraceTuple(
+            trace_frame=trace_frame,
+            branches=branches,
+            missing=trace_frame.caller == "",
+        )
+        for trace_frame, branches in navigation
+    ]
+
+
+def _sarif_codeflow_location_from_trace_tuple(
+    trace_frame: TraceFrameQueryResult,
+    tool: str,
+    nesting_level: int = 1,
+    output_features: bool = False,
+) -> Dict[str, Union[SARIFCodeflowLocationObject, Dict[str, str]]]:
+    features_str = titos = ""
+    if output_features:
+        frame_features = [
+            text.contents
+            for text in trace_frame.shared_texts
+            if text.kind is SharedTextKind.FEATURE
+        ]
+        if frame_features:
+            features_str = f"features: {frame_features}"
+        if trace_frame.titos and len(trace_frame.titos.split(";")) > 0:
+            titos = f"via {len(trace_frame.titos.split(';'))} propagators"
+    trace_region = {}
+    if trace_frame.callee_location:
+        trace_region = trace_frame.callee_location.to_sarif()
+    location = {
+        "location": {
+            "physicalLocation": {
+                "artifactLocation": {
+                    "uri": trace_frame.filename,
+                    "uriBaseId": "%SRCROOT%",
+                },
+                "region": trace_region,
+            },
+            "message": {
+                "text": f"flow from {trace_frame.get_clean_caller(tool)}(...{trace_frame.caller_port}...) -[into]-> {trace_frame.get_clean_callee(tool)}(...{trace_frame.callee_port}...) {titos} {features_str}".strip()
+            },
+        },
+        "nestingLevel": nesting_level,
+    }
+    return location
