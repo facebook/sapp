@@ -34,7 +34,6 @@ from ..models import (
 from ..sarif_types import (
     SARIFCodeflowLocationObject,
     SARIFCodeflowsObject,
-    SARIFPhyicalLocationObject,
 )
 from . import run
 from .issues import IssueQueryResult
@@ -121,20 +120,22 @@ class TraceFrameQueryResult(NamedTuple):
         return self.callee_port in LEAF_NAMES
 
     def get_clean_caller(self, tool: str) -> str:
-        return self._clean_callable_name(self.caller, tool)
+        return self.get_human_readable_caller(self.caller, tool)
 
     def get_clean_callee(self, tool: str) -> str:
-        return self._clean_callable_name(self.callee, tool)
+        return self.get_human_readable_caller(self.callee, tool)
 
-    def _clean_callable_name(self, name: str, tool: str, depth: int = 1) -> str:
+    def get_human_readable_caller(self, name: str, tool: str, depth: int = 1) -> str:
         if name in LEAF_NAMES:
             return name
         if tool == "mariana-trench":
-            package_and_class, method_name = name.split(".")
-            method_name = method_name.split(":")[0]  # parse
-            package_and_class = package_and_class.strip(";").split("/")[
-                depth * -1
-            ]  # parse Lpackage1/package2/class;.
+            # convert name from dalvik byte code e.g., Lpackage1/package2/class;.Func1 to human readable name class.Func1
+            package_class_and_method_name = name.split(".")
+            if len(package_class_and_method_name) != 2:
+                return name
+            package_and_class, method_name = package_class_and_method_name
+            method_name = method_name.split(":")[0]
+            package_and_class = package_and_class.strip(";").split("/")[depth * -1]
             return f"{package_and_class}.{method_name}"
         else:
             return name
@@ -468,16 +469,15 @@ def to_sarif(
     trace_tuples = _create_trace_tuples(
         reversed(postcondition_navigation)
     ) + _create_trace_tuples(precondition_navigation)
-    codeflows = [{"threadFlows": [{"locations": []}]}]
+    codeflows = []
     nesting_level = 0
     for t in trace_tuples:
         location = _sarif_codeflow_location_from_trace_tuple(
-            t.trace_frame, tool, nesting_level, True
+            t.trace_frame, tool, nesting_level, output_features=output_features
         )
-        codeflows[0]["threadFlows"][0]["locations"].append(location)
+        codeflows.append(location)
         nesting_level += 1
-
-    return codeflows
+    return [{"threadFlows": [{"locations": codeflows}]}]
 
 
 def _create_trace_tuples(
@@ -513,7 +513,7 @@ def _sarif_codeflow_location_from_trace_tuple(
     trace_region = {}
     if trace_frame.callee_location:
         trace_region = trace_frame.callee_location.to_sarif()
-    location = {
+    return {
         "location": {
             "physicalLocation": {
                 "artifactLocation": {
@@ -528,4 +528,3 @@ def _sarif_codeflow_location_from_trace_tuple(
         },
         "nestingLevel": nesting_level,
     }
-    return location

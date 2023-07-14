@@ -254,7 +254,7 @@ class IssueQueryResult(NamedTuple):
         }
         from . import trace
 
-        sarif_result["codeFlows"] = trace.to_sarif(session, self, tool, True)
+        sarif_result["codeFlows"] = trace.to_sarif(session, self, tool, output_features=True)
         return sarif_result
 
     def __hash__(self) -> int:
