@@ -84,7 +84,7 @@ class SourceLocation(NamedTuple):
         return SourceLocation.to_string(self)
 
     def to_sarif(self) -> SARIFRegionObject:
-        region = {
+        region: SARIFRegionObject = {
             "startLine": self.line_no,
             "startColumn": self.begin_column,
         }

@@ -7,7 +7,7 @@
 
 import sys
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, TypedDict, Union
 
 
 if sys.version_info >= (3, 10):
@@ -26,13 +26,50 @@ class SARIFSeverityLevel(Enum):
         return self.value
 
 
-SARIFRegionObject: TypeAlias = Dict[str, int]
+class SARIFRegionObject(TypedDict, total=False):
+    startLine: int
+    startColumn: int
+    endColumn: int
 
-SARIFResult: TypeAlias = Dict[
-    str,
-    Union[
-        Dict[str, str],
-        List[Dict[str, Dict[str, Union[SARIFRegionObject, Dict[str, str]]]]],
-        str,
-    ],
-]
+
+class SARIFMessageObject(TypedDict):
+    text: str
+
+
+class SARIFArtifactLocationObject(TypedDict, total=False):
+    uri: Optional[str]
+    uriBaseId: str
+
+
+class SARIFPhyicalLocationObject(TypedDict):
+    artifactLocation: SARIFArtifactLocationObject
+    region: Union[SARIFRegionObject, Dict[None, None]]
+
+
+class SARIFCodeflowLocationInnerObject(TypedDict, total=False):
+    physicalLocation: SARIFPhyicalLocationObject
+    message: SARIFMessageObject
+
+
+class SARIFCodeflowLocationObject(TypedDict):
+    location: SARIFCodeflowLocationInnerObject
+    nestingLevel: int
+
+
+class SARIFThreadFlowObject(TypedDict):
+    locations: List[SARIFCodeflowLocationObject]
+
+
+class SARIFCodeflowObject(TypedDict):
+    threadFlows: List[SARIFThreadFlowObject]
+
+
+SARIFCodeflowsObject: TypeAlias = List[SARIFCodeflowObject]
+
+
+class SARIFResult(TypedDict):
+    ruleId: str
+    level: str
+    message: SARIFMessageObject
+    locations: List[SARIFCodeflowLocationInnerObject]
+    codeFlows: SARIFCodeflowsObject

@@ -54,21 +54,25 @@ class SARIF:
         if tool == "pysa":
             driver_json["name"] = "Pysa"
             driver_json["informationUri"] = "https://github.com/facebook/pyre-check/"
-
-            tool_warning_messages = get_warning_message_range(
-                session,
-                self._tool_warning_code_ranges[tool][0],
-                self._tool_warning_code_ranges[tool][1],
-            )
-            rules_json = []
-            for rule in tool_warning_messages:
-                rules_json.append({"id": str(rule.code), "name": rule.message})
-            driver_json["rules"] = rules_json
+        elif tool == "mariana-trench":
+            driver_json["name"] = "Mariana Trench"
+            driver_json[
+                "informationUri"
+            ] = "https://github.com/facebook/mariana-trench/"
         else:
             raise NotImplementedError
 
+        tool_warning_messages = get_warning_message_range(
+            session,
+            self._tool_warning_code_ranges[tool][0],
+            self._tool_warning_code_ranges[tool][1],
+        )
+        rules_json = []
+        for rule in tool_warning_messages:
+            rules_json.append({"id": str(rule.code), "name": rule.message})
+        driver_json["rules"] = rules_json
         self.driver = driver_json
-        self.results = [issue.to_sarif() for issue in filtered_issues]
+        self.results = [issue.to_sarif(session, tool) for issue in filtered_issues]
 
     def to_json(self, indent: int = 2) -> str:
         return json.dumps(self, cls=SARIFEncoder, indent=indent)

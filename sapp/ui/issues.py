@@ -25,7 +25,11 @@ from ..models import (
     SourceLocation,
 )
 from ..queries import get_warning_message
-from ..sarif_types import SARIFResult, SARIFSeverityLevel
+from ..sarif_types import (
+    SARIFCodeflowLocationInnerObject,
+    SARIFResult,
+    SARIFSeverityLevel,
+)
 from . import filter_predicates, run
 
 # pyre-fixme[5]: Global expression must be annotated.
@@ -234,23 +238,27 @@ class IssueQueryResult(NamedTuple):
             ],
         }
 
-    def to_sarif(self, severity_level: str = "warning") -> SARIFResult:
-        sarif_result = {
+    def to_sarif(
+        self, session: Session, tool: str, severity_level: str = "warning"
+    ) -> SARIFResult:
+        from . import trace
+
+        location: SARIFCodeflowLocationInnerObject = {
+            "physicalLocation": {
+                "artifactLocation": {"uri": self.filename},
+                "region": self.location.to_sarif(),
+            }
+        }
+        result: SARIFResult = {
             "ruleId": str(self.code),
             "level": str(SARIFSeverityLevel(severity_level)),
             "message": {
                 "text": self.message,
             },
-            "locations": [
-                {
-                    "physicalLocation": {
-                        "artifactLocation": {"uri": self.filename},
-                        "region": self.location.to_sarif(),
-                    }
-                }
-            ],
+            "locations": [location],
+            "codeFlows": trace.to_sarif(session, self, tool, True),
         }
-        return sarif_result
+        return result
 
     def __hash__(self) -> int:
         return hash(
