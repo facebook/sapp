@@ -9,9 +9,8 @@
 import datetime
 from typing import Callable, Optional
 
-from tools.sapp.sapp.models import RunStatus
-
 from ..bulk_saver import BulkSaver
+
 from ..models import (
     ClassTypeInterval,
     DBID,
@@ -23,6 +22,7 @@ from ..models import (
     MetaRun,
     PurgeStatusForInstance,
     Run,
+    RunStatus,
     SharedText,
     SharedTextKind,
     SourceLocation,
