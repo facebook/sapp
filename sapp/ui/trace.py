@@ -31,13 +31,7 @@ from ..models import (
     TraceFrameLeafAssoc,
     TraceKind,
 )
-from ..sarif_types import (
-    SARIFCodeflowLocationObject,
-    SARIFCodeflowsObject,
-    SARIFThreadFlowObject,
-)
 from . import run
-from .issues import IssueQueryResult
 
 FilenameText: AliasedClass = aliased(SharedText)
 CallableText: AliasedClass = aliased(SharedText)
@@ -443,47 +437,7 @@ def trace_kind_to_shared_text_kind(trace_kind: Optional[TraceKind]) -> SharedTex
     raise AssertionError(f"{trace_kind} is invalid")
 
 
-def to_sarif(
-    session: Session, issue: IssueQueryResult, tool: str, output_features: bool = False
-) -> SARIFCodeflowsObject:
-    postcondition_initial_frames = initial_frames(
-        session,
-        issue.issue_instance_id,
-        TraceKind.POSTCONDITION,
-    )
-    precondition_initial_frames = initial_frames(
-        session,
-        issue.issue_instance_id,
-        TraceKind.PRECONDITION,
-    )
-    postcondition_navigation = navigate_trace_frames(
-        session,
-        postcondition_initial_frames,
-        set(issue.source_kinds),
-        set(issue.sink_kinds),
-    )
-    precondition_navigation = navigate_trace_frames(
-        session,
-        precondition_initial_frames,
-        set(issue.source_kinds),
-        set(issue.sink_kinds),
-    )
-    trace_tuples = _create_trace_tuples(
-        reversed(postcondition_navigation)
-    ) + _create_trace_tuples(precondition_navigation)
-    codeflows: List[SARIFCodeflowLocationObject] = []
-    nesting_level = 0
-    for t in trace_tuples:
-        location = _sarif_codeflow_location_from_trace_tuple(
-            t.trace_frame, tool, nesting_level, output_features=True
-        )
-        codeflows.append(location)
-        nesting_level += 1
-    threadflow: SARIFThreadFlowObject = {"locations": codeflows}
-    return [{"threadFlows": [threadflow]}]
-
-
-def _create_trace_tuples(
+def create_trace_tuples(
     navigation: Iterable[Tuple[TraceFrameQueryResult, int]]
 ) -> List[TraceTuple]:
     return [
@@ -494,46 +448,3 @@ def _create_trace_tuples(
         )
         for trace_frame, branches in navigation
     ]
-
-
-def _sarif_codeflow_location_from_trace_tuple(
-    trace_frame: TraceFrameQueryResult,
-    tool: str,
-    nesting_level: int = 1,
-    output_features: bool = False,
-) -> SARIFCodeflowLocationObject:
-    features_str = titos = ""
-    if output_features:
-        frame_features = [
-            text.contents
-            for text in trace_frame.shared_texts
-            if text.kind is SharedTextKind.FEATURE
-        ]
-        if frame_features:
-            features_str = f"features: {frame_features}"
-        if trace_frame.titos and len(trace_frame.titos.split(";")) > 0:
-            titos = f"via {len(trace_frame.titos.split(';'))} propagators"
-    trace_region = {}
-    if trace_frame.callee_location:
-        trace_region = trace_frame.callee_location.to_sarif()
-    return {
-        "location": {
-            "physicalLocation": {
-                "artifactLocation": {
-                    "uri": trace_frame.filename,
-                    "uriBaseId": "%SRCROOT%",
-                },
-                "region": trace_region,
-            },
-            "message": {
-                "text": (
-                    f"flow from {trace_frame.get_human_readable_caller(tool)}"
-                    f"(...{trace_frame.caller_port}...)"
-                    f" -[into]-> {trace_frame.get_human_readable_callee(tool)}"
-                    f"(...{trace_frame.callee_port}...)"
-                    f" {titos} {features_str}".strip()
-                )
-            },
-        },
-        "nestingLevel": nesting_level,
-    }
