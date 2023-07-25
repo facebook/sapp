@@ -2,7 +2,7 @@
 
 exports[`Renders issues and filters 1`] = `
 Array [
-  <div
+  <nav
     className="ant-breadcrumb"
     style={
       Object {
@@ -10,33 +10,35 @@ Array [
       }
     }
   >
-    <span>
-      <a
-        className="ant-breadcrumb-link"
-        href="/runs"
-      >
-        Runs
-      </a>
-      <span
-        className="ant-breadcrumb-separator"
-      >
-        /
-      </span>
-    </span>
-    <span>
-      <span
-        className="ant-breadcrumb-link"
-      >
-        Run 
-        0
-      </span>
-      <span
-        className="ant-breadcrumb-separator"
-      >
-        /
-      </span>
-    </span>
-  </div>,
+    <ol>
+      <li>
+        <a
+          className="ant-breadcrumb-link"
+          href="/runs"
+        >
+          Runs
+        </a>
+        <span
+          className="ant-breadcrumb-separator"
+        >
+          /
+        </span>
+      </li>
+      <li>
+        <span
+          className="ant-breadcrumb-link"
+        >
+          Run 
+          0
+        </span>
+        <span
+          className="ant-breadcrumb-separator"
+        >
+          /
+        </span>
+      </li>
+    </ol>
+  </nav>,
   <section
     className="ant-layout ant-layout-has-sider"
   >
@@ -171,6 +173,7 @@ Array [
         >
           <button
             className="ant-btn"
+            disabled={false}
             onClick={[Function]}
             onMouseEnter={[Function]}
             onMouseLeave={[Function]}
@@ -188,7 +191,6 @@ Array [
             >
               <svg
                 aria-hidden="true"
-                className=""
                 data-icon="filter"
                 fill="currentColor"
                 focusable="false"
@@ -207,18 +209,20 @@ Array [
           </button>
         </div>
         <ul
-          className="ant-menu ant-menu-light ant-menu-root ant-menu-inline"
-          onMouseEnter={[Function]}
-          onTransitionEnd={[Function]}
+          className="ant-menu ant-menu-root ant-menu-inline ant-menu-light"
+          data-menu-list={true}
+          onKeyDown={[Function]}
           role="menu"
           style={
             Object {
               "borderRight": 0,
             }
           }
+          tabIndex={0}
         >
           <div
             className="ant-select ant-select-auto-complete ant-select-single ant-select-customize-input ant-select-show-search"
+            eventKey="tmp_key-0"
             onBlur={[Function]}
             onFocus={[Function]}
             onKeyDown={[Function]}
@@ -230,106 +234,125 @@ Array [
                 "width": "100%",
               }
             }
+            warnKey={true}
           >
             <div
               className="ant-select-selector"
+              onClick={[Function]}
               onMouseDown={[Function]}
             >
               <span
                 className="ant-select-selection-search"
               >
                 <span
-                  className="ant-input-affix-wrapper ant-input-search ant-select-selection-search-input"
-                  onMouseUp={[Function]}
+                  className="ant-input-group-wrapper ant-input-search ant-select-selection-search-input"
                   style={
                     Object {
                       "opacity": null,
                     }
                   }
                 >
-                  <input
-                    aria-activedescendant="rc_select_TEST_OR_SSR_list_0"
-                    aria-autocomplete="list"
-                    aria-controls="rc_select_TEST_OR_SSR_list"
-                    aria-haspopup="listbox"
-                    aria-owns="rc_select_TEST_OR_SSR_list"
-                    autoComplete="off"
-                    className="ant-input"
-                    id="rc_select_TEST_OR_SSR"
-                    onBlur={[Function]}
-                    onChange={[Function]}
-                    onCompositionEnd={[Function]}
-                    onCompositionStart={[Function]}
-                    onFocus={[Function]}
-                    onKeyDown={[Function]}
-                    onMouseDown={[Function]}
-                    onPaste={[Function]}
-                    placeholder="saved filter"
-                    readOnly={false}
-                    role="combobox"
-                    style={null}
-                    type="search"
-                    unselectable={null}
-                    value=""
-                  />
                   <span
-                    className="ant-input-suffix"
+                    className="ant-input-wrapper ant-input-group"
                   >
+                    <input
+                      aria-activedescendant="rc_select_TEST_OR_SSR_list_0"
+                      aria-autocomplete="list"
+                      aria-controls="rc_select_TEST_OR_SSR_list"
+                      aria-haspopup="listbox"
+                      aria-owns="rc_select_TEST_OR_SSR_list"
+                      autoComplete="off"
+                      className="ant-input"
+                      hidden={null}
+                      id="rc_select_TEST_OR_SSR"
+                      onBlur={[Function]}
+                      onChange={[Function]}
+                      onCompositionEnd={[Function]}
+                      onCompositionStart={[Function]}
+                      onFocus={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseDown={[Function]}
+                      onPaste={[Function]}
+                      placeholder="saved filter"
+                      readOnly={false}
+                      role="combobox"
+                      style={null}
+                      type="search"
+                      unselectable={null}
+                      value=""
+                    />
                     <span
-                      aria-label="search"
-                      className="anticon anticon-search ant-input-search-icon"
-                      onClick={[Function]}
-                      role="img"
-                      tabIndex={-1}
+                      className="ant-input-group-addon"
                     >
-                      <svg
-                        aria-hidden="true"
-                        className=""
-                        data-icon="search"
-                        fill="currentColor"
-                        focusable="false"
-                        height="1em"
-                        viewBox="64 64 896 896"
-                        width="1em"
+                      <button
+                        className="ant-btn ant-btn-default ant-btn-icon-only ant-input-search-button"
+                        disabled={false}
+                        onClick={[Function]}
+                        onMouseDown={[Function]}
+                        type="button"
                       >
-                        <path
-                          d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
-                        />
-                      </svg>
+                        <span
+                          aria-label="search"
+                          className="anticon anticon-search"
+                          role="img"
+                        >
+                          <svg
+                            aria-hidden="true"
+                            data-icon="search"
+                            fill="currentColor"
+                            focusable="false"
+                            height="1em"
+                            viewBox="64 64 896 896"
+                            width="1em"
+                          >
+                            <path
+                              d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
+                            />
+                          </svg>
+                        </span>
+                      </button>
                     </span>
                   </span>
                 </span>
               </span>
+              <span
+                className="ant-select-selection-placeholder"
+              />
             </div>
           </div>
           <li
             className="ant-menu-submenu ant-menu-submenu-inline"
             onMouseEnter={[Function]}
             onMouseLeave={[Function]}
-            role="menuitem"
+            role="none"
+            style={Object {}}
           >
             <div
+              aria-controls="rc-menu-uuid-test-tmp_key-1-popup"
               aria-expanded={false}
-              aria-haspopup="true"
+              aria-haspopup={true}
               className="ant-menu-submenu-title"
+              data-menu-id="rc-menu-uuid-test-tmp_key-1"
               onClick={[Function]}
+              onFocus={[Function]}
               onMouseEnter={[Function]}
               onMouseLeave={[Function]}
-              role="button"
+              role="menuitem"
               style={
                 Object {
                   "paddingLeft": 24,
                 }
               }
+              tabIndex={-1}
+              title={null}
             >
               <span
                 aria-label="setting"
-                className="anticon anticon-setting"
+                className="anticon anticon-setting ant-menu-item-icon"
                 role="img"
               >
                 <svg
                   aria-hidden="true"
-                  className=""
                   data-icon="setting"
                   fill="currentColor"
                   focusable="false"
@@ -342,41 +365,48 @@ Array [
                   />
                 </svg>
               </span>
-              <span>
+              <span
+                className="ant-menu-title-content"
+              >
                 Filter options
               </span>
               <i
                 className="ant-menu-submenu-arrow"
               />
             </div>
-            <div />
           </li>
           <li
             className="ant-menu-submenu ant-menu-submenu-inline ant-menu-submenu-open ant-menu-submenu-disabled"
             onMouseEnter={[Function]}
             onMouseLeave={[Function]}
-            role="menuitem"
+            role="none"
+            style={Object {}}
           >
             <div
+              aria-controls="rc-menu-uuid-test-recents-popup"
+              aria-disabled={true}
               aria-expanded={true}
-              aria-haspopup="true"
-              aria-owns="recents$Menu"
+              aria-haspopup={true}
               className="ant-menu-submenu-title"
-              role="button"
+              data-menu-id="rc-menu-uuid-test-recents"
+              onClick={[Function]}
+              onFocus={[Function]}
+              role="menuitem"
               style={
                 Object {
                   "paddingLeft": 24,
                 }
               }
+              tabIndex={null}
+              title={null}
             >
               <span
                 aria-label="field-time"
-                className="anticon anticon-field-time"
+                className="anticon anticon-field-time ant-menu-item-icon"
                 role="img"
               >
                 <svg
                   aria-hidden="true"
-                  className=""
                   data-icon="field-time"
                   fill="currentColor"
                   focusable="false"
@@ -395,7 +425,9 @@ Array [
                   />
                 </svg>
               </span>
-              <span>
+              <span
+                className="ant-menu-title-content"
+              >
                 Recent filters
               </span>
               <i
@@ -404,12 +436,120 @@ Array [
             </div>
             <ul
               className="ant-menu ant-menu-sub ant-menu-inline"
-              id="recents$Menu"
-              role="menu"
-              style={Object {}}
+              data-menu-list={true}
+              id="rc-menu-uuid-test-recents-popup"
             />
           </li>
         </ul>
+        <div
+          aria-hidden={true}
+          style={
+            Object {
+              "display": "none",
+            }
+          }
+        >
+          <div
+            className="ant-select ant-select-auto-complete ant-select-single ant-select-customize-input ant-select-show-search"
+            eventKey="tmp_key-0"
+            onBlur={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onKeyUp={[Function]}
+            onMouseDown={[Function]}
+            style={
+              Object {
+                "padding": "12px 12px 0 12px",
+                "width": "100%",
+              }
+            }
+            warnKey={true}
+          >
+            <div
+              className="ant-select-selector"
+              onClick={[Function]}
+              onMouseDown={[Function]}
+            >
+              <span
+                className="ant-select-selection-search"
+              >
+                <span
+                  className="ant-input-group-wrapper ant-input-search ant-select-selection-search-input"
+                  style={
+                    Object {
+                      "opacity": null,
+                    }
+                  }
+                >
+                  <span
+                    className="ant-input-wrapper ant-input-group"
+                  >
+                    <input
+                      aria-activedescendant="rc_select_TEST_OR_SSR_list_0"
+                      aria-autocomplete="list"
+                      aria-controls="rc_select_TEST_OR_SSR_list"
+                      aria-haspopup="listbox"
+                      aria-owns="rc_select_TEST_OR_SSR_list"
+                      autoComplete="off"
+                      className="ant-input"
+                      hidden={null}
+                      id="rc_select_TEST_OR_SSR"
+                      onBlur={[Function]}
+                      onChange={[Function]}
+                      onCompositionEnd={[Function]}
+                      onCompositionStart={[Function]}
+                      onFocus={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseDown={[Function]}
+                      onPaste={[Function]}
+                      placeholder="saved filter"
+                      readOnly={false}
+                      role="combobox"
+                      style={null}
+                      type="search"
+                      unselectable={null}
+                      value=""
+                    />
+                    <span
+                      className="ant-input-group-addon"
+                    >
+                      <button
+                        className="ant-btn ant-btn-default ant-btn-icon-only ant-input-search-button"
+                        disabled={false}
+                        onClick={[Function]}
+                        onMouseDown={[Function]}
+                        type="button"
+                      >
+                        <span
+                          aria-label="search"
+                          className="anticon anticon-search"
+                          role="img"
+                        >
+                          <svg
+                            aria-hidden="true"
+                            data-icon="search"
+                            fill="currentColor"
+                            focusable="false"
+                            height="1em"
+                            viewBox="64 64 896 896"
+                            width="1em"
+                          >
+                            <path
+                              d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
+                            />
+                          </svg>
+                        </span>
+                      </button>
+                    </span>
+                  </span>
+                </span>
+              </span>
+              <span
+                className="ant-select-selection-placeholder"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   </section>,
@@ -418,7 +558,7 @@ Array [
 
 exports[`Renders issues and filters 2`] = `
 Array [
-  <div
+  <nav
     className="ant-breadcrumb"
     style={
       Object {
@@ -426,33 +566,35 @@ Array [
       }
     }
   >
-    <span>
-      <a
-        className="ant-breadcrumb-link"
-        href="/runs"
-      >
-        Runs
-      </a>
-      <span
-        className="ant-breadcrumb-separator"
-      >
-        /
-      </span>
-    </span>
-    <span>
-      <span
-        className="ant-breadcrumb-link"
-      >
-        Run 
-        0
-      </span>
-      <span
-        className="ant-breadcrumb-separator"
-      >
-        /
-      </span>
-    </span>
-  </div>,
+    <ol>
+      <li>
+        <a
+          className="ant-breadcrumb-link"
+          href="/runs"
+        >
+          Runs
+        </a>
+        <span
+          className="ant-breadcrumb-separator"
+        >
+          /
+        </span>
+      </li>
+      <li>
+        <span
+          className="ant-breadcrumb-link"
+        >
+          Run 
+          0
+        </span>
+        <span
+          className="ant-breadcrumb-separator"
+        >
+          /
+        </span>
+      </li>
+    </ol>
+  </nav>,
   <section
     className="ant-layout ant-layout-has-sider"
   >
@@ -489,7 +631,6 @@ Array [
               >
                 <svg
                   aria-hidden="true"
-                  className=""
                   data-icon="fire"
                   fill="currentColor"
                   focusable="false"
@@ -513,7 +654,7 @@ Array [
                 href="/run/0/issue/11"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -530,7 +671,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -553,7 +694,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -575,7 +716,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -585,7 +726,7 @@ Array [
                   onMouseLeave={[Function]}
                   style={
                     Object {
-                      "WebkitLineClamp": null,
+                      "WebkitLineClamp": undefined,
                     }
                   }
                 >
@@ -602,7 +743,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -625,7 +766,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -647,7 +788,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -659,7 +800,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -682,7 +823,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -704,7 +845,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -727,6 +868,7 @@ Array [
                   >
                     <div
                       className="ant-select-selector"
+                      onClick={[Function]}
                       onMouseDown={[Function]}
                     >
                       <span
@@ -740,6 +882,7 @@ Array [
                           aria-owns="rc_select_TEST_OR_SSR_list"
                           autoComplete="off"
                           className="ant-select-selection-search-input"
+                          disabled={false}
                           id="rc_select_TEST_OR_SSR"
                           onChange={[Function]}
                           onCompositionEnd={[Function]}
@@ -785,7 +928,6 @@ Array [
                       >
                         <svg
                           aria-hidden="true"
-                          className=""
                           data-icon="down"
                           fill="currentColor"
                           focusable="false"
@@ -808,7 +950,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -831,7 +973,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -853,7 +995,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -861,7 +1003,7 @@ Array [
                   className="ant-typography"
                   style={
                     Object {
-                      "WebkitLineClamp": null,
+                      "WebkitLineClamp": undefined,
                     }
                   }
                 >
@@ -876,7 +1018,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -899,7 +1041,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -921,7 +1063,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -931,7 +1073,7 @@ Array [
                   onMouseLeave={[Function]}
                   style={
                     Object {
-                      "WebkitLineClamp": null,
+                      "WebkitLineClamp": undefined,
                       "wordBreak": "break-all",
                     }
                   }
@@ -947,7 +1089,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -970,7 +1112,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -992,7 +1134,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -1009,7 +1151,6 @@ Array [
                 >
                   <svg
                     aria-hidden="true"
-                    className=""
                     data-icon="code"
                     fill="currentColor"
                     focusable="false"
@@ -1038,7 +1179,7 @@ Array [
                   onMouseLeave={[Function]}
                   style={
                     Object {
-                      "WebkitLineClamp": null,
+                      "WebkitLineClamp": undefined,
                       "wordBreak": "break-all",
                     }
                   }
@@ -1054,7 +1195,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -1077,7 +1218,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -1099,7 +1240,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -1127,7 +1268,7 @@ Array [
                   onMouseLeave={[Function]}
                   style={
                     Object {
-                      "WebkitLineClamp": null,
+                      "WebkitLineClamp": undefined,
                     }
                   }
                 >
@@ -1165,7 +1306,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -1188,7 +1329,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -1210,7 +1351,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -1238,7 +1379,7 @@ Array [
                   onMouseLeave={[Function]}
                   style={
                     Object {
-                      "WebkitLineClamp": null,
+                      "WebkitLineClamp": undefined,
                     }
                   }
                 >
@@ -1276,7 +1417,7 @@ Array [
             className="ant-row"
             style={
               Object {
-                "marginBottom": 4,
+                "marginBottom": -4,
                 "marginLeft": -4,
                 "marginRight": -4,
                 "marginTop": -4,
@@ -1299,7 +1440,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -1321,7 +1462,7 @@ Array [
                 className="ant-typography ant-typography-secondary"
                 style={
                   Object {
-                    "WebkitLineClamp": null,
+                    "WebkitLineClamp": undefined,
                   }
                 }
               >
@@ -1388,6 +1529,7 @@ Array [
         >
           <button
             className="ant-btn"
+            disabled={false}
             onClick={[Function]}
             onMouseEnter={[Function]}
             onMouseLeave={[Function]}
@@ -1405,7 +1547,6 @@ Array [
             >
               <svg
                 aria-hidden="true"
-                className=""
                 data-icon="filter"
                 fill="currentColor"
                 focusable="false"
@@ -1424,18 +1565,20 @@ Array [
           </button>
         </div>
         <ul
-          className="ant-menu ant-menu-light ant-menu-root ant-menu-inline"
-          onMouseEnter={[Function]}
-          onTransitionEnd={[Function]}
+          className="ant-menu ant-menu-root ant-menu-inline ant-menu-light"
+          data-menu-list={true}
+          onKeyDown={[Function]}
           role="menu"
           style={
             Object {
               "borderRight": 0,
             }
           }
+          tabIndex={0}
         >
           <div
             className="ant-select ant-select-auto-complete ant-select-single ant-select-customize-input ant-select-show-search"
+            eventKey="tmp_key-0"
             onBlur={[Function]}
             onFocus={[Function]}
             onKeyDown={[Function]}
@@ -1447,106 +1590,125 @@ Array [
                 "width": "100%",
               }
             }
+            warnKey={true}
           >
             <div
               className="ant-select-selector"
+              onClick={[Function]}
               onMouseDown={[Function]}
             >
               <span
                 className="ant-select-selection-search"
               >
                 <span
-                  className="ant-input-affix-wrapper ant-input-search ant-select-selection-search-input"
-                  onMouseUp={[Function]}
+                  className="ant-input-group-wrapper ant-input-search ant-select-selection-search-input"
                   style={
                     Object {
                       "opacity": null,
                     }
                   }
                 >
-                  <input
-                    aria-activedescendant="rc_select_TEST_OR_SSR_list_0"
-                    aria-autocomplete="list"
-                    aria-controls="rc_select_TEST_OR_SSR_list"
-                    aria-haspopup="listbox"
-                    aria-owns="rc_select_TEST_OR_SSR_list"
-                    autoComplete="off"
-                    className="ant-input"
-                    id="rc_select_TEST_OR_SSR"
-                    onBlur={[Function]}
-                    onChange={[Function]}
-                    onCompositionEnd={[Function]}
-                    onCompositionStart={[Function]}
-                    onFocus={[Function]}
-                    onKeyDown={[Function]}
-                    onMouseDown={[Function]}
-                    onPaste={[Function]}
-                    placeholder="saved filter"
-                    readOnly={false}
-                    role="combobox"
-                    style={null}
-                    type="search"
-                    unselectable={null}
-                    value=""
-                  />
                   <span
-                    className="ant-input-suffix"
+                    className="ant-input-wrapper ant-input-group"
                   >
+                    <input
+                      aria-activedescendant="rc_select_TEST_OR_SSR_list_0"
+                      aria-autocomplete="list"
+                      aria-controls="rc_select_TEST_OR_SSR_list"
+                      aria-haspopup="listbox"
+                      aria-owns="rc_select_TEST_OR_SSR_list"
+                      autoComplete="off"
+                      className="ant-input"
+                      hidden={null}
+                      id="rc_select_TEST_OR_SSR"
+                      onBlur={[Function]}
+                      onChange={[Function]}
+                      onCompositionEnd={[Function]}
+                      onCompositionStart={[Function]}
+                      onFocus={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseDown={[Function]}
+                      onPaste={[Function]}
+                      placeholder="saved filter"
+                      readOnly={false}
+                      role="combobox"
+                      style={null}
+                      type="search"
+                      unselectable={null}
+                      value=""
+                    />
                     <span
-                      aria-label="search"
-                      className="anticon anticon-search ant-input-search-icon"
-                      onClick={[Function]}
-                      role="img"
-                      tabIndex={-1}
+                      className="ant-input-group-addon"
                     >
-                      <svg
-                        aria-hidden="true"
-                        className=""
-                        data-icon="search"
-                        fill="currentColor"
-                        focusable="false"
-                        height="1em"
-                        viewBox="64 64 896 896"
-                        width="1em"
+                      <button
+                        className="ant-btn ant-btn-default ant-btn-icon-only ant-input-search-button"
+                        disabled={false}
+                        onClick={[Function]}
+                        onMouseDown={[Function]}
+                        type="button"
                       >
-                        <path
-                          d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
-                        />
-                      </svg>
+                        <span
+                          aria-label="search"
+                          className="anticon anticon-search"
+                          role="img"
+                        >
+                          <svg
+                            aria-hidden="true"
+                            data-icon="search"
+                            fill="currentColor"
+                            focusable="false"
+                            height="1em"
+                            viewBox="64 64 896 896"
+                            width="1em"
+                          >
+                            <path
+                              d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
+                            />
+                          </svg>
+                        </span>
+                      </button>
                     </span>
                   </span>
                 </span>
               </span>
+              <span
+                className="ant-select-selection-placeholder"
+              />
             </div>
           </div>
           <li
             className="ant-menu-submenu ant-menu-submenu-inline"
             onMouseEnter={[Function]}
             onMouseLeave={[Function]}
-            role="menuitem"
+            role="none"
+            style={Object {}}
           >
             <div
+              aria-controls="rc-menu-uuid-test-tmp_key-1-popup"
               aria-expanded={false}
-              aria-haspopup="true"
+              aria-haspopup={true}
               className="ant-menu-submenu-title"
+              data-menu-id="rc-menu-uuid-test-tmp_key-1"
               onClick={[Function]}
+              onFocus={[Function]}
               onMouseEnter={[Function]}
               onMouseLeave={[Function]}
-              role="button"
+              role="menuitem"
               style={
                 Object {
                   "paddingLeft": 24,
                 }
               }
+              tabIndex={-1}
+              title={null}
             >
               <span
                 aria-label="setting"
-                className="anticon anticon-setting"
+                className="anticon anticon-setting ant-menu-item-icon"
                 role="img"
               >
                 <svg
                   aria-hidden="true"
-                  className=""
                   data-icon="setting"
                   fill="currentColor"
                   focusable="false"
@@ -1559,41 +1721,48 @@ Array [
                   />
                 </svg>
               </span>
-              <span>
+              <span
+                className="ant-menu-title-content"
+              >
                 Filter options
               </span>
               <i
                 className="ant-menu-submenu-arrow"
               />
             </div>
-            <div />
           </li>
           <li
             className="ant-menu-submenu ant-menu-submenu-inline ant-menu-submenu-open ant-menu-submenu-disabled"
             onMouseEnter={[Function]}
             onMouseLeave={[Function]}
-            role="menuitem"
+            role="none"
+            style={Object {}}
           >
             <div
+              aria-controls="rc-menu-uuid-test-recents-popup"
+              aria-disabled={true}
               aria-expanded={true}
-              aria-haspopup="true"
-              aria-owns="recents$Menu"
+              aria-haspopup={true}
               className="ant-menu-submenu-title"
-              role="button"
+              data-menu-id="rc-menu-uuid-test-recents"
+              onClick={[Function]}
+              onFocus={[Function]}
+              role="menuitem"
               style={
                 Object {
                   "paddingLeft": 24,
                 }
               }
+              tabIndex={null}
+              title={null}
             >
               <span
                 aria-label="field-time"
-                className="anticon anticon-field-time"
+                className="anticon anticon-field-time ant-menu-item-icon"
                 role="img"
               >
                 <svg
                   aria-hidden="true"
-                  className=""
                   data-icon="field-time"
                   fill="currentColor"
                   focusable="false"
@@ -1612,7 +1781,9 @@ Array [
                   />
                 </svg>
               </span>
-              <span>
+              <span
+                className="ant-menu-title-content"
+              >
                 Recent filters
               </span>
               <i
@@ -1621,12 +1792,120 @@ Array [
             </div>
             <ul
               className="ant-menu ant-menu-sub ant-menu-inline"
-              id="recents$Menu"
-              role="menu"
-              style={Object {}}
+              data-menu-list={true}
+              id="rc-menu-uuid-test-recents-popup"
             />
           </li>
         </ul>
+        <div
+          aria-hidden={true}
+          style={
+            Object {
+              "display": "none",
+            }
+          }
+        >
+          <div
+            className="ant-select ant-select-auto-complete ant-select-single ant-select-customize-input ant-select-show-search"
+            eventKey="tmp_key-0"
+            onBlur={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onKeyUp={[Function]}
+            onMouseDown={[Function]}
+            style={
+              Object {
+                "padding": "12px 12px 0 12px",
+                "width": "100%",
+              }
+            }
+            warnKey={true}
+          >
+            <div
+              className="ant-select-selector"
+              onClick={[Function]}
+              onMouseDown={[Function]}
+            >
+              <span
+                className="ant-select-selection-search"
+              >
+                <span
+                  className="ant-input-group-wrapper ant-input-search ant-select-selection-search-input"
+                  style={
+                    Object {
+                      "opacity": null,
+                    }
+                  }
+                >
+                  <span
+                    className="ant-input-wrapper ant-input-group"
+                  >
+                    <input
+                      aria-activedescendant="rc_select_TEST_OR_SSR_list_0"
+                      aria-autocomplete="list"
+                      aria-controls="rc_select_TEST_OR_SSR_list"
+                      aria-haspopup="listbox"
+                      aria-owns="rc_select_TEST_OR_SSR_list"
+                      autoComplete="off"
+                      className="ant-input"
+                      hidden={null}
+                      id="rc_select_TEST_OR_SSR"
+                      onBlur={[Function]}
+                      onChange={[Function]}
+                      onCompositionEnd={[Function]}
+                      onCompositionStart={[Function]}
+                      onFocus={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseDown={[Function]}
+                      onPaste={[Function]}
+                      placeholder="saved filter"
+                      readOnly={false}
+                      role="combobox"
+                      style={null}
+                      type="search"
+                      unselectable={null}
+                      value=""
+                    />
+                    <span
+                      className="ant-input-group-addon"
+                    >
+                      <button
+                        className="ant-btn ant-btn-default ant-btn-icon-only ant-input-search-button"
+                        disabled={false}
+                        onClick={[Function]}
+                        onMouseDown={[Function]}
+                        type="button"
+                      >
+                        <span
+                          aria-label="search"
+                          className="anticon anticon-search"
+                          role="img"
+                        >
+                          <svg
+                            aria-hidden="true"
+                            data-icon="search"
+                            fill="currentColor"
+                            focusable="false"
+                            height="1em"
+                            viewBox="64 64 896 896"
+                            width="1em"
+                          >
+                            <path
+                              d="M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z"
+                            />
+                          </svg>
+                        </span>
+                      </button>
+                    </span>
+                  </span>
+                </span>
+              </span>
+              <span
+                className="ant-select-selection-placeholder"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   </section>,
