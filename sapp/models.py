@@ -158,7 +158,6 @@ class IssueBIGDBIDType(BIGDBIDType):
 
 
 class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
-
     __tablename__ = "issue_instance_trace_frame_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
@@ -1105,7 +1104,6 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
 
 
 class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
-
     __tablename__ = "trace_frame_message_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
@@ -1159,7 +1157,6 @@ class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
 
 
 class TraceFrame(Base, PrepareMixin, RecordMixin):
-
     __tablename__ = "trace_frames"
     __table_args__ = (
         Index("ix_traceframe_run_caller_port", "run_id", "caller_id", "caller_port"),
@@ -1325,7 +1322,6 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
 # of traces leading to some other leaf. TraceFrameAnnotationTraceFrameAssoc
 # contains the first hop towards that leaf..
 class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
-
     __tablename__ = "trace_frame_annotations"
     __table_args__ = BASE_TABLE_ARGS
 
@@ -1395,7 +1391,6 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
 # IssueInstanceTraceFrameAssoc, which indicates the first hop trace frame from
 # the issue instance.
 class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
-
     __tablename__ = "trace_frame_annotation_trace_frame_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
@@ -1643,7 +1638,6 @@ class PrimaryKey(Base, PrimaryKeyBase):
 
 
 class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
-
     PRIMARY_KEY: Type = PrimaryKey
 
     QUERY_CLASSES: Set[Type] = {

@@ -1,8 +1,10 @@
 from typing import Any, Optional
 
 from . import query
-from .interfaces import MapperProperty as MapperProperty
-from .interfaces import PropComparator as PropComparator
+from .interfaces import (
+    MapperProperty as MapperProperty,
+    PropComparator as PropComparator,
+)
 
 class DescriptorProperty(MapperProperty):
     doc: Any = ...
@@ -26,10 +28,12 @@ class CompositeProperty(DescriptorProperty):
     @property
     def columns(self): ...
     def get_history(self, state, dict_, passive: Any = ...): ...
+
     class CompositeBundle(query.Bundle):
         property: Any = ...
         def __init__(self, property, expr) -> None: ...
         def create_row_processor(self, query, procs, labels): ...
+
     class Comparator(PropComparator):
         __hash__: Any = ...
         @property

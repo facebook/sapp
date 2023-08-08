@@ -1,4 +1,4 @@
-from typing import Any, Optional, Type, TypeVar, Union, overload
+from typing import Any, Optional, overload, Type, TypeVar, Union
 
 from sqlalchemy import Column
 from sqlalchemy.orm.query import Query

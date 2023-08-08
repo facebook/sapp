@@ -1,9 +1,20 @@
 import decimal
 import sys
 from datetime import date, datetime, time, timedelta
-from typing import IO, Any, Callable, Dict, List, Optional
-from typing import Text as typing_Text
-from typing import Tuple, Type, TypeVar, Union, overload
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    IO,
+    List,
+    Optional,
+    overload,
+    Text as typing_Text,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from typing_extensions import Protocol
 
@@ -11,10 +22,12 @@ from .. import util
 from ..engine import Connectable, Connection, Dialect, Engine
 from .base import SchemaEventTarget as SchemaEventTarget
 from .schema import MetaData
-from .type_api import Emulated
-from .type_api import NativeForEmulated as NativeForEmulated
-from .type_api import TypeDecorator as TypeDecorator
-from .type_api import TypeEngine as TypeEngine
+from .type_api import (
+    Emulated,
+    NativeForEmulated as NativeForEmulated,
+    TypeDecorator as TypeDecorator,
+    TypeEngine as TypeEngine,
+)
 
 _T = TypeVar("_T")
 
@@ -381,11 +394,13 @@ class JSON(Indexable, TypeEngine[_JSONT]):
     NULL: util.symbol = ...
     none_as_null: bool = ...
     def __init__(self, none_as_null: bool = ...) -> None: ...
+
     class JSONElementType(TypeEngine[Union[int, str]]):
         def string_bind_processor(self, dialect): ...
         def string_literal_processor(self, dialect): ...
         def bind_processor(self, dialect): ...
         def literal_processor(self, dialect): ...
+
     class JSONIndexType(JSONElementType): ...
     class JSONPathType(JSONElementType): ...
     comparator_factory: Type[Any] = ...

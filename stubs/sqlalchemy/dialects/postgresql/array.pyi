@@ -1,5 +1,4 @@
-from typing import Any as _AnyType
-from typing import Callable, Optional, Type, TypeVar, overload
+from typing import Any as _AnyType, Callable, Optional, overload, Type, TypeVar
 
 from ... import types as _sqltypes
 from ...sql import expression

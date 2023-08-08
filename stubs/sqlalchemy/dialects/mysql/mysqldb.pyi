@@ -1,9 +1,11 @@
 from typing import Any, Optional
 
-from .base import MySQLCompiler as MySQLCompiler
-from .base import MySQLDialect as MySQLDialect
-from .base import MySQLExecutionContext as MySQLExecutionContext
-from .base import MySQLIdentifierPreparer as MySQLIdentifierPreparer
+from .base import (
+    MySQLCompiler as MySQLCompiler,
+    MySQLDialect as MySQLDialect,
+    MySQLExecutionContext as MySQLExecutionContext,
+    MySQLIdentifierPreparer as MySQLIdentifierPreparer,
+)
 
 class MySQLExecutionContext_mysqldb(MySQLExecutionContext):
     @property

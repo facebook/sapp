@@ -8,18 +8,7 @@ from __future__ import annotations
 import logging
 from collections import namedtuple
 from itertools import tee
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, Union
 
 from munch import Munch
 from sqlalchemy import and_, Column, exc, inspect, or_, String, types

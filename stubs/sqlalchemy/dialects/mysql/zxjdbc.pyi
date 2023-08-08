@@ -5,9 +5,11 @@
 from typing import Any
 
 from ...connectors.zxJDBC import ZxJDBCConnector as ZxJDBCConnector
-from .base import BIT as BIT
-from .base import MySQLDialect as MySQLDialect
-from .base import MySQLExecutionContext as MySQLExecutionContext
+from .base import (
+    BIT as BIT,
+    MySQLDialect as MySQLDialect,
+    MySQLExecutionContext as MySQLExecutionContext,
+)
 
 class _ZxJDBCBit(BIT):
     def result_processor(self, dialect, coltype): ...

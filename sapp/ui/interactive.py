@@ -774,7 +774,7 @@ json CALLABLE        show the original json output for the matching callable
             query = queries.leaves(
                 session=session, kind=kind, run_id=self._current_run_id
             )
-            for (_, name) in query:
+            for _, name in query:
                 leaves[name] += 1
 
         results: Iterable[Tuple[str, int]]
