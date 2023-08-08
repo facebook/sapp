@@ -9,44 +9,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  black:
+  lint-with-precommit:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-      - name: Install black
-        run: pip install black==22.3.0
+      - name: Setup pre-commit
+        run: pip install pre-commit
 
-      - name: Run black
-        run: black --exclude 'stubs\/' --check --diff .
-
-  usort:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-
-      - name: Install usort
-        run: pip install usort==1.0.2
-
-      - name: Run usort
-        run: usort diff . && usort check .
-
-  flake8:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-
-      - name: Install flake8
-        run: pip install flake8
-
-      - name: Run flake8
-        run: flake8
+      - name: Run pre-commit
+        run: pre-commit run --all-files
 
   ESLint:
     runs-on: ubuntu-latest
