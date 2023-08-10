@@ -308,7 +308,12 @@ class Features(NamedTuple):
     @staticmethod
     def from_taint_json(taint: Dict[str, Any]) -> "Features":
         """Similar to `LocalPositions.from_taint_json`."""
-        return Features.from_json(taint.get("local_features", {}))
+        # User-declared features are stored in "local_user_features" and should
+        # be reported as local features in order to show up in the trace frame
+        # on the UI.
+        user_features = Features.from_json(taint.get("local_user_features", {}))
+        local_features = Features.from_json(taint.get("local_features", {}))
+        return Features(user_features.features | local_features.features)
 
     def to_sapp(self) -> List[str]:
         return sorted(self.features)
