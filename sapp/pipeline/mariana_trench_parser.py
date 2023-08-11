@@ -375,6 +375,11 @@ class Postcondition(Condition):
         return super().convert_to_sapp(sapp.ParseType.POSTCONDITION)
 
 
+class Propagation(Condition):
+    def to_sapp(self) -> sapp.ParseConditionTuple:
+        return super().convert_to_sapp(sapp.ParseType.PRECONDITION)
+
+
 class IssueCondition(NamedTuple):
     callee: Call
     leaves: List[ConditionLeaf]
@@ -553,6 +558,8 @@ class Parser(BaseParser):
                     yield effect_precondition.to_sapp()
                 for postcondition in self._parse_postconditions(model):
                     yield postcondition.to_sapp()
+                for propagation in self._parse_propagations(model):
+                    yield propagation.to_sapp()
 
     def _parse_issues(self, model: Dict[str, Any]) -> Iterable[sapp.ParseIssueTuple]:
         for issue in model.get("issues", []):
@@ -813,10 +820,28 @@ class Parser(BaseParser):
 
         return normalized_taints
 
+    @staticmethod
+    def _is_propagation_without_trace(taint: Dict[str, Any]) -> bool:
+        if "call" in taint or "origin" in taint:
+            # If a "call" exists, this is not a leaf.
+            # Similarly, "origin"'s only appear for actual calls, not
+            # field callees or for propagations without traces.
+            return False
+
+        # "call_info" should be the same for each entry in kinds.
+        call_info = {kind.get("call_info") for kind in taint["kinds"]}
+        assert (
+            len(call_info) == 1
+        ), f"Expected the same call_info for all kinds. Got: {call_info}"
+
+        return "Propagation" in call_info
+
     def _parse_preconditions(self, model: Dict[str, Any]) -> Iterable[Precondition]:
         return self._parse_condition(
             model,
             condition_model_key="sinks",
+            port_key="port",
+            leaf_model_key="taint",
             leaf_kind="sink",
             condition_class=Precondition,
         )
@@ -827,6 +852,8 @@ class Parser(BaseParser):
         return self._parse_condition(
             model,
             condition_model_key="effect_sinks",
+            port_key="port",
+            leaf_model_key="taint",
             leaf_kind="sink",
             condition_class=Precondition,
         )
@@ -835,14 +862,28 @@ class Parser(BaseParser):
         return self._parse_condition(
             model,
             condition_model_key="generations",
+            port_key="port",
+            leaf_model_key="taint",
             leaf_kind="source",
             condition_class=Postcondition,
+        )
+
+    def _parse_propagations(self, model: Dict[str, Any]) -> Iterable[Propagation]:
+        return self._parse_condition(
+            model,
+            condition_model_key="propagation",
+            port_key="input",
+            leaf_model_key="output",
+            leaf_kind="sink",
+            condition_class=Propagation,
         )
 
     def _parse_condition(
         self,
         model: Dict[str, Any],
         condition_model_key: str,
+        port_key: str,
+        leaf_model_key: str,
         leaf_kind: str,
         condition_class: Type[ConditionType],
     ) -> Iterable[ConditionType]:
@@ -852,14 +893,17 @@ class Parser(BaseParser):
         for leaf_model in model.get(condition_model_key, []):
             caller = Call(
                 method=caller_method,
-                port=Port.from_json(leaf_model["port"], leaf_kind),
+                port=Port.from_json(leaf_model[port_key], leaf_kind),
                 position=caller_position,
             )
-            for unnormalized_leaf_taint in leaf_model["taint"]:
+            for unnormalized_leaf_taint in leaf_model[leaf_model_key]:
                 normalized_taints = Parser._normalize_conditions(
                     unnormalized_leaf_taint, caller_method
                 )
                 for leaf_taint in normalized_taints:
+                    if Parser._is_propagation_without_trace(leaf_taint):
+                        continue
+
                     callee = Call.from_taint_frame_json(
                         leaf_taint, caller_position, leaf_kind
                     )
