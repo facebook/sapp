@@ -118,6 +118,10 @@ class Position(NamedTuple):
     end: int
 
     @staticmethod
+    def default() -> "Position":
+        return Position(UNKNOWN_PATH, UNKNOWN_LINE, 0, 0)
+
+    @staticmethod
     def from_json(position: Dict[str, Any], method: Method) -> "Position":
         path = position.get("path", UNKNOWN_PATH)
         line = position.get("line", UNKNOWN_LINE)
@@ -324,6 +328,44 @@ class Features(NamedTuple):
         ]
 
 
+class ExtraTrace(NamedTuple):
+    kind: str
+    callee: Call
+
+    @staticmethod
+    def from_taint_json(caller: Method, extra_trace: Dict[str, Any]) -> "ExtraTrace":
+        return ExtraTrace(
+            kind=extra_trace.get("kind"),
+            callee=Call.from_taint_frame_json(extra_trace, Position.default(), "sink"),
+        )
+
+    def to_sapp(self) -> sapp.ParseTraceAnnotation:
+        subtraces = (
+            [
+                {
+                    "callee": self.callee.method.name,
+                    "port": self.callee.port.value,
+                    "position": self.callee.position.to_sapp(),
+                }
+            ]
+            if not self.callee.method.is_leaf()
+            else []
+        )
+
+        return sapp.ParseTraceAnnotation(
+            location=self.callee.position.to_sapp(),
+            kind="tito_transform",
+            msg=f"Propagation through {self.kind}",
+            leaf_kind=self.kind,
+            leaf_depth=0,
+            type_interval=None,
+            link=None,
+            trace_key=None,
+            titos=[],
+            subtraces=subtraces,
+        )
+
+
 class ConditionLeaf(NamedTuple):
     kind: str
     distance: int
@@ -342,6 +384,7 @@ class Condition(NamedTuple):
     leaves: List[ConditionLeaf]
     local_positions: LocalPositions
     features: Features
+    extra_traces: Set[ExtraTrace]
 
     def convert_to_sapp(
         self, kind: Literal[sapp.ParseType.PRECONDITION, sapp.ParseType.POSTCONDITION]
@@ -358,7 +401,7 @@ class Condition(NamedTuple):
             features=self.features.to_sapp_as_parsetracefeature(),
             titos=self.local_positions.to_sapp(),
             leaves=[leaf.to_sapp() for leaf in self.leaves],
-            annotations=[],
+            annotations=[extra_trace.to_sapp() for extra_trace in self.extra_traces],
         )
 
 
@@ -385,6 +428,7 @@ class IssueCondition(NamedTuple):
     leaves: List[ConditionLeaf]
     local_positions: LocalPositions
     features: Features
+    extra_traces: Set[ExtraTrace]
 
     def to_sapp(self) -> sapp.ParseIssueConditionTuple:
         return sapp.ParseIssueConditionTuple(
@@ -395,7 +439,7 @@ class IssueCondition(NamedTuple):
             titos=self.local_positions.to_sapp(),
             features=self.features.to_sapp_as_parsetracefeature(),
             type_interval=None,
-            annotations=[],
+            annotations=[extra_trace.to_sapp() for extra_trace in self.extra_traces],
         )
 
 
@@ -624,6 +668,11 @@ class Parser(BaseParser):
                             normalized_condition, callable
                         ),
                         features=Features.from_taint_json(normalized_condition),
+                        extra_traces={
+                            ExtraTrace.from_taint_json(callable, extra_trace)
+                            for kind in normalized_condition["kinds"]
+                            for extra_trace in kind.get("extra_traces", [])
+                        },
                     )
                 )
 
@@ -907,9 +956,14 @@ class Parser(BaseParser):
                     callee = Call.from_taint_frame_json(
                         leaf_taint, caller_position, leaf_kind
                     )
-                    leaves = [
-                        ConditionLeaf.from_json(kind) for kind in leaf_taint["kinds"]
-                    ]
+                    kinds = leaf_taint["kinds"]
+                    leaves = [ConditionLeaf.from_json(kind) for kind in kinds]
+                    extra_traces = {
+                        ExtraTrace.from_taint_json(caller_method, extra_trace)
+                        for kind in kinds
+                        for extra_trace in kind.get("extra_traces", [])
+                    }
+
                     yield condition_class(
                         caller=caller,
                         callee=callee,
@@ -918,4 +972,5 @@ class Parser(BaseParser):
                             leaf_taint, caller_method
                         ),
                         features=Features.from_taint_json(leaf_taint),
+                        extra_traces=extra_traces,
                     )
