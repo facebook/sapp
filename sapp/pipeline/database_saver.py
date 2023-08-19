@@ -116,6 +116,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
                             run_label=self.summary.get("meta_run_child_label", None),
                         )
                     )
+                session.add_all(self.summary.get("run_attributes", []))
                 session.commit()
 
                 run_id = self.summary["run"].id.resolved()
