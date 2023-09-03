@@ -4,8 +4,7 @@ from sqlalchemy.schema import DDLElement, DefaultGenerator
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.functions import FunctionElement
 
-from ..sql.compiler import Compiled as Compiled
-from ..sql.compiler import TypeCompiler as TypeCompiler
+from ..sql.compiler import Compiled as Compiled, TypeCompiler as TypeCompiler
 from .base import Connection
 from .result import ResultProxy
 

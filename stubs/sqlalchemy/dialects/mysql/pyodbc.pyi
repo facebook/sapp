@@ -5,8 +5,10 @@
 from typing import Any
 
 from ...connectors.pyodbc import PyODBCConnector as PyODBCConnector
-from .base import MySQLDialect as MySQLDialect
-from .base import MySQLExecutionContext as MySQLExecutionContext
+from .base import (
+    MySQLDialect as MySQLDialect,
+    MySQLExecutionContext as MySQLExecutionContext,
+)
 
 class MySQLExecutionContext_pyodbc(MySQLExecutionContext):
     def get_lastrowid(self): ...

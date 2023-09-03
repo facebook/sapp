@@ -121,7 +121,6 @@ class Filter:
         max_trace_length_to_sources: Optional[int],
         is_new_issue: Optional[bool],
     ) -> Filter:
-
         restructured_features: List[Dict[str, Union[str, List[str]]]] = []
         for filtering_condition in features or []:
             feature_entry = {}

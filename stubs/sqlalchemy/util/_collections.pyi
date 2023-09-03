@@ -11,12 +11,12 @@ from typing import (
     List,
     Mapping,
     Optional,
+    overload,
     Set,
     Tuple,
     Type,
     TypeVar,
     Union,
-    overload,
 )
 
 _T = TypeVar("_T")
@@ -109,6 +109,7 @@ class OrderedDict(Dict[_KT, _VT]):
         def sort(
             self, *, key: Optional[Callable[[_VT], Any]] = ..., reverse: bool = ...
         ) -> None: ...
+
     @overload
     def update(self, ____sequence: Mapping[_KT, _VT], **kwargs: _VT) -> None: ...
     @overload
@@ -130,6 +131,7 @@ class OrderedDict(Dict[_KT, _VT]):
         def itervalues(self) -> Iterator[_VT]: ...
         def iterkeys(self) -> Iterator[_KT]: ...
         def iteritems(self) -> Iterator[Tuple[_KT, _VT]]: ...
+
     def __setitem__(self, key: _KT, object: _VT) -> None: ...
     def __delitem__(self, key: _KT) -> None: ...
     @overload

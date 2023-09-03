@@ -6,8 +6,7 @@ from sqlalchemy.schema import DDLElement, DefaultGenerator
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.functions import FunctionElement
 
-from .interfaces import Connectable as Connectable
-from .interfaces import ExceptionContext as ExceptionContext
+from .interfaces import Connectable as Connectable, ExceptionContext as ExceptionContext
 from .result import ResultProxy
 
 class Transaction(object):

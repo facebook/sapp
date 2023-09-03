@@ -120,7 +120,7 @@ class FakeObjectGenerator:
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
-            for (leaf, depth) in leaves:
+            for leaf, depth in leaves:
                 # pyre-fixme[16]: `Optional` has no attribute
                 #  `add_trace_frame_leaf_assoc`.
                 self.graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
@@ -171,7 +171,7 @@ class FakeObjectGenerator:
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
-            for (leaf, depth) in leaves:
+            for leaf, depth in leaves:
                 # pyre-fixme[16]: `Optional` has no attribute
                 #  `add_trace_frame_leaf_assoc`.
                 self.graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)

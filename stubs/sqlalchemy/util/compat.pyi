@@ -3,8 +3,7 @@ import sys
 import threading as threading
 from collections import namedtuple as namedtuple
 from inspect import getargspec as inspect_getfullargspec
-from io import BytesIO as byte_buffer
-from io import StringIO as StringIO
+from io import BytesIO as byte_buffer, StringIO as StringIO
 from operator import attrgetter as dottedgetter
 from typing import Any, Optional, Text
 
@@ -12,21 +11,21 @@ if sys.version_info < (3, 0):
     import cPickle as pickle
     from itertools import izip_longest as zip_longest
     from urllib import (
-        quote_plus as quote_plus,
-        unquote_plus as unquote_plus,
         quote as quote,
+        quote_plus as quote_plus,
         unquote as unquote,
+        unquote_plus as unquote_plus,
     )
     from urlparse import parse_qsl as parse_qsl
 else:
     import pickle as pickle
     from itertools import zip_longest as zip_longest
     from urllib.parse import (
-        quote_plus as quote_plus,
-        unquote_plus as unquote_plus,
         parse_qsl as parse_qsl,
         quote as quote,
+        quote_plus as quote_plus,
         unquote as unquote,
+        unquote_plus as unquote_plus,
     )
 
 py36: bool = ...

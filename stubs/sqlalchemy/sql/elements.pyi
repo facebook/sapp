@@ -8,11 +8,14 @@ from typing import (
     List,
     Mapping,
     Optional,
+    overload,
     Set,
     Text,
+    Tuple as _TupleType,
+    Type,
+    TypeVar,
+    Union,
 )
-from typing import Tuple as _TupleType
-from typing import Type, TypeVar, Union, overload
 
 from typing_extensions import Protocol
 
@@ -20,8 +23,7 @@ from .. import util
 from ..engine.base import Connection, Engine
 from . import operators
 from .annotation import Annotated as Annotated
-from .base import Executable as Executable
-from .base import Immutable as Immutable
+from .base import Executable as Executable, Immutable as Immutable
 from .functions import FunctionElement
 from .schema import ForeignKey
 from .selectable import TableClause, TextAsFrom

@@ -174,7 +174,6 @@ class TestSappCli(TestCase):
 
 
 def assert_successful_exit(result: Result) -> None:
-
     assert result.exit_code == 0, (
         f"Command did not exit successfully: {result}\n"
         # pyre-fixme

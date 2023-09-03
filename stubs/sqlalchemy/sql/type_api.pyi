@@ -1,6 +1,17 @@
-from typing import Any, Callable, ClassVar, Generic, Mapping, Optional
-from typing import Text as typing_Text
-from typing import Tuple, Type, TypeVar, Union, overload
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Generic,
+    Mapping,
+    Optional,
+    overload,
+    Text as typing_Text,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from .. import util
 from ..engine.interfaces import Dialect
@@ -8,8 +19,7 @@ from . import operators
 from .base import SchemaEventTarget as SchemaEventTarget
 from .elements import BindParameter, ColumnElement
 from .sqltypes import Boolean, Indexable, Integer, MatchType, NullType, String
-from .visitors import Visitable as Visitable
-from .visitors import VisitableType as VisitableType
+from .visitors import Visitable as Visitable, VisitableType as VisitableType
 
 _T = TypeVar("_T")
 _T_co = TypeVar("_T_co", covariant=True)
@@ -71,6 +81,7 @@ _UDT = TypeVar("_UDT", bound=UserDefinedType)
 class UserDefinedType(TypeEngine[_T], metaclass=VisitableCheckKWArg):
     __visit_name__: str = ...
     ensure_kwarg: str = ...
+
     class Comparator(TypeEngine.Comparator): ...
     comparator_factory: Type[Any] = ...
     def coerce_compared_value(self: _UDT, op: Any, value: Any) -> _UDT: ...
@@ -94,6 +105,7 @@ class TypeDecorator(SchemaEventTarget, TypeEngine[_T]):
     )  # impl is Type[TypeEngine[Any]] on the class, but TypeEngine[Any] on instances
     def __init__(self, *args: Any, **kwargs: Any) -> None: ...
     coerce_to_is_types: Tuple[Type[Any], ...] = ...
+
     class Comparator(TypeEngine.Comparator):
         def operate(self, op, *other, **kwargs): ...
         def reverse_operate(self, op, other, **kwargs): ...

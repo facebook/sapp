@@ -2,9 +2,9 @@
 
 **Pre-submission checklist**
 - [ ] I've ran the following linters locally and fixed lint errors related to the files I modified in this PR
-    - [ ] `black .`
-    - [ ] `usort format .`
-    - [ ] `flake8`
+  1. `pip install pre-commit`(If you haven't install pre-commit yet)
+  2. `pre-commit install`(If you haven't install the pre-commit script yet.)
+  3. `pre-commit run`
 - [ ] I've installed dev dependencies `pip install -r requirements-dev.txt` and completed the following:
     - [ ] I've ran tests with `./scripts/run-tests.sh` and made sure all tests are passing
 

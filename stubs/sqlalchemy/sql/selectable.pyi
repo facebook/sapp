@@ -15,18 +15,24 @@ from typing import (
 from .. import util
 from ..engine import Connection, Engine
 from .annotation import Annotated as Annotated
-from .base import ColumnSet
-from .base import Executable as Executable
-from .base import Generative as Generative
-from .base import Immutable as Immutable
-from .base import ImmutableColumnCollection
+from .base import (
+    ColumnSet,
+    Executable as Executable,
+    Generative as Generative,
+    Immutable as Immutable,
+    ImmutableColumnCollection,
+)
 from .dml import Delete, Insert, Update
-from .elements import BindParameter
-from .elements import ClauseElement as ClauseElement
-from .elements import ColumnClause, ColumnElement
-from .elements import Grouping as Grouping
-from .elements import Label, TextClause
-from .elements import UnaryExpression as UnaryExpression
+from .elements import (
+    BindParameter,
+    ClauseElement as ClauseElement,
+    ColumnClause,
+    ColumnElement,
+    Grouping as Grouping,
+    Label,
+    TextClause,
+    UnaryExpression as UnaryExpression,
+)
 from .functions import Function
 from .schema import ForeignKey, Table
 from .type_api import TypeEngine

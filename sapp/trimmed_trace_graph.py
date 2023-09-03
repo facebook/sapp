@@ -365,7 +365,6 @@ class TrimmedTraceGraph(TraceGraph):
     def _recompute_trace_length_association(
         self, visited: Visited, initial_frame_ids: Set[int], leaf_kind: SharedTextKind
     ) -> int:
-
         """Walks the traces starting at the initial frames with the initial
         corresponding kinds to recompute and store the minimum trace length from each
         reachable frame to the corresponding leaf."""
@@ -685,7 +684,7 @@ class TrimmedTraceGraph(TraceGraph):
 
             # Conditions that call this may have originated from other issues,
             # keep searching for parent conditions leading to this one.
-            for (next_frame, frame_leaves) in self._get_predecessor_frames(
+            for next_frame, frame_leaves in self._get_predecessor_frames(
                 graph, leaves, condition
             ):
                 if len(frame_leaves) > 0:
@@ -786,7 +785,7 @@ class TrimmedTraceGraph(TraceGraph):
         self._populate_shared_text(graph, trace_frame.filename_id)
         self._populate_shared_text(graph, trace_frame.caller_id)
         self._populate_shared_text(graph, trace_frame.callee_id)
-        for (leaf_id, depth) in graph._trace_frame_leaf_assoc[trace_frame_id].items():
+        for leaf_id, depth in graph._trace_frame_leaf_assoc[trace_frame_id].items():
             leaf = graph._shared_texts[leaf_id]
             if leaf_id not in self._shared_texts:
                 self.add_shared_text(leaf)

@@ -1,7 +1,6 @@
 from typing import Any, Iterable, Optional, Text, Union
 
-from .elements import BindParameter as BindParameter
-from .elements import UnaryExpression
+from .elements import BindParameter as BindParameter, UnaryExpression
 from .selectable import Select as Select
 
 class Operators(object):

@@ -1,12 +1,14 @@
-from typing import Any, Generic, List, Optional, Type, TypeVar, Union, overload
+from typing import Any, Generic, List, Optional, overload, Type, TypeVar, Union
 
-from typing_extensions import Literal, final
+from typing_extensions import final, Literal
 
-from .interfaces import MANYTOMANY as MANYTOMANY
-from .interfaces import MANYTOONE as MANYTOONE
-from .interfaces import ONETOMANY as ONETOMANY
-from .interfaces import PropComparator as PropComparator
-from .interfaces import StrategizedProperty as StrategizedProperty
+from .interfaces import (
+    MANYTOMANY as MANYTOMANY,
+    MANYTOONE as MANYTOONE,
+    ONETOMANY as ONETOMANY,
+    PropComparator as PropComparator,
+    StrategizedProperty as StrategizedProperty,
+)
 
 def remote(expr): ...
 def foreign(expr): ...
@@ -129,6 +131,7 @@ class RelationshipProperty(StrategizedProperty, Generic[_T_co]):
         info: Optional[Any] = ...,
     ) -> RelationshipProperty[_T_co]: ...
     def instrument_class(self, mapper): ...
+
     class Comparator(PropComparator):
         prop: Any = ...
         def __init__(

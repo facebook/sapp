@@ -1,8 +1,7 @@
 from typing import Any, List, Mapping, Optional, Text, Type
 
 from ... import types as sqltypes
-from ...sql import functions as sqlfunc
-from ...sql import type_api
+from ...sql import functions as sqlfunc, type_api
 from .array import ARRAY
 
 class HSTORE(
@@ -14,6 +13,7 @@ class HSTORE(
     def __init__(
         self, text_type: Optional[type_api.TypeEngine[Text]] = ...
     ) -> None: ...
+
     class Comparator(type_api.TypeEngine.Comparator):
         def has_key(self, other: Any): ...
         def has_all(self, other: Any): ...
