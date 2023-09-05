@@ -16,7 +16,7 @@ from typing import Any, Callable, List, Optional
 log = logging.getLogger("sapp")
 
 
-class retryable(object):
+class retryable:
     def __init__(
         self, num_tries: int = 1, retryable_exs: Optional[List[Any]] = None
     ) -> None:

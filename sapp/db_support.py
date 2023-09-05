@@ -54,7 +54,7 @@ BASE_TABLE_ARGS = (
 # the real id.
 
 
-class DBID(object):
+class DBID:
     __slots__ = ["_id", "is_new", "local_id"]
 
     # Temporary IDs that are local per run (local_id) are assigned for each
@@ -161,7 +161,7 @@ class BIGDBIDType(DBIDType):
         return self.impl
 
 
-class PrepareMixin(object):
+class PrepareMixin:
     @classmethod
     def prepare(
         cls,
@@ -292,7 +292,7 @@ class PrepareMixin(object):
 # __slots__, which is more efficient. Both of these mixins can be replaced when
 # we have dynamically created classes with the slots set. But until then,
 # prefer RecordMixin unless you need to change fields after creation.
-class RecordMixin(object):
+class RecordMixin:
     # pyre-fixme[4]: Attribute must be annotated.
     _record = None
 
@@ -317,7 +317,7 @@ class RecordMixin(object):
         return obj._asdict()
 
 
-class MutableRecordMixin(object):
+class MutableRecordMixin:
     @classmethod
     # pyre-fixme[2]: Parameter must be annotated.
     def Record(cls, **kwargs) -> Munch:

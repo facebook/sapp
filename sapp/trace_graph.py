@@ -32,7 +32,7 @@ log: logging.Logger = logging.getLogger("sapp")
 LeafIDToDepthMap = Dict[int, Optional[int]]
 
 
-class TraceGraph(object):
+class TraceGraph:
     """Represents a graph of the Zoncolan trace steps. Nodes of the graph are
     the issues, preconditions, postconditions, sources and sinks. Edges are
     the the assocs, and for pre/postconditions, the map of 'caller->callee'

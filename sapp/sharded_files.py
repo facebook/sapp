@@ -9,7 +9,7 @@ import re
 from typing import List
 
 
-class ShardedFileComponents(object):
+class ShardedFileComponents:
     """
     Splits a sharded file name or pattern into its components:
     - directory
@@ -78,7 +78,7 @@ class ShardedFileComponents(object):
         return self.shard_total == -1 and self.shard_index == -1
 
 
-class ShardedFile(object):
+class ShardedFile:
     """A sharded file object represents a set of files sharded according to the
     following pattern:
 

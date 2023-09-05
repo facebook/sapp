@@ -339,7 +339,7 @@ class PipelineStep(Generic[T_in, T_out], metaclass=ABCMeta):
         raise NotImplementedError("PipelineStep.run is abstract")
 
 
-class Pipeline(object):
+class Pipeline:
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     def __init__(self, steps: List[PipelineStep[Any, Any]]):

@@ -96,7 +96,7 @@ def _parse_file(
     return (path, dict(entries))
 
 
-class JSONDiagnostics(object):
+class JSONDiagnostics:
     def __init__(
         self,
         analysis_output: AnalysisOutput,

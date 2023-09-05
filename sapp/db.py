@@ -29,7 +29,7 @@ class DBType(sqlalchemy.Enum):
     MEMORY = "memory"
 
 
-class DB(object):
+class DB:
     """Interact with the database type requested"""
 
     """File-based DB when using SQLITE"""
