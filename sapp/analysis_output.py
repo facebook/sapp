@@ -52,7 +52,7 @@ class AnalysisOutputError(Exception):
     pass
 
 
-class AnalysisOutput(object):
+class AnalysisOutput:
     """Represents analysis output.
 
     Possible ways to define, in order of high to low precedence:
