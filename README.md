@@ -14,7 +14,7 @@ SAPP is also available on [GitHub Marketplace as a GitHub Action](https://github
 
 ## Installation
 
-To run SAPP, you will need [Python 3.7 or later](https://www.python.org/getit/). SAPP can be installed through [PyPI](https://pypi.org/project/fb-sapp/) with `pip install fb-sapp`.
+To run SAPP, you will need [Python 3.8 or later](https://www.python.org/getit/). SAPP can be installed through [PyPI](https://pypi.org/project/fb-sapp/) with `pip install fb-sapp`.
 
 ## Getting Started
 
