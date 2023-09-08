@@ -3,6 +3,7 @@
     "setup.py",
     "stubs"
   ],
+  "site_package_search_strategy": "pep561",
   "search_path": [
     {
       "site-package": "click"
@@ -35,9 +36,6 @@
       "site-package": "pygments"
     },
     {
-      "site-package": "ujson"
-    },
-    {
       "site-package": "xxhash"
     },
     {
@@ -45,9 +43,6 @@
     },
     {
       "site-package": "traitlets"
-    },
-    {
-      "site-package": "typing_extensions"
     },
     {
       "site-package": "pyre_extensions"
