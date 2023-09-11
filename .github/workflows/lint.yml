@@ -22,19 +22,6 @@ jobs:
       - name: Run black
         run: black --exclude 'stubs\/' --check --diff .
 
-  usort:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-
-      - name: Install usort
-        run: pip install usort==1.0.2
-
-      - name: Run usort
-        run: usort diff . && usort check .
-
   flake8:
     runs-on: ubuntu-latest
 
