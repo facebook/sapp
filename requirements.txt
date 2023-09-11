@@ -14,4 +14,4 @@ SQLAlchemy<1.4
 traitlets==5.2.2.post1
 typing-extensions==4.2.0
 xxhash==3.0.0
-zstd==1.5.5.1
+zstandard==0.17.0

@@ -34,7 +34,7 @@ from functools import partial
 from multiprocessing import Pool
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Type
 
-import zstd
+import zstandard
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import JsonLexer
@@ -153,7 +153,7 @@ class JSONDiagnostics:
 
         with open(path, "rb") as fh:
             compressed = fh.read()
-        decompressed = zstd.ZstdDecompressor().decompress(compressed)
+        decompressed = zstandard.decompress(compressed)
         table = LookupTable.from_json(decompressed.decode("utf8"))
 
         if table.version != TABLE_VERSION:
@@ -172,9 +172,7 @@ class JSONDiagnostics:
 
     def _save_lookup_table(self, path: str, table: LookupTable) -> None:
         logger.info(f"Writing lookup table to `{path}`")
-        compressed = zstd.ZstdCompressor(threads=-1).compress(
-            table.to_json().encode("utf8")
-        )
+        compressed = zstandard.compress(table.to_json().encode("utf8"))
         tmp_name = path + ".tmp"
         with open(tmp_name, "wb") as fh:
             fh.write(compressed)

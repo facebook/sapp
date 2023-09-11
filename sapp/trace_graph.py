@@ -8,7 +8,7 @@
 import logging
 import re
 from collections import defaultdict
-from typing import Any, cast, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
+from typing import cast, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
 from .bulk_saver import BulkSaver
 from .models import (

@@ -173,12 +173,10 @@ class TestSappCli(TestCase):
             assert_successful_exit(result)
 
 
-def assert_successful_exit(result: Result) -> None:
-
-    assert result.exit_code == 0, (
-        f"Command did not exit successfully: {result}\n"
-        # pyre-fixme
-        + f"Command output:\n{result.stdout}\n"
-        # pyre-fixme
-        + f"{os.linesep.join(traceback.format_exception(*result.exc_info))}"
+def assert_successful_exit(r: Result) -> None:
+    # pyre bug: using the variable name `result` leads to a wrong type error.
+    assert r.exit_code == 0, (
+        f"Command did not exit successfully: {r}\n"
+        + f"Command output:\n{r.stdout}\n"
+        + f"{os.linesep.join(traceback.format_exception(*r.exc_info))}"
     )
