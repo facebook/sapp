@@ -3,7 +3,6 @@
     "setup.py",
     "stubs"
   ],
-  "site_package_search_strategy": "pep561",
   "search_path": [
     {
       "site-package": "click"
@@ -52,9 +51,10 @@
     },
     "stubs"
   ],
+  "site_package_search_strategy": "pep561",
   "source_directories": [
     "."
   ],
   "strict": true,
-  "version": "0.0.101693307516"
+  "version": "0.0.101694517016"
 }
