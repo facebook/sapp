@@ -289,6 +289,7 @@ def navigate_trace_frames(
                         callee_port=trace_frame.callee_port,
                         caller="",
                         caller_port="",
+                        filename="",
                     ),
                     0,
                 )

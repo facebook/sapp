@@ -48,7 +48,7 @@ SARIFOutput: TypeAlias = Dict[
 
 class SARIF:
     version: str = "2.1.0"
-    schema: str = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json"  # noqa
+    schema: str = "https://raw.githubusercontent.com/github/codeql-action/main/src/sarif-schema-2.1.0.json"  # noqa
 
     def __init__(
         self, tool: str, session: Session, filtered_issues: Set[IssueQueryResult]
@@ -140,6 +140,8 @@ class SARIF:
         ) + trace.create_trace_tuples(precondition_navigation)
         codeflows: List[SARIFCodeflowLocationObject] = []
         nesting_level = 0
+        if len(trace_tuples) == 0:
+            return []
         for trace_tuple in trace_tuples:
             location = self._sarif_codeflow_location_from_trace_tuple(
                 trace_tuple.trace_frame, nesting_level, output_features
