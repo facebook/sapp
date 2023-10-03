@@ -649,7 +649,7 @@ class Parser(BaseParser):
         leaves = set()
 
         for condition_taint in condition_taints:
-            normalized_conditions = Parser._normalize_conditions(
+            normalized_conditions = Parser._normalize_crtex_conditions(
                 taint=condition_taint, caller_method=callable
             )
             for normalized_condition in normalized_conditions:
@@ -695,26 +695,6 @@ class Parser(BaseParser):
                         )
 
         return conditions, leaves
-
-    @staticmethod
-    def _normalize_conditions(
-        taint: Dict[str, Any], caller_method: Method
-    ) -> List[Dict[str, Any]]:
-        # The analysis should emit traces where the JSON already conforms to
-        # the way traces are structured in SAPP, i.e.:
-        # caller -> caller_port -> (callee, position, port) -> (kind, distance)
-        # However, it does not do that today for CRTEX and field callees. This
-        # chain of "normalize" operations transforms the JSON into that form
-        # above so all of them can be parsed in the same way.
-        normalized_field_callees = Parser._normalize_field_callees(taint)
-
-        normalized_taints = []
-        for leaf_taint in normalized_field_callees:
-            normalized_taints.extend(
-                Parser._normalize_crtex_conditions(leaf_taint, caller_method)
-            )
-
-        return normalized_taints
 
     @staticmethod
     def _normalize_crtex_condition(
@@ -837,39 +817,6 @@ class Parser(BaseParser):
         return conditions
 
     @staticmethod
-    def _normalize_field_callees(taint: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Similar to `_normalize_crtex_conditions`, but does it for "field_callee"
-        instead of "canonical_names"."""
-        # TODO(T91357916): The analysis should be able to emit this correctly without
-        # the parser having to post-process it.
-        if "call" in taint or "origin" in taint:
-            # Field callees only appear at the leaf. If a "call" exists, this is not
-            # a leaf. Similarly, "origin"'s only appear for actual calls, not field
-            # callees.
-            return [taint]
-
-        non_field_callee_taint_kinds = []
-        normalized_taints = []
-
-        for kind in taint["kinds"]:
-            field_callee = kind.get("field_callee")
-            if field_callee:
-                normalized_taints.append(
-                    {"call": {"resolves_to": field_callee}, "kinds": [kind]}
-                )
-            else:
-                non_field_callee_taint_kinds.append(kind)
-
-        if len(non_field_callee_taint_kinds) > 0:
-            # Copy the taint object to preserve any other fields in it.
-            # Shallow copy is fine since we are just overwriting "kinds".
-            taint_copy = taint.copy()
-            taint_copy["kinds"] = non_field_callee_taint_kinds
-            normalized_taints.append(taint_copy)
-
-        return normalized_taints
-
-    @staticmethod
     def _is_propagation_without_trace(taint: Dict[str, Any]) -> bool:
         if "call" in taint or "origin" in taint:
             # If a "call" exists, this is not a leaf.
@@ -946,7 +893,7 @@ class Parser(BaseParser):
                 position=caller_position,
             )
             for unnormalized_leaf_taint in leaf_model[leaf_model_key]:
-                normalized_taints = Parser._normalize_conditions(
+                normalized_taints = Parser._normalize_crtex_conditions(
                     unnormalized_leaf_taint, caller_method
                 )
                 for leaf_taint in normalized_taints:
