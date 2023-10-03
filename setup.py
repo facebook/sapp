@@ -14,7 +14,7 @@ def _requirements():
 
 setup(
     name="fb-sapp",
-    version="0.5.4",
+    version="0.5.5",
     description="Static Analysis Post-Processor for processing taint analysis results.",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
