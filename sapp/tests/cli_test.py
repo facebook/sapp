@@ -8,7 +8,6 @@ import contextlib
 import os
 import tempfile
 import traceback
-import unittest
 from functools import partial
 from pathlib import Path
 from typing import Generator
@@ -37,23 +36,6 @@ def isolated_fs() -> Generator[str, None, None]:
 class TestSappCli(TestCase):
     def setUp(self) -> None:
         self.runner = CliRunner()
-
-    @unittest.skip("T41451811")
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_explore_options(self, mock_analysis_output) -> None:
-        with isolated_fs():
-            result = self.runner.invoke(
-                cli,
-                [
-                    "--database-engine",
-                    "memory",
-                    "--database-name",
-                    "mydatabase",
-                    "explore",
-                ],
-            )
-            print(result.output)
-            assert_successful_exit(result)
 
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
