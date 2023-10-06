@@ -168,7 +168,6 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
 
         # If we have a mapfile, create the map.
         if linemapfile:
-            print("Parsing linemap file")
             log.info("Parsing linemap file")
             with open(linemapfile, "r") as f:
                 linemap = json.load(f)
@@ -179,7 +178,6 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         if previous_issue_handles:
             log.info("Parsing previous issue handles")
             previous_handles = BaseParser.parse_handles_file(previous_issue_handles)
-            print("previous handles", previous_handles)
 
         log.info("Parsing analysis output...")
         for typ, key, e in self._analysis_output_to_parsed_tuples(inputfile):
