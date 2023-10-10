@@ -678,14 +678,29 @@ class Parser(BaseParser):
 
                 for kind in normalized_condition["kinds"]:
                     for origin in kind.get("origins", []):
+                        if isinstance(origin, str):
+                            # TODO(T163918472): Deprecate legacy origins json.
+                            leaf_name = Method.from_json(origin)
+                        elif "method" in origin:
+                            # Methods may be strings, or a json object.
+                            leaf_name = Method.from_json(origin["method"])
+                        elif "field" in origin:
+                            # Fields are always just strings.
+                            leaf_name = Method(origin["field"])
+                        else:
+                            # TODO(T163918472): Deprecate legacy origins json.
+                            # For non-legacy json, this could be a newly added
+                            # key that the parser does not yet support.
+                            leaf_name = Method.from_json(origin)
                         leaves.add(
                             Leaf(
-                                method=Method.from_json(origin),
+                                method=leaf_name,
                                 kind=kind["kind"],
                                 distance=kind.get("distance", 0),
                             )
                         )
                     for field_origin in kind.get("field_origins", []):
+                        # TODO(T163918472): Deprecate legacy field origins json.
                         leaves.add(
                             Leaf(
                                 method=Method(field_origin),

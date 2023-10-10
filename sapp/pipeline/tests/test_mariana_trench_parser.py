@@ -96,7 +96,12 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 13, "start": 14, "end": 15}],
@@ -120,7 +125,12 @@ class TestParser(unittest.TestCase):
                           "distance": 3,
                           "may_features": ["via-obscure"],
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [
@@ -237,7 +247,12 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 13, "start": 14, "end": 15}]
@@ -258,7 +273,12 @@ class TestParser(unittest.TestCase):
                           "distance": 3,
                           "always_features": ["via-obscure"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.other_sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.other_sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -279,7 +299,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 3,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 33, "start": 34, "end": 35}],
@@ -402,7 +427,12 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 13, "start": 14, "end": 15}]
@@ -414,7 +444,9 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 0,
                           "kind": "TestSource",
-                          "field_origins": ["LSource;.sourceField:LData;"]
+                          "origins": [
+                            { "field": "LSource;.sourceField:LData;" }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 33, "start": 34, "end": 35}]
@@ -524,7 +556,12 @@ class TestParser(unittest.TestCase):
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 13, "start": 14, "end": 15}]
@@ -544,12 +581,22 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 3,
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         },
                         {
                           "distance": 1,
                           "kind": "TestSink2",
-                          "origins": ["LSink;.sink3:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink3:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 14, "start": 14, "end": 15}]
@@ -571,7 +618,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 3,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [{"line": 33, "start": 34, "end": 35}],
@@ -592,12 +644,22 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 4,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         },
                         {
                           "distance": 5,
                           "kind": "TestSource2",
-                          "origins": ["LSource;.source3:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source3:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -778,7 +840,12 @@ class TestParser(unittest.TestCase):
                         {
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_features": {
@@ -842,7 +909,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [
@@ -907,7 +979,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [
@@ -984,7 +1061,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [
@@ -1050,7 +1132,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [
@@ -1105,7 +1192,12 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_features": {
@@ -1164,7 +1256,12 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSource",
-                          "origins": ["LSource;.source:()V"]
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -1344,7 +1441,12 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"],
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ],
                           "may_features": ["via-obscure"]
                         }
                       ],
@@ -1405,7 +1507,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_positions": [
@@ -1460,7 +1567,12 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -1516,7 +1628,12 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSink",
-                          "origins": ["LSink;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ],
                       "local_features": {
@@ -1710,19 +1827,24 @@ class TestParser(unittest.TestCase):
                       "kinds": [
                         {
                           "kind": "TestSink",
-                          "origins": [{
-                            "name": "LSink;.sink:(LData;)V",
-                            "parameter_type_overrides": [
-                              {
-                                "parameter": 0,
-                                "type": "LAnonymous$0;"
+                          "origins": [
+                            {
+                              "method": {
+                                "name": "LSink;.sink:(LData;)V",
+                                "parameter_type_overrides": [
+                                  {
+                                    "parameter": 0,
+                                    "type": "LAnonymous$0;"
+                                  },
+                                  {
+                                    "parameter": 1,
+                                    "type": "LAnonymous$1;"
+                                  }
+                                ]
                               },
-                              {
-                                "parameter": 1,
-                                "type": "LAnonymous$1;"
-                              }
-                            ]
-                          }]
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -1776,7 +1898,10 @@ class TestParser(unittest.TestCase):
                         {
                           "kind": "TestSource",
                           "origins": [
-                            "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+                            {
+                              "method": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
+                              "port": "Argument(1)"
+                            }
                           ],
                           "canonical_names": [ { "instantiated": "TestEvent:field_a" } ]
                         }
@@ -1830,7 +1955,10 @@ class TestParser(unittest.TestCase):
                         {
                           "kind": "TestSource",
                           "origins": [
-                           "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V"
+                            {
+                              "method": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
+                              "port": "Argument(1)"
+                            }
                           ],
                           "canonical_names": [ { "instantiated": "LClass;.method:(I)V" }]
                         }
@@ -1995,7 +2123,12 @@ class TestParser(unittest.TestCase):
                         {
                           "distance": 1,
                           "kind": "TestSink",
-                          "origins": ["Lcom/facebook/Sink$4;.sink:(LData;)V"]
+                          "origins": [
+                            {
+                              "method": "Lcom/facebook/Sink$4;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     }
