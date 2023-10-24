@@ -215,7 +215,7 @@ class Call(NamedTuple):
         """
         return Call.from_json(
             method=origin_json.get("method"),
-            port="Leaf",
+            port=origin_json.get("port", "Leaf"),
             position=origin_json.get("position"),
             default_position=caller_position,
             leaf_kind=leaf_kind,
