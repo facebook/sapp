@@ -8,7 +8,7 @@ import datetime
 import json
 import logging
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from ..models import (
     DBID,
@@ -39,6 +39,7 @@ from . import (
     ParseIssueTuple,
     ParseLeaf,
     ParseTraceAnnotation,
+    ParseTraceAnnotationSubtrace,
     ParseTraceFeature,
     ParseTypeInterval,
     PipelineStep,
@@ -578,17 +579,18 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         run: Run,
         parent_filename: str,
         parent_caller: str,
-        trace: Dict[str, Any],
+        trace: ParseTraceAnnotationSubtrace,
         annotation: ParseTraceAnnotation,
     ) -> TraceFrame:
         # Generates the first-hop trace frames from the annotation and
         # all dependencies of these sub traces. If this gets called, it is
         # assumed that the annotation leads to traces, and that the leaf kind
         # and depth are specified.
-        callee = trace["callee"]
-        callee_port = trace["port"]
-        features = trace.get("features", [])
-        nested_annotations = trace.get("annotations", [])
+        callee = trace.callee
+        callee_port = trace.port
+        features = trace.features
+        nested_annotations = trace.annotations
+        position = trace.position
         titos = self._generate_tito(parent_filename, annotation, parent_caller)
         call_tf = self._generate_raw_trace_frame(
             trace_kind,
@@ -598,7 +600,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             "root",
             callee,
             callee_port,
-            annotation.location,
+            position,
             titos,
             [(annotation.leaf_kind or "", annotation.leaf_depth)],
             annotation.type_interval,

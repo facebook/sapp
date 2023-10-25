@@ -342,11 +342,11 @@ class ExtraTrace(NamedTuple):
     def to_sapp(self) -> sapp.ParseTraceAnnotation:
         subtraces = (
             [
-                {
-                    "callee": self.callee.method.name,
-                    "port": self.callee.port.value,
-                    "position": self.callee.position.to_sapp(),
-                }
+                sapp.ParseTraceAnnotationSubtrace(
+                    callee=self.callee.method.name,
+                    port=self.callee.port.value,
+                    position=self.callee.position.to_sapp(),
+                )
             ]
             if not self.callee.method.is_leaf()
             else []

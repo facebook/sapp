@@ -107,6 +107,14 @@ class ParseTypeInterval(NamedTuple):
     preserves_type_context: bool
 
 
+class ParseTraceAnnotationSubtrace(NamedTuple):
+    callee: str
+    port: str
+    position: SourceLocation
+    features: List["ParseTraceFeature"] = []
+    annotations: List["ParseTraceAnnotation"] = []
+
+
 class ParseTraceAnnotation(NamedTuple):
     location: SourceLocation
     kind: str
@@ -117,9 +125,7 @@ class ParseTraceAnnotation(NamedTuple):
     link: Optional[str]
     trace_key: Optional[str]
     titos: List[SourceLocation]
-    subtraces: List[
-        Dict[str, Any]
-    ]  # callee, port, features, annotations (TODO figure what exactly this shape is)
+    subtraces: List[ParseTraceAnnotationSubtrace]
 
     @staticmethod
     def from_json(j: Dict[str, Any]) -> "ParseTraceAnnotation":

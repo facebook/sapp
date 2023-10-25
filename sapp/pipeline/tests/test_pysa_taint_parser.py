@@ -14,6 +14,7 @@ from .. import (
     ParseIssueConditionTuple,
     ParseIssueTuple,
     ParseTraceAnnotation,
+    ParseTraceAnnotationSubtrace,
     ParseTraceFeature,
     ParseTypeInterval,
     SourceLocation,
@@ -241,15 +242,15 @@ class TestParser(unittest.TestCase):
                                     trace_key=None,
                                     titos=[],
                                     subtraces=[
-                                        {
-                                            "callee": "extra_trace.transform_yz",
-                                            "port": "formal(arg)",
-                                            "position": {
-                                                "line": 117,
-                                                "start": 23,
-                                                "end": 24,
-                                            },
-                                        }
+                                        ParseTraceAnnotationSubtrace(
+                                            callee="extra_trace.transform_yz",
+                                            port="formal(arg)",
+                                            position=SourceLocation(
+                                                line_no=117,
+                                                begin_column=23,
+                                                end_column=24,
+                                            ),
+                                        )
                                     ],
                                 )
                             ],
@@ -288,15 +289,15 @@ class TestParser(unittest.TestCase):
                                     trace_key=None,
                                     titos=[],
                                     subtraces=[
-                                        {
-                                            "callee": "extra_trace.transform_yz",
-                                            "port": "formal(arg)",
-                                            "position": {
-                                                "line": 117,
-                                                "start": 23,
-                                                "end": 24,
-                                            },
-                                        }
+                                        ParseTraceAnnotationSubtrace(
+                                            callee="extra_trace.transform_yz",
+                                            port="formal(arg)",
+                                            position=SourceLocation(
+                                                line_no=117,
+                                                begin_column=23,
+                                                end_column=24,
+                                            ),
+                                        )
                                     ],
                                 )
                             ],
@@ -1593,11 +1594,13 @@ class TestParser(unittest.TestCase):
                             trace_key=None,
                             titos=[],
                             subtraces=[
-                                {
-                                    "callee": "extra_trace.nested_transform_x",
-                                    "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 33, "end": 34},
-                                }
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=59, begin_column=33, end_column=34
+                                    ),
+                                )
                             ],
                         )
                     ],
@@ -1637,11 +1640,13 @@ class TestParser(unittest.TestCase):
                             trace_key=None,
                             titos=[],
                             subtraces=[
-                                {
-                                    "callee": "extra_trace.nested_transform_x",
-                                    "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 33, "end": 34},
-                                }
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=59, begin_column=33, end_column=34
+                                    ),
+                                )
                             ],
                         )
                     ],
@@ -1681,11 +1686,13 @@ class TestParser(unittest.TestCase):
                             trace_key=None,
                             titos=[],
                             subtraces=[
-                                {
-                                    "callee": "extra_trace.nested_transform_x",
-                                    "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 33, "end": 34},
-                                }
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=59, begin_column=33, end_column=34
+                                    ),
+                                ),
                             ],
                         )
                     ],
@@ -1725,11 +1732,13 @@ class TestParser(unittest.TestCase):
                             trace_key=None,
                             titos=[],
                             subtraces=[
-                                {
-                                    "callee": "extra_trace.nested_transform_x",
-                                    "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 33, "end": 34},
-                                }
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=59, begin_column=33, end_column=34
+                                    ),
+                                )
                             ],
                         )
                     ],
@@ -2253,11 +2262,13 @@ class TestParser(unittest.TestCase):
                             trace_key=None,
                             titos=[],
                             subtraces=[
-                                {
-                                    "callee": "extra_trace.nested_transform_x",
-                                    "port": "formal(arg)",
-                                    "position": {"line": 59, "start": 33, "end": 34},
-                                }
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=59, begin_column=33, end_column=34
+                                    ),
+                                )
                             ],
                         )
                     ],

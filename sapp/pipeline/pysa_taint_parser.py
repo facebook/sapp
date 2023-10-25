@@ -35,6 +35,7 @@ from . import (
     ParseIssueTuple,
     ParsePosition,
     ParseTraceAnnotation,
+    ParseTraceAnnotationSubtrace,
     ParseTypeInterval,
     SourceLocation,
 )
@@ -444,11 +445,13 @@ class Parser(BaseParser):
             if "call" in extra_trace:
                 call = extra_trace["call"]
                 first_hops = [
-                    {
-                        "callee": resolved,
-                        "port": call["port"],
-                        "position": self._adjust_location(call["position"]),
-                    }
+                    ParseTraceAnnotationSubtrace(
+                        callee=resolved,
+                        port=call["port"],
+                        position=SourceLocation.from_typed_dict(
+                            self._adjust_location(call["position"])
+                        ),
+                    )
                     for resolved in call["resolves_to"]
                 ]
                 if len(first_hops) == 0:
