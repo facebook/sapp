@@ -57,6 +57,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         record_meta_run_issue_instances: bool = False,
         meta_run_identifier: Optional[int] = None,
         archive_issue_instances_of_new_issues: bool = True,
+        skip_traces: bool = False,
     ) -> None:
         super().__init__()
         self.summary: Summary
@@ -67,6 +68,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         self.archive_issue_instances_of_new_issues = (
             archive_issue_instances_of_new_issues
         )
+        self.skip_traces: bool = skip_traces
 
     def run(self, input: DictEntries, summary: Summary) -> Tuple[TraceGraph, Summary]:
         self.summary = summary
@@ -338,6 +340,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         Returns the TraceFrames associated this starting frame (generated or found existing)
         """
         returned_frames = []
+        if self.skip_traces:
+            return returned_frames
 
         kind = start_frame.kind
         queue = [(start_frame, outgoing_leaf_ids)]
