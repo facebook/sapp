@@ -142,6 +142,17 @@ class ParseTraceAnnotation(NamedTuple):
             subtraces=j["subtraces"],
         )
 
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.location,
+                self.kind,
+                self.msg,
+                self.leaf_kind,
+                self.leaf_depth,
+            )
+        )
+
 
 class ParseTraceFeature(NamedTuple):
     name: str
