@@ -18,7 +18,7 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import Session
 
 from .db import DB
-from .iterutil import split_every
+from .iterutil import inclusive_range, split_every
 
 log: logging.Logger = logging.getLogger("sapp")
 
@@ -346,16 +346,25 @@ class PrimaryKeyBase(PrepareMixin, RecordMixin):  # noqa
 class PrimaryKeyGeneratorBase:
     """Keep track of DB objects' primary keys by ourselves rather than relying
     on SQLAlchemy, so we can supply them as arguments when creating association
-    objects. Subclass to define PRIMARY_KEY class and QUERY_CLASSES."""
+    objects."""
 
     def __init__(
-        self, primary_key: Type[object], query_classes: Set[Type[object]]
+        self,
+        primary_key: Type[PrimaryKeyBase],
+        query_classes: Set[Type[object]],
+        allowed_id_range: Optional[range] = None,
     ) -> None:
         self.primary_key = primary_key
         self.query_classes = query_classes
 
         # Map from class name to an ID range (next_id, max_reserved_id)
         self.pks: Dict[str, Tuple[int, int]] = {}
+
+        if allowed_id_range is None:
+            # By default, allow all positive signed 64 bit integers
+            self.allowed_id_range: range = inclusive_range(1, 2**63 - 1)
+        else:
+            self.allowed_id_range = allowed_id_range
 
     def reserve(
         self,
@@ -381,18 +390,15 @@ class PrimaryKeyGeneratorBase:
 
         return self
 
-    # pyre-fixme[24]: Generic type `type` expects 1 type parameter, use
-    #  `typing.Type` to avoid runtime subscripting errors.
-    # pyre-fixme[24]: Generic type `type` expects 1 type parameter, use
-    #  `typing.Type` to avoid runtime subscripting errors.
-    def _lock_pk_with_retries(self, session: Session, cls: Type) -> Optional[object]:
+    def _lock_pk_with_retries(
+        self, session: Session, cls: Type[PrimaryKeyBase]
+    ) -> Optional[PrimaryKeyBase]:
         cls_pk: Optional[object] = None
         retries: int = 6
         while retries > 0:
             try:
                 cls_pk = (
                     session.query(self.primary_key)
-                    # pyre-fixme[16]: `object` has no attribute `table_name`
                     .filter(self.primary_key.table_name == cls.__name__)
                     .with_for_update()
                     .first()
@@ -417,44 +423,85 @@ class PrimaryKeyGeneratorBase:
     ) -> None:
         cls_pk = self._lock_pk_with_retries(session, cls)
         if not cls_pk:
-            # If cls_pk is None, then we query the data table for the max ID
-            # and use that as the current_id in the primary_keys table. This
-            # should only occur once (the except with a rollback means any
-            # additional attempt will fail to add a row, and use the "current"
-            # id value)
-            row = session.query(cls.id).order_by(cls.id.desc()).first()
+            # If cls_pk is None, create a new row in the primary_keys table
+            current_id = self._get_initial_current_id(session, cls)
             try:
-                session.execute(
-                    "INSERT INTO primary_keys(table_name, current_id) \
-                    VALUES (:table_name, :current_id)",
-                    {
-                        "table_name": cls.__name__,
-                        "current_id": (row.id.resolved()) if row else 0,
-                    },
+                session.add(
+                    # pyre-fixme[28]: Unexpected keyword argument `table_name`
+                    self.primary_key(table_name=cls.__name__, current_id=current_id)
                 )
                 session.commit()
             except exc.SQLAlchemyError as err:
+                # Perhaps another process successfully created the row?
+                # Rollback and try to read the new row
                 log.error("Writing into the primary keys table failed", exc_info=err)
                 session.rollback()
             cls_pk = self._lock_pk_with_retries(session, cls)
+            assert cls_pk, (
+                "Primary key entry for {cls.__name__} not found "
+                "after trying to create it"
+            )
 
-        if cls_pk:
-            # pyre-fixme[16]: `object` has no attribute `current_id`
-            next_id = cls_pk.current_id + 1
-            cls_pk.current_id = cls_pk.current_id + count
-            pk_entry: Tuple[int, int] = (next_id, cls_pk.current_id)
-            session.commit()
-            self.pks[cls.__name__] = pk_entry
+        next_id = cls_pk.current_id + 1
+        max_id = cls_pk.current_id + count
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def get(self, cls) -> int:
+        assert next_id in self.allowed_id_range, (
+            f"Can't reserve any primary keys for {cls.__name__} because the next id="
+            f"{next_id} would be outside the allowed {self.allowed_id_range}"
+        )
+        assert max_id in self.allowed_id_range, (
+            f"Can't reserve {count} primary keys for {cls.__name__} because the max id="
+            f"{max_id} would be outside the allowed {self.allowed_id_range}"
+        )
+
+        cls_pk.current_id = max_id
+        session.commit()
+        self.pks[cls.__name__] = (next_id, max_id)
+
+    def _get_initial_current_id(
+        self,
+        session: Session,
+        cls: Type[object],
+    ) -> int:
+        highest_existing_id = self._get_highest_existing_id(session, cls)
+        if highest_existing_id is not None:
+            assert highest_existing_id in self.allowed_id_range, (
+                f"An existing row in the {cls.__name__} table has an "
+                f"id={highest_existing_id} which is already outside of the "
+                f"allowed {self.allowed_id_range}"
+            )
+            return highest_existing_id
+        else:
+            # The calling code will only allocate IDs above the value we return here.
+            # We can subtract 1 so new tables start with 1 rather than 2
+            return self.allowed_id_range.start - 1
+
+    def _get_highest_existing_id(
+        self,
+        session: Session,
+        cls: Type[object],
+    ) -> Optional[int]:
+        # pyre-fixme[16]: `object` has no attribute `id`
+        row_with_highest_id = session.query(cls.id).order_by(cls.id.desc()).first()
+        if row_with_highest_id is None:
+            return None
+        return row_with_highest_id.id.resolved()
+
+    def get(self, cls: Type[object]) -> int:
         assert cls in self.query_classes, (
             "%s primary key should be generated by SQLAlchemy" % cls.__name__
         )
         assert cls.__name__ in self.pks, (
             "%s primary key needs to be initialized before use" % cls.__name__
         )
-        (pk, max_pk) = self.pks[cls.__name__]
-        assert pk <= max_pk, "%s reserved primary key range exhausted" % cls.__name__
-        self.pks[cls.__name__] = (pk + 1, max_pk)
-        return pk
+
+        (next_id, max_id) = self.pks[cls.__name__]
+        assert next_id <= max_id, (
+            "%s reserved primary key range exhausted" % cls.__name__
+        )
+        assert (
+            next_id in self.allowed_id_range
+        ), f"{cls.__name__} primary key was outside the allowed {self.allowed_id_range}"
+
+        self.pks[cls.__name__] = (next_id + 1, max_id)
+        return next_id

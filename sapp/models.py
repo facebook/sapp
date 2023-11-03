@@ -1643,7 +1643,7 @@ class PrimaryKey(Base, PrimaryKeyBase):
 
 
 class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
-    def __init__(self) -> None:
+    def __init__(self, allowed_id_range: Optional[range] = None) -> None:
         super().__init__(
             primary_key=PrimaryKey,
             query_classes={
@@ -1656,6 +1656,7 @@ class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
                 TraceFrameAnnotation,
                 ClassTypeInterval,
             },
+            allowed_id_range=allowed_id_range,
         )
 
 

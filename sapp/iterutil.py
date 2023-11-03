@@ -22,3 +22,7 @@ def split_every(n: int, iterable: Iterable[T]) -> Iterator[List[T]]:
     while piece:
         yield piece
         piece = list(itertools.islice(i, n))
+
+
+def inclusive_range(start: int, end: int) -> range:
+    return range(start, end + 1)
