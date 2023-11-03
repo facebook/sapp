@@ -5,7 +5,7 @@
 
 from unittest import TestCase
 
-from tools.sapp.sapp.models import IssueDBID
+from tools.sapp.sapp.models import IssueDBID, SharedText, TraceFrame
 
 from ..db import DB, DBType
 from ..models import create as create_tables, Issue, PrimaryKey, PrimaryKeyGenerator
@@ -63,6 +63,25 @@ class PrimaryKeyGeneratorTest(TestCase):
             # reserved [8, 10] and written 10 as the last used id
             self.assertEqual(key_row.current_id, 10)
             self.assertEqual(key_row.table_name, "Issue")
+
+    def test_pk_generator(self) -> None:
+        with self.db.make_session() as session:
+            pk_gen = PrimaryKeyGenerator().reserve(
+                session,
+                [SharedText],
+                {SharedText.__name__: 2},
+            )
+        self.assertEqual(pk_gen.get(SharedText), 1)
+        self.assertEqual(pk_gen.get(SharedText), 2)
+
+    def test_pk_gen_failures(self) -> None:
+        with self.db.make_session() as session:
+            pk_gen = PrimaryKeyGenerator().reserve(session, [SharedText])
+        with self.assertRaises(AssertionError):
+            pk_gen.get(TraceFrame)
+        self.assertEqual(pk_gen.get(SharedText), 1)
+        with self.assertRaises(AssertionError):
+            pk_gen.get(SharedText)
 
     def test_two_generators(self) -> None:
         with self.db.make_session() as session:
