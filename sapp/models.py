@@ -1643,19 +1643,20 @@ class PrimaryKey(Base, PrimaryKeyBase):
 
 
 class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
-
-    PRIMARY_KEY: Type = PrimaryKey
-
-    QUERY_CLASSES: Set[Type] = {
-        Issue,
-        IssueInstance,
-        IssueInstanceFixInfo,
-        SharedText,
-        Run,
-        TraceFrame,
-        TraceFrameAnnotation,
-        ClassTypeInterval,
-    }
+    def __init__(self) -> None:
+        super().__init__(
+            primary_key=PrimaryKey,
+            query_classes={
+                Issue,
+                IssueInstance,
+                IssueInstanceFixInfo,
+                SharedText,
+                Run,
+                TraceFrame,
+                TraceFrameAnnotation,
+                ClassTypeInterval,
+            },
+        )
 
 
 def create(db: DB) -> None:
