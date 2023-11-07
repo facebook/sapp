@@ -273,6 +273,11 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
             lines = (line.rstrip("\n") for line in f)
             return set(filter(lambda line: not line.startswith("#"), lines))
 
+    @staticmethod
+    def parse_issue_callable_allowlist_file(path: Path) -> Set[str]:
+        with open(path) as f:
+            return {line.rstrip("\n") for line in f}
+
     # Instead of returning the actual json from the AnalysisOutput, we return
     # location information so it can be retrieved later.
     def get_json_file_offsets(self, input: AnalysisOutput) -> Iterable[EntryPosition]:
