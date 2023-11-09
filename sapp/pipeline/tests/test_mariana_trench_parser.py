@@ -12,6 +12,8 @@ from .. import (
     ParseConditionTuple,
     ParseIssueConditionTuple,
     ParseIssueTuple,
+    ParseTraceAnnotation,
+    ParseTraceAnnotationSubtrace,
     ParseTraceFeature,
     SourceLocation,
 )
@@ -81,7 +83,8 @@ class TestParser(unittest.TestCase):
                   "sink_index": 0,
                   "sinks": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -93,6 +96,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
@@ -110,7 +114,8 @@ class TestParser(unittest.TestCase):
                   ],
                   "sources": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSource;.source:()LData;",
                         "port": "Return",
                         "position": {
@@ -122,6 +127,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 3,
                           "may_features": ["via-obscure"],
                           "kind": "TestSource",
@@ -232,7 +238,8 @@ class TestParser(unittest.TestCase):
                   "sink_index": 1,
                   "sinks": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -244,6 +251,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
@@ -258,7 +266,8 @@ class TestParser(unittest.TestCase):
                       "local_positions": [{"line": 13, "start": 14, "end": 15}]
                     },
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -270,6 +279,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 3,
                           "always_features": ["via-obscure"],
                           "kind": "TestSink",
@@ -285,7 +295,8 @@ class TestParser(unittest.TestCase):
                   ],
                   "sources": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSource;.source:()LData;",
                         "port": "Return",
                         "position": {
@@ -297,6 +308,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 3,
                           "kind": "TestSource",
                           "origins": [
@@ -412,7 +424,8 @@ class TestParser(unittest.TestCase):
                   "sink_index": 2,
                   "sinks": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -424,6 +437,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
@@ -440,8 +454,12 @@ class TestParser(unittest.TestCase):
                   ],
                   "sources": [
                     {
+                      "call_info": {
+                        "call_kind": "Declaration"
+                      },
                       "kinds": [
                         {
+                          "call_kind": "Declaration",
                           "distance": 0,
                           "kind": "TestSource",
                           "origins": [
@@ -541,7 +559,8 @@ class TestParser(unittest.TestCase):
                   "sink_index": 3,
                   "sinks": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -553,6 +572,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 2,
                           "always_features": ["via-parameter-field"],
                           "kind": "TestSink",
@@ -567,7 +587,8 @@ class TestParser(unittest.TestCase):
                       "local_positions": [{"line": 13, "start": 14, "end": 15}]
                     },
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink2:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -579,6 +600,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 3,
                           "kind": "TestSink",
                           "origins": [
@@ -589,6 +611,7 @@ class TestParser(unittest.TestCase):
                           ]
                         },
                         {
+                          "call_kind": "CallSite",
                           "distance": 1,
                           "kind": "TestSink2",
                           "origins": [
@@ -604,7 +627,8 @@ class TestParser(unittest.TestCase):
                   ],
                   "sources": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSource;.source:()LData;",
                         "port": "Return",
                         "position": {
@@ -616,6 +640,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 3,
                           "kind": "TestSource",
                           "origins": [
@@ -630,7 +655,8 @@ class TestParser(unittest.TestCase):
                       "local_features": {"always_features": ["via-obscure"]}
                     },
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSource;.source2:()LData;",
                         "port": "Return",
                         "position": {
@@ -642,6 +668,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 4,
                           "kind": "TestSource",
                           "origins": [
@@ -652,6 +679,7 @@ class TestParser(unittest.TestCase):
                           ]
                         },
                         {
+                          "call_kind": "CallSite",
                           "distance": 5,
                           "kind": "TestSource2",
                           "origins": [
@@ -836,22 +864,21 @@ class TestParser(unittest.TestCase):
                   "port": "Return",
                   "taint": [
                     {
+                      "call_info": {
+                        "call_kind": "Declaration"
+                      },
                       "kinds": [
                         {
-                          "always_features": ["via-parameter-field"],
+                          "call_kind": "Declaration",
                           "kind": "TestSource",
                           "origins": [
                             {
                               "method": "LSource;.source:()V",
-                              "port": "Argument(1)"
+                              "port": "Return"
                             }
                           ]
                         }
-                      ],
-                      "local_features": {
-                        "always_features": ["via-obscure"],
-                        "may_features": ["via-taint-in-taint-out"]
-                      }
+                      ]
                     }
                   ]
                 }
@@ -862,29 +889,7 @@ class TestParser(unittest.TestCase):
               }
             }
             """,
-            [
-                ParseConditionTuple(
-                    type=ParseType.POSTCONDITION,
-                    caller="LSource;.source:()V",
-                    callee="leaf",
-                    callee_location=SourceLocation(
-                        line_no=1,
-                        begin_column=1,
-                        end_column=1,
-                    ),
-                    filename="Source.java",
-                    titos=[],
-                    leaves=[("TestSource", 0)],
-                    caller_port="result",
-                    callee_port="source",
-                    type_interval=None,
-                    features=[
-                        ParseTraceFeature("always-via-obscure", []),
-                        ParseTraceFeature("via-taint-in-taint-out", []),
-                    ],
-                    annotations=[],
-                )
-            ],
+            [],
         )
 
         # Origin case.
@@ -897,7 +902,8 @@ class TestParser(unittest.TestCase):
                   "port": "Return",
                   "taint": [
                     {
-                      "origin": {
+                      "call_info": {
+                        "call_kind": "Origin",
                         "position": {
                           "path": "Class.java",
                           "line": 10,
@@ -907,7 +913,9 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
-                          "distance": 1,
+                          "call_kind": "Origin",
+                          "always_features": ["via-parameter-field"],
+                          "distance": 0,
                           "kind": "TestSource",
                           "origins": [
                             {
@@ -917,76 +925,10 @@ class TestParser(unittest.TestCase):
                           ]
                         }
                       ],
-                      "local_positions": [
-                        {"line": 13, "start": 14, "end": 15},
-                        {"line": 16, "start": 17, "end": 18}
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "position": {
-                "line": 1,
-                "path": "Class.java"
-              }
-            }
-            """,
-            [
-                ParseConditionTuple(
-                    type=ParseType.POSTCONDITION,
-                    caller="LClass;.indirect_source:()V",
-                    callee="leaf",
-                    callee_location=SourceLocation(
-                        line_no=10,
-                        begin_column=12,
-                        end_column=13,
-                    ),
-                    filename="Class.java",
-                    titos=[
-                        SourceLocation(line_no=13, begin_column=15, end_column=16),
-                        SourceLocation(line_no=16, begin_column=18, end_column=19),
-                    ],
-                    leaves=[("TestSource", 1)],
-                    caller_port="result",
-                    callee_port="source",
-                    type_interval=None,
-                    features=[],
-                    annotations=[],
-                )
-            ],
-        )
-
-        # Origin with name case.
-        self.assertParsed(
-            """
-            {
-              "method": "LClass;.indirect_source:()V",
-              "generations": [
-                {
-                  "port": "Return",
-                  "taint": [
-                    {
-                      "origin": {
-                        "position": {
-                          "path": "Class.java",
-                          "line": 10,
-                          "start": 11,
-                          "end": 12
-                        },
-                        "method": "LSource;.source:()V"
+                      "local_features": {
+                        "always_features": ["via-obscure"],
+                        "may_features": ["via-taint-in-taint-out"]
                       },
-                      "kinds": [
-                        {
-                          "distance": 1,
-                          "kind": "TestSource",
-                          "origins": [
-                            {
-                              "method": "LSource;.source:()V",
-                              "port": "Argument(1)"
-                            }
-                          ]
-                        }
-                      ],
                       "local_positions": [
                         {"line": 13, "start": 14, "end": 15},
                         {"line": 16, "start": 17, "end": 18}
@@ -1016,11 +958,14 @@ class TestParser(unittest.TestCase):
                         SourceLocation(line_no=13, begin_column=15, end_column=16),
                         SourceLocation(line_no=16, begin_column=18, end_column=19),
                     ],
-                    leaves=[("TestSource", 1)],
+                    leaves=[("TestSource", 0)],
                     caller_port="result",
                     callee_port="source",
                     type_interval=None,
-                    features=[],
+                    features=[
+                        ParseTraceFeature("always-via-obscure", []),
+                        ParseTraceFeature("via-taint-in-taint-out", []),
+                    ],
                     annotations=[],
                 )
             ],
@@ -1036,34 +981,35 @@ class TestParser(unittest.TestCase):
                   "port": "Return",
                   "taint": [
                     {
-                      "origin": {
+                      "call_info": {
+                        "call_kind": "Origin",
                         "position": {
                           "path": "Class.java",
                           "line": 10,
                           "start": 11,
                           "end": 12
-                        },
-                        "method": {
-                          "name": "LSource;.source:()V",
-                          "parameter_type_overrides": [
-                            {
-                              "parameter": 0,
-                              "type": "LAnonymous$0;"
-                            },
-                            {
-                              "parameter": 1,
-                              "type": "LAnonymous$1;"
-                            }
-                          ]
                         }
                       },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "distance": 1,
                           "kind": "TestSource",
                           "origins": [
                             {
-                              "method": "LSource;.source:()V",
+                              "method": {
+                                "name": "LSource;.source:()V",
+                                "parameter_type_overrides": [
+                                  {
+                                    "parameter": 0,
+                                    "type": "LAnonymous$0;"
+                                  },
+                                  {
+                                    "parameter": 1,
+                                    "type": "LAnonymous$1;"
+                                  }
+                                ]
+                              },
                               "port": "Argument(1)"
                             }
                           ]
@@ -1108,7 +1054,7 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-        # Node case.
+        # CallSite case.
         self.assertParsed(
             """
             {
@@ -1118,7 +1064,8 @@ class TestParser(unittest.TestCase):
                   "port": "Return",
                   "taint": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSource;.source:()LData;",
                         "port": "Return",
                         "position": {
@@ -1130,6 +1077,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 1,
                           "kind": "TestSource",
                           "origins": [
@@ -1183,19 +1131,23 @@ class TestParser(unittest.TestCase):
         self.assertParsed(
             """
             {
-              "method": "LSource;.source:()V",
+              "method": "LSource;.source_wrapper:()V",
               "generations": [
                 {
                   "port": "Return.x.y",
                   "taint": [
                     {
+                      "call_info": {
+                        "call_kind": "Origin"
+                      },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSource",
                           "origins": [
                             {
                               "method": "LSource;.source:()V",
-                              "port": "Argument(1)"
+                              "port": "Return"
                             }
                           ]
                         }
@@ -1216,8 +1168,8 @@ class TestParser(unittest.TestCase):
             [
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
-                    caller="LSource;.source:()V",
-                    callee="leaf",
+                    caller="LSource;.source_wrapper:()V",
+                    callee="LSource;.source:()V",
                     callee_location=SourceLocation(
                         line_no=1,
                         begin_column=1,
@@ -1235,88 +1187,45 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-        # Test with a parameter source (contains callee position but not callee/port).
-        self.assertParsed(
-            """
-            {
-              "method": "LSource;.source:()V",
-              "generations": [
-                {
-                  "port": "Return",
-                  "taint": [
-                    {
-                      "call": {
-                        "position": {
-                          "path": "Source.java",
-                          "line": 2,
-                          "start": 3,
-                          "end": 4
-                        }
-                      },
-                      "kinds": [
-                        {
-                          "kind": "TestSource",
-                          "origins": [
-                            {
-                              "method": "LSource;.source:()V",
-                              "port": "Argument(1)"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "position": {
-                "line": 1,
-                "path": "Source.java"
-              }
-            }
-            """,
-            [
-                ParseConditionTuple(
-                    type=ParseType.POSTCONDITION,
-                    caller="LSource;.source:()V",
-                    callee="leaf",
-                    callee_location=SourceLocation(
-                        line_no=2,
-                        begin_column=4,
-                        end_column=5,
-                    ),
-                    filename="Source.java",
-                    titos=[],
-                    leaves=[("TestSource", 0)],
-                    caller_port="result",
-                    callee_port="source",
-                    type_interval=None,
-                    features=[],
-                    annotations=[],
-                )
-            ],
-        )
-
         # Test multiple caller ports, callees and kinds (leaves)
         self.assertParsed(
             """
             {
-              "method": "LSource;.source:(I)V",
+              "method": "LSource;.source_wrapper:(I)V",
               "generations": [
                 {
                   "port": "Return",
                   "taint": [
                     {
+                      "call_info": {
+                        "call_kind": "Origin"
+                      },
                       "kinds": [
                         {
-                          "kind": "TestSource"
+                          "call_kind": "Origin",
+                          "kind": "TestSource",
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(I)V",
+                              "port": "Return"
+                            }
+                          ]
                         },
                         {
-                          "kind": "TestSource2"
+                          "call_kind": "Origin",
+                          "kind": "TestSource2",
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(I)V",
+                              "port": "Return"
+                            }
+                          ]
                         }
                       ]
                     },
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSource;.source1:()LData;",
                         "port": "Return",
                         "position": {
@@ -1328,10 +1237,12 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "kind": "TestSource",
                           "distance": 1
                         },
                         {
+                          "call_kind": "CallSite",
                           "kind": "TestSource2",
                           "distance": 2
                         }
@@ -1343,7 +1254,8 @@ class TestParser(unittest.TestCase):
                   "port": "Argument(1)",
                   "taint": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSource;.source2:()LData;",
                         "port": "Return",
                         "position": {
@@ -1355,6 +1267,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "kind": "TestSource",
                           "distance": 3
                         }
@@ -1372,8 +1285,8 @@ class TestParser(unittest.TestCase):
             [
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
-                    caller="LSource;.source:(I)V",
-                    callee="leaf",
+                    caller="LSource;.source_wrapper:(I)V",
+                    callee="LSource;.source:(I)V",
                     callee_location=SourceLocation(
                         line_no=1,
                         begin_column=1,
@@ -1381,7 +1294,7 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="Source.java",
                     titos=[],
-                    leaves=[("TestSource", 0), ("TestSource2", 0)],
+                    leaves=[("TestSource", 0)],
                     caller_port="result",
                     callee_port="source",
                     type_interval=None,
@@ -1390,7 +1303,25 @@ class TestParser(unittest.TestCase):
                 ),
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
-                    caller="LSource;.source:(I)V",
+                    caller="LSource;.source_wrapper:(I)V",
+                    callee="LSource;.source:(I)V",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Source.java",
+                    titos=[],
+                    leaves=[("TestSource2", 0)],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LSource;.source_wrapper:(I)V",
                     callee="LSource;.source1:()LData;",
                     callee_location=SourceLocation(
                         line_no=10,
@@ -1408,7 +1339,7 @@ class TestParser(unittest.TestCase):
                 ),
                 ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
-                    caller="LSource;.source:(I)V",
+                    caller="LSource;.source_wrapper:(I)V",
                     callee="LSource;.source2:()LData;",
                     callee_location=SourceLocation(
                         line_no=10,
@@ -1428,18 +1359,22 @@ class TestParser(unittest.TestCase):
         )
 
     def testModelPreconditions(self) -> None:
-        # Leaf case.
+        # Origin case.
         self.assertParsed(
             """
             {
-              "method": "LSink;.sink:(LData;)V",
+              "method": "LSink;.sink_wrapper:(LData;)V",
               "sinks": [
                 {
                   "port": "Argument(1)",
                   "taint": [
                     {
+                      "call_info": {
+                        "call_kind": "Origin"
+                      },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSink",
                           "origins": [
                             {
@@ -1464,8 +1399,8 @@ class TestParser(unittest.TestCase):
             [
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
-                    caller="LSink;.sink:(LData;)V",
-                    callee="leaf",
+                    caller="LSink;.sink_wrapper:(LData;)V",
+                    callee="LSink;.sink:(LData;)V",
                     callee_location=SourceLocation(
                         line_no=1,
                         begin_column=1,
@@ -1483,7 +1418,7 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-        # Node case.
+        # CallSite case.
         self.assertParsed(
             """
             {
@@ -1493,7 +1428,8 @@ class TestParser(unittest.TestCase):
                   "port": "Argument(2)",
                   "taint": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -1505,6 +1441,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 1,
                           "kind": "TestSink",
                           "origins": [
@@ -1558,14 +1495,18 @@ class TestParser(unittest.TestCase):
         self.assertParsed(
             """
             {
-              "method": "LSink;.sink:(LData;)V",
+              "method": "LSink;.sink_wrapper:(LData;)V",
               "sinks": [
                 {
                   "port": "Argument(1).x.y",
                   "taint": [
                     {
+                      "call_info": {
+                        "call_kind": "Origin"
+                      },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSink",
                           "origins": [
                             {
@@ -1588,8 +1529,8 @@ class TestParser(unittest.TestCase):
             [
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
-                    caller="LSink;.sink:(LData;)V",
-                    callee="leaf",
+                    caller="LSink;.sink_wrapper:(LData;)V",
+                    callee="LSink;.sink:(LData;)V",
                     callee_location=SourceLocation(
                         line_no=1,
                         begin_column=1,
@@ -1607,91 +1548,45 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-        # Test with a return sink (has callee position only).
-        self.assertParsed(
-            """
-            {
-              "method": "LSink;.sink:(LData;)V",
-              "sinks": [
-                {
-                  "port": "Argument(2)",
-                  "taint": [
-                    {
-                      "call": {
-                        "position": {
-                          "path": "Sink.java",
-                          "line": 2,
-                          "start": 3,
-                          "end": 4
-                        }
-                      },
-                      "kinds": [
-                        {
-                          "kind": "TestSink",
-                          "origins": [
-                            {
-                              "method": "LSink;.sink:(LData;)V",
-                              "port": "Argument(1)"
-                            }
-                          ]
-                        }
-                      ],
-                      "local_features": {
-                        "may_features": ["via-sink"]
-                      }
-                    }
-                  ]
-                }
-              ],
-              "position": {
-                "line": 1,
-                "path": "Sink.java"
-              }
-            }
-            """,
-            [
-                ParseConditionTuple(
-                    type=ParseType.PRECONDITION,
-                    caller="LSink;.sink:(LData;)V",
-                    callee="leaf",
-                    callee_location=SourceLocation(
-                        line_no=2,
-                        begin_column=4,
-                        end_column=5,
-                    ),
-                    filename="Sink.java",
-                    titos=[],
-                    leaves=[("TestSink", 0)],
-                    caller_port="argument(2)",
-                    callee_port="sink",
-                    type_interval=None,
-                    features=[ParseTraceFeature("via-sink", [])],
-                    annotations=[],
-                )
-            ],
-        )
-
         # Test multiple caller ports, callees and kinds (leaves)
         self.assertParsed(
             """
             {
-              "method": "LSink;.sink:(LData;LData;)V",
+              "method": "LSink;.sink_wrapper:(LData;LData;)V",
               "sinks": [
                 {
                   "port": "Argument(2)",
                   "taint": [
                     {
+                      "call_info": {
+                        "call_kind": "Origin"
+                      },
                       "kinds": [
                         {
-                          "kind": "TestSink"
+                          "call_kind": "Origin",
+                          "kind": "TestSink",
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         },
                         {
-                          "kind": "TestSink2"
+                          "call_kind": "Origin",
+                          "kind": "TestSink2",
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     },
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink2:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -1703,10 +1598,12 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "kind": "TestSink",
                           "distance": 1
                         },
                         {
+                          "call_kind": "CallSite",
                           "kind": "TestSink2",
                           "distance": 2
                         }
@@ -1718,7 +1615,8 @@ class TestParser(unittest.TestCase):
                   "port": "Argument(1)",
                   "taint": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "LSink;.sink3:(LData;)V",
                         "port": "Argument(0)",
                         "position": {
@@ -1730,6 +1628,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "kind": "TestSink",
                           "distance": 3
                         }
@@ -1747,8 +1646,8 @@ class TestParser(unittest.TestCase):
             [
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
-                    caller="LSink;.sink:(LData;LData;)V",
-                    callee="leaf",
+                    caller="LSink;.sink_wrapper:(LData;LData;)V",
+                    callee="LSink;.sink:(LData;LData;)V",
                     callee_location=SourceLocation(
                         line_no=1,
                         begin_column=1,
@@ -1756,7 +1655,7 @@ class TestParser(unittest.TestCase):
                     ),
                     filename="Sink.java",
                     titos=[],
-                    leaves=[("TestSink", 0), ("TestSink2", 0)],
+                    leaves=[("TestSink", 0)],
                     caller_port="argument(2)",
                     callee_port="sink",
                     type_interval=None,
@@ -1765,7 +1664,25 @@ class TestParser(unittest.TestCase):
                 ),
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
-                    caller="LSink;.sink:(LData;LData;)V",
+                    caller="LSink;.sink_wrapper:(LData;LData;)V",
+                    callee="LSink;.sink:(LData;LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Sink.java",
+                    titos=[],
+                    leaves=[("TestSink2", 0)],
+                    caller_port="argument(2)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LSink;.sink_wrapper:(LData;LData;)V",
                     callee="LSink;.sink2:(LData;)V",
                     callee_location=SourceLocation(
                         line_no=10,
@@ -1783,7 +1700,7 @@ class TestParser(unittest.TestCase):
                 ),
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
-                    caller="LSink;.sink:(LData;LData;)V",
+                    caller="LSink;.sink_wrapper:(LData;LData;)V",
                     callee="LSink;.sink3:(LData;)V",
                     callee_location=SourceLocation(
                         line_no=10,
@@ -1824,8 +1741,12 @@ class TestParser(unittest.TestCase):
                   "port": "Argument(1)",
                   "taint": [
                     {
+                      "call_info": {
+                        "call_kind": "Origin"
+                      },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSink",
                           "origins": [
                             {
@@ -1861,7 +1782,7 @@ class TestParser(unittest.TestCase):
                 ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller="LSink;.sink:(LData;)V[0: LAnonymous$0;, 1: LAnonymous$1;]",
-                    callee="leaf",
+                    callee="LSink;.sink:(LData;)V[0: LAnonymous$0;, 1: LAnonymous$1;]",
                     callee_location=SourceLocation(
                         line_no=1,
                         begin_column=1,
@@ -1891,16 +1812,17 @@ class TestParser(unittest.TestCase):
                   "port": "Return",
                   "taint": [
                     {
-                      "call": {
-                        "port": "Anchor.Return"
+                      "call_info": {
+                        "call_kind": "Origin"
                       },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSource",
                           "origins": [
                             {
-                              "method": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
-                              "port": "Argument(1)"
+                              "canonical_name": "TestEvent:field_a",
+                              "port": "Anchor.Return"
                             }
                           ],
                           "canonical_names": [ { "instantiated": "TestEvent:field_a" } ]
@@ -1934,7 +1856,7 @@ class TestParser(unittest.TestCase):
                     type_interval=None,
                     features=[],
                     annotations=[],
-                )
+                ),
             ],
         )
         self.assertParsed(
@@ -1948,16 +1870,17 @@ class TestParser(unittest.TestCase):
                   "port": "Return",
                   "taint": [
                     {
-                      "call": {
-                        "port": "Producer.1234.Argument(2)"
+                      "call_info": {
+                        "call_kind": "Origin"
                       },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSource",
                           "origins": [
                             {
-                              "method": "Lcom/facebook/analytics/structuredlogger/events/TestEvent;.setFieldA:(I)V",
-                              "port": "Argument(1)"
+                              "canonical_name": "LClass;.method:(I)V",
+                              "port": "Producer.1234.Argument(2)"
                             }
                           ],
                           "canonical_names": [ { "instantiated": "LClass;.method:(I)V" }]
@@ -2007,13 +1930,22 @@ class TestParser(unittest.TestCase):
                   "port": "Argument(1)",
                   "taint": [
                     {
-                      "call": {
-                        "port": "Anchor.Argument(0)"
+                      "call_info": {
+                        "call_kind": "Origin"
                       },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSink",
-                          "canonical_names": [ { "instantiated": "SomeMutation:some_field" } ]
+                          "canonical_names": [
+                            { "instantiated": "SomeMutation:some_field" }
+                          ],
+                          "origins": [
+                            {
+                              "canonical_name" : "SomeMutation:some_field",
+                              "port": "Anchor.Argument(1)"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -2040,7 +1972,7 @@ class TestParser(unittest.TestCase):
                     titos=[],
                     leaves=[("TestSink", 0)],
                     caller_port="argument(1)",
-                    callee_port="anchor:formal(0)",
+                    callee_port="anchor:formal(1)",
                     type_interval=None,
                     features=[],
                     annotations=[],
@@ -2058,13 +1990,22 @@ class TestParser(unittest.TestCase):
                   "port": "Argument(1)",
                   "taint": [
                     {
-                      "call": {
-                        "port": "Anchor.Argument(-1)"
+                      "call_info": {
+                        "call_kind": "Origin"
                       },
                       "kinds": [
                         {
+                          "call_kind": "Origin",
                           "kind": "TestSink",
-                          "canonical_names": [ { "instantiated": "SomeMutation:some_field" } ]
+                          "canonical_names": [
+                            { "instantiated": "SomeMutation:some_field" }
+                          ],
+                          "origins": [
+                            {
+                              "canonical_name" : "SomeMutation:some_field",
+                              "port": "Anchor.Argument(-1)"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -2109,7 +2050,8 @@ class TestParser(unittest.TestCase):
                   "port": "Argument(2)",
                   "taint": [
                     {
-                      "call": {
+                      "call_info": {
+                        "call_kind": "CallSite",
                         "resolves_to": "Lcom/facebook/Sink$4;.sink:(LData;)V",
                         "port": "Argument(1)",
                         "position": {
@@ -2121,6 +2063,7 @@ class TestParser(unittest.TestCase):
                       },
                       "kinds": [
                         {
+                          "call_kind": "CallSite",
                           "distance": 1,
                           "kind": "TestSink",
                           "origins": [
@@ -2159,6 +2102,286 @@ class TestParser(unittest.TestCase):
                     type_interval=None,
                     features=[],
                     annotations=[],
+                )
+            ],
+        )
+
+    def testModelPropagations(self) -> None:
+        # Parse Propagation and PropagationWithTrace:Declaration
+        # These should be ignored
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.transformT1:(I)I",
+              "position" : { "line" : 29, "path" : "TaintTransforms.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:Declaration"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:Declaration",
+                          "kind" : "T1@LocalReturn",
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT1:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    },
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "Propagation",
+                        "port" : "Return"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "Propagation",
+                          "kind" : "LocalReturn",
+                          "output_paths" : { "" : 4 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [],
+        )
+
+        # Parse PropagationWithTrace:Origin
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.hopPropagation2:(I)I",
+              "position" : { "line" : 43, "path" : "ExtraTraces.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:Origin",
+                        "port" : "Argument(0)",
+                        "position" : { "line" : 44, "path" : "ExtraTraces.java" }
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:Origin",
+                          "kind" : "T2:LocalReturn",
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT2:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.hopPropagation2:(I)I",
+                    callee="LClass;.transformT2:(I)I",
+                    callee_location=SourceLocation(
+                        line_no=44,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("T2:LocalReturn", 0)],
+                    caller_port="argument(0)",
+                    callee_port="sink",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Parse PropagationWithTrace:CallSite
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.hopPropagation1:(I)I",
+              "position" : { "line" : 38, "path" : "ExtraTraces.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:CallSite",
+                        "port" : "Argument(0)",
+                        "position" : { "line" : 39, "path" : "ExtraTraces.java" },
+                        "resolves_to" : "LClass;.hopPropagation2:(I)I"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:CallSite",
+                          "distance" : 1,
+                          "kind" : "T2:LocalReturn",
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT2:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.hopPropagation1:(I)I",
+                    callee="LClass;.hopPropagation2:(I)I",
+                    callee_location=SourceLocation(
+                        line_no=39,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("T2:LocalReturn", 1)],
+                    caller_port="argument(0)",
+                    callee_port="argument(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Parse propagation with extra traces
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.hopPropagation2:(I)I",
+              "position" : { "line" : 43, "path" : "ExtraTraces.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:CallSite",
+                        "port" : "Argument(0)",
+                        "position" : { "line" : 45, "path" : "ExtraTraces.java" },
+                        "resolves_to" : "LClass;.hopPropagation3:(I)I"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:CallSite",
+                          "distance" : 2,
+                          "extra_traces" :
+                          [
+                            {
+                              "call_info" :
+                              {
+                                "call_kind" : "PropagationWithTrace:Origin",
+                                "port" : "Argument(0)",
+                                "position" : {
+                                  "line" : 44,
+                                  "path" : "ExtraTraces.java"
+                                }
+                              },
+                              "kind" : "T2:LocalReturn"
+                            }
+                          ],
+                          "kind" : "T2@T1:LocalReturn",
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT1:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.hopPropagation2:(I)I",
+                    callee="LClass;.hopPropagation3:(I)I",
+                    callee_location=SourceLocation(
+                        line_no=45,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("T2@T1:LocalReturn", 2)],
+                    caller_port="argument(0)",
+                    callee_port="argument(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=44,
+                                begin_column=1,
+                                end_column=1,
+                            ),
+                            kind="tito_transform",
+                            msg="Propagation through T2:LocalReturn",
+                            leaf_kind="T2:LocalReturn",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[],
+                        )
+                    ],
                 )
             ],
         )

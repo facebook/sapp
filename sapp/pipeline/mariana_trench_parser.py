@@ -32,7 +32,7 @@ else:
     from typing_extensions import Literal
 
 
-LOG: logging.Logger = logging.getLogger()
+log: logging.Logger = logging.getLogger()
 UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1
 
@@ -141,129 +141,97 @@ class Position(NamedTuple):
         )
 
 
-class Call(NamedTuple):
+class Origin(NamedTuple):
+    callee_name: Method
+    callee_port: Port
+
+    @staticmethod
+    def from_json(leaf_json: Dict[str, Any], leaf_kind: str) -> "Origin":
+        """
+        Depending on the origin kind, the json keys will vary:
+
+        Method origin (most common): { "method" : ... , "port" : ... }
+        Field origin: { "field" : ... }
+          No port for field origins. Always assumed to be "Leaf".
+        Crtex origin : { "canonical_name" : ... , "port" : ... }
+        """
+        callee = leaf_json.get(
+            "method", leaf_json.get("field", leaf_json.get("canonical_name"))
+        )
+        if not callee:
+            raise sapp.ParseError(f"No callee found in origin {leaf_json}.")
+        callee_name = Method.from_json(callee)
+
+        # The origin represents a call to a leaf/terminal trace. Its port should
+        # indicate that, so that downstream trace reachability computation knows
+        # when it has reached the end. See trace_graph.is_leaf_port(). Non-CRTEX
+        # ports should always be <leaf_kind> regardless of the JSON (e.g. method
+        # origins could indicate that the sink comes from "argument(1)"", but it
+        # needs to be "sink" in sapp).
+        callee_port = Port.from_json("leaf", leaf_kind)
+        if "canonical_name" in leaf_json:
+            # All CRTEX ports are considered leaf ports.
+            callee_port = Port.from_json(leaf_json["port"], leaf_kind)
+
+        if not callee_port.is_leaf():
+            raise sapp.ParseError(f"Encountered non-leaf port in origin {leaf_json}")
+
+        return Origin(callee_name, callee_port)
+
+
+class CallInfo(NamedTuple):
+    """Mirrors the CallInfo object in the analysis"""
+
+    call_kind: str
     method: Method
     port: Port
     position: Position
 
     @staticmethod
     def from_json(
-        method: Union[None, str, Dict[str, Any]],
-        port: str,
-        position: Optional[Dict[str, Any]],
-        default_position: Position,
-        leaf_kind: str,
-    ) -> "Call":
-        call_method = Method.from_json(method)
-        call_port = Port.from_json(port, leaf_kind)
-        if position is None:
-            if not call_port.is_leaf():
-                raise sapp.ParseError(
-                    f"Missing call position for call to `{call_method.name}`."
-                )
-            else:
-                call_position = default_position
-        else:
-            call_position = Position.from_json(position, call_method)
-        return Call(call_method, call_port, call_position)
+        taint_json: Dict[str, Any], leaf_kind: str, caller_position: Position
+    ) -> "CallInfo":
+        call_kind = taint_json["call_kind"]
+        method = Method.from_json(taint_json.get("resolves_to"))
+        port = Port.from_json(taint_json.get("port", "leaf"), leaf_kind)
 
-    @staticmethod
-    def _from_taint_callee_json(
-        callee_json: Union[None, Dict[str, Any]],
-        caller_position: Position,
-        leaf_kind: str,
-    ) -> "Call":
-        """Creates Call object from JSON representing a pre/postcondition's taint.
-        This represents the condition's callee.
-        """
-        if callee_json:
-            return Call.from_json(
-                method=callee_json.get("resolves_to"),
-                port=callee_json.get("port", "Leaf"),
-                position=callee_json.get("position"),
-                default_position=caller_position,
-                leaf_kind=leaf_kind,
-            )
-        else:
-            return Call.from_json(
-                method=None,
-                port="Leaf",
-                position=None,
-                default_position=caller_position,
-                leaf_kind=leaf_kind,
-            )
-
-    @staticmethod
-    def _from_taint_origin_json(
-        origin_json: Dict[str, Any],
-        caller_position: Position,
-        leaf_kind: str,
-    ) -> "Call":
-        """Creates Call object from JSON an origin of taint. Mariana Trench
-        distinguishes leaves from call sites by having an "origin" structure of
-        the following form:
-
-        "origin": {
-            "position": {
-                 "path": ...,
-                 "line": 42,
-                 "start": 123,
-                 "end": 456
-            },
-           ?"method": "methodA" | { "name": "methodA", "parameter_type_overrides": ... }
-        }
-        """
-        return Call.from_json(
-            method=origin_json.get("method"),
-            port=origin_json.get("port", "Leaf"),
-            position=origin_json.get("position"),
-            default_position=caller_position,
-            leaf_kind=leaf_kind,
+        position_json = taint_json.get("position")
+        position = (
+            caller_position
+            if not position_json
+            else Position.from_json(position_json, method)
         )
+        return CallInfo(call_kind, method, port, position)
+
+    def is_declaration(self) -> bool:
+        """Can can be a declaration for a source/sink (call_kind == Declaration)
+        or a propagation (call_kind == PropagationWithTrace:Declaration)"""
+        return "Declaration" in self.call_kind
+
+    def is_origin(self) -> bool:
+        return "Origin" in self.call_kind
+
+    def is_propagation_without_trace(self) -> bool:
+        return "Propagation" == self.call_kind
+
+
+class Call(NamedTuple):
+    """Represents a callee in sapp"""
+
+    method: Method
+    port: Port
+    position: Position
 
     @staticmethod
-    def from_taint_frame_json(
-        frame_json: Dict[str, Any],
-        caller_position: Position,
-        leaf_kind: str,
-    ) -> "Call":
-        """Creates Call object from JSON representing a pre/postcondition's taint.
-        This represents the condition's callee. There are two potential forms of taint:
+    def from_call_info(call_info: CallInfo) -> "Call":
+        return Call(call_info.method, call_info.port, call_info.position)
 
-        Non-leaf frames will have a "call" structure representing a hop to the next
-        frame, of the following form:
-
-        "call": {
-            "position": {
-                 "path": ...,
-                 "line": 42,
-                 "start": 123,
-                 "end": 456
-            },
-            "port": "Return",
-            "resolves_to": "Lcom/facebook/marianatrench/integrationtests/Origin;"
-        }
-
-        Leaf frames, on the other hand, do not have a port or a call they
-        resolve to, so they have a different form and the underlying position.
-
-        "origin": {
-            "position": {
-                 "path": ...,
-                 "line": 42,
-                 "start": 123,
-                 "end": 456
-            }
-        }
-        """
-        if "origin" in frame_json:
-            return Call._from_taint_origin_json(
-                frame_json["origin"],
-                caller_position,
-                leaf_kind,
-            )
-        return Call._from_taint_callee_json(
-            frame_json.get("call"), caller_position, leaf_kind
+    @staticmethod
+    def from_origin(origin: Origin, call_info: CallInfo) -> "Call":
+        return Call(
+            method=origin.callee_name,
+            port=origin.callee_port,
+            position=call_info.position,
         )
 
 
@@ -330,13 +298,17 @@ class Features(NamedTuple):
 
 class ExtraTrace(NamedTuple):
     kind: str
-    callee: Call
+    callee: CallInfo
 
     @staticmethod
-    def from_taint_json(caller: Method, extra_trace: Dict[str, Any]) -> "ExtraTrace":
+    def from_json(
+        extra_trace: Dict[str, Any], caller_position: Position
+    ) -> "ExtraTrace":
         return ExtraTrace(
-            kind=extra_trace.get("kind"),
-            callee=Call.from_taint_frame_json(extra_trace, Position.default(), "sink"),
+            kind=extra_trace["kind"],
+            callee=CallInfo.from_json(
+                extra_trace["call_info"], "sink", caller_position
+            ),
         )
 
     def to_sapp(self) -> sapp.ParseTraceAnnotation:
@@ -366,13 +338,37 @@ class ExtraTrace(NamedTuple):
         )
 
 
+class Kind(NamedTuple):
+    name: str
+    distance: int
+    origins: List[Origin]
+    extra_traces: List[ExtraTrace]
+
+    @staticmethod
+    def from_json(
+        kind: Dict[str, Any], leaf_kind: str, caller_position: Position
+    ) -> "Kind":
+        origins = []
+        for origin in kind.get("origins", []):
+            origins.append(Origin.from_json(origin, leaf_kind))
+        extra_traces = []
+        for extra_trace in kind.get("extra_traces", []):
+            extra_traces.append(ExtraTrace.from_json(extra_trace, caller_position))
+        return Kind(
+            name=kind["kind"],
+            distance=kind.get("distance", 0),
+            origins=origins,
+            extra_traces=extra_traces,
+        )
+
+
 class ConditionLeaf(NamedTuple):
     kind: str
     distance: int
 
     @staticmethod
-    def from_json(kind: Dict[str, Any]) -> "ConditionLeaf":
-        return ConditionLeaf(kind=kind["kind"], distance=kind.get("distance", 0))
+    def from_kind(kind: Kind) -> "ConditionLeaf":
+        return ConditionLeaf(kind=kind.name, distance=kind.distance)
 
     def to_sapp(self) -> Tuple[str, int]:
         return (self.kind, self.distance)
@@ -646,193 +642,62 @@ class Parser(BaseParser):
         condition_taints = issue[f"{leaf_kind}s"]
 
         conditions = []
-        leaves = set()
+        issue_leaves = set()
 
         for condition_taint in condition_taints:
-            normalized_conditions = Parser._normalize_crtex_conditions(
-                taint=condition_taint, caller_method=callable
+            local_positions = LocalPositions.from_taint_json(condition_taint, callable)
+            features = Features.from_taint_json(condition_taint)
+            call_info = CallInfo.from_json(
+                condition_taint["call_info"], leaf_kind, callable_position
             )
-            for normalized_condition in normalized_conditions:
+
+            kinds = [
+                Kind.from_json(kind_json, leaf_kind, callable_position)
+                for kind_json in condition_taint["kinds"]
+            ]
+
+            issue_leaves.update(
+                {
+                    Leaf(
+                        method=origin.callee_name,
+                        kind=kind.name,
+                        distance=kind.distance,
+                    )
+                    for kind in kinds
+                    for origin in kind.origins
+                }
+            )
+
+            if call_info.is_origin():
+                for kind in kinds:
+                    condition_leaves = [ConditionLeaf.from_kind(kind)]
+                    for origin in kind.origins:
+                        conditions.append(
+                            IssueCondition(
+                                callee=Call.from_origin(origin, call_info),
+                                leaves=condition_leaves,
+                                local_positions=local_positions,
+                                features=features,
+                                extra_traces=set(kind.extra_traces),
+                            )
+                        )
+            else:
+                # Declaration and CallSite kinds can be handled the same way.
+                condition_leaves = [ConditionLeaf.from_kind(kind) for kind in kinds]
+                extra_traces = set()
+                for kind in kinds:
+                    extra_traces.update(kind.extra_traces)
                 conditions.append(
                     IssueCondition(
-                        callee=Call.from_taint_frame_json(
-                            normalized_condition,
-                            callable_position,
-                            leaf_kind,
-                        ),
-                        leaves=[
-                            ConditionLeaf.from_json(kind)
-                            for kind in normalized_condition["kinds"]
-                        ],
-                        local_positions=LocalPositions.from_taint_json(
-                            normalized_condition, callable
-                        ),
-                        features=Features.from_taint_json(normalized_condition),
-                        extra_traces={
-                            ExtraTrace.from_taint_json(callable, extra_trace)
-                            for kind in normalized_condition["kinds"]
-                            for extra_trace in kind.get("extra_traces", [])
-                        },
+                        callee=Call.from_call_info(call_info),
+                        leaves=condition_leaves,
+                        local_positions=local_positions,
+                        features=features,
+                        extra_traces=extra_traces,
                     )
                 )
 
-                for kind in normalized_condition["kinds"]:
-                    for origin in kind.get("origins", []):
-                        if "method" in origin:
-                            # Methods may be strings, or a json object.
-                            leaf_name = Method.from_json(origin["method"])
-                        elif "field" in origin:
-                            # Fields are always just strings.
-                            leaf_name = Method(origin["field"])
-                        else:
-                            # Unrecognized origin JSON. Possibly newly added
-                            # origin type that needs to be handled.
-                            continue
-                        leaves.add(
-                            Leaf(
-                                method=leaf_name,
-                                kind=kind["kind"],
-                                distance=kind.get("distance", 0),
-                            )
-                        )
-
-        return conditions, leaves
-
-    @staticmethod
-    def _normalize_crtex_condition(
-        taint: Dict[str, Any],
-        callee: Dict[str, Any],
-        kind: Dict[str, Any],
-        caller_method: Method,
-    ) -> List[Dict[str, Any]]:
-        if "canonical_names" not in kind:
-            return [taint]
-
-        conditions = []
-        # Expected format: "canonical_names": [ { "instantiated": "<name>" }, ... ]
-        # Canonical names are used for CRTEX only, and are expected to be the callee
-        # name where traces are concerned. Each instantiated name maps to one frame.
-        for canonical_name in kind["canonical_names"]:
-            if "instantiated" not in canonical_name:
-                # Uninstantiated canonical names are user-defined CRTEX leaves
-                # They do not show up as a frame in the UI.
-                continue
-
-            # Shallow copy is ok, only "resolves_to" field is different.
-            callee_copy = callee.copy()
-            callee_copy["resolves_to"] = canonical_name["instantiated"]
-            # Same for kind. We are just removing a key/field.
-            kind_copy = kind.copy()
-            kind_copy.pop("canonical_names")
-            # Same for the whole taint object. Needs to be copied to preserve
-            # any other fields in it.
-            taint_copy = taint.copy()
-            taint_copy["call"] = callee_copy
-            taint_copy["kinds"] = [kind_copy]
-            conditions.append(taint_copy)
-
-        return conditions
-
-    @staticmethod
-    def _normalize_crtex_conditions(
-        taint: Dict[str, Any], caller_method: Method
-    ) -> List[Dict[str, Any]]:
-        """CRTEX frames contain the callee information (instantiated canonical name)
-        within the kinds field. Each of these maps to a unique callee and should be
-        represented as such. This performs the following transformation on the JSON.
-
-        From:
-        {
-          "call": {
-            "port": "Anchor.Argument(0)"
-          },
-          "kinds": [
-            {
-              "kind": "CRTEXSink1",
-              "canonical_names": [
-                { "instantiated" : "Instantiated1" },
-                { "instantiated" : "Instantiated2" }
-              ],
-              ...
-            },
-            {
-              "kind": "CRTEXSink2",
-              "canonical_names": [
-                { "instantiated" : "Instantiated3" },
-              ],
-              ...
-            }
-          ]
-        }
-
-        To:
-        [
-          {
-            "call": {
-              "resolves_to": "Instantiated1",
-              "port": "Anchor.Argument(0)",
-            },
-            "kinds": [
-              { "kind": "CRTEXSink1", ... }
-            ]
-          },
-          {
-            "call": {
-              "resolves_to": "Instantiated2",
-              "port": "Anchor.Argument(0)",
-            },
-            "kinds": [
-              { "kind": "CRTEXSink1", ... }
-            ]
-          },
-          {
-            "call": {
-              "resolves_to": "Instantiated3",
-              "port": "Anchor.Argument(0)",
-            },
-            "kinds": [
-              { "kind": "CRTEXSink2", ... }
-            ]
-          }
-        ]
-
-        The idea is that each canonical name should translate into a unique callee.
-        """
-        # TODO(T91357916): Similar to local positions and features, canonical names do
-        # not need to be stored in "kinds". The analysis should update its internal
-        # representation and output JSON. Doing the transformation here is messy.
-        callee = taint.get("call")
-        if callee is None:
-            # CRTEX frames always have a "call" indicating the callee.
-            return [taint]
-
-        port = callee.get("port", "")
-        if not (port.startswith("Anchor") or port.startswith("Producer")):
-            # CRTEX frames have port anchor/producer.
-            return [taint]
-
-        conditions = []
-        for kind in taint["kinds"]:
-            conditions.extend(
-                Parser._normalize_crtex_condition(taint, callee, kind, caller_method)
-            )
-        return conditions
-
-    @staticmethod
-    def _is_propagation_without_trace(taint: Dict[str, Any]) -> bool:
-        if "call" in taint or "origin" in taint:
-            # If a "call" exists, this is not a leaf.
-            # Similarly, "origin"'s only appear for actual calls, not
-            # field callees or for propagations without traces.
-            return False
-
-        # "call_info" should be the same for each entry in kinds.
-        call_info = {kind.get("call_info") for kind in taint["kinds"]}
-        assert (
-            len(call_info) == 1
-        ), f"Expected the same call_info for all kinds. Got: {call_info}"
-
-        return "Propagation" in call_info
+        return conditions, issue_leaves
 
     def _parse_preconditions(self, model: Dict[str, Any]) -> Iterable[Precondition]:
         return self._parse_condition(
@@ -894,32 +759,51 @@ class Parser(BaseParser):
                 port=Port.from_json(leaf_model[port_key], leaf_kind),
                 position=caller_position,
             )
-            for unnormalized_leaf_taint in leaf_model[leaf_model_key]:
-                normalized_taints = Parser._normalize_crtex_conditions(
-                    unnormalized_leaf_taint, caller_method
+            for leaf_taint in leaf_model[leaf_model_key]:
+                call_info_json = leaf_taint["call_info"]
+                call_info = CallInfo.from_json(
+                    call_info_json, leaf_kind, caller_position
                 )
-                for leaf_taint in normalized_taints:
-                    if Parser._is_propagation_without_trace(leaf_taint):
-                        continue
+                if (
+                    call_info.is_declaration()
+                    or call_info.is_propagation_without_trace()
+                ):
+                    # (User)-Declarations do not translate into trace frames.
+                    # Propagations (without traces) can also be ignored.
+                    continue
 
-                    callee = Call.from_taint_frame_json(
-                        leaf_taint, caller_position, leaf_kind
-                    )
-                    kinds = leaf_taint["kinds"]
-                    leaves = [ConditionLeaf.from_json(kind) for kind in kinds]
-                    extra_traces = {
-                        ExtraTrace.from_taint_json(caller_method, extra_trace)
-                        for kind in kinds
-                        for extra_trace in kind.get("extra_traces", [])
-                    }
+                local_positions = LocalPositions.from_taint_json(
+                    leaf_taint, caller_method
+                )
+                local_features = Features.from_taint_json(leaf_taint)
+
+                kinds_json = leaf_taint["kinds"]
+                kinds = [
+                    Kind.from_json(kind_json, leaf_kind, caller_position)
+                    for kind_json in kinds_json
+                ]
+
+                if "Origin" in call_info.call_kind:
+                    for kind in kinds:
+                        for origin in kind.origins:
+                            yield condition_class(
+                                caller=caller,
+                                callee=Call.from_origin(origin, call_info),
+                                leaves=[ConditionLeaf.from_kind(kind)],
+                                local_positions=local_positions,
+                                features=local_features,
+                                extra_traces=set(kind.extra_traces),
+                            )
+                else:
+                    extra_traces = set()
+                    for kind in kinds:
+                        extra_traces.update(kind.extra_traces)
 
                     yield condition_class(
                         caller=caller,
-                        callee=callee,
-                        leaves=leaves,
-                        local_positions=LocalPositions.from_taint_json(
-                            leaf_taint, caller_method
-                        ),
-                        features=Features.from_taint_json(leaf_taint),
+                        callee=Call.from_call_info(call_info),
+                        leaves=[ConditionLeaf.from_kind(kind) for kind in kinds],
+                        local_positions=local_positions,
+                        features=local_features,
                         extra_traces=extra_traces,
                     )
