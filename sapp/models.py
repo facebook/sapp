@@ -753,6 +753,10 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         server_default=None,
     )
 
+    oncall_shortname: Column[Optional[str]] = Column(
+        String(length=100), doc="responsible for code where issue found", nullable=True
+    )
+
     @classmethod
     def _take(cls, n, iterable):
         "Return first n items of the iterable as a list"
