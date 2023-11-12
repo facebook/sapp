@@ -22,8 +22,6 @@ import {useQuery, gql} from '@apollo/client';
 import {Card, Modal, Typography} from 'antd';
 import {LoadingOutlined} from '@ant-design/icons';
 
-import 'antd/dist/antd.css';
-
 const {Header, Content, Footer} = Layout;
 const {Text} = Typography;
 
