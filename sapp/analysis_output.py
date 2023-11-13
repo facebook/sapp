@@ -32,6 +32,7 @@ class Metadata:
     # pyre-ignore: we don't have a shape for rules yet.
     rules: Dict[int, Any] = dataclasses.field(default_factory=dict)
     class_type_intervals_filenames: List[str] = dataclasses.field(default_factory=list)
+    category_coverage: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
     def merge(self, o: "Metadata") -> "Metadata":
         return Metadata(
@@ -45,6 +46,7 @@ class Metadata:
             rules={**self.rules, **o.rules},
             class_type_intervals_filenames=self.class_type_intervals_filenames
             + o.class_type_intervals_filenames,
+            category_coverage=self.category_coverage,  # should all be the same
         )
 
 
@@ -156,6 +158,7 @@ class AnalysisOutput:
                 project=metadata.get("project"),
                 rules=rules,
                 class_type_intervals_filenames=class_type_intervals_filenames,
+                category_coverage=metadata.get("category_coverage", []),
             )
             if not main_metadata:
                 main_metadata = this_metadata
@@ -213,6 +216,7 @@ class AnalysisOutput:
                 project=metadata.get("project"),
                 rules=rules,
                 class_type_intervals_filenames=class_type_intervals_filenames,
+                category_coverage=metadata.get("category_coverage", []),
             ),
         )
 
