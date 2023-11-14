@@ -783,17 +783,27 @@ class Parser(BaseParser):
                     for kind_json in kinds_json
                 ]
 
-                if "Origin" in call_info.call_kind:
+                if call_info.is_origin():
+                    condition_by_callee = {}
                     for kind in kinds:
                         for origin in kind.origins:
-                            yield condition_class(
-                                caller=caller,
-                                callee=Call.from_origin(origin, call_info),
-                                leaves=[ConditionLeaf.from_kind(kind)],
-                                local_positions=local_positions,
-                                features=local_features,
-                                extra_traces=set(kind.extra_traces),
+                            callee = Call.from_origin(origin, call_info)
+                            condition = condition_by_callee.get(
+                                callee,
+                                condition_class(
+                                    caller=caller,
+                                    callee=callee,
+                                    leaves=[],
+                                    local_positions=local_positions,
+                                    features=local_features,
+                                    extra_traces=set(),
+                                ),
                             )
+                            condition.leaves.append(ConditionLeaf.from_kind(kind))
+                            condition.extra_traces.update(kind.extra_traces)
+                            condition_by_callee[callee] = condition
+                    for condition in condition_by_callee.values():
+                        yield condition
                 else:
                     extra_traces = set()
                     for kind in kinds:
