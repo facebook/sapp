@@ -40,13 +40,8 @@ UNKNOWN_LINE: int = -1
 class Method(NamedTuple):
     name: str
 
-    def is_leaf(self) -> bool:
-        return self.name == "leaf"
-
     @staticmethod
-    def from_json(method: Union[None, str, Dict[str, Any]]) -> "Method":
-        if method is None:
-            return Method("leaf")
+    def from_json(method: Union[str, Dict[str, Any]]) -> "Method":
         if isinstance(method, str):
             return Method(method)
 
@@ -122,12 +117,12 @@ class Position(NamedTuple):
         return Position(UNKNOWN_PATH, UNKNOWN_LINE, 0, 0)
 
     @staticmethod
-    def from_json(position: Dict[str, Any], method: Method) -> "Position":
+    def from_json(position: Dict[str, Any], method: Optional[Method]) -> "Position":
         path = position.get("path", UNKNOWN_PATH)
         line = position.get("line", UNKNOWN_LINE)
         start = position.get("start", 0) + 1
         end = max(position.get("end", 0) + 1, start)
-        if path == UNKNOWN_PATH and not method.is_leaf():
+        if path == UNKNOWN_PATH and method:
             path = method.name.split(";")[0]
             path = path.split("$")[0]
             path = path[1:]
@@ -183,7 +178,7 @@ class CallInfo(NamedTuple):
     """Mirrors the CallInfo object in the analysis"""
 
     call_kind: str
-    method: Method
+    method: Optional[Method]
     port: Port
     position: Position
 
@@ -192,7 +187,9 @@ class CallInfo(NamedTuple):
         taint_json: Dict[str, Any], leaf_kind: str, caller_position: Position
     ) -> "CallInfo":
         call_kind = taint_json["call_kind"]
-        method = Method.from_json(taint_json.get("resolves_to"))
+
+        callee = taint_json.get("resolves_to")
+        method = Method.from_json(callee) if callee else None
         port = Port.from_json(taint_json.get("port", "leaf"), leaf_kind)
 
         position_json = taint_json.get("position")
@@ -224,6 +221,10 @@ class Call(NamedTuple):
 
     @staticmethod
     def from_call_info(call_info: CallInfo) -> "Call":
+        if call_info.method is None:
+            raise sapp.ParseError(
+                f"Cannot construct a Call without a valid method {call_info}"
+            )
         return Call(call_info.method, call_info.port, call_info.position)
 
     @staticmethod
@@ -320,7 +321,7 @@ class ExtraTrace(NamedTuple):
                     position=self.callee.position.to_sapp(),
                 )
             ]
-            if not self.callee.method.is_leaf()
+            if self.callee.method
             else []
         )
 
@@ -668,6 +669,11 @@ class Parser(BaseParser):
                 }
             )
 
+            if call_info.is_declaration():
+                raise sapp.ParseError(
+                    f"Unexpected declaration frame at issue {leaf_kind}"
+                )
+
             if call_info.is_origin():
                 for kind in kinds:
                     condition_leaves = [ConditionLeaf.from_kind(kind)]
@@ -682,7 +688,6 @@ class Parser(BaseParser):
                             )
                         )
             else:
-                # Declaration and CallSite kinds can be handled the same way.
                 condition_leaves = [ConditionLeaf.from_kind(kind) for kind in kinds]
                 extra_traces = set()
                 for kind in kinds:

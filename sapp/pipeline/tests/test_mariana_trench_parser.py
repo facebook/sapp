@@ -455,11 +455,11 @@ class TestParser(unittest.TestCase):
                   "sources": [
                     {
                       "call_info": {
-                        "call_kind": "Declaration"
+                        "call_kind": "Origin"
                       },
                       "kinds": [
                         {
-                          "call_kind": "Declaration",
+                          "call_kind": "Origin",
                           "distance": 0,
                           "kind": "TestSource",
                           "origins": [
@@ -512,7 +512,7 @@ class TestParser(unittest.TestCase):
                     ],
                     postconditions=[
                         ParseIssueConditionTuple(
-                            callee="leaf",
+                            callee="LSource;.sourceField:LData;",
                             port="source",
                             location=SourceLocation(
                                 line_no=2,
