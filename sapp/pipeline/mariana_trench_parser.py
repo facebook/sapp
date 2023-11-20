@@ -671,7 +671,7 @@ class Parser(BaseParser):
 
             if call_info.is_declaration():
                 raise sapp.ParseError(
-                    f"Unexpected declaration frame at issue {leaf_kind}"
+                    f"Unexpected declaration frame at issue {leaf_kind}: {issue}"
                 )
 
             if call_info.is_origin():
