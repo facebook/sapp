@@ -6,6 +6,7 @@
 from unittest import TestCase
 
 from pyre_extensions import none_throws
+from sqlalchemy.exc import IntegrityError
 
 from ..db import DB, DBType
 
@@ -38,28 +39,39 @@ class BulkSaverTest(TestCase):
                 ).id.resolved()
 
         slow_penguin = self.fakes.issue(handle="penguin")
-        # Create a few other issues to make sure those save correctly too
+        self.fakes.instance(issue_id=slow_penguin.id, message="Penguin Instance")
+
+        # Create a few other issues and instances to make sure those save correctly too
         for _ in range(9):
-            self.fakes.issue()
-        self.fakes.instance(issue_id=slow_penguin.id)
+            issue = self.fakes.issue()
+            self.fakes.instance(issue_id=issue.id)
 
         self.fakes.save_all(self.db, before_save=insert_duplicate)
         speedy_penguin_id = none_throws(speedy_penguin_id)
 
-        with self.db.make_session() as session:
-            issues = session.query(Issue).all()
-            db_penguin = session.query(Issue).filter(Issue.handle == "penguin").one()
-            db_instance = session.query(IssueInstance).one()
-
-        # Expect 10 total issues (9 normal + 1 pengin)
-        self.assertEqual(len(issues), 10)
-
-        # The ids of the pengin objects should all be resolved to the same value
+        # During saving, the duplicate issue handle will be detected and
+        # the ID must be pointed to the existing record
         self.assertEqual(slow_penguin.id.resolved(), speedy_penguin_id)
-        self.assertEqual(db_penguin.id.resolved(), speedy_penguin_id)
 
-        # The issue instance must end up pointing at the same id too
-        self.assertEqual(db_instance.issue_id.resolved(), speedy_penguin_id)
+        with self.db.make_session() as session:
+            # Our penguin instance will be created with the correct issue id
+            penguin_instance = (
+                session.query(IssueInstance)
+                .filter(IssueInstance.issue_id == speedy_penguin_id)
+                .one()
+            )
+            self.assertEqual(penguin_instance.message.contents, "Penguin Instance")
+
+        with self.db.make_session() as session:
+            # Expect 10 total issues and instances (9 normal + 1 penguin)
+            all_issues = session.query(Issue).all()
+            self.assertEqual(len(all_issues), 10)
+
+            # We must have exactly one instance for each issue
+            for issue in all_issues:
+                session.query(IssueInstance).filter(
+                    IssueInstance.issue_id == issue.id.resolved()
+                ).one()
 
     def test_duplicate_class_type_interval_key(self) -> None:
         # The `_save_batch` retry logic should fail here since ClassTypeInterval.merge
@@ -67,9 +79,7 @@ class BulkSaverTest(TestCase):
         self.fakes.class_type_interval(run_id=1, class_name="Foo")
         self.fakes.class_type_interval(run_id=1, class_name="Foo")
 
-        with self.assertRaisesRegex(
-            ValueError, "was not resolved by ClassTypeInterval.merge"
-        ):
+        with self.assertRaises(IntegrityError):
             self.fakes.save_all(self.db)
 
     def test_backfill_primary_keys(self) -> None:

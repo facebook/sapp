@@ -9,7 +9,8 @@
 import logging
 from typing import Any, Callable, Dict, Optional
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.dialects.mysql import insert as mysql_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from .db import DB
 from .decorators import log_time
@@ -52,20 +53,13 @@ class BulkSaver:
         MetaRunIssueInstanceIndex,
     ]
 
-    BATCH_SIZE = 30000
+    # These will be saved using `_save_batch_and_handle_key_conflicts`
+    # since duplicate keys may be created from two seperate runs
+    CLASSES_WITH_POTENTIAL_KEY_CONFLICTS = {
+        Issue,
+    }
 
-    # The number of sub-batches to split the parent batch into before retrying
-    # on duplicate key exceptions.
-    #
-    # Assuming there are only a couple of duplicate records per batch,
-    # splitting in ~4 seems to give reasonable behavior.
-    #
-    # Lower factors (like 2) lead to a bit more unnecessary traffic as we re-send
-    # more large batches while taking longer to isolate the duplicate record(s).
-    #
-    # Higher factors lead to too many round-trips with the database.
-    # At the extreme, we would send a request for every individual row in the batch.
-    BATCH_SPLIT_FACTOR = 4
+    BATCH_SIZE = 30000
 
     def __init__(
         self, primary_key_generator: Optional[PrimaryKeyGenerator] = None
@@ -116,7 +110,10 @@ class BulkSaver:
             )
 
         for cls in saving_classes:
-            log.info("Merging and generating ids for %s...", cls.__name__)
+            log.info(
+                f"Merging and generating ids for {len(self.saving[cls.__name__])} "
+                f"{cls.__name__}s..."
+            )
             self._prepare(database, cls, pk_gen)
 
         # Used by unit tests to simulate races
@@ -124,7 +121,7 @@ class BulkSaver:
             before_save()
 
         for cls in saving_classes:
-            log.info("Saving %s...", cls.__name__)
+            log.info(f"Saving {len(self.saving[cls.__name__])} {cls.__name__}s...")
             self._save(database, cls, pk_gen)
 
     @log_time
@@ -149,56 +146,94 @@ class BulkSaver:
         # To update an existing object, just modify its attribute(s)
         # and call session.commit()
         for batch in split_every(self.BATCH_SIZE, items):
-            round_trips = self._save_batch(database, cls, batch)
-            if round_trips > 1:
-                log.info(
-                    f"Saving {cls.__name__} batch of {len(batch)} "
-                    f"took {round_trips} round trips due to duplicate key retries"
-                )
+            if cls in self.CLASSES_WITH_POTENTIAL_KEY_CONFLICTS:
+                self._save_batch_and_handle_key_conflicts(database, cls, batch)
+            else:
+                self._save_batch(database, cls, batch)
 
     # Save a batch of records to the database, handling duplicate key errors
-    # by retrying in smaller batches until all non-duplicate records have been
-    # inserted and all duplicates have been merged with existing rows.
+    # by skipping those records during insert and then performing an additional merge
+    # so all IDs are pointed to records in the database.
     #
-    # Why is this needed when we already merge duplicates in `_prepare`?
+    # Concretely, this is useful for Issues, which have a unique index on
+    # `handle` and can have duplicate key errors when two processes race to create
+    # Issues with the same handle.
+    #
+    # Why is this needed when we have already merged records with duplicate keys
+    # in `_prepare`?
     # There is a race where another script can insert a duplicate after `_prepare` but
     # before `_save`.
+    def _save_batch_and_handle_key_conflicts(
+        self,
+        database: DB,
+        # pyre-fixme[2]: Parameter must be annotated.
+        cls,
+        # pyre-fixme[2]: Parameter must be annotated.
+        batch,
+    ) -> None:
+        with database.make_session() as session:
+            records_to_save = [
+                # Unlike `bulk_insert_mappings`, the insert APIs will fail if attributes
+                # that are not columns are passed in, so remove "model"
+                {k: v for k, v in cls.to_dict(r).items() if k != "model"}
+                for r in batch
+            ]
+            dialect = database.engine.dialect.name
+            if dialect == "mysql":
+                statement = (
+                    mysql_insert(cls).values(records_to_save)
+                    # Setting a field to itself is a standard way of doing a no-op in
+                    # case of existing rows. This is better than using "INSERT IGNORE"
+                    # because that ignores all sorts of other errors too.
+                    .on_duplicate_key_update({"id": cls.id})
+                )
+            elif dialect == "sqlite":
+                statement = (
+                    sqlite_insert(cls).values(records_to_save).on_conflict_do_nothing()
+                )
+            else:
+                raise ValueError(
+                    f"Database dialect was {dialect} but only `mysql` or `sqlite` "
+                    f"are supported now"
+                )
+            session.execute(statement)
+            session.commit()
+
+        # After the "INSERT ... ON DUPLICATE KEY UPDATE", all records in the batch
+        # have been saved by us or by another concurrently-running process. For records
+        # saved by another process, their IDs need to be updated.
+        #
+        # We don't know which records were saved by us and MySQL can't tell us
+        # as part of the INSERT, because it has no RETURNING support.
+        #
+        # Therefore, we re-run the merge implementation on *all* records in the batch.
+        # This will re-read keys for all records and handle updating IDs for records
+        # that were saved by another process.
+        #
+        # Rejected Optimization: we could skip this logic if we knew that all records
+        # in the batch were saved by us. `CursorResult.rowcount` /may/ have this
+        # information, but it's value apparently depends on MySQL connection flags so
+        # we choose to avoid relying on this.
+        unsaved_records = list(cls.merge(database, batch))
+        if len(unsaved_records) > 0:
+            raise ValueError(
+                f"There are still {len(unsaved_records)} unsaved {cls.__name__} "
+                f"records."
+            )
+
+    # Save a batch of records to the database, failing on duplicate key errors.
+    #
+    # This is more efficient than `_save_batch_and_handle_key_conflicts` for records
+    # where we know that races can't occur, because we don't have to read back the
+    # inserted records.
     #
     # pyre-fixme[2]: Parameter must be annotated.
-    def _save_batch(self, database: DB, cls, batch) -> int:
-        round_trips = 1
-        try:
-            with database.make_session() as session:
-                session.bulk_insert_mappings(
-                    cls, (cls.to_dict(r) for r in batch), render_nulls=True
-                )
-                session.commit()
-            return round_trips
-        # "Duplicate entry for key" errors are surfaced as IntegrityError
-        except IntegrityError as e:
-            if len(batch) == 1:
-                # As the batch only contains one record, we know that this was
-                # the cause of the failure.
-                #
-                # Call the merge implementation again. It should now resolve
-                # the duplicate's id to the id of the existing row.
-                duplicate = batch[0]
-                if len(list(cls.merge(database, [duplicate]))) == 0:
-                    log.debug(f"Re-merged duplicate record during saving: {duplicate}")
-                else:
-                    raise ValueError(
-                        f"Got a duplicate key exception that was not resolved "
-                        f"by {cls.__name__}.merge: {duplicate}"
-                    ) from e
-            else:
-                # The batch contained multiple items, so we don't which record
-                # caused the failure. Split into smaller "sub_batches" and retry.
-                #
-                # Negations are ceiling integer division to avoid batch size of 0
-                sub_batch_size = -(len(batch) // -self.BATCH_SPLIT_FACTOR)
-                for sub_batch in split_every(sub_batch_size, batch):
-                    round_trips += self._save_batch(database, cls, sub_batch)
-            return round_trips
+    def _save_batch(self, database: DB, cls, batch) -> None:
+        with database.make_session() as session:
+            session.bulk_insert_mappings(
+                cls, (cls.to_dict(r) for r in batch), render_nulls=True
+            )
+            session.commit()
 
     def add_trace_frame_leaf_assoc(
         self, message: SharedText, trace_frame: TraceFrame, depth: Optional[int]
