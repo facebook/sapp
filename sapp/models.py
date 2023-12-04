@@ -307,7 +307,6 @@ class SharedText(Base, PrepareMixin, RecordMixin):
             return cls._merge_by_keys(
                 session,
                 items,
-                lambda item: "%s:%s" % (item.contents, item.kind),
                 cls.contents,
                 cls.kind,
             )
@@ -764,7 +763,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
 
     @classmethod
     def merge(cls, session, issues):
-        return cls._merge_by_key(session, issues, cls.handle)
+        return cls._merge_by_keys(session, issues, cls.handle)
 
 
 class RunStatus(enum.Enum):
@@ -1594,7 +1593,7 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     def merge(cls, session, items):
-        return cls._merge_by_key(session, items, cls.run_id)
+        return cls._merge_by_keys(session, items, cls.run_id)
 
 
 class ClassTypeInterval(Base, PrepareMixin, RecordMixin):

@@ -11,7 +11,7 @@ from itertools import tee
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, Union
 
 from munch import Munch
-from sqlalchemy import and_, Column, exc, inspect, or_, String, types
+from sqlalchemy import Column, exc, inspect, String, tuple_, types
 from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.engine import Dialect
@@ -23,8 +23,8 @@ from .iterutil import inclusive_range, split_every
 log: logging.Logger = logging.getLogger("sapp")
 
 
-"""Number of variables that can safely be set on a single DB call"""
-BATCH_SIZE = 450
+# Currently matches the value in `bulk_saver.py`
+BATCH_SIZE = 30000
 
 BASE_TABLE_ARGS = (
     {
@@ -175,87 +175,62 @@ class PrepareMixin:
         return items
 
     @classmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _merge_by_key(cls, database: DB, items, attr):
-        return cls._merge_by_keys(
-            database, items, lambda item: getattr(item, attr.key), attr
-        )
-
-    @classmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _merge_by_keys(cls, database: DB, items, hash_item, *attrs):
+    def _merge_by_keys(
+        cls, database: DB, items: Iterable[PrepareMixin], *key_attributes: Column
+    ) -> Iterator[PrepareMixin]:
         """An object can have multiple attributes as its key. This merges the
         items to be added with existing items in the database based on their
         key(s).
 
         session: Session object for querying the DB.
         items: Iterator of items to be added to the DB.
-        hash_item: Function that takes as in put the item to be added and
-                   returns a hash of it.
-        attrs: List of attributes of the object/class that represent the
+        key_attributes: List of attributes of the object/class that represent the
                object's key.
 
         Returns the next item (in items) that is not already in the DB.
         """
-        # Note: items is an iterator, not an iterable, 'tee' is a must.
-        items_iter1, items_iter2 = tee(items)
+        # Guard against `items` being an iterator: we need to iterate it twice
+        items = list(items)
 
-        keys = {}  # map of hash -> keys of the item
-        for i in items_iter1:
-            # An item's key is a map of 'attr -> item[attr]' where attr is
-            # usually a column name.
-            # For 'SharedText', its key would look like: {
-            #   "kind": "feature",
-            #   "contents": "via tito",
-            # }
-            item_hash = hash_item(i)
-            keys[item_hash] = {attr.key: getattr(i, attr.key) for attr in attrs}
+        def key_for_item(item: PrepareMixin) -> Tuple[...]:
+            return tuple(getattr(item, attr.key) for attr in key_attributes)
+
+        # Create a set of keys for each item
+        #
+        # An item's keys is a tuple containing the item's `key_attributes` values
+        # in the same order as `key_attributes`
+        #
+        # For example, if `key_attributes` is `[SharedText.kind, SharedText.contents]`,
+        # then a key may be `tuple("feature", "via:tito")`
+        keys = {key_for_item(i) for i in items}
 
         # Find existing items.
         existing_ids = {}  # map of item_hash -> existing ID
-        cls_attrs = [getattr(cls, attr.key) for attr in attrs]
-        for fetch_keys in split_every(BATCH_SIZE, keys.values()):
-            filters = []
-            for fetch_key in fetch_keys:
-                # Sub-filters for checking if item with fetch_key is in the DB
-                # Example: [
-                #   SharedText.kind.__eq__("feature"),
-                #   SharedText.contents.__eq__("via tito"),
-                # ]
-                subfilter = [
-                    getattr(cls, attr).__eq__(val) for attr, val in fetch_key.items()
-                ]
-                filters.append(and_(*subfilter))
+        cls_attrs = [getattr(cls, attr.key) for attr in key_attributes]
+        for fetch_keys in split_every(BATCH_SIZE, keys):
             with database.make_session() as session:
                 existing_items = (
                     # pyre-fixme[16]: `PrepareMixin` has no attribute `id`.
                     session.query(cls.id, *cls_attrs)
-                    .filter(or_(*(filters)))
+                    .filter(tuple_(*cls_attrs).in_(fetch_keys))
                     .all()
                 )
             for existing_item in existing_items:
-                item_hash = hash_item(existing_item)
-                existing_ids[item_hash] = existing_item.id
+                existing_ids[key_for_item(existing_item)] = existing_item.id
 
         # Now see if we can merge
         new_items = {}
-        for i in items_iter2:
-            item_hash = hash_item(i)
-            if item_hash in existing_ids:
+        for i in items:
+            key = key_for_item(i)
+            if key in existing_ids:
                 # The key is already in the DB
-                i.id.resolve(existing_ids[item_hash], is_new=False)
-            elif item_hash in new_items:
+                i.id.resolve(existing_ids[key], is_new=False)
+            elif key in new_items:
                 # The key is already in the list of new items
-                i.id.resolve(new_items[item_hash].id, is_new=False)
+                i.id.resolve(new_items[key].id, is_new=False)
             else:
                 # The key is new
-                new_items[item_hash] = i
+                new_items[key] = i
                 yield i
 
     @classmethod
