@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 import graphene
 import sqlalchemy
@@ -23,10 +24,6 @@ from ..models import DBID, Run, RunStatus
 from ..sarif import SARIF
 from .issues import Instance
 
-if TYPE_CHECKING:
-    from pathlib import Path  # usort: skip. Wants trailing whitespace
-
-    from .issues import IssueQueryResult  # noqa
 
 LOG: logging.Logger = logging.getLogger(__name__)
 
