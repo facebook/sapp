@@ -63,6 +63,11 @@ for command in commands:
     cli.add_command(command)
 cli.add_command(lint)
 
-if __name__ == "__main__":
+
+def main() -> None:
     logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
     cli()
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover
