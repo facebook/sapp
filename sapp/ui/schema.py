@@ -5,7 +5,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import graphene
 from graphene import relay
@@ -108,6 +108,63 @@ class MatchesIsField(graphene.InputObjectType):
     value = graphene.List(graphene.String)
 
 
+def create_filter_from_query(
+    codes: List[int],
+    paths: List[str],
+    callables: Optional[MatchesIsField],
+    statuses: List[str],
+    source_names: Optional[MatchesIsField],
+    source_kinds: Optional[MatchesIsField],
+    sink_names: Optional[MatchesIsField],
+    sink_kinds: Optional[MatchesIsField],
+    features: Optional[List[FeatureCondition]],
+    min_trace_length_to_sinks: Optional[int],
+    max_trace_length_to_sinks: Optional[int],
+    min_trace_length_to_sources: Optional[int],
+    max_trace_length_to_sources: Optional[int],
+    is_new_issue: Optional[bool],
+) -> Filter:
+
+    restructured_features: List[Dict[str, Union[str, List[str]]]] = []
+    for filtering_condition in features or []:
+        feature_entry = {}
+        feature_entry["mode"] = filtering_condition.mode
+        feature_entry["features"] = list(filtering_condition.features)
+        restructured_features.append(feature_entry)
+
+    traceLengthFromSources: Optional[List[int]] = None
+    if (
+        min_trace_length_to_sources is not None
+        or max_trace_length_to_sources is not None
+    ):
+        traceLengthFromSources = [
+            min_trace_length_to_sources or 0,
+            max_trace_length_to_sources or 31,
+        ]
+
+    traceLengthToSinks: Optional[List[int]] = None
+    if min_trace_length_to_sinks is not None or max_trace_length_to_sinks is not None:
+        traceLengthToSinks = [
+            min_trace_length_to_sinks or 0,
+            max_trace_length_to_sinks or 31,
+        ]
+
+    return Filter(
+        features=restructured_features,
+        codes=codes,
+        paths=paths,
+        callables=callables,
+        statuses=statuses,
+        source_names=source_names,
+        source_kinds=source_kinds,
+        sink_names=sink_names,
+        sink_kinds=sink_kinds,
+        traceLengthFromSources=traceLengthFromSources,
+        traceLengthToSinks=traceLengthToSinks,
+        is_new_issue=is_new_issue,
+    )
+
+
 class Query(graphene.ObjectType):
     # pyre-fixme[4]: Attribute must be annotated.
     node = relay.Node.Field()
@@ -189,7 +246,7 @@ class Query(graphene.ObjectType):
     ) -> List[IssueQueryResult]:
         session = get_session(info.context)
 
-        filter_instance = Filter.from_query(
+        filter_instance = create_filter_from_query(
             codes,
             paths,
             callables,

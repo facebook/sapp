@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Type
+from typing import Any, Dict, List, NamedTuple, Optional, Set
 
 from graphene_sqlalchemy.converter import (
     convert_column_to_int_or_id,
