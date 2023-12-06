@@ -7,17 +7,7 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
-from typing import (
-    Generic,
-    List,
-    Optional,
-    Pattern,
-    Sequence,
-    Set,
-    TYPE_CHECKING,
-    TypeVar,
-    Union,
-)
+from typing import Generic, List, Optional, Pattern, Sequence, Set, TypeVar, Union
 
 from sqlalchemy import Column
 from sqlalchemy.orm.query import Query
@@ -25,9 +15,7 @@ from sqlalchemy.sql.expression import or_
 from typing_extensions import Final
 
 from ..models import DBID
-
-if TYPE_CHECKING:
-    from .issues import IssueQueryResult  # noqa
+from .query_result import IssueQueryResult
 
 _Q = TypeVar("_Q")
 _T = TypeVar("_T")
