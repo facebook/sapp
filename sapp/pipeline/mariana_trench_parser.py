@@ -212,30 +212,6 @@ class CallInfo(NamedTuple):
         return "Propagation" == self.call_kind
 
 
-class Call(NamedTuple):
-    """Represents a callee in sapp"""
-
-    method: Method
-    port: Port
-    position: Position
-
-    @staticmethod
-    def from_call_info(call_info: CallInfo) -> "Call":
-        if call_info.method is None:
-            raise sapp.ParseError(
-                f"Cannot construct a Call without a valid method {call_info}"
-            )
-        return Call(call_info.method, call_info.port, call_info.position)
-
-    @staticmethod
-    def from_origin(origin: Origin, call_info: CallInfo) -> "Call":
-        return Call(
-            method=origin.callee_name,
-            port=origin.callee_port,
-            position=call_info.position,
-        )
-
-
 class LocalPositions(NamedTuple):
     positions: List[Position]
 
@@ -375,9 +351,33 @@ class ConditionLeaf(NamedTuple):
         return (self.kind, self.distance)
 
 
+class ConditionCall(NamedTuple):
+    """Represents a caller/callee in a [pre|post]Condition"""
+
+    method: Method
+    port: Port
+    position: Position
+
+    @staticmethod
+    def from_call_info(call_info: CallInfo) -> "ConditionCall":
+        if call_info.method is None:
+            raise sapp.ParseError(
+                f"Cannot construct a ConditionCall without a valid method {call_info}"
+            )
+        return ConditionCall(call_info.method, call_info.port, call_info.position)
+
+    @staticmethod
+    def from_origin(origin: Origin, call_info: CallInfo) -> "ConditionCall":
+        return ConditionCall(
+            method=origin.callee_name,
+            port=origin.callee_port,
+            position=call_info.position,
+        )
+
+
 class Condition(NamedTuple):
-    caller: Call
-    callee: Call
+    caller: ConditionCall
+    callee: ConditionCall
     leaves: List[ConditionLeaf]
     local_positions: LocalPositions
     features: Features
@@ -421,7 +421,7 @@ class Propagation(Condition):
 
 
 class IssueCondition(NamedTuple):
-    callee: Call
+    callee: ConditionCall
     leaves: List[ConditionLeaf]
     local_positions: LocalPositions
     features: Features
@@ -680,7 +680,7 @@ class Parser(BaseParser):
                     for origin in kind.origins:
                         conditions.append(
                             IssueCondition(
-                                callee=Call.from_origin(origin, call_info),
+                                callee=ConditionCall.from_origin(origin, call_info),
                                 leaves=condition_leaves,
                                 local_positions=local_positions,
                                 features=features,
@@ -694,7 +694,7 @@ class Parser(BaseParser):
                     extra_traces.update(kind.extra_traces)
                 conditions.append(
                     IssueCondition(
-                        callee=Call.from_call_info(call_info),
+                        callee=ConditionCall.from_call_info(call_info),
                         leaves=condition_leaves,
                         local_positions=local_positions,
                         features=features,
@@ -759,7 +759,7 @@ class Parser(BaseParser):
         caller_position = Position.from_json(model["position"], caller_method)
 
         for leaf_model in model.get(condition_model_key, []):
-            caller = Call(
+            caller = ConditionCall(
                 method=caller_method,
                 port=Port.from_json(leaf_model[port_key], leaf_kind),
                 position=caller_position,
@@ -792,7 +792,7 @@ class Parser(BaseParser):
                     condition_by_callee = {}
                     for kind in kinds:
                         for origin in kind.origins:
-                            callee = Call.from_origin(origin, call_info)
+                            callee = ConditionCall.from_origin(origin, call_info)
                             condition = condition_by_callee.get(
                                 callee,
                                 condition_class(
@@ -816,7 +816,7 @@ class Parser(BaseParser):
 
                     yield condition_class(
                         caller=caller,
-                        callee=Call.from_call_info(call_info),
+                        callee=ConditionCall.from_call_info(call_info),
                         leaves=[ConditionLeaf.from_kind(kind) for kind in kinds],
                         local_positions=local_positions,
                         features=local_features,
