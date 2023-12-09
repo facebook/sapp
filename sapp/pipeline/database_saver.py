@@ -7,7 +7,7 @@
 
 import collections
 import logging
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 from ..bulk_saver import BulkSaver
 from ..db import DB
@@ -40,13 +40,16 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
         database: DB,
         primary_key_generator: Optional[PrimaryKeyGenerator] = None,
         dry_run: bool = False,
+        extra_saving_classes: Optional[List[Type[object]]] = None,
     ) -> None:
         self.dbname: str = database.dbname
         self.database = database
         self.primary_key_generator: PrimaryKeyGenerator = (
             primary_key_generator or PrimaryKeyGenerator()
         )
-        self.bulk_saver = BulkSaver(self.primary_key_generator)
+        self.bulk_saver = BulkSaver(
+            self.primary_key_generator, extra_saving_classes=extra_saving_classes
+        )
         self.dry_run = dry_run
         self.graph: TraceGraph
         self.summary: Summary
@@ -116,7 +119,6 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
                             run_label=self.summary.get("meta_run_child_label", None),
                         )
                     )
-                session.add_all(self.summary.get("run_attributes", []))
                 session.commit()
 
                 run_id = self.summary["run"].id.resolved()

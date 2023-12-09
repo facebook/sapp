@@ -361,7 +361,14 @@ class PrimaryKeyGeneratorBase:
                 count = item_counts[cls.__name__]
             else:
                 count = 1
-            self._reserve_id_range(session, cls, count)
+
+            if count > 0:
+                self._reserve_id_range(session, cls, count)
+            elif count == 0:
+                # Don't bother locking rows if there's nothing to reserve
+                pass
+            else:
+                raise ValueError(f"{cls.__name__} count must be >= 0")
 
         return self
 

@@ -7,7 +7,7 @@
 """
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional, Type
 
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -38,7 +38,7 @@ class BulkSaver:
     """Stores new objects created within a run and bulk save them"""
 
     # order is significant, objects will be saved in this order.
-    SAVING_CLASSES_ORDER = [
+    DEFAULT_SAVING_CLASSES_ORDER = [
         SharedText,
         Issue,
         IssueInstanceFixInfo,
@@ -62,18 +62,23 @@ class BulkSaver:
     BATCH_SIZE = 30000
 
     def __init__(
-        self, primary_key_generator: Optional[PrimaryKeyGenerator] = None
+        self,
+        primary_key_generator: Optional[PrimaryKeyGenerator] = None,
+        extra_saving_classes: Optional[List[Type[object]]] = None,
     ) -> None:
         self.primary_key_generator: PrimaryKeyGenerator = (
             primary_key_generator or PrimaryKeyGenerator()
         )
+        self.saving_classes_order: List[Type[object]] = (
+            extra_saving_classes or []
+        ) + self.DEFAULT_SAVING_CLASSES_ORDER
         self.saving: Dict[str, Any] = {}
-        for cls in self.SAVING_CLASSES_ORDER:
+        for cls in self.saving_classes_order:
             self.saving[cls.__name__] = []
 
     # pyre-fixme[2]: Parameter must be annotated.
     def add(self, item) -> None:
-        assert item.model in self.SAVING_CLASSES_ORDER, (
+        assert item.model in self.saving_classes_order, (
             "%s should be added with session.add()" % item.model.__name__
         )
         self.saving[item.model.__name__].append(item)
@@ -81,7 +86,7 @@ class BulkSaver:
     # pyre-fixme[2]: Parameter must be annotated.
     def add_all(self, items) -> None:
         if items:
-            assert items[0].model in self.SAVING_CLASSES_ORDER, (
+            assert items[0].model in self.saving_classes_order, (
                 "%s should be added with session.add_all()" % items[0].model.__name__
             )
             self.saving[items[0].model.__name__].extend(items)
@@ -96,7 +101,7 @@ class BulkSaver:
     ) -> None:
         saving_classes = [
             cls
-            for cls in self.SAVING_CLASSES_ORDER
+            for cls in self.saving_classes_order
             if len(self.saving[cls.__name__]) != 0
         ]
 
@@ -276,6 +281,6 @@ class BulkSaver:
 
     def dump_stats(self) -> str:
         stat_str = ""
-        for cls in self.SAVING_CLASSES_ORDER:
+        for cls in self.saving_classes_order:
             stat_str += "%s: %d\n" % (cls.__name__, len(self.saving[cls.__name__]))
         return stat_str
