@@ -7,6 +7,8 @@ import json
 import logging
 import re
 import sys
+
+from collections import defaultdict
 from typing import (
     Any,
     Dict,
@@ -320,6 +322,8 @@ class Kind(NamedTuple):
     distance: int
     origins: List[Origin]
     extra_traces: List[ExtraTrace]
+    callee_interval: Optional[Tuple[int, int]]
+    preserves_type_context: bool
 
     @staticmethod
     def from_json(
@@ -331,12 +335,28 @@ class Kind(NamedTuple):
         extra_traces = []
         for extra_trace in kind.get("extra_traces", []):
             extra_traces.append(ExtraTrace.from_json(extra_trace, caller_position))
+        interval = kind.get("callee_interval")
         return Kind(
             name=kind["kind"],
             distance=kind.get("distance", 0),
             origins=origins,
             extra_traces=extra_traces,
+            callee_interval=(interval[0], interval[1]) if interval else None,
+            preserves_type_context=kind.get("preserves_type_context", False),
         )
+
+    @staticmethod
+    def partition_by_interval(
+        kinds: List["Kind"],
+    ) -> Dict[Optional["ConditionTypeInterval"], List["Kind"]]:
+        kinds_by_interval = defaultdict(list)
+        for kind in kinds:
+            if kind.callee_interval is None:
+                kinds_by_interval[None].append(kind)
+            else:
+                interval = ConditionTypeInterval.from_kind(kind)
+                kinds_by_interval[interval].append(kind)
+        return kinds_by_interval
 
 
 class ConditionLeaf(NamedTuple):
@@ -375,6 +395,29 @@ class ConditionCall(NamedTuple):
         )
 
 
+class ConditionTypeInterval(NamedTuple):
+    start: int
+    finish: int
+    preserves_type_context: bool
+
+    @staticmethod
+    def from_kind(kind: Kind) -> "ConditionTypeInterval":
+        if kind.callee_interval is None:
+            raise sapp.ParseError(f"Callee interval expected in {kind}")
+        return ConditionTypeInterval(
+            start=kind.callee_interval[0],
+            finish=kind.callee_interval[1],
+            preserves_type_context=kind.preserves_type_context,
+        )
+
+    def to_sapp(self) -> sapp.ParseTypeInterval:
+        return sapp.ParseTypeInterval(
+            start=self.start,
+            finish=self.finish,
+            preserves_type_context=self.preserves_type_context,
+        )
+
+
 class Condition(NamedTuple):
     caller: ConditionCall
     callee: ConditionCall
@@ -382,6 +425,7 @@ class Condition(NamedTuple):
     local_positions: LocalPositions
     features: Features
     extra_traces: Set[ExtraTrace]
+    type_interval: Optional[ConditionTypeInterval]
 
     def convert_to_sapp(
         self, kind: Literal[sapp.ParseType.PRECONDITION, sapp.ParseType.POSTCONDITION]
@@ -394,7 +438,9 @@ class Condition(NamedTuple):
             callee=self.callee.method.name,
             callee_port=self.callee.port.value,
             callee_location=self.callee.position.to_sapp(),
-            type_interval=None,
+            type_interval=(
+                self.type_interval.to_sapp() if self.type_interval else None
+            ),
             features=self.features.to_sapp_as_parsetracefeature(),
             titos=self.local_positions.to_sapp(),
             leaves=[leaf.to_sapp() for leaf in self.leaves],
@@ -426,6 +472,7 @@ class IssueCondition(NamedTuple):
     local_positions: LocalPositions
     features: Features
     extra_traces: Set[ExtraTrace]
+    type_interval: Optional[ConditionTypeInterval]
 
     def to_sapp(self) -> sapp.ParseIssueConditionTuple:
         return sapp.ParseIssueConditionTuple(
@@ -435,7 +482,9 @@ class IssueCondition(NamedTuple):
             leaves=[leaf.to_sapp() for leaf in self.leaves],
             titos=self.local_positions.to_sapp(),
             features=self.features.to_sapp_as_parsetracefeature(),
-            type_interval=None,
+            type_interval=(
+                self.type_interval.to_sapp() if self.type_interval else None
+            ),
             annotations=[extra_trace.to_sapp() for extra_trace in self.extra_traces],
         )
 
@@ -652,10 +701,12 @@ class Parser(BaseParser):
                 condition_taint["call_info"], leaf_kind, callable_position
             )
 
-            kinds = [
-                Kind.from_json(kind_json, leaf_kind, callable_position)
-                for kind_json in condition_taint["kinds"]
-            ]
+            kinds_by_interval = Kind.partition_by_interval(
+                [
+                    Kind.from_json(kind_json, leaf_kind, callable_position)
+                    for kind_json in condition_taint["kinds"]
+                ]
+            )
 
             issue_leaves.update(
                 {
@@ -664,6 +715,7 @@ class Parser(BaseParser):
                         kind=kind.name,
                         distance=kind.distance,
                     )
+                    for _, kinds in kinds_by_interval.items()
                     for kind in kinds
                     for origin in kind.origins
                 }
@@ -675,32 +727,37 @@ class Parser(BaseParser):
                 )
 
             if call_info.is_origin():
-                for kind in kinds:
-                    condition_leaves = [ConditionLeaf.from_kind(kind)]
-                    for origin in kind.origins:
-                        conditions.append(
-                            IssueCondition(
-                                callee=ConditionCall.from_origin(origin, call_info),
-                                leaves=condition_leaves,
-                                local_positions=local_positions,
-                                features=features,
-                                extra_traces=set(kind.extra_traces),
+                for interval, kinds in kinds_by_interval.items():
+                    for kind in kinds:
+                        condition_leaves = [ConditionLeaf.from_kind(kind)]
+                        for origin in kind.origins:
+                            conditions.append(
+                                IssueCondition(
+                                    callee=ConditionCall.from_origin(origin, call_info),
+                                    leaves=condition_leaves,
+                                    local_positions=local_positions,
+                                    features=features,
+                                    extra_traces=set(kind.extra_traces),
+                                    type_interval=interval,
+                                )
                             )
-                        )
             else:
-                condition_leaves = [ConditionLeaf.from_kind(kind) for kind in kinds]
-                extra_traces = set()
-                for kind in kinds:
-                    extra_traces.update(kind.extra_traces)
-                conditions.append(
-                    IssueCondition(
-                        callee=ConditionCall.from_call_info(call_info),
-                        leaves=condition_leaves,
-                        local_positions=local_positions,
-                        features=features,
-                        extra_traces=extra_traces,
+                for interval, kinds in kinds_by_interval.items():
+                    condition_leaves = []
+                    extra_traces = set()
+                    for kind in kinds:
+                        condition_leaves.append(ConditionLeaf.from_kind(kind))
+                        extra_traces.update(kind.extra_traces)
+                    conditions.append(
+                        IssueCondition(
+                            callee=ConditionCall.from_call_info(call_info),
+                            leaves=condition_leaves,
+                            local_positions=local_positions,
+                            features=features,
+                            extra_traces=extra_traces,
+                            type_interval=interval,
+                        )
                     )
-                )
 
         return conditions, issue_leaves
 
@@ -783,42 +840,47 @@ class Parser(BaseParser):
                 local_features = Features.from_taint_json(leaf_taint)
 
                 kinds_json = leaf_taint["kinds"]
-                kinds = [
-                    Kind.from_json(kind_json, leaf_kind, caller_position)
-                    for kind_json in kinds_json
-                ]
+                kinds_by_interval = Kind.partition_by_interval(
+                    [
+                        Kind.from_json(kind_json, leaf_kind, caller_position)
+                        for kind_json in kinds_json
+                    ]
+                )
 
                 if call_info.is_origin():
-                    condition_by_callee = {}
-                    for kind in kinds:
-                        for origin in kind.origins:
-                            callee = ConditionCall.from_origin(origin, call_info)
-                            condition = condition_by_callee.get(
-                                callee,
-                                condition_class(
-                                    caller=caller,
-                                    callee=callee,
-                                    leaves=[],
-                                    local_positions=local_positions,
-                                    features=local_features,
-                                    extra_traces=set(),
-                                ),
-                            )
-                            condition.leaves.append(ConditionLeaf.from_kind(kind))
-                            condition.extra_traces.update(kind.extra_traces)
-                            condition_by_callee[callee] = condition
-                    for condition in condition_by_callee.values():
-                        yield condition
+                    for interval, kinds in kinds_by_interval.items():
+                        condition_by_callee = {}
+                        for kind in kinds:
+                            for origin in kind.origins:
+                                callee = ConditionCall.from_origin(origin, call_info)
+                                condition = condition_by_callee.get(
+                                    callee,
+                                    condition_class(
+                                        caller=caller,
+                                        callee=callee,
+                                        leaves=[],
+                                        local_positions=local_positions,
+                                        features=local_features,
+                                        extra_traces=set(),
+                                        type_interval=interval,
+                                    ),
+                                )
+                                condition.leaves.append(ConditionLeaf.from_kind(kind))
+                                condition.extra_traces.update(kind.extra_traces)
+                                condition_by_callee[callee] = condition
+                        for condition in condition_by_callee.values():
+                            yield condition
                 else:
-                    extra_traces = set()
-                    for kind in kinds:
-                        extra_traces.update(kind.extra_traces)
-
-                    yield condition_class(
-                        caller=caller,
-                        callee=ConditionCall.from_call_info(call_info),
-                        leaves=[ConditionLeaf.from_kind(kind) for kind in kinds],
-                        local_positions=local_positions,
-                        features=local_features,
-                        extra_traces=extra_traces,
-                    )
+                    for interval, kinds in kinds_by_interval.items():
+                        extra_traces = set()
+                        for kind in kinds:
+                            extra_traces.update(kind.extra_traces)
+                        yield condition_class(
+                            caller=caller,
+                            callee=ConditionCall.from_call_info(call_info),
+                            leaves=[ConditionLeaf.from_kind(kind) for kind in kinds],
+                            local_positions=local_positions,
+                            features=local_features,
+                            extra_traces=extra_traces,
+                            type_interval=interval,
+                        )

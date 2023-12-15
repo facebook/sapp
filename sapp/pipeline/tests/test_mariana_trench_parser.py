@@ -15,6 +15,7 @@ from .. import (
     ParseTraceAnnotation,
     ParseTraceAnnotationSubtrace,
     ParseTraceFeature,
+    ParseTypeInterval,
     SourceLocation,
 )
 from ..base_parser import ParseType
@@ -2346,6 +2347,347 @@ class TestParser(unittest.TestCase):
                             subtraces=[],
                         )
                     ],
+                )
+            ],
+        )
+
+    def testClassIntervals(self) -> None:
+        # Intervals at origin
+        self.assertParsed(
+            """
+            {
+              "method": "LSink;.sink_wrapper:(LData;)V",
+              "sinks": [
+                {
+                  "port": "Argument(1)",
+                  "taint": [
+                    {
+                      "call_info": {
+                        "call_kind": "Origin"
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "Origin",
+                          "kind": "TestSink",
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ],
+                          "callee_interval": [1, 2],
+                          "preserves_type_context": true
+                        },
+                        {
+                          "call_kind": "Origin",
+                          "kind": "TestSink",
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ],
+                          "callee_interval": [3, 4],
+                          "preserves_type_context": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Sink.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LSink;.sink_wrapper:(LData;)V",
+                    callee="LSink;.sink:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Sink.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1)",
+                    callee_port="sink",
+                    type_interval=ParseTypeInterval(
+                        start=1, finish=2, preserves_type_context=True
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LSink;.sink_wrapper:(LData;)V",
+                    callee="LSink;.sink:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="Sink.java",
+                    titos=[],
+                    leaves=[("TestSink", 0)],
+                    caller_port="argument(1)",
+                    callee_port="sink",
+                    type_interval=ParseTypeInterval(
+                        start=3, finish=4, preserves_type_context=True
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+            ],
+        )
+
+        # Intervals at call site
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_sink:(LData;LData;)V",
+              "sinks": [
+                {
+                  "port": "Argument(2)",
+                  "taint": [
+                    {
+                      "call_info": {
+                        "call_kind": "CallSite",
+                        "resolves_to": "LSink;.sink:(LData;)V",
+                        "port": "Argument(1)",
+                        "position": {
+                          "path": "Class.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 1,
+                          "kind": "TestSink",
+                          "callee_interval": [10, 20],
+                          "preserves_type_context": false
+                        },
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 2,
+                          "kind": "TestSink2",
+                          "callee_interval": [10, 20],
+                          "preserves_type_context": false
+                        },
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 1,
+                          "kind": "TestSink",
+                          "callee_interval": [21, 30],
+                          "preserves_type_context": true
+                        }
+                      ],
+                      "local_positions": [
+                        {"line": 13, "start": 14, "end": 15},
+                        {"line": 16, "start": 17, "end": 18}
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Class.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="LSink;.sink:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Class.java",
+                    titos=[
+                        SourceLocation(line_no=13, begin_column=15, end_column=16),
+                        SourceLocation(line_no=16, begin_column=18, end_column=19),
+                    ],
+                    leaves=[("TestSink", 1), ("TestSink2", 2)],
+                    caller_port="argument(2)",
+                    callee_port="argument(1)",
+                    type_interval=ParseTypeInterval(
+                        start=10, finish=20, preserves_type_context=False
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="LSink;.sink:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Class.java",
+                    titos=[
+                        SourceLocation(line_no=13, begin_column=15, end_column=16),
+                        SourceLocation(line_no=16, begin_column=18, end_column=19),
+                    ],
+                    leaves=[("TestSink", 1)],
+                    caller_port="argument(2)",
+                    callee_port="argument(1)",
+                    type_interval=ParseTypeInterval(
+                        start=21, finish=30, preserves_type_context=True
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+            ],
+        )
+
+        # Intervals in issue condition
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.flow:()V",
+              "issues": [
+                {
+                  "rule": 1,
+                  "position": {
+                    "path": "Flow.java",
+                    "line": 10,
+                    "start": 11,
+                    "end": 12
+                  },
+                  "callee": "LSink;.sink:(LData;)V",
+                  "sink_index": 0,
+                  "sinks": [
+                    {
+                      "call_info": {
+                        "call_kind": "CallSite",
+                        "resolves_to": "LSink;.sink:(LData;)V",
+                        "port": "Argument(1)",
+                        "position": {
+                          "path": "Flow.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 2,
+                          "kind": "TestSink",
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ],
+                          "callee_interval": [123, 456],
+                          "preserves_type_context": true
+                        }
+                      ]
+                    }
+                  ],
+                  "sources": [
+                    {
+                      "call_info": {
+                        "call_kind": "CallSite",
+                        "resolves_to": "LSource;.source:()LData;",
+                        "port": "Return",
+                        "position": {
+                          "path": "Flow.java",
+                          "line": 20,
+                          "start": 21,
+                          "end": 22
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 3,
+                          "kind": "TestSource",
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ],
+                          "callee_interval": [234, 345],
+                          "preserves_type_context": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 2,
+                "path": "Flow.java"
+              }
+            }
+            """,
+            [
+                ParseIssueTuple(
+                    code=1,
+                    message="TestRule: Test Rule Description",
+                    callable="LClass;.flow:()V",
+                    handle="LClass;.flow:()V:LSink;.sink:(LData;)V:0:1:1ef9022f932a64d0",
+                    filename="Flow.java",
+                    callable_line=2,
+                    line=10,
+                    start=12,
+                    end=13,
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSink;.sink:(LData;)V",
+                            port="argument(1)",
+                            location=SourceLocation(
+                                line_no=10,
+                                begin_column=12,
+                                end_column=13,
+                            ),
+                            leaves=[("TestSink", 2)],
+                            titos=[],
+                            features=[],
+                            type_interval=ParseTypeInterval(
+                                start=123, finish=456, preserves_type_context=True
+                            ),
+                            annotations=[],
+                        )
+                    ],
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSource;.source:()LData;",
+                            port="result",
+                            location=SourceLocation(
+                                line_no=20,
+                                begin_column=22,
+                                end_column=23,
+                            ),
+                            leaves=[("TestSource", 3)],
+                            titos=[],
+                            features=[],
+                            type_interval=ParseTypeInterval(
+                                start=234, finish=345, preserves_type_context=True
+                            ),
+                            annotations=[],
+                        )
+                    ],
+                    initial_sources={("LSource;.source:(LData;)V", "TestSource", 3)},
+                    final_sinks={("LSink;.sink:(LData;)V", "TestSink", 2)},
+                    features=[],
+                    fix_info=None,
                 )
             ],
         )
