@@ -99,10 +99,10 @@ class PrimaryKeyGeneratorTest(TestCase):
 
         # It doesn't matter which order get is called in, each generator
         # should only vend ids it has reserved itself
-        self.assertEquals(generator2.get(Issue), 3)
-        self.assertEquals(generator1.get(Issue), 1)
-        self.assertEquals(generator1.get(Issue), 2)
-        self.assertEquals(generator2.get(Issue), 4)
+        self.assertEqual(generator2.get(Issue), 3)
+        self.assertEqual(generator1.get(Issue), 1)
+        self.assertEqual(generator1.get(Issue), 2)
+        self.assertEqual(generator2.get(Issue), 4)
 
         # Generators should never vend ids beyond what they reserved
         with self.assertRaisesRegex(AssertionError, "range exhausted"):
@@ -135,10 +135,10 @@ class PrimaryKeyGeneratorTest(TestCase):
 
         # It doesn't matter which order get is called in, each generator
         # should only vend ids it has reserved itself
-        self.assertEquals(generator2.get(Issue), 152)
-        self.assertEquals(generator1.get(Issue), 150)
-        self.assertEquals(generator1.get(Issue), 151)
-        self.assertEquals(generator2.get(Issue), 153)
+        self.assertEqual(generator2.get(Issue), 152)
+        self.assertEqual(generator1.get(Issue), 150)
+        self.assertEqual(generator1.get(Issue), 151)
+        self.assertEqual(generator2.get(Issue), 153)
 
         with self.assertRaisesRegex(AssertionError, "range exhausted"):
             generator2.get(Issue)
