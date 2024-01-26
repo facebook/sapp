@@ -36,11 +36,8 @@ class RunTest(TestCase):
             allruns = runs(session)
 
             self.assertEqual(len(allruns), 3)
-            # pyre-ignore[6]: graphene too dynamic.
             self.assertEqual(int(allruns[0].run_id), 3)
-            # pyre-ignore[6]: graphene too dynamic.
             self.assertEqual(int(allruns[1].run_id), 2)
-            # pyre-ignore[6]: graphene too dynamic.
             self.assertEqual(int(allruns[2].run_id), 1)
 
     def testLatestRun(self) -> None:
@@ -58,7 +55,6 @@ class RunTest(TestCase):
         with self.db.make_session() as session:
             delete_run(session, "1")
             remainingRuns = runs(session)
-            # pyre-ignore[6]: graphene too dynamic.
             remainingRunsId = [int(r.run_id) for r in remainingRuns]
             self.assertEqual(len(remainingRuns), 2)
             self.assertNotIn(1, remainingRunsId)
