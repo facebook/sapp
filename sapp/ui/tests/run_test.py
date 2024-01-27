@@ -36,8 +36,14 @@ class RunTest(TestCase):
             allruns = runs(session)
 
             self.assertEqual(len(allruns), 3)
+            # pyre-fixme[6]: For 1st argument expected `Union[SupportsTrunc, str,
+            #  SupportsInt, Buffer, SupportsIndex]` but got `ID`.
             self.assertEqual(int(allruns[0].run_id), 3)
+            # pyre-fixme[6]: For 1st argument expected `Union[SupportsTrunc, str,
+            #  SupportsInt, Buffer, SupportsIndex]` but got `ID`.
             self.assertEqual(int(allruns[1].run_id), 2)
+            # pyre-fixme[6]: For 1st argument expected `Union[SupportsTrunc, str,
+            #  SupportsInt, Buffer, SupportsIndex]` but got `ID`.
             self.assertEqual(int(allruns[2].run_id), 1)
 
     def testLatestRun(self) -> None:
@@ -55,6 +61,8 @@ class RunTest(TestCase):
         with self.db.make_session() as session:
             delete_run(session, "1")
             remainingRuns = runs(session)
+            # pyre-fixme[6]: For 1st argument expected `Union[SupportsTrunc, str,
+            #  SupportsInt, Buffer, SupportsIndex]` but got `ID`.
             remainingRunsId = [int(r.run_id) for r in remainingRuns]
             self.assertEqual(len(remainingRuns), 2)
             self.assertNotIn(1, remainingRunsId)
