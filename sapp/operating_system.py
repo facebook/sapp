@@ -16,4 +16,4 @@ except ImportError:
 def get_rss_in_gb() -> float:
     if psutil is None:
         return 0
-    return psutil.virtual_memory().used / (1000**3)
+    return psutil.Process().memory_info().rss / (1000**3)
