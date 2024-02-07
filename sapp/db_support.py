@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 from collections import namedtuple
-from itertools import tee
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, Union
 
 from munch import Munch

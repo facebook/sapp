@@ -193,7 +193,10 @@ class JSONDiagnostics:
                 pool.imap_unordered(partial(_parse_file, self.parser_class), filenames)
             ):
                 if sys.stdout.isatty():
-                    sys.stdout.write(f"\rProcessed {i+1} out of {len(filenames)} files")
+                    sys.stdout.write(
+                        f"\rProcessed {i + 1} out of {len(filenames)} files"
+                    )
+
                     sys.stdout.flush()
                 if filename not in filename_to_id:
                     filename_to_id[filename] = next_id

@@ -13,7 +13,6 @@ from .. import (
     ParseIssueConditionTuple,
     ParseIssueTuple,
     ParseTraceAnnotation,
-    ParseTraceAnnotationSubtrace,
     ParseTraceFeature,
     ParseTypeInterval,
     SourceLocation,
