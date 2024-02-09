@@ -600,7 +600,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             run,
             parent_filename,
             parent_caller,
-            "root",
+            "subtrace_root",
             callee,
             callee_port,
             position,
