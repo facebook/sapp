@@ -774,7 +774,7 @@ json CALLABLE        show the original json output for the matching callable
             query = queries.leaves(
                 session=session, kind=kind, run_id=self._current_run_id
             )
-            for (_, name) in query:
+            for _, name in query:
                 leaves[name] += 1
 
         results: Iterable[Tuple[str, int]]
@@ -1211,9 +1211,9 @@ json CALLABLE        show the original json output for the matching callable
         self, trace_frames: Iterable[TraceFrameQueryResult], limit: int
     ) -> Dict[Tuple[str, str], List[TraceFrameQueryResult]]:
         """Buckets together trace frames that have the same caller:caller_port."""
-        caller_buckets: DefaultDict[
-            Tuple[str, str], List[TraceFrameQueryResult]
-        ] = defaultdict(list)
+        caller_buckets: DefaultDict[Tuple[str, str], List[TraceFrameQueryResult]] = (
+            defaultdict(list)
+        )
         for trace_frame in itertools.islice(trace_frames, limit):
             caller_buckets[(trace_frame.caller, trace_frame.caller_port)].append(
                 trace_frame

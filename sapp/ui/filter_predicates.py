@@ -27,8 +27,7 @@ class Predicate(ABC):
 
 class QueryPredicate(Predicate):
     @abstractmethod
-    def apply(self, query: Query[_Q]) -> Query[_Q]:
-        ...
+    def apply(self, query: Query[_Q]) -> Query[_Q]: ...
 
 
 class InRange(Generic[_T], QueryPredicate):
@@ -80,8 +79,7 @@ class Like(Generic[_T], QueryPredicate):
 
 class IssuePredicate(Predicate):
     @abstractmethod
-    def apply(self, issues: List[IssueQueryResult]) -> List[IssueQueryResult]:
-        ...
+    def apply(self, issues: List[IssueQueryResult]) -> List[IssueQueryResult]: ...
 
 
 class HasAll(IssuePredicate):

@@ -67,34 +67,34 @@ class TraceGraph:
         self._trace_frames: Dict[int, TraceFrame] = {}
 
         self._shared_texts: Dict[int, SharedText] = {}
-        self._shared_text_lookup: (
-            DefaultDict[SharedTextKind, Dict[str, int]]
-        ) = defaultdict(dict)
+        self._shared_text_lookup: DefaultDict[SharedTextKind, Dict[str, int]] = (
+            defaultdict(dict)
+        )
 
         self._trace_frame_leaf_assoc: DefaultDict[int, LeafIDToDepthMap] = defaultdict(
             lambda: {}
         )
 
-        self._trace_frame_issue_instance_assoc: DefaultDict[
-            int, Set[int]
-        ] = defaultdict(set)
-        self._issue_instance_trace_frame_assoc: DefaultDict[
-            int, Set[int]
-        ] = defaultdict(set)
+        self._trace_frame_issue_instance_assoc: DefaultDict[int, Set[int]] = (
+            defaultdict(set)
+        )
+        self._issue_instance_trace_frame_assoc: DefaultDict[int, Set[int]] = (
+            defaultdict(set)
+        )
 
-        self._trace_frame_annotation_trace_frame_assoc: DefaultDict[
-            int, Set[int]
-        ] = defaultdict(set)
-        self._trace_frame_trace_frame_annotation_assoc: DefaultDict[
-            int, Set[int]
-        ] = defaultdict(set)
+        self._trace_frame_annotation_trace_frame_assoc: DefaultDict[int, Set[int]] = (
+            defaultdict(set)
+        )
+        self._trace_frame_trace_frame_annotation_assoc: DefaultDict[int, Set[int]] = (
+            defaultdict(set)
+        )
 
-        self._issue_instance_shared_text_assoc: DefaultDict[
-            int, Set[int]
-        ] = defaultdict(set)
-        self._shared_text_issue_instance_assoc: DefaultDict[
-            int, Set[int]
-        ] = defaultdict(set)
+        self._issue_instance_shared_text_assoc: DefaultDict[int, Set[int]] = (
+            defaultdict(set)
+        )
+        self._shared_text_issue_instance_assoc: DefaultDict[int, Set[int]] = (
+            defaultdict(set)
+        )
 
         self._issue_instance_fix_info: Dict[int, IssueInstanceFixInfo] = {}
 

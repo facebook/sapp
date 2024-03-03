@@ -60,21 +60,31 @@ class IssueQueryResult(NamedTuple):
             is_new_issue=record.is_new_issue,
             min_trace_length_to_sources=record.min_trace_length_to_sources,
             min_trace_length_to_sinks=record.min_trace_length_to_sinks,
-            features=frozenset(record.concatenated_features.split(","))
-            if record.concatenated_features
-            else frozenset(),
-            source_names=frozenset(record.concatenated_source_names.split(","))
-            if record.concatenated_source_names
-            else frozenset(),
-            source_kinds=frozenset(record.concatenated_source_kinds.split(","))
-            if record.concatenated_source_kinds
-            else frozenset(),
-            sink_names=frozenset(record.concatenated_sink_names.split(","))
-            if record.concatenated_sink_names
-            else frozenset(),
-            sink_kinds=frozenset(record.concatenated_sink_kinds.split(","))
-            if record.concatenated_sink_kinds
-            else frozenset(),
+            features=(
+                frozenset(record.concatenated_features.split(","))
+                if record.concatenated_features
+                else frozenset()
+            ),
+            source_names=(
+                frozenset(record.concatenated_source_names.split(","))
+                if record.concatenated_source_names
+                else frozenset()
+            ),
+            source_kinds=(
+                frozenset(record.concatenated_source_kinds.split(","))
+                if record.concatenated_source_kinds
+                else frozenset()
+            ),
+            sink_names=(
+                frozenset(record.concatenated_sink_names.split(","))
+                if record.concatenated_sink_names
+                else frozenset()
+            ),
+            sink_kinds=(
+                frozenset(record.concatenated_sink_kinds.split(","))
+                if record.concatenated_sink_kinds
+                else frozenset()
+            ),
             similar_issues=set(),
             run_id=record.run_id,
         )

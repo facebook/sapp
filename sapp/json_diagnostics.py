@@ -128,7 +128,7 @@ class JSONDiagnostics:
 
         entries = []
         for callable_name, entry_location in entry_locations.items():
-            for (file_id, offset) in entry_location:
+            for file_id, offset in entry_location:
                 path = lookup_table.file_index[file_id]
 
                 errors = parser.get_json_from_file_offset(path, offset)

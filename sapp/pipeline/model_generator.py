@@ -141,7 +141,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
     ) -> int:
         length = None
         for entry in entries:
-            for (_leaf, depth) in entry.leaves:
+            for _leaf, depth in entry.leaves:
                 if length is None or length > depth:
                     length = depth
         if length is not None:
@@ -443,7 +443,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         leaf_records = []
         leaf_mapping_ids: Set[LeafMapping] = set()
-        for (leaf, depth) in leaves:
+        for leaf, depth in leaves:
             leaf_record = self._get_shared_text(leaf_kind, leaf)
             caller_leaf_id = self.graph.get_transform_normalized_caller_kind_id(
                 leaf_record
@@ -477,7 +477,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             reachability=FrameReachability.UNREACHABLE,
         )
 
-        for (leaf_record, depth) in leaf_records:
+        for leaf_record, depth in leaf_records:
             self.graph.add_trace_frame_leaf_assoc(trace_frame, leaf_record, depth)
 
         # Note that the "graph._trace_frame_leaf_assoc" table is really associated with

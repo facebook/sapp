@@ -64,9 +64,9 @@ class SARIF:
             driver_json["informationUri"] = "https://github.com/facebook/pyre-check/"
         elif self.tool == "mariana-trench":
             driver_json["name"] = "Mariana Trench"
-            driver_json[
-                "informationUri"
-            ] = "https://github.com/facebook/mariana-trench/"
+            driver_json["informationUri"] = (
+                "https://github.com/facebook/mariana-trench/"
+            )
         else:
             raise NotImplementedError
 
