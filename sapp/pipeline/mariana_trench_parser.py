@@ -486,7 +486,7 @@ class Parser(BaseParser):
         for leaf_model in model.get(condition_model_key, []):
             caller = ConditionCall(
                 method=caller_method,
-                port=mariana_trench.Port.from_json(leaf_model[port_key], leaf_kind),
+                port=mariana_trench.Port.from_json(leaf_model[port_key]),
                 position=caller_position,
             )
             for leaf_taint in leaf_model[leaf_model_key]:

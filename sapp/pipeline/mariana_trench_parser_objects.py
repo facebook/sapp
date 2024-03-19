@@ -44,7 +44,8 @@ class Port(NamedTuple):
 
     def is_leaf(self) -> bool:
         return (
-            self.value in ("source", "sink")
+            self.value.startswith("source")
+            or self.value.startswith("sink")
             or self.value.startswith("anchor:")
             or self.value.startswith("producer:")
         )
@@ -56,32 +57,26 @@ class Port(NamedTuple):
         return re.sub(r"argument\((-?\d+)\)", r"formal(\1)", port)
 
     @staticmethod
-    def from_json(port: str, leaf_kind: str) -> "Port":
+    def from_json(port: str) -> "Port":
         elements = port.split(".")
 
         if len(elements) == 0:
             raise sapp.ParseError(f"Invalid port: `{port}`.")
 
         elements[0] = elements[0].lower()
-        if elements[0] == "leaf":
-            elements[0] = leaf_kind
-        elif elements[0] == "return":
+        if elements[0] == "return":
             elements[0] = "result"
         elif elements[0] == "anchor":
             # Anchor port is of the form Anchor.<MT port, e.g. Argument(0)>
             # SAPP/CRTEX expects: "anchor:formal(0)"
-            canonical_port = Port.from_json(
-                ".".join(elements[1:]), "unreachable_leaf_kind_anchor"
-            )
+            canonical_port = Port.from_json(".".join(elements[1:]))
             return Port(f"{elements[0]}:{Port.to_crtex(canonical_port.value)}")
         elif elements[0] == "producer" and len(elements) >= 3:
             # Producer port is of the form Producer.<producer_id>.<MT port>.
             # SAPP/CRTEX expects: "producer:<producer_id>:<canonical_port>".
             root = elements[0]
             producer_id = elements[1]
-            canonical_port = Port.from_json(
-                ".".join(elements[2:]), "unreachable_leaf_kind_producer"
-            )
+            canonical_port = Port.from_json(".".join(elements[2:]))
             return Port(f"{root}:{producer_id}:{Port.to_crtex(canonical_port.value)}")
 
         return Port(".".join(elements))
@@ -141,13 +136,18 @@ class Origin(NamedTuple):
         # The origin represents a call to a leaf/terminal trace. Its port should
         # indicate that, so that downstream trace reachability computation knows
         # when it has reached the end. See trace_graph.is_leaf_port(). Non-CRTEX
-        # ports should always be <leaf_kind> regardless of the JSON (e.g. method
-        # origins could indicate that the sink comes from "argument(1)"", but it
-        # needs to be "sink" in sapp).
-        callee_port = Port.from_json("leaf", leaf_kind)
+        # ports should always be <leaf_kind>[:<actual port>].
         if "canonical_name" in leaf_json:
             # All CRTEX ports are considered leaf ports.
-            callee_port = Port.from_json(leaf_json["port"], leaf_kind)
+            callee_port = Port.from_json(leaf_json["port"])
+        else:
+            actual_callee_port = leaf_json.get("port")
+            if actual_callee_port is not None:
+                # Normalize the actual callee port as well.
+                actual_callee_port = Port.from_json(actual_callee_port).value
+                callee_port = Port.from_json(f"{leaf_kind}:{actual_callee_port}")
+            else:
+                callee_port = Port.from_json(leaf_kind)
 
         if not callee_port.is_leaf():
             raise sapp.ParseError(f"Encountered non-leaf port in origin {leaf_json}")
@@ -171,7 +171,7 @@ class CallInfo(NamedTuple):
 
         callee = taint_json.get("resolves_to")
         method = Method.from_json(callee) if callee else None
-        port = Port.from_json(taint_json.get("port", "leaf"), leaf_kind)
+        port = Port.from_json(taint_json.get("port", leaf_kind))
 
         position_json = taint_json.get("position")
         position = (
