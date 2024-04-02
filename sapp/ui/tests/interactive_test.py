@@ -376,10 +376,10 @@ class InteractiveTest(TestCase):
 
         assocs = [
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature1.id, issue_instance_id=1
+                shared_text_id=feature1.id, issue_instance_id=DBID(1)
             ),
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature2.id, issue_instance_id=1
+                shared_text_id=feature2.id, issue_instance_id=DBID(1)
             ),
         ]
 
@@ -419,10 +419,10 @@ class InteractiveTest(TestCase):
 
         assocs = [
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature1.id, issue_instance_id=1
+                shared_text_id=feature1.id, issue_instance_id=DBID(1)
             ),
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature2.id, issue_instance_id=1
+                shared_text_id=feature2.id, issue_instance_id=DBID(1)
             ),
         ]
 
@@ -462,10 +462,10 @@ class InteractiveTest(TestCase):
 
         assocs = [
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature1.id, issue_instance_id=1
+                shared_text_id=feature1.id, issue_instance_id=DBID(1)
             ),
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature2.id, issue_instance_id=1
+                shared_text_id=feature2.id, issue_instance_id=DBID(1)
             ),
         ]
 
@@ -507,19 +507,19 @@ class InteractiveTest(TestCase):
                 session,
                 [
                     IssueInstanceSharedTextAssoc(
-                        shared_text_id=feature1.id, issue_instance_id=1
+                        shared_text_id=feature1.id, issue_instance_id=DBID(1)
                     ),
                     IssueInstanceSharedTextAssoc(
-                        shared_text_id=feature2.id, issue_instance_id=1
+                        shared_text_id=feature2.id, issue_instance_id=DBID(1)
                     ),
                     IssueInstanceSharedTextAssoc(
-                        shared_text_id=feature3.id, issue_instance_id=1
+                        shared_text_id=feature3.id, issue_instance_id=DBID(1)
                     ),
                     IssueInstanceSharedTextAssoc(
-                        shared_text_id=feature1.id, issue_instance_id=2
+                        shared_text_id=feature1.id, issue_instance_id=DBID(2)
                     ),
                     IssueInstanceSharedTextAssoc(
-                        shared_text_id=feature2.id, issue_instance_id=2
+                        shared_text_id=feature2.id, issue_instance_id=DBID(2)
                     ),
                 ],
             )
@@ -555,9 +555,9 @@ class InteractiveTest(TestCase):
 
     def testListRuns(self) -> None:
         runs = [
-            Run(id=1, date=datetime.now(), status=RunStatus.FINISHED),
-            Run(id=2, date=datetime.now(), status=RunStatus.INCOMPLETE),
-            Run(id=3, date=datetime.now(), status=RunStatus.FINISHED),
+            Run(id=DBID(1), date=datetime.now(), status=RunStatus.FINISHED),
+            Run(id=DBID(2), date=datetime.now(), status=RunStatus.INCOMPLETE),
+            Run(id=DBID(3), date=datetime.now(), status=RunStatus.FINISHED),
         ]
 
         with self.db.make_session() as session:
@@ -597,8 +597,8 @@ class InteractiveTest(TestCase):
 
     def testSetRunNonExistent(self) -> None:
         runs = [
-            Run(id=1, date=datetime.now(), status=RunStatus.FINISHED),
-            Run(id=2, date=datetime.now(), status=RunStatus.INCOMPLETE),
+            Run(id=DBID(1), date=datetime.now(), status=RunStatus.FINISHED),
+            Run(id=DBID(2), date=datetime.now(), status=RunStatus.INCOMPLETE),
         ]
 
         with self.db.make_session() as session:
@@ -615,12 +615,12 @@ class InteractiveTest(TestCase):
 
     def testSetLatestRun(self) -> None:
         runs = [
-            Run(id=1, date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
-            Run(id=2, date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
-            Run(id=3, date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
-            Run(id=4, date=datetime.now(), status=RunStatus.FINISHED, kind="b"),
-            Run(id=5, date=datetime.now(), status=RunStatus.FINISHED, kind="b"),
-            Run(id=6, date=datetime.now(), status=RunStatus.FINISHED, kind="c"),
+            Run(id=DBID(1), date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
+            Run(id=DBID(2), date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
+            Run(id=DBID(3), date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
+            Run(id=DBID(4), date=datetime.now(), status=RunStatus.FINISHED, kind="b"),
+            Run(id=DBID(5), date=datetime.now(), status=RunStatus.FINISHED, kind="b"),
+            Run(id=DBID(6), date=datetime.now(), status=RunStatus.FINISHED, kind="c"),
         ]
 
         with self.db.make_session() as session:
@@ -708,10 +708,10 @@ class InteractiveTest(TestCase):
         self.fakes.save_all(self.db)
         assocs = [
             IssueInstanceSharedTextAssoc(
-                shared_text_id=source1.id, issue_instance_id=1
+                shared_text_id=source1.id, issue_instance_id=DBID(1)
             ),
             IssueInstanceSharedTextAssoc(
-                shared_text_id=source2.id, issue_instance_id=1
+                shared_text_id=source2.id, issue_instance_id=DBID(1)
             ),
         ]
 
@@ -738,8 +738,12 @@ class InteractiveTest(TestCase):
         self.fakes.sink("sink3")
         self.fakes.save_all(self.db)
         assocs = [
-            IssueInstanceSharedTextAssoc(shared_text_id=sink1.id, issue_instance_id=1),
-            IssueInstanceSharedTextAssoc(shared_text_id=sink2.id, issue_instance_id=1),
+            IssueInstanceSharedTextAssoc(
+                shared_text_id=sink1.id, issue_instance_id=DBID(1)
+            ),
+            IssueInstanceSharedTextAssoc(
+                shared_text_id=sink2.id, issue_instance_id=DBID(1)
+            ),
         ]
 
         with self.db.make_session() as session:
@@ -766,10 +770,10 @@ class InteractiveTest(TestCase):
         self.fakes.save_all(self.db)
         assocs = [
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature1.id, issue_instance_id=1
+                shared_text_id=feature1.id, issue_instance_id=DBID(1)
             ),
             IssueInstanceSharedTextAssoc(
-                shared_text_id=feature2.id, issue_instance_id=1
+                shared_text_id=feature2.id, issue_instance_id=DBID(1)
             ),
         ]
 

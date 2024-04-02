@@ -1585,7 +1585,6 @@ json CALLABLE        show the original json output for the matching callable
     def _get_current_issue(self, session: Session) -> IssueQueryResult:
         return (
             session.query(
-                # pyre-ignore[16]: SQLAlchemy
                 IssueInstance.id.label("issue_instance_id"),
                 FilenameText.contents.label("filename"),
                 IssueInstance.location,

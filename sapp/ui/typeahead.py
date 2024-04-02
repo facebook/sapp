@@ -29,7 +29,6 @@ class Path(graphene.ObjectType):
 
 def all_paths(session: Session) -> List[Path]:
     return (
-        # pyre-fixme[16]: `str` has no attribute `label`.
         session.query(IssueInstance, SharedText.contents.label("path"))
         .join(SharedText, SharedText.id == IssueInstance.filename_id)
         .group_by(SharedText)
@@ -43,7 +42,6 @@ class SourceName(graphene.ObjectType):
 
 def all_source_names(session: Session) -> List[SourceName]:
     return (
-        # pyre-fixme[16]: `str` has no attribute `label`
         session.query(IssueInstance, SharedText.contents.label("source_name"))
         .join(SharedText, SharedText.kind == SharedTextKind.SOURCE_DETAIL)
         .group_by(SharedText)
@@ -57,7 +55,6 @@ class SourceKind(graphene.ObjectType):
 
 def all_source_kinds(session: Session) -> List[SourceName]:
     return (
-        # pyre-fixme[16]: `str` has no attribute `label`
         session.query(IssueInstance, SharedText.contents.label("source_kind"))
         .join(SharedText, SharedText.kind == SharedTextKind.SOURCE)
         .group_by(SharedText)
@@ -71,7 +68,6 @@ class SinkName(graphene.ObjectType):
 
 def all_sink_names(session: Session) -> List[SourceName]:
     return (
-        # pyre-fixme[16]: `str` has no attribute `label`
         session.query(IssueInstance, SharedText.contents.label("sink_name"))
         .join(SharedText, SharedText.kind == SharedTextKind.SINK_DETAIL)
         .group_by(SharedText)
@@ -85,7 +81,6 @@ class SinkKind(graphene.ObjectType):
 
 def all_sink_kinds(session: Session) -> List[SourceName]:
     return (
-        # pyre-fixme[16]: `str` has no attribute `label`
         session.query(IssueInstance, SharedText.contents.label("sink_kind"))
         .join(SharedText, SharedText.kind == SharedTextKind.SINK)
         .group_by(SharedText)
@@ -107,7 +102,6 @@ class Callable(graphene.ObjectType):
 
 def all_callables(session: Session) -> List[Callable]:
     return (
-        # pyre-fixme[16]: `str` has no attribute `label`.
         session.query(IssueInstance, SharedText.contents.label("callable"))
         .join(SharedText, SharedText.id == IssueInstance.callable_id)
         .group_by(SharedText)
@@ -121,7 +115,6 @@ class Feature(graphene.ObjectType):
 
 def all_features(session: Session) -> List[Feature]:
     return (
-        # pyre-fixme[16]: `str` has no attribute `label`.
         session.query(SharedText, SharedText.contents.label("feature"))
         .filter(SharedText.kind == SharedTextKind.FEATURE)
         .all()

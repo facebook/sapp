@@ -7,7 +7,7 @@
 
 from unittest import TestCase
 
-from tools.sapp.sapp.models import IssueDBID, SharedText, TraceFrame
+from tools.sapp.sapp.models import DBID, IssueDBID, SharedText, TraceFrame
 
 from ..db import DB, DBType
 from ..models import create as create_tables, Issue, PrimaryKey, PrimaryKeyGenerator
@@ -41,7 +41,7 @@ class PrimaryKeyGeneratorTest(TestCase):
                     id=IssueDBID(4),
                     handle="1",
                     code=6015,
-                    callable_id=11111,
+                    callable_id=DBID(11111),
                     detected_time=10,
                 )
             )
@@ -50,7 +50,7 @@ class PrimaryKeyGeneratorTest(TestCase):
                     id=IssueDBID(7),
                     handle="2",
                     code=6015,
-                    callable_id=11111,
+                    callable_id=DBID(11111),
                     detected_time=10,
                 )
             )
@@ -163,7 +163,7 @@ class PrimaryKeyGeneratorTest(TestCase):
                     id=IssueDBID(4),
                     handle="1",
                     code=6015,
-                    callable_id=11111,
+                    callable_id=DBID(11111),
                     detected_time=10,
                 )
             )
@@ -172,7 +172,7 @@ class PrimaryKeyGeneratorTest(TestCase):
                     id=IssueDBID(7),
                     handle="2",
                     code=6015,
-                    callable_id=11111,
+                    callable_id=DBID(11111),
                     detected_time=10,
                 )
             )

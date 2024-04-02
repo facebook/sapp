@@ -301,17 +301,14 @@ class PrimaryKeyBase(PrepareMixin, RecordMixin):  # noqa
     __tablename__ = "primary_keys"
     __table_args__: Tuple[Dict[str, str]] = BASE_TABLE_ARGS
 
-    # pyre-fixme[8]: Attribute has type `str`; used as `Column[str]`.
-    table_name: str = Column(
+    table_name: Column[str] = Column(
         String(length=100),
         doc="Name of the table that this row stores the next available primary key for",
         nullable=False,
         primary_key=True,
     )
 
-    # pyre-fixme[8]: Attribute has type `int`; used as
-    #  `Column[Variable[sqlalchemy.sql.type_api._U]]`.
-    current_id: int = Column(
+    current_id: Column[int] = Column(
         BIGINT(unsigned=True).with_variant(BIGINT, "sqlite"),
         doc="The current/latest id used in the table.",
         nullable=False,

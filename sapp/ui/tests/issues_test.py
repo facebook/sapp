@@ -7,6 +7,8 @@
 
 from unittest import TestCase
 
+from tools.sapp.sapp.models import DBID
+
 from ... import queries
 from ...db import DB, DBType
 from ...models import create as create_models, IssueInstanceSharedTextAssoc
@@ -305,12 +307,12 @@ class QueryTest(TestCase):
         with self.db.make_session() as session:
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=source_name_1.id, issue_instance_id=1
+                    shared_text_id=source_name_1.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=source_name_2.id, issue_instance_id=2
+                    shared_text_id=source_name_2.id, issue_instance_id=DBID(2)
                 )
             )
             session.commit()
@@ -361,12 +363,12 @@ class QueryTest(TestCase):
         with self.db.make_session() as session:
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=source_kind_1.id, issue_instance_id=1
+                    shared_text_id=source_kind_1.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=source_kind_2.id, issue_instance_id=2
+                    shared_text_id=source_kind_2.id, issue_instance_id=DBID(2)
                 )
             )
             session.commit()
@@ -417,12 +419,12 @@ class QueryTest(TestCase):
         with self.db.make_session() as session:
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=sink_name_1.id, issue_instance_id=1
+                    shared_text_id=sink_name_1.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=sink_name_2.id, issue_instance_id=2
+                    shared_text_id=sink_name_2.id, issue_instance_id=DBID(2)
                 )
             )
             session.commit()
@@ -471,12 +473,12 @@ class QueryTest(TestCase):
         with self.db.make_session() as session:
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=sink_kind_1.id, issue_instance_id=1
+                    shared_text_id=sink_kind_1.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=sink_kind_2.id, issue_instance_id=2
+                    shared_text_id=sink_kind_2.id, issue_instance_id=DBID(2)
                 )
             )
             session.commit()
@@ -526,12 +528,12 @@ class QueryTest(TestCase):
         with self.db.make_session() as session:
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature1.id, issue_instance_id=1
+                    shared_text_id=feature1.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature2.id, issue_instance_id=1
+                    shared_text_id=feature2.id, issue_instance_id=DBID(1)
                 )
             )
             session.commit()
@@ -578,12 +580,12 @@ class QueryTest(TestCase):
         with self.db.make_session() as session:
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature1.id, issue_instance_id=1
+                    shared_text_id=feature1.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature2.id, issue_instance_id=1
+                    shared_text_id=feature2.id, issue_instance_id=DBID(1)
                 )
             )
             session.commit()
@@ -631,22 +633,22 @@ class QueryTest(TestCase):
         with self.db.make_session() as session:
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature1.id, issue_instance_id=1
+                    shared_text_id=feature1.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature2.id, issue_instance_id=1
+                    shared_text_id=feature2.id, issue_instance_id=DBID(1)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature1.id, issue_instance_id=2
+                    shared_text_id=feature1.id, issue_instance_id=DBID(2)
                 )
             )
             session.add(
                 IssueInstanceSharedTextAssoc(
-                    shared_text_id=feature4.id, issue_instance_id=2
+                    shared_text_id=feature4.id, issue_instance_id=DBID(2)
                 )
             )
             session.commit()

@@ -246,6 +246,17 @@ class SharedTextKind(enum.Enum):
     def from_string(cls, string: str) -> Optional[SharedTextKind]:
         return cls.__members__.get(string)
 
+    @classmethod
+    def from_string_with_exception(cls, string: str) -> SharedTextKind:
+        result: Optional[SharedTextKind] = None
+        if isinstance(string, SharedTextKind):
+            result = string
+        elif isinstance(string, str):
+            result = cls.__members__.get(string)
+        if result is None:
+            raise ValueError(f"Unknown SharedTextKind: {string}")
+        return result
+
 
 class SharedText(Base, PrepareMixin, RecordMixin):
     """Any string-ish type that can be shared as a property of some other
@@ -262,17 +273,14 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         ),
     ) + BASE_TABLE_ARGS
 
-    # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
-    id: DBID = Column(BIGDBIDType, primary_key=True)
+    id: Column[DBID] = Column(BIGDBIDType, primary_key=True)
 
-    # pyre-fixme[8]: Attribute has type `str`; used as `Column[str]`.
-    contents: str = Column(
+    contents: Column[str] = Column(
         String(length=SHARED_TEXT_LENGTH),
         nullable=False,
     )
 
-    # pyre-fixme[8]: Attribute has type `SharedTextKind`; used as `Column[str]`.
-    kind: SharedTextKind = Column(
+    kind: Column[str] = Column(
         Enum(SharedTextKind), server_default="feature", nullable=False
     )
 
@@ -333,11 +341,13 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_feature_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
-    issue_instance_id = Column(
+    issue_instance_id: Column[DBID] = Column(
         "issue_instance_id", BIGDBIDType, primary_key=True, nullable=False
     )
 
-    shared_text_id = Column("feature_id", BIGDBIDType, primary_key=True, nullable=False)
+    shared_text_id: Column[DBID] = Column(
+        "feature_id", BIGDBIDType, primary_key=True, nullable=False
+    )
 
     issue_instance = relationship(
         "IssueInstance",
@@ -429,16 +439,17 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         Index("ix_issue_instances_run_id_purge_status", "run_id", "purge_status"),
     ) + BASE_TABLE_ARGS
 
-    # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
-    id: DBID = Column(BIGDBIDType, primary_key=True)
+    id: Column[DBID] = Column(BIGDBIDType, primary_key=True)
 
-    location = Column(
+    location: Column[SourceLocation] = Column(
         SourceLocationType,
         nullable=False,
         doc="Location (possibly a range) of the issue",
     )
 
-    filename_id = Column(BIGDBIDType, nullable=False, server_default="0", default=0)
+    filename_id: Column[DBID] = Column(
+        BIGDBIDType, nullable=False, server_default="0", default=0
+    )
 
     filename = relationship(
         "SharedText",
@@ -447,7 +458,9 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
-    callable_id = Column(BIGDBIDType, nullable=False, server_default="0", default=0)
+    callable_id: Column[DBID] = Column(
+        BIGDBIDType, nullable=False, server_default="0", default=0
+    )
 
     callable = relationship(
         "SharedText",
@@ -463,9 +476,9 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         doc="True if the issue did not exist before this instance",
     )
 
-    run_id = Column(BIGDBIDType, nullable=False, index=False)
+    run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=False)
 
-    issue_id = Column(BIGDBIDType, nullable=False, index=True)
+    issue_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=True)
 
     issue = relationship(
         "Issue",
@@ -474,7 +487,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
-    fix_info_id = Column(BIGDBIDType, nullable=True)
+    fix_info_id: Column[Optional[DBID]] = Column(BIGDBIDType, nullable=True)
 
     fix_info = relationship(
         "IssueInstanceFixInfo",
@@ -483,7 +496,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
-    message_id = Column(BIGDBIDType, nullable=True)
+    message_id: Column[Optional[DBID]] = Column(BIGDBIDType, nullable=True)
 
     message = relationship(
         "SharedText",
@@ -646,8 +659,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         Index("ix_issues_status_severity", "status", "severity"),
     ) + BASE_TABLE_ARGS
 
-    # pyre-fixme[8]: Attribute has type `IssueDBID`; used as `Column[typing.Any]`.
-    id: IssueDBID = Column(IssueBIGDBIDType, primary_key=True, nullable=False)
+    id: Column[IssueDBID] = Column(IssueBIGDBIDType, primary_key=True, nullable=False)
 
     handle: Column[str] = Column(
         String(length=HANDLE_LENGTH),
@@ -657,7 +669,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         + "different code revisions",
     )
 
-    callable_id = Column(
+    callable_id: Column[DBID] = Column(
         BIGDBIDType, nullable=False, index=True, server_default="0", default=0
     )
 
@@ -733,9 +745,13 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         doc="FBID for EntInternUser (typically actor of first triage from history)",
     )
 
-    first_instance_id = Column(BIGDBIDType, nullable=True, index=False)
+    first_instance_id: Column[Optional[DBID]] = Column(
+        BIGDBIDType, nullable=True, index=False
+    )
 
-    triaged_instance_id = Column(BIGDBIDType, nullable=True, index=False)
+    triaged_instance_id: Column[Optional[DBID]] = Column(
+        BIGDBIDType, nullable=True, index=False
+    )
 
     update_time: Column[int] = Column(
         BIGINT(20, unsigned=True),
@@ -868,7 +884,7 @@ class Run(Base):
         Index("ix_runs_purge_status_run_status_date", "purge_status", "status", "date"),
     ) + BASE_TABLE_ARGS
 
-    id = Column(BIGDBIDType, primary_key=True)
+    id: Column[DBID] = Column(BIGDBIDType, primary_key=True)
 
     job_id: Column[Optional[str]] = Column(String(length=255), index=True)
 
@@ -1005,7 +1021,7 @@ class MetaRun(Base):
     __tablename__ = "metaruns"
     __table_args__ = BASE_TABLE_ARGS
 
-    id = Column(BIGDBIDType, primary_key=True, autoincrement=False)
+    id: Column[DBID] = Column(BIGDBIDType, primary_key=True, autoincrement=False)
 
     # This is the moral equivalent of job_id, but named in a more intuitive manner.
     # Allows determining the latest meta run for each custom run separately.
@@ -1081,8 +1097,8 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "metarun_run_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
-    meta_run_id = Column(BIGDBIDType, nullable=False, primary_key=True)
-    run_id = Column(BIGDBIDType, nullable=False, primary_key=True)
+    meta_run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
+    run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
     meta_run = relationship(
         "MetaRun",
         primaryjoin=("MetaRunToRunAssoc.meta_run_id == foreign(MetaRun.id)"),
@@ -1096,7 +1112,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
-    run_label = Column(
+    run_label: Column[Optional[str]] = Column(
         String(length=1024),
         nullable=True,
         doc="Optional label associated with a child run (eg. Buck target)",
@@ -1112,9 +1128,11 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "trace_frame_message_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
-    trace_frame_id = Column(BIGDBIDType, nullable=False, primary_key=True)
+    trace_frame_id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
-    leaf_id = Column("message_id", BIGDBIDType, nullable=False, primary_key=True)
+    leaf_id: Column[DBID] = Column(
+        "message_id", BIGDBIDType, nullable=False, primary_key=True
+    )
 
     # The minimum trace length unfortunately can be off and actually lead to
     # loops. This is a known problem and any code generating traces should
@@ -1146,8 +1164,7 @@ class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_fix_info"
     __table_args__ = BASE_TABLE_ARGS
 
-    # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
-    id: DBID = Column(BIGDBIDType, nullable=False, primary_key=True)
+    id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
     fix_info: Column[str] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH), nullable=False
@@ -1169,8 +1186,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         Index("ix_traceframe_run_callee_port", "run_id", "callee_id", "callee_port"),
     ) + BASE_TABLE_ARGS
 
-    # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
-    id: DBID = Column(BIGDBIDType, nullable=False, primary_key=True)
+    id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
     kind: Column[str] = Column(Enum(TraceKind), nullable=False, index=False)
 
@@ -1190,7 +1206,9 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         doc="The caller port of this call edge",
     )
 
-    callee_id = Column(BIGDBIDType, nullable=False, server_default="0", default=0)
+    callee_id: Column[DBID] = Column(
+        BIGDBIDType, nullable=False, server_default="0", default=0
+    )
 
     callee = relationship(
         "SharedText",
@@ -1199,7 +1217,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
-    callee_location = Column(
+    callee_location: Column[SourceLocation] = Column(
         SourceLocationType,
         nullable=False,
         doc="The location of the callee in the source code (line|start|end)",
@@ -1212,9 +1230,11 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         doc="The callee port of this call edge'",
     )
 
-    filename_id = Column(BIGDBIDType, nullable=False, server_default="0", default=0)
+    filename_id: Column[DBID] = Column(
+        BIGDBIDType, nullable=False, server_default="0", default=0
+    )
 
-    run_id = Column("run_id", BIGDBIDType, nullable=False, index=False)
+    run_id: Column[DBID] = Column("run_id", BIGDBIDType, nullable=False, index=False)
 
     type_interval_lower: Column[Optional[int]] = Column(
         Integer, nullable=True, doc="Class interval lower-bound (inclusive)"
@@ -1232,7 +1252,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         doc="Whether the call preserves the calling type context",
     )
 
-    titos = Column(
+    titos: Column[SourceLocation] = Column(
         SourceLocationsType,
         doc="Locations of TITOs aka abductions for the trace frame",
         nullable=False,
@@ -1332,23 +1352,21 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
     __tablename__ = "trace_frame_annotations"
     __table_args__ = BASE_TABLE_ARGS
 
-    # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
-    id: DBID = Column(BIGDBIDType, nullable=False, primary_key=True)
+    id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
-    location = Column(
+    location: Column[SourceLocation] = Column(
         SourceLocationType, nullable=False, doc="The location for the message"
     )
 
     kind: Column[Optional[str]] = Column(String(length=255), nullable=True, index=True)
 
-    # pyre-fixme[8]: Attribute has type `str`; used as `Column[str]`.
-    message: str = Column(
+    message: Column[str] = Column(
         String(length=4096),
         doc="Message describing info about the trace",
         nullable=False,
     )
 
-    leaf_id = Column(BIGDBIDType, nullable=True)
+    leaf_id: Column[DBID] = Column(BIGDBIDType, nullable=True)
     leaf = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == TraceFrameAnnotation.leaf_id",
@@ -1356,22 +1374,19 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
-    # pyre-fixme[8]: Attribute has type `Optional[str]`; used as `Column[str]`.
-    link: Optional[str] = Column(
+    link: Column[Optional[str]] = Column(
         String(length=4096),
         doc="An optional URL linking the message to more info (Quandary)",
         nullable=True,
     )
 
-    # pyre-fixme[8]: Attribute has type `Optional[str]`; used as `Column[str]`.
-    trace_key: Optional[str] = Column(
+    trace_key: Column[Optional[str]] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH),
         nullable=True,
         doc="Link to possible pre/post traces (caller_condition).",
     )
 
-    # pyre-fixme[8]: Attribute has type `DBID`; used as `Column[typing.Any]`.
-    trace_frame_id: DBID = Column(BIGDBIDType, nullable=False, index=True)
+    trace_frame_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=True)
     trace_frame = relationship(
         "TraceFrame",
         primaryjoin=("TraceFrame.id == foreign(TraceFrameAnnotation.trace_frame_id)"),
@@ -1402,11 +1417,11 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "trace_frame_annotation_trace_frame_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
-    trace_frame_annotation_id = Column(
+    trace_frame_annotation_id: Column[DBID] = Column(
         "trace_frame_annotation_id", BIGDBIDType, primary_key=True, nullable=False
     )
 
-    trace_frame_id = Column(
+    trace_frame_id: Column[DBID] = Column(
         "trace_frame_id", BIGDBIDType, primary_key=True, nullable=False, index=True
     )
 
@@ -1580,9 +1595,9 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
     __tablename__ = "run_origins"
     __table_args__ = BASE_TABLE_ARGS
 
-    id = Column(BIGDBIDType, nullable=False, primary_key=True)
-    run_id = Column(BIGDBIDType, nullable=False, index=True)
-    origin = Column(String(length=255), nullable=False)
+    id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
+    run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=True)
+    origin: Column[str] = Column(String(length=255), nullable=False)
 
     run = relationship(
         "Run",
@@ -1612,12 +1627,14 @@ class ClassTypeInterval(Base, PrepareMixin, RecordMixin):
 
     # Synthetic primary key allows easier pagination when compared to
     # using (run_id, class_name) as a composite primary key
-    id = Column("id", BIGDBIDType, nullable=False, primary_key=True)
+    id: Column[DBID] = Column("id", BIGDBIDType, nullable=False, primary_key=True)
 
-    run_id = Column(BIGDBIDType, nullable=False)
-    class_name = Column(String(length=INNODB_MAX_INDEX_LENGTH), nullable=False)
-    lower_bound = Column(Integer, nullable=False)
-    upper_bound = Column(Integer, nullable=False)
+    run_id: Column[DBID] = Column(BIGDBIDType, nullable=False)
+    class_name: Column[str] = Column(
+        String(length=INNODB_MAX_INDEX_LENGTH), nullable=False
+    )
+    lower_bound: Column[int] = Column(Integer, nullable=False)
+    upper_bound: Column[int] = Column(Integer, nullable=False)
 
 
 class MetaRunIssueInstanceIndex(Base, PrepareMixin, RecordMixin):
@@ -1629,8 +1646,10 @@ class MetaRunIssueInstanceIndex(Base, PrepareMixin, RecordMixin):
         Index("ix_metarun_issue_instance_index", "meta_run_id", "issue_instance_hash"),
     ) + BASE_TABLE_ARGS
 
-    issue_instance_id = Column(BIGDBIDType, nullable=False, primary_key=True)
-    meta_run_id = Column(BIGDBIDType, nullable=False)
+    issue_instance_id: Column[DBID] = Column(
+        BIGDBIDType, nullable=False, primary_key=True
+    )
+    meta_run_id: Column[DBID] = Column(BIGDBIDType, nullable=False)
     issue_instance_hash: Column[str] = Column(
         String(length=META_RUN_ISSUE_INSTANCE_HASH_LENGTH),
         nullable=False,

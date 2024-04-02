@@ -146,7 +146,6 @@ class Instance:
     def get(self) -> List[IssueQueryResult]:
         features = (
             self._session.query(
-                # pyre-ignore: SQAlchemy sadness.
                 IssueInstance.id.label("id"),
                 func.group_concat(FeatureText.contents.distinct()).label(
                     "concatenated_features"
@@ -248,7 +247,6 @@ class Instance:
                 IssueInstance.id.label("issue_instance_id"),
                 FilenameText.contents.label("filename"),
                 IssueInstance.location,
-                # pyre-ignore[16]: SQLAlchemy
                 Issue.id.label("issue_id"),
                 Issue.code,
                 Issue.status,
@@ -303,7 +301,7 @@ class Instance:
     def where_issue_instance_id_is(self, issue_id: Optional[int]) -> "Instance":
         if issue_id is not None:
             self._predicates.append(
-                filter_predicates.Equals(IssueInstance.id, issue_id)
+                filter_predicates.Equals(IssueInstance.id, DBID(issue_id))
             )
         return self
 

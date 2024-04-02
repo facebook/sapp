@@ -729,7 +729,8 @@ class TrimmedTraceGraph(TraceGraph):
         """
         instance = graph._issue_instances[instance_id]
         issue = graph._issues[instance.issue_id.local_id]
-        self._populate_shared_text(graph, instance.message_id)
+        if instance.message_id is not None:
+            self._populate_shared_text(graph, instance.message_id)
         self._populate_shared_text(graph, instance.filename_id)
         self._populate_shared_text(graph, instance.callable_id)
 
