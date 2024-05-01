@@ -193,6 +193,7 @@ class PrepareMixin:
         # Guard against `items` being an iterator: we need to iterate it twice
         items = list(items)
 
+        # pyre-fixme[11]: Annotation `` is not defined as a type.
         def key_for_item(item: PrepareMixin) -> Tuple[...]:
             return tuple(getattr(item, attr.key) for attr in key_attributes)
 
