@@ -26,9 +26,9 @@ SinkToSharedTextMap = Dict[int, Set[int]]
 SinkToState = Dict[int, PerSinkState]
 
 
-class PropagateSharedTexts(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[13]
+class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[13]
     """For all issues propagate source kinds and features to all reachable frames
-    leading to sinks and propagate features to leaf sinks.
+    leading to sinks and propagate features to leaf sinks with anchor ports.
     """
 
     def __init__(self, propagate_sources: bool, propagate_features: bool) -> None:
