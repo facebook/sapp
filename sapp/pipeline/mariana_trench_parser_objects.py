@@ -192,6 +192,9 @@ class CallInfo(NamedTuple):
     def is_propagation_without_trace(self) -> bool:
         return "Propagation" == self.call_kind
 
+    def is_propagation_with_trace(self) -> bool:
+        return "PropagationWithTrace" in self.call_kind
+
 
 class LocalPositions(NamedTuple):
     positions: List[Position]
@@ -257,16 +260,19 @@ class Features(NamedTuple):
 class ExtraTrace(NamedTuple):
     kind: str
     callee: CallInfo
+    frame_type: str
 
     @staticmethod
     def from_json(
         extra_trace: Dict[str, Any], caller_position: Position
     ) -> "ExtraTrace":
+        frame_type = extra_trace["frame_type"]
         return ExtraTrace(
             kind=extra_trace["kind"],
             callee=CallInfo.from_json(
-                extra_trace["call_info"], "sink", caller_position
+                extra_trace["call_info"], frame_type, caller_position
             ),
+            frame_type=frame_type,
         )
 
     def to_sapp(self) -> sapp.ParseTraceAnnotation:
@@ -284,8 +290,12 @@ class ExtraTrace(NamedTuple):
 
         return sapp.ParseTraceAnnotation(
             location=self.callee.position.to_sapp(),
-            kind="tito_transform",
-            msg=f"Propagation through {self.kind}",
+            kind=self.frame_type,
+            msg=(
+                f"Propagation through {self.kind}"
+                if self.callee.is_propagation_with_trace()
+                else f"To {self.frame_type} kind: {self.kind}"
+            ),
             leaf_kind=self.kind,
             leaf_depth=0,
             type_interval=None,

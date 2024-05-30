@@ -15,6 +15,7 @@ from .. import (
     ParseIssueConditionTuple,
     ParseIssueTuple,
     ParseTraceAnnotation,
+    ParseTraceAnnotationSubtrace,
     ParseTraceFeature,
     ParseTypeInterval,
     SourceLocation,
@@ -2293,6 +2294,7 @@ class TestParser(unittest.TestCase):
                                   "path" : "ExtraTraces.java"
                                 }
                               },
+                              "frame_type": "sink",
                               "kind" : "T2:LocalReturn"
                             }
                           ],
@@ -2337,9 +2339,107 @@ class TestParser(unittest.TestCase):
                                 begin_column=1,
                                 end_column=1,
                             ),
-                            kind="tito_transform",
+                            kind="sink",
                             msg="Propagation through T2:LocalReturn",
                             leaf_kind="T2:LocalReturn",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        # Parse callsite with source extra traces
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.rootCallable:(I)I",
+              "position" : { "line" : 42, "path" : "ExtraTraces.java" },
+              "effect_sinks" :
+              [
+                {
+                  "port" : "call-chain",
+                  "taint" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "Origin",
+                        "port" : "Argument(0)",
+                        "position" :
+                        {
+                          "line" : 42,
+                          "path" : "ExtraTraces.java"
+                        }
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "extra_traces" :
+                          [
+                            {
+                              "call_info" :
+                              {
+                                "call_kind" : "Origin",
+                                "port" : "Return",
+                                "position" :
+                                {
+                                  "line" : 42,
+                                  "path" : "ExtraTraces.java"
+                                }
+                              },
+                              "frame_type" : "source",
+                              "kind" : "TestSource"
+                            }
+                          ],
+                          "kind" : "TestSource@TestSink",
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.toSink:(I)V",
+                              "port" : "Argument(0)"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.rootCallable:(I)I",
+                    callee="LClass;.toSink:(I)V",
+                    callee_location=SourceLocation(
+                        line_no=42,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("TestSource@TestSink", 0)],
+                    caller_port="call-chain",
+                    callee_port="sink:argument(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=42,
+                                begin_column=1,
+                                end_column=1,
+                            ),
+                            kind="source",
+                            msg="To source kind: TestSource",
+                            leaf_kind="TestSource",
                             leaf_depth=0,
                             type_interval=None,
                             link=None,
