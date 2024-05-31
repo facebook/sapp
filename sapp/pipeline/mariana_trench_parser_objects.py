@@ -18,6 +18,20 @@ UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1
 
 
+def _parse_kind_name(kind: Union[str, Dict[str, Any]]) -> str:
+    if type(kind) is str:
+        return kind
+    # Parse the name in case this is a TransformKind
+    name = ""
+    if local_transform := kind.get("local"):
+        name += f"{local_transform}@"
+    if global_transform := kind.get("global"):
+        name += f"{global_transform}:"
+    name += kind["base"]
+
+    return name
+
+
 class Method(NamedTuple):
     name: str
 
@@ -268,7 +282,7 @@ class ExtraTrace(NamedTuple):
     ) -> "ExtraTrace":
         frame_type = extra_trace["frame_type"]
         return ExtraTrace(
-            kind=extra_trace["kind"],
+            kind=_parse_kind_name(extra_trace["kind"]),
             callee=CallInfo.from_json(
                 extra_trace["call_info"], frame_type, caller_position
             ),
@@ -349,7 +363,7 @@ class Kind(NamedTuple):
         for extra_trace in kind.get("extra_traces", []):
             extra_traces.append(ExtraTrace.from_json(extra_trace, caller_position))
         return Kind(
-            name=kind["kind"],
+            name=_parse_kind_name(kind["kind"]),
             distance=kind.get("distance", 0),
             origins=origins,
             extra_traces=extra_traces,

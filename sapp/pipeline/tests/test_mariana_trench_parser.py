@@ -2295,10 +2295,19 @@ class TestParser(unittest.TestCase):
                                 }
                               },
                               "frame_type": "sink",
-                              "kind" : "T2:LocalReturn"
+                              "kind" :
+                              {
+                                "base" : "LocalReturn",
+                                "global" : "T2"
+                              }
                             }
                           ],
-                          "kind" : "T2@T1:LocalReturn",
+                          "kind" :
+                          {
+                            "base" : "LocalReturn",
+                            "global" : "T1",
+                            "local" : "T2"
+                          },
                           "origins" :
                           [
                             {
@@ -2789,6 +2798,392 @@ class TestParser(unittest.TestCase):
                     final_sinks={("LSink;.sink:(LData;)V", "TestSink", 2)},
                     features=[],
                     fix_info=None,
+                )
+            ],
+        )
+
+    def testTransformKind(self) -> None:
+        # Only local kinds
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.hopPropagation2:(I)I",
+              "position" : { "line" : 43, "path" : "ExtraTraces.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:CallSite",
+                        "port" : "Argument(0)",
+                        "position" : { "line" : 45, "path" : "ExtraTraces.java" },
+                        "resolves_to" : "LClass;.hopPropagation3:(I)I"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:CallSite",
+                          "distance" : 2,
+                          "extra_traces" :
+                          [
+                            {
+                              "call_info" :
+                              {
+                                "call_kind" : "PropagationWithTrace:Origin",
+                                "port" : "Argument(0)",
+                                "position" : {
+                                  "line" : 44,
+                                  "path" : "ExtraTraces.java"
+                                }
+                              },
+                              "frame_type": "sink",
+                              "kind" :
+                              {
+                                "base" : "LocalReturn",
+                                "global" : "T2"
+                              }
+                            }
+                          ],
+                          "kind" :
+                          {
+                            "base" : "LocalReturn",
+                            "local" : "T2"
+                          },
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT1:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.hopPropagation2:(I)I",
+                    callee="LClass;.hopPropagation3:(I)I",
+                    callee_location=SourceLocation(
+                        line_no=45,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("T2@LocalReturn", 2)],
+                    caller_port="argument(0)",
+                    callee_port="argument(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=44,
+                                begin_column=1,
+                                end_column=1,
+                            ),
+                            kind="sink",
+                            msg="Propagation through T2:LocalReturn",
+                            leaf_kind="T2:LocalReturn",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        # Only global kinds
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.hopPropagation2:(I)I",
+              "position" : { "line" : 43, "path" : "ExtraTraces.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:CallSite",
+                        "port" : "Argument(0)",
+                        "position" : { "line" : 45, "path" : "ExtraTraces.java" },
+                        "resolves_to" : "LClass;.hopPropagation3:(I)I"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:CallSite",
+                          "distance" : 2,
+                          "kind" :
+                          {
+                            "base" : "LocalReturn",
+                            "global" : "T2"
+                          },
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT1:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.hopPropagation2:(I)I",
+                    callee="LClass;.hopPropagation3:(I)I",
+                    callee_location=SourceLocation(
+                        line_no=45,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("T2:LocalReturn", 2)],
+                    caller_port="argument(0)",
+                    callee_port="argument(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
+        # Both global and local kinds
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.hopPropagation2:(I)I",
+              "position" : { "line" : 43, "path" : "ExtraTraces.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:CallSite",
+                        "port" : "Argument(0)",
+                        "position" : { "line" : 45, "path" : "ExtraTraces.java" },
+                        "resolves_to" : "LClass;.hopPropagation3:(I)I"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:CallSite",
+                          "distance" : 2,
+                          "extra_traces" :
+                          [
+                            {
+                              "call_info" :
+                              {
+                                "call_kind" : "PropagationWithTrace:Origin",
+                                "port" : "Argument(0)",
+                                "position" : {
+                                  "line" : 44,
+                                  "path" : "ExtraTraces.java"
+                                }
+                              },
+                              "frame_type": "sink",
+                              "kind" :
+                              {
+                                "base" : "LocalReturn",
+                                "global" : "T2"
+                              }
+                            }
+                          ],
+                          "kind" :
+                          {
+                            "base" : "LocalReturn",
+                            "global" : "T1",
+                            "local" : "T2"
+                          },
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT1:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.hopPropagation2:(I)I",
+                    callee="LClass;.hopPropagation3:(I)I",
+                    callee_location=SourceLocation(
+                        line_no=45,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("T2@T1:LocalReturn", 2)],
+                    caller_port="argument(0)",
+                    callee_port="argument(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=44,
+                                begin_column=1,
+                                end_column=1,
+                            ),
+                            kind="sink",
+                            msg="Propagation through T2:LocalReturn",
+                            leaf_kind="T2:LocalReturn",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        # Multiple global and local kinds
+        self.assertParsed(
+            """
+            {
+              "method" : "LClass;.hopPropagation2:(I)I",
+              "position" : { "line" : 43, "path" : "ExtraTraces.java" },
+              "propagation" :
+              [
+                {
+                  "input" : "Argument(0)",
+                  "output" :
+                  [
+                    {
+                      "call_info" :
+                      {
+                        "call_kind" : "PropagationWithTrace:CallSite",
+                        "port" : "Argument(0)",
+                        "position" : { "line" : 45, "path" : "ExtraTraces.java" },
+                        "resolves_to" : "LClass;.hopPropagation3:(I)I"
+                      },
+                      "kinds" :
+                      [
+                        {
+                          "call_kind" : "PropagationWithTrace:CallSite",
+                          "distance" : 2,
+                          "extra_traces" :
+                          [
+                            {
+                              "call_info" :
+                              {
+                                "call_kind" : "PropagationWithTrace:Origin",
+                                "port" : "Argument(0)",
+                                "position" : {
+                                  "line" : 44,
+                                  "path" : "ExtraTraces.java"
+                                }
+                              },
+                              "frame_type": "sink",
+                              "kind" :
+                              {
+                                "base" : "LocalReturn",
+                                "global" : "T1:T2"
+                              }
+                            }
+                          ],
+                          "kind" :
+                          {
+                            "base" : "LocalReturn",
+                            "global" : "T3:T4",
+                            "local" : "T1:T2"
+                          },
+                          "origins" :
+                          [
+                            {
+                              "method" : "LClass;.transformT1:(I)I",
+                              "port" : "Argument(0)"
+                            }
+                          ],
+                          "output_paths" : { "" : 0 }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.hopPropagation2:(I)I",
+                    callee="LClass;.hopPropagation3:(I)I",
+                    callee_location=SourceLocation(
+                        line_no=45,
+                        begin_column=1,
+                        end_column=1,
+                    ),
+                    filename="ExtraTraces.java",
+                    titos=[],
+                    leaves=[("T1:T2@T3:T4:LocalReturn", 2)],
+                    caller_port="argument(0)",
+                    callee_port="argument(0)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=44,
+                                begin_column=1,
+                                end_column=1,
+                            ),
+                            kind="sink",
+                            msg="Propagation through T1:T2:LocalReturn",
+                            leaf_kind="T1:T2:LocalReturn",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[],
+                        )
+                    ],
                 )
             ],
         )
