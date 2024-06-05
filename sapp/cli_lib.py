@@ -15,6 +15,7 @@ import click
 import click_log
 import IPython
 from click import argument, option, Parameter, Path
+from tools.sapp.sapp.models import Run
 from traitlets.config import Config
 
 from .analysis_output import AnalysisOutput
@@ -198,7 +199,7 @@ def analyze(
         AddFeatures(add_feature),
         ModelGenerator(),
         TrimTraceGraph(),
-        DatabaseSaver(ctx.database, PrimaryKeyGenerator(), dry_run),
+        DatabaseSaver(ctx.database, Run, PrimaryKeyGenerator(), dry_run),
     ]
     # pyre-fixme[6]: Expected
     #  `List[tools.sapp.sapp.pipeline.PipelineStep[typing.Any, typing.Any]]` for 1st

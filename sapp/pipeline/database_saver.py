@@ -9,7 +9,7 @@
 
 import collections
 import logging
-from typing import List, Optional, Tuple, Type
+from typing import Generic, List, Optional, Tuple, Type, TypeVar
 
 from ..bulk_saver import BulkSaver
 from ..db import DB
@@ -32,20 +32,22 @@ from . import PipelineStep, Summary
 
 log: logging.Logger = logging.getLogger("sapp")
 
+TRun = TypeVar("TRun", bound=Run)
+
 
 # pyre-fixme[13]: Attribute `summary` is never initialized.
-class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
-    RUN_MODEL = Run
-
+class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
     def __init__(
         self,
         database: DB,
+        run_model: Type[TRun],
         primary_key_generator: Optional[PrimaryKeyGenerator] = None,
         dry_run: bool = False,
         extra_saving_classes: Optional[List[Type[object]]] = None,
     ) -> None:
         self.dbname: str = database.dbname
         self.database = database
+        self.run_model = run_model
         self.primary_key_generator: PrimaryKeyGenerator = (
             primary_key_generator or PrimaryKeyGenerator()
         )
@@ -126,12 +128,17 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
                 run_id = self.summary["run"].id.resolved()
                 log.info("Created run: %d", run_id)
 
+            # Get full list of issues before bulk_saver prunes them during _prepare
+            issues = self.bulk_saver.get_items_to_add(Issue)
+
             self.bulk_saver.save_all(self.database)
+
+            self._save_central_issues(self.summary["run"], issues)
 
             # Now that the run is finished, fetch it from the DB again and set its
             # status to FINISHED.
             with self.database.make_session() as session:
-                run = session.query(self.RUN_MODEL).filter_by(id=run_id).one()
+                run = session.query(self.run_model).filter_by(id=run_id).one()
                 run.status = RunStatus.FINISHED
                 session.add(run)
                 session.commit()
@@ -163,3 +170,8 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary]):
                 collections.Counter(issue.code for issue in self.graph.get_issues())
             ),
         )
+
+    def _save_central_issues(self, run: TRun, issues: List[Issue]) -> None:
+        """Subclasses may implement this to save issue data to a second location before
+        the run status is changed to FINISHED"""
+        pass
