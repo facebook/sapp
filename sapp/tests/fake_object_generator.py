@@ -67,7 +67,7 @@ class FakeObjectGenerator:
             code=code or (6015 + self.handle),
             callable_id=callable.id,
             status=status,
-            detected_time=now.timestamp(),
+            detected_time=int(now.timestamp()),
             first_instance_id=DBID(10072),
         )
         if self.graph:

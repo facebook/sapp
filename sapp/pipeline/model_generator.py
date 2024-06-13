@@ -202,7 +202,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             handle=entry.handle,
             callable_id=callable_record.id,
             status=IssueStatus.UNCATEGORIZED,
-            detected_time=run.date.timestamp(),
+            detected_time=int(run.date.timestamp()),
             first_instance_id=instance_id,
         )
 
