@@ -1068,7 +1068,10 @@ class TestParser(unittest.TestCase):
                                 begin_column=16,
                                 end_column=16,
                             ),
-                            leaves=[("UserControlled", 1), ("Header", 2)],
+                            leaves=[
+                                ("Header", 2),
+                                ("UserControlled", 1),
+                            ],
                             titos=[
                                 SourceLocation(
                                     line_no=17, begin_column=19, end_column=19
@@ -1092,7 +1095,10 @@ class TestParser(unittest.TestCase):
                                 begin_column=22,
                                 end_column=22,
                             ),
-                            leaves=[("RCE", 3), ("SQL", 2)],
+                            leaves=[
+                                ("RCE", 3),
+                                ("SQL", 2),
+                            ],
                             titos=[
                                 SourceLocation(
                                     line_no=23, begin_column=25, end_column=25
@@ -1363,7 +1369,10 @@ class TestParser(unittest.TestCase):
                         SourceLocation(line_no=10, begin_column=12, end_column=12),
                         SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
-                    leaves=[("UserControlled", 0), ("Header", 0)],
+                    leaves=[
+                        ("Header", 0),
+                        ("UserControlled", 0),
+                    ],
                     caller_port="result",
                     callee_port="source",
                     type_interval=ParseTypeInterval(
@@ -1621,7 +1630,10 @@ class TestParser(unittest.TestCase):
                         SourceLocation(line_no=10, begin_column=12, end_column=12),
                         SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
-                    leaves=[("UserControlled", 0), ("Header", 0)],
+                    leaves=[
+                        ("Header", 0),
+                        ("UserControlled", 0),
+                    ],
                     caller_port="result",
                     callee_port="producer:1:result",
                     type_interval=ParseTypeInterval(
@@ -1823,7 +1835,10 @@ class TestParser(unittest.TestCase):
                         SourceLocation(line_no=10, begin_column=12, end_column=12),
                         SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
-                    leaves=[("UserControlled", 2), ("Header", 3)],
+                    leaves=[
+                        ("Header", 3),
+                        ("UserControlled", 2),
+                    ],
                     caller_port="result[field]",
                     callee_port="result[attribute]",
                     type_interval=ParseTypeInterval(
@@ -2135,6 +2150,111 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
+        # direct and indirect sources with the same callee and callee port.
+        # Note: Pysa would NOT actually emit this, it would emit a single "taint".
+        # This is only for test purposes.
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "filename": "foo.py",
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 13, "start": 14, "end": 15 }
+                        ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "indirect-source" } ]
+                          }
+                        ],
+                        "is_self_call": false
+                      },
+                      {
+                        "call": {
+                          "position": {
+                            "filename": "foo.py",
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 13, "start": 14, "end": 15 }
+                        ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 2,
+                            "leaves": [ { "name": "_another_user_controlled" } ],
+                            "features": [ { "always-via": "another-indirect-source" } ]
+                          }
+                        ],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[
+                        ("UserControlled", 2),
+                        ("UserControlled", 1),
+                    ],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+            ],
+        )
 
     def testSinkModelV3(self) -> None:
         # User-declared sink.
@@ -2243,7 +2363,10 @@ class TestParser(unittest.TestCase):
                         SourceLocation(line_no=10, begin_column=12, end_column=12),
                         SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
-                    leaves=[("SQL", 0), ("RCE", 0)],
+                    leaves=[
+                        ("RCE", 0),
+                        ("SQL", 0),
+                    ],
                     caller_port="formal(x)",
                     callee_port="sink",
                     type_interval=ParseTypeInterval(

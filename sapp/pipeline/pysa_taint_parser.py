@@ -7,6 +7,7 @@
 
 """Parse Pysa/Taint output for Zoncolan processing"""
 
+import functools
 import json
 import logging
 import sys
@@ -76,12 +77,6 @@ class SourceLocationWithFilename(NamedTuple):
         )
 
 
-class LeafWithPort(NamedTuple):
-    name: Optional[str]
-    kind: str
-    port: Optional[str]
-
-
 class LeafWithDistance(NamedTuple):
     name: Optional[str]
     kind: str
@@ -98,6 +93,13 @@ class LeafWithPortDistance(NamedTuple):
         return LeafWithDistance(name=self.name, kind=self.kind, distance=self.distance)
 
 
+class TraceFragmentKey(NamedTuple):
+    callee: str
+    port: str
+    location: SourceLocationWithFilename
+    type_interval: Optional[ParseTypeInterval]
+
+
 # Represents a trace frame (source or sink) in a format similar to SAPP.
 class TraceFragment(NamedTuple):
     callee: str
@@ -107,7 +109,32 @@ class TraceFragment(NamedTuple):
     titos: Iterable[SourceLocation]
     features: Iterable[TraceFeature]
     type_interval: Optional[ParseTypeInterval]
-    trace_annotations: List[ParseTraceAnnotation]
+    trace_annotations: Iterable[ParseTraceAnnotation]
+
+    def key(self) -> TraceFragmentKey:
+        return TraceFragmentKey(
+            callee=self.callee,
+            port=self.port,
+            location=self.location,
+            type_interval=self.type_interval,
+        )
+
+    @staticmethod
+    def merge(a: "TraceFragment", b: "TraceFragment") -> "TraceFragment":
+        if a.key() != b.key():
+            raise AssertionError("Trace fragments cannot be merged")
+        return TraceFragment(
+            callee=a.callee,
+            port=a.port,
+            location=a.location,
+            leaves=sorted(set(a.leaves) | set(b.leaves)),
+            titos=sorted(set(a.titos) | set(b.titos)),
+            features=sorted(set(a.features) | set(b.features)),
+            type_interval=a.type_interval,
+            trace_annotations=sorted(
+                set(a.trace_annotations) | set(b.trace_annotations)
+            ),
+        )
 
 
 class Parser(BaseParser):
@@ -343,26 +370,25 @@ class Parser(BaseParser):
         fragments: List[ParseIssueConditionTuple] = []
         leaf_distances: Set[ParseIssueLeaf] = set()
 
-        for trace in traces:
-            for fragment in self._parse_trace_fragment(leaf_port, trace):
-                leaves = fragment.leaves
-                fragments.append(
-                    ParseIssueConditionTuple(
-                        callee=fragment.callee,
-                        port=fragment.port,
-                        location=fragment.location.drop_filename(),
-                        leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
-                        titos=fragment.titos,
-                        features=[
-                            feature.to_parse_feature() for feature in fragment.features
-                        ],
-                        type_interval=fragment.type_interval,
-                        annotations=fragment.trace_annotations,
-                    )
+        for fragment in self._parse_trace_fragments(leaf_port, traces):
+            leaves = fragment.leaves
+            fragments.append(
+                ParseIssueConditionTuple(
+                    callee=fragment.callee,
+                    port=fragment.port,
+                    location=fragment.location.drop_filename(),
+                    leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
+                    titos=fragment.titos,
+                    features=[
+                        feature.to_parse_feature() for feature in fragment.features
+                    ],
+                    type_interval=fragment.type_interval,
+                    annotations=fragment.trace_annotations,
                 )
-                leaf_distances.update(
-                    (leaf.name, leaf.kind, leaf.distance) for leaf in leaves
-                )
+            )
+            leaf_distances.update(
+                (leaf.name, leaf.kind, leaf.distance) for leaf in leaves
+            )
 
         return (fragments, leaf_distances)
 
@@ -371,8 +397,18 @@ class Parser(BaseParser):
         leaf_port: Union[Literal["source"], Literal["sink"]],
         traces: List[Dict[str, Any]],
     ) -> Iterable[TraceFragment]:
+        # We could emit each fragment as a different trace frame, but we want to emit
+        # a single frame for all fragments with the same key, to save database space.
+        fragments_by_key: defaultdict[TraceFragmentKey, List[TraceFragment]] = (
+            defaultdict(list)
+        )
+
         for trace in traces:
-            yield from self._parse_trace_fragment(leaf_port, trace)
+            for fragment in self._parse_trace_fragment(leaf_port, trace):
+                fragments_by_key[fragment.key()].append(fragment)
+
+        for fragments_with_same_key in fragments_by_key.values():
+            yield functools.reduce(TraceFragment.merge, fragments_with_same_key)
 
     def _parse_trace_fragment(
         self,
@@ -391,50 +427,45 @@ class Parser(BaseParser):
             location = self._parse_location_with_filename(trace["origin"])
 
             # Turn leaves into direct callees and group by (callee, port)
-            leaf_name_and_port_to_leaves: defaultdict[
-                Tuple[str, str], List[LeafWithDistance]
-            ] = defaultdict(list)
-            for leaf in self._parse_leaves(trace):
-                callee_name = leaf.name or "leaf"
-                callee_port = leaf.port or leaf_port
-                leaf_name_and_port_to_leaves[(callee_name, callee_port)].append(
-                    leaf.discard_port()
-                )
-
-            for (
-                (callee_name, callee_port),
-                leaves,
-            ) in leaf_name_and_port_to_leaves.items():
-                yield TraceFragment(
-                    callee=callee_name,
-                    port=callee_port,
-                    location=location,
-                    leaves=leaves,
-                    titos=tito_positions,
-                    features=local_features,
-                    type_interval=type_interval,
-                    trace_annotations=trace_annotations,
-                )
+            for flow_details in trace.get("kinds", []):
+                kind = flow_details["kind"]
+                distance = flow_details.get("length", 0)
+                for leaf in self._parse_leaves(kind, distance, flow_details):
+                    yield TraceFragment(
+                        callee=leaf.name or "leaf",
+                        port=leaf.port or leaf_port,
+                        location=location,
+                        leaves=[leaf.discard_port()],
+                        titos=tito_positions,
+                        features=local_features,
+                        type_interval=type_interval,
+                        trace_annotations=trace_annotations,
+                    )
         elif "call" in trace:
             call = trace["call"]
             port = call["port"]
             location = self._parse_location_with_filename(call["position"])
             resolves_to = call.get("resolves_to", [])
-            leaves: List[LeafWithDistance] = [
-                leaf.discard_port() for leaf in self._parse_leaves(trace)
-            ]
 
-            for resolved in resolves_to:
-                yield TraceFragment(
-                    callee=resolved,
-                    port=port,
-                    location=location,
-                    leaves=leaves,
-                    titos=tito_positions,
-                    features=local_features,
-                    type_interval=type_interval,
-                    trace_annotations=trace_annotations,
-                )
+            for flow_details in trace.get("kinds", []):
+                kind = flow_details["kind"]
+                distance = flow_details.get("length", 0)
+                leaves: List[LeafWithDistance] = [
+                    leaf.discard_port()
+                    for leaf in self._parse_leaves(kind, distance, flow_details)
+                ]
+
+                for resolved in resolves_to:
+                    yield TraceFragment(
+                        callee=resolved,
+                        port=port,
+                        location=location,
+                        leaves=leaves,
+                        titos=tito_positions,
+                        features=local_features,
+                        type_interval=type_interval,
+                        trace_annotations=trace_annotations,
+                    )
         elif "declaration" in trace:
             pass  # User-declared fragment.
         else:
@@ -521,20 +552,19 @@ class Parser(BaseParser):
     def _adjust_start_location(self, start: int) -> int:
         return start + 1
 
-    def _parse_leaves(self, trace: Dict[str, Any]) -> List[LeafWithPortDistance]:
+    def _parse_leaves(
+        self, kind: str, distance: int, flow_details: Dict[str, Any]
+    ) -> List[LeafWithPortDistance]:
         leaves: List[LeafWithPortDistance] = []
-        for flow_details in trace.get("kinds", []):
-            kind = flow_details["kind"]
-            distance = flow_details.get("length", 0)
-            for leaf in flow_details.get("leaves", [{}]):
-                leaves.append(
-                    LeafWithPortDistance(
-                        name=leaf.get("name", None),
-                        kind=kind,
-                        port=leaf.get("port", None),
-                        distance=distance,
-                    )
+        for leaf in flow_details.get("leaves", [{}]):
+            leaves.append(
+                LeafWithPortDistance(
+                    name=leaf.get("name", None),
+                    kind=kind,
+                    port=leaf.get("port", None),
+                    distance=distance,
                 )
+            )
         return leaves
 
     @staticmethod
