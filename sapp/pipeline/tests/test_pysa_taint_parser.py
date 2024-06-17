@@ -117,23 +117,23 @@ class TestParser(unittest.TestCase):
                             "kind": "UserControlled",
                             "length": 1,
                             "leaves": [ { "name": "_user_controlled" } ],
-                            "features": [ { "always-via": "source-feature" } ]
-                          }
-                        ],
-                        "extra_traces": [
-                          {
-                            "call": {
-                              "position": {
-                                "line": 117,
-                                "start": 22,
-                                "end": 24
-                              },
-                              "resolves_to": [
-                                "extra_trace.transform_yz"
-                              ],
-                              "port": "formal(arg)"
-                            },
-                            "kind": "TransformY:TransformZ:ExtraTraceSink"
+                            "features": [ { "always-via": "source-feature" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": {
+                                    "line": 117,
+                                    "start": 22,
+                                    "end": 24
+                                  },
+                                  "resolves_to": [
+                                    "extra_trace.transform_yz"
+                                  ],
+                                  "port": "formal(arg)"
+                                },
+                                "kind": "TransformY:TransformZ:ExtraTraceSink"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -167,24 +167,24 @@ class TestParser(unittest.TestCase):
                             "kind": "RCE",
                             "length": 2,
                             "leaves": [ { "name": "_remote_code_execution" } ],
-                            "features": [ { "always-via": "sink-feature" } ]
-                          }
-                        ],
-                        "extra_traces": [
-                          {
-                            "call": {
-                              "position": {
-                                "line": 117,
-                                "start": 22,
-                                "end": 24
-                              },
-                              "resolves_to": [
-                                "extra_trace.transform_yz"
-                              ],
-                              "port": "formal(arg)"
-                            },
-                            "leaf_kind": "TransformY:TransformZ:ExtraTraceSink",
-                            "trace_kind": "sink"
+                            "features": [ { "always-via": "sink-feature" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": {
+                                    "line": 117,
+                                    "start": 22,
+                                    "end": 24
+                                  },
+                                  "resolves_to": [
+                                    "extra_trace.transform_yz"
+                                  ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformY:TransformZ:ExtraTraceSink",
+                                "trace_kind": "sink"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -1338,15 +1338,7 @@ class TestParser(unittest.TestCase):
                           { "lower": 25, "upper": 30 },
                           { "lower": 35, "upper": 40 }
                         ],
-                        "is_self_call": false,
-                        "extra_traces": [
-                          {
-                            "origin": { "line": 97, "start": 27, "end": 33 },
-                            "leaf_kind": "TransformX:ExtraTraceSink",
-                            "trace_kind": "sink",
-                            "message": "TransformX"
-                          }
-                        ]
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -1379,22 +1371,7 @@ class TestParser(unittest.TestCase):
                         start=25, finish=40, preserves_type_context=False
                     ),
                     features=[ParseTraceFeature("always-via:source-local", [])],
-                    annotations=[
-                        ParseTraceAnnotation(
-                            location=SourceLocation(
-                                line_no=97, begin_column=28, end_column=33
-                            ),
-                            kind="sink",
-                            msg="TransformX",
-                            leaf_kind="TransformX:ExtraTraceSink",
-                            leaf_depth=0,
-                            type_interval=None,
-                            link=None,
-                            trace_key=None,
-                            titos=[],
-                            subtraces=[],
-                        )
-                    ],
+                    annotations=[],
                 )
             ],
         )
@@ -1535,7 +1512,18 @@ class TestParser(unittest.TestCase):
                                 "port": "producer:2:result"
                               }
                             ],
-                            "features": [ { "always-via": "direct-source" } ]
+                            "features": [ { "always-via": "direct-source" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": { "line": 59, "start": 32, "end": 34 },
+                                  "resolves_to": [ "extra_trace.nested_transform_x" ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformX:ExtraTraceSink",
+                                "trace_kind": "tito_transform"
+                              }
+                            ]
                           },
                           {
                             "kind": "Header",
@@ -1546,22 +1534,22 @@ class TestParser(unittest.TestCase):
                                 "port": "producer:1:result"
                               }
                             ],
-                            "features": [ { "always-via": "direct-source" } ]
+                            "features": [ { "always-via": "cross-repo-source" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": { "line": 59, "start": 32, "end": 34 },
+                                  "resolves_to": [ "extra_trace.nested_transform_x" ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformX:ExtraTraceSink",
+                                "trace_kind": "tito_transform"
+                              }
+                            ]
                           }
                         ],
                         "receiver_interval": [{ "lower": 26, "upper": 31 }],
-                        "is_self_call": true,
-                        "extra_traces": [
-                          {
-                            "call": {
-                              "position": { "line": 59, "start": 32, "end": 34 },
-                              "resolves_to": [ "extra_trace.nested_transform_x" ],
-                              "port": "formal(arg)"
-                            },
-                            "leaf_kind": "TransformX:ExtraTraceSink",
-                            "trace_kind": "tito_transform"
-                          }
-                        ]
+                        "is_self_call": true
                       }
                     ]
                   }
@@ -2255,6 +2243,640 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
+        # Sources with different subtraces
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "filename": "foo.py",
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 13, "start": 14, "end": 15 }
+                        ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "indirect-source" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": { "line": 16, "start": 17, "end": 18 },
+                                  "resolves_to": [ "extra_trace.nested_transform_x" ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformX:ExtraTraceSink",
+                                "trace_kind": "tito_transform"
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "Header",
+                            "length": 2,
+                            "leaves": [ { "name": "_header" } ],
+                            "features": [ { "always-via": "indirect-source" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": { "line": 19, "start": 20, "end": 21 },
+                                  "resolves_to": [ "extra_trace.nested_transform_y" ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformY:ExtraTraceSink",
+                                "trace_kind": "tito_transform"
+                              }
+                            ]
+                          }
+                        ],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("UserControlled", 1)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=16, begin_column=18, end_column=18
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=16,
+                                        begin_column=18,
+                                        end_column=18,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("Header", 2)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=19, begin_column=21, end_column=21
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformY:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_y",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=19,
+                                        begin_column=21,
+                                        end_column=21,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                ),
+            ],
+        )
+        # Source with one subtrace and one without subtrace
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "filename": "foo.py",
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 13, "start": 14, "end": 15 }
+                        ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "indirect-source" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": { "line": 16, "start": 17, "end": 18 },
+                                  "resolves_to": [ "extra_trace.nested_transform_x" ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformX:ExtraTraceSink",
+                                "trace_kind": "tito_transform"
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "Header",
+                            "length": 2,
+                            "leaves": [ { "name": "_header" } ],
+                            "features": [ { "always-via": "indirect-source" } ]
+                          }
+                        ],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("UserControlled", 1)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=16, begin_column=18, end_column=18
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=16,
+                                        begin_column=18,
+                                        end_column=18,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("Header", 2)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+            ],
+        )
+        # Properly parse old subtrace syntax.
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "filename": "foo.py",
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 13, "start": 14, "end": 15 }
+                        ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "indirect-source" } ]
+                          },
+                          {
+                            "kind": "Header",
+                            "length": 2,
+                            "leaves": [ { "name": "_header" } ],
+                            "features": [ { "always-via": "indirect-source" } ]
+                          }
+                        ],
+                        "is_self_call": false,
+                        "extra_traces": [
+                          {
+                            "call": {
+                              "position": { "line": 16, "start": 17, "end": 18 },
+                              "resolves_to": [ "extra_trace.nested_transform_x" ],
+                              "port": "formal(arg)"
+                            },
+                            "leaf_kind": "TransformX:ExtraTraceSink",
+                            "trace_kind": "tito_transform"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[
+                        ("Header", 2),
+                        ("UserControlled", 1),
+                    ],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=16, begin_column=18, end_column=18
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=16,
+                                        begin_column=18,
+                                        end_column=18,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                ),
+            ],
+        )
+        # Combine old and new subtrace syntax.
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "filename": "foo.py",
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 13, "start": 14, "end": 15 }
+                        ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "indirect-source" } ]
+                          },
+                          {
+                            "kind": "Header",
+                            "length": 2,
+                            "leaves": [ { "name": "_header" } ],
+                            "features": [ { "always-via": "indirect-source" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": { "line": 19, "start": 20, "end": 21 },
+                                  "resolves_to": [ "extra_trace.nested_transform_y" ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformY:ExtraTraceSink",
+                                "trace_kind": "tito_transform"
+                              }
+                            ]
+                          }
+                        ],
+                        "is_self_call": false,
+                        "extra_traces": [
+                          {
+                            "call": {
+                              "position": { "line": 16, "start": 17, "end": 18 },
+                              "resolves_to": [ "extra_trace.nested_transform_x" ],
+                              "port": "formal(arg)"
+                            },
+                            "leaf_kind": "TransformX:ExtraTraceSink",
+                            "trace_kind": "tito_transform"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("UserControlled", 1)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=16, begin_column=18, end_column=18
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=16,
+                                        begin_column=18,
+                                        end_column=18,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("Header", 2)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=16, begin_column=18, end_column=18
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformX:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_x",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=16,
+                                        begin_column=18,
+                                        end_column=18,
+                                    ),
+                                )
+                            ],
+                        ),
+                        ParseTraceAnnotation(
+                            location=SourceLocation(
+                                line_no=19, begin_column=21, end_column=21
+                            ),
+                            kind="tito_transform",
+                            msg="",
+                            leaf_kind="TransformY:ExtraTraceSink",
+                            leaf_depth=0,
+                            type_interval=None,
+                            link=None,
+                            trace_key=None,
+                            titos=[],
+                            subtraces=[
+                                ParseTraceAnnotationSubtrace(
+                                    callee="extra_trace.nested_transform_y",
+                                    port="formal(arg)",
+                                    position=SourceLocation(
+                                        line_no=19,
+                                        begin_column=21,
+                                        end_column=21,
+                                    ),
+                                )
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+        )
 
     def testSinkModelV3(self) -> None:
         # User-declared sink.
@@ -2329,18 +2951,7 @@ class TestParser(unittest.TestCase):
                           }
                         ],
                         "receiver_interval": [{ "lower": 27, "upper": 32 }],
-                        "is_self_call": false,
-                        "extra_traces": [
-                          {
-                            "call": {
-                              "position": { "line": 59, "start": 32, "end": 34 },
-                              "resolves_to": [ "extra_trace.nested_transform_x" ],
-                              "port": "formal(arg)"
-                            },
-                            "leaf_kind": "TransformX:ExtraTraceSink",
-                            "trace_kind": "tito_transform"
-                          }
-                        ]
+                        "is_self_call": false
                       }
                     ]
                   }
@@ -2373,30 +2984,7 @@ class TestParser(unittest.TestCase):
                         start=27, finish=32, preserves_type_context=False
                     ),
                     features=[ParseTraceFeature("always-via:local-sink", [])],
-                    annotations=[
-                        ParseTraceAnnotation(
-                            location=SourceLocation(
-                                line_no=59, begin_column=33, end_column=34
-                            ),
-                            kind="tito_transform",
-                            msg="",
-                            leaf_kind="TransformX:ExtraTraceSink",
-                            leaf_depth=0,
-                            type_interval=None,
-                            link=None,
-                            trace_key=None,
-                            titos=[],
-                            subtraces=[
-                                ParseTraceAnnotationSubtrace(
-                                    callee="extra_trace.nested_transform_x",
-                                    port="formal(arg)",
-                                    position=SourceLocation(
-                                        line_no=59, begin_column=33, end_column=34
-                                    ),
-                                )
-                            ],
-                        )
-                    ],
+                    annotations=[],
                 )
             ],
         )
