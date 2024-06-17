@@ -35,7 +35,6 @@ from . import (
     ParseIssueConditionTuple,
     ParseIssueLeaf,
     ParseIssueTuple,
-    ParsePosition,
     ParseTraceAnnotation,
     ParseTraceAnnotationSubtrace,
     ParseTypeInterval,
@@ -55,6 +54,20 @@ else:
 
 
 log: logging.Logger = logging.getLogger("sapp")
+
+
+class SourceLocationWithFilename(NamedTuple):
+    filename: str
+    line: int
+    start: int
+    end: int
+
+    def drop_filename(self) -> SourceLocation:
+        return SourceLocation(
+            line_no=self.line,
+            begin_column=self.start,
+            end_column=self.end,
+        )
 
 
 class LeafWithPort(NamedTuple):
@@ -83,9 +96,9 @@ class LeafWithPortDistance(NamedTuple):
 class TraceFragment(NamedTuple):
     callee: str
     port: str
-    location: ParsePosition
+    location: SourceLocationWithFilename
     leaves: Iterable[LeafWithDistance]
-    titos: Iterable[ParsePosition]
+    titos: Iterable[SourceLocation]
     features: Iterable[ParseFeature]
     type_interval: Optional[ParseTypeInterval]
     trace_annotations: List[ParseTraceAnnotation]
@@ -203,9 +216,9 @@ class Parser(BaseParser):
                     type=ParseType.POSTCONDITION,
                     caller=callable,
                     callee=fragment.callee,
-                    callee_location=SourceLocation.from_typed_dict(fragment.location),
-                    filename=fragment.location["filename"],
-                    titos=list(map(SourceLocation.from_typed_dict, fragment.titos)),
+                    callee_location=fragment.location.drop_filename(),
+                    filename=fragment.location.filename,
+                    titos=fragment.titos,
                     leaves=[(leaf.kind, leaf.distance) for leaf in fragment.leaves],
                     caller_port=port,
                     callee_port=fragment.port,
@@ -224,9 +237,9 @@ class Parser(BaseParser):
                     type=ParseType.PRECONDITION,
                     caller=callable,
                     callee=fragment.callee,
-                    callee_location=SourceLocation.from_typed_dict(fragment.location),
-                    filename=fragment.location["filename"],
-                    titos=list(map(SourceLocation.from_typed_dict, fragment.titos)),
+                    callee_location=fragment.location.drop_filename(),
+                    filename=fragment.location.filename,
+                    titos=fragment.titos,
                     leaves=[(leaf.kind, leaf.distance) for leaf in fragment.leaves],
                     caller_port=port,
                     callee_port=fragment.port,
@@ -246,16 +259,17 @@ class Parser(BaseParser):
             initial_sources,
         ) = self._parse_issue_traces(json["traces"], "forward", "source")
 
+        location = self._parse_location_with_filename(json)
         yield ParseIssueTuple(
             code=json["code"],
-            line=json["line"],
+            line=location.line,
             callable_line=json["callable_line"],
-            start=self._adjust_start_location(json["start"]),
-            end=json["end"],
+            start=location.start,
+            end=location.end,
             callable=json["callable"],
             handle=self._generate_issue_master_handle(json),
             message=json["message"],
-            filename=self._extract_filename(json["filename"]),
+            filename=self._extract_filename(location.filename),
             preconditions=preconditions,
             final_sinks=final_sinks,
             postconditions=postconditions,
@@ -324,9 +338,9 @@ class Parser(BaseParser):
                     ParseIssueConditionTuple(
                         callee=fragment.callee,
                         port=fragment.port,
-                        location=SourceLocation.from_typed_dict(fragment.location),
+                        location=fragment.location.drop_filename(),
                         leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
-                        titos=list(map(SourceLocation.from_typed_dict, fragment.titos)),
+                        titos=fragment.titos,
                         features=flatten_features_to_parse_trace_feature(
                             fragment.features
                         ),
@@ -353,18 +367,16 @@ class Parser(BaseParser):
         leaf_port: Union[Literal["source"], Literal["sink"]],
         trace: Dict[str, Any],
     ) -> Iterable[TraceFragment]:
-        tito_positions = list(
-            map(
-                self._adjust_location,
-                trace.get("tito_positions", []),
-            )
-        )
+        tito_positions = [
+            self._parse_location(location)
+            for location in trace.get("tito_positions", [])
+        ]
         local_features = trace.get("local_features", [])
         type_interval = self._parse_type_interval(trace)
         trace_annotations = self._parse_extra_traces(trace)
 
         if "origin" in trace:
-            location = self._adjust_location(trace["origin"])
+            location = self._parse_location_with_filename(trace["origin"])
 
             # Turn leaves into direct callees and group by (callee, port)
             leaf_name_and_port_to_leaves: defaultdict[
@@ -394,7 +406,7 @@ class Parser(BaseParser):
         elif "call" in trace:
             call = trace["call"]
             port = call["port"]
-            location = self._adjust_location(call["position"])
+            location = self._parse_location_with_filename(call["position"])
             resolves_to = call.get("resolves_to", [])
             leaves: List[LeafWithDistance] = [
                 leaf.discard_port() for leaf in self._parse_leaves(trace)
@@ -439,9 +451,7 @@ class Parser(BaseParser):
                     ParseTraceAnnotationSubtrace(
                         callee=resolved,
                         port=call["port"],
-                        position=SourceLocation.from_typed_dict(
-                            self._adjust_location(call["position"])
-                        ),
+                        position=self._parse_location(call["position"]),
                     )
                     for resolved in call["resolves_to"]
                 ]
@@ -453,9 +463,7 @@ class Parser(BaseParser):
                 first_hops = []  # There is no subtrace to show
             else:
                 raise ParseError('Expect key "call" or "origin" in "extra_traces".')
-            source_location = SourceLocation.from_typed_dict(
-                self._adjust_location(location)
-            )
+            source_location = self._parse_location(location)
             # The default values are used for backwards compatibility
             trace_kind = extra_trace.get("trace_kind", "tito_transform")
             leaf_kind = extra_trace.get("leaf_kind", extra_trace.get("kind"))
@@ -475,11 +483,22 @@ class Parser(BaseParser):
             )
         return trace_annotations
 
-    def _adjust_location(self, location: ParsePosition) -> ParsePosition:
-        return {  # pyre-ignore[7]
-            **location,
-            "start": self._adjust_start_location(location["start"]),
-        }
+    def _parse_location_with_filename(
+        self, json: Dict[str, Any]
+    ) -> SourceLocationWithFilename:
+        return SourceLocationWithFilename(
+            filename=json["filename"],
+            line=json["line"],
+            start=self._adjust_start_location(json["start"]),
+            end=json["end"],
+        )
+
+    def _parse_location(self, json: Dict[str, Any]) -> SourceLocation:
+        return SourceLocation(
+            line_no=json["line"],
+            begin_column=self._adjust_start_location(json["start"]),
+            end_column=json["end"],
+        )
 
     def _adjust_start_location(self, start: int) -> int:
         return start + 1
