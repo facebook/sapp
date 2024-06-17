@@ -15,7 +15,6 @@ import click
 import click_log
 import IPython
 from click import argument, option, Parameter, Path
-from tools.sapp.sapp.models import Run
 from traitlets.config import Config
 
 from .analysis_output import AnalysisOutput
@@ -24,7 +23,7 @@ from .db import DB
 from .extensions import prompt_extension
 from .filesystem import find_root
 from .json_cmd import json_cmd
-from .models import PrimaryKeyGenerator
+from .models import PrimaryKeyGenerator, Run
 from .pipeline import Pipeline
 from .pipeline.add_features import AddFeatures
 from .pipeline.create_database import CreateDatabase

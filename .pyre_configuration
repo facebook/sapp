@@ -49,6 +49,9 @@
     {
       "site-package": "flask_cors"
     },
+    {
+      "site-package": "psutil"
+    },
     "stubs"
   ],
   "site_package_search_strategy": "pep561",

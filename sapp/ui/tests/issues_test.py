@@ -7,11 +7,9 @@
 
 from unittest import TestCase
 
-from tools.sapp.sapp.models import DBID
-
 from ... import queries
 from ...db import DB, DBType
-from ...models import create as create_models, IssueInstanceSharedTextAssoc
+from ...models import create as create_models, DBID, IssueInstanceSharedTextAssoc
 from ...tests.fake_object_generator import FakeObjectGenerator
 from ..issues import Instance
 

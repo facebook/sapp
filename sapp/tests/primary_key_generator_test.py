@@ -7,10 +7,17 @@
 
 from unittest import TestCase
 
-from tools.sapp.sapp.models import DBID, IssueDBID, SharedText, TraceFrame
-
 from ..db import DB, DBType
-from ..models import create as create_tables, Issue, PrimaryKey, PrimaryKeyGenerator
+from ..models import (
+    create as create_tables,
+    DBID,
+    Issue,
+    IssueDBID,
+    PrimaryKey,
+    PrimaryKeyGenerator,
+    SharedText,
+    TraceFrame,
+)
 
 from .fake_object_generator import FakeObjectGenerator
 
@@ -154,7 +161,9 @@ class PrimaryKeyGeneratorTest(TestCase):
             ):
                 generator.reserve(session, [Issue], {Issue.__name__: 100})
 
-    def test_allowed_id_range_existing_data_outside_allowed_range(self) -> None:
+    def test_allowed_id_range_existing_data_outside_allowed_range(
+        self,
+    ) -> None:
         with self.db.make_session() as session:
             # Bypass the bulk saver to avoid creating PrimaryKey rows
             # to simulate a backfill scenario
@@ -186,7 +195,9 @@ class PrimaryKeyGeneratorTest(TestCase):
             ):
                 generator.reserve(session, [Issue], {Issue.__name__: 10})
 
-    def test_allowed_id_range_old_allocation_outside_allowed_range(self) -> None:
+    def test_allowed_id_range_old_allocation_outside_allowed_range(
+        self,
+    ) -> None:
         with self.db.make_session() as session:
             generator = PrimaryKeyGenerator(allowed_id_range=range(150, 200))
             generator.reserve(session, [Issue], {Issue.__name__: 10})

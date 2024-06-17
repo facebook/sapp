@@ -16,3 +16,4 @@ typing-extensions>=4.2.0,<5
 xxhash>=3.0.0,<4
 zstandard>=0.17.0
 Werkzeug>=2.3.7,<3
+psutil
