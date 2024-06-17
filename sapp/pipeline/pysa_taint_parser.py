@@ -27,16 +27,15 @@ from typing import (
 from .. import errors
 from ..analysis_output import AnalysisOutput, Metadata
 from . import (
-    flatten_features,
     flatten_features_to_parse_trace_feature,
     ParseConditionTuple,
     ParseError,
-    ParseFeature,
     ParseIssueConditionTuple,
     ParseIssueLeaf,
     ParseIssueTuple,
     ParseTraceAnnotation,
     ParseTraceAnnotationSubtrace,
+    ParseTraceFeature,
     ParseTypeInterval,
     SourceLocation,
 )
@@ -54,6 +53,13 @@ else:
 
 
 log: logging.Logger = logging.getLogger("sapp")
+
+
+class TraceFeature(NamedTuple):
+    name: str
+
+    def to_parse_feature(self) -> ParseTraceFeature:
+        return ParseTraceFeature(name=self.name, locations=[])
 
 
 class SourceLocationWithFilename(NamedTuple):
@@ -99,7 +105,7 @@ class TraceFragment(NamedTuple):
     location: SourceLocationWithFilename
     leaves: Iterable[LeafWithDistance]
     titos: Iterable[SourceLocation]
-    features: Iterable[ParseFeature]
+    features: Iterable[TraceFeature]
     type_interval: Optional[ParseTypeInterval]
     trace_annotations: List[ParseTraceAnnotation]
 
@@ -223,7 +229,9 @@ class Parser(BaseParser):
                     caller_port=port,
                     callee_port=fragment.port,
                     type_interval=fragment.type_interval,
-                    features=flatten_features_to_parse_trace_feature(fragment.features),
+                    features=[
+                        feature.to_parse_feature() for feature in fragment.features
+                    ],
                     annotations=fragment.trace_annotations,
                 )
 
@@ -244,7 +252,9 @@ class Parser(BaseParser):
                     caller_port=port,
                     callee_port=fragment.port,
                     type_interval=fragment.type_interval,
-                    features=flatten_features_to_parse_trace_feature(fragment.features),
+                    features=[
+                        feature.to_parse_feature() for feature in fragment.features
+                    ],
                     annotations=fragment.trace_annotations,
                 )
 
@@ -260,6 +270,8 @@ class Parser(BaseParser):
         ) = self._parse_issue_traces(json["traces"], "forward", "source")
 
         location = self._parse_location_with_filename(json)
+        features = self._parse_features(json["features"])
+
         yield ParseIssueTuple(
             code=json["code"],
             line=location.line,
@@ -275,7 +287,7 @@ class Parser(BaseParser):
             postconditions=postconditions,
             initial_sources=initial_sources,
             fix_info=None,
-            features=flatten_features(json["features"]),
+            features=[feature.name for feature in features],
         )
 
     def _generate_issue_master_handle(self, issue: Dict[str, Any]) -> str:
@@ -341,9 +353,9 @@ class Parser(BaseParser):
                         location=fragment.location.drop_filename(),
                         leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
                         titos=fragment.titos,
-                        features=flatten_features_to_parse_trace_feature(
-                            fragment.features
-                        ),
+                        features=[
+                            feature.to_parse_feature() for feature in fragment.features
+                        ],
                         type_interval=fragment.type_interval,
                         annotations=fragment.trace_annotations,
                     )
@@ -371,7 +383,7 @@ class Parser(BaseParser):
             self._parse_location(location)
             for location in trace.get("tito_positions", [])
         ]
-        local_features = trace.get("local_features", [])
+        local_features = self._parse_features(trace.get("local_features", []))
         type_interval = self._parse_type_interval(trace)
         trace_annotations = self._parse_extra_traces(trace)
 
@@ -482,6 +494,12 @@ class Parser(BaseParser):
                 )
             )
         return trace_annotations
+
+    def _parse_features(self, json: List[Dict[str, Any]]) -> List[TraceFeature]:
+        return [
+            TraceFeature(name=feature.name)
+            for feature in flatten_features_to_parse_trace_feature(json)
+        ]
 
     def _parse_location_with_filename(
         self, json: Dict[str, Any]
