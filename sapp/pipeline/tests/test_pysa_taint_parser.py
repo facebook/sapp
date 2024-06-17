@@ -1255,9 +1255,9 @@ class TestParser(unittest.TestCase):
                     initial_sources={("_user_controlled", "UserControlled", 0)},
                     final_sinks={(None, "RCE", 0)},
                     features=[
-                        "has:first-index",
-                        "first-index:payload",
                         "always-via:tito",
+                        "first-index:payload",
+                        "has:first-index",
                     ],
                     fix_info=None,
                 )
@@ -2874,6 +2874,124 @@ class TestParser(unittest.TestCase):
                             ],
                         ),
                     ],
+                ),
+            ],
+        )
+        # Kind-specific breadcrumbs.
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "filename": "foo.py",
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 13, "start": 14, "end": 15 }
+                        ],
+                        "local_features": [
+                            { "always-via": "shared-breadcrumb" },
+                            { "always-via": "other-shared-breadcrumb" }
+                        ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "indirect-source" } ],
+                            "local_features": [ { "always-via": "user-controlled-breadcrumb" } ]
+                          },
+                          {
+                            "kind": "Header",
+                            "length": 2,
+                            "leaves": [ { "name": "_header" } ],
+                            "features": [ { "always-via": "indirect-source" } ],
+                            "local_features": [ { "always-via": "header-breadcrumb" } ]
+                          }
+                        ],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("UserControlled", 1)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[
+                        ParseTraceFeature("always-via:other-shared-breadcrumb", []),
+                        ParseTraceFeature("always-via:shared-breadcrumb", []),
+                        ParseTraceFeature("always-via:user-controlled-breadcrumb", []),
+                    ],
+                    annotations=[],
+                ),
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[("Header", 2)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[
+                        ParseTraceFeature("always-via:header-breadcrumb", []),
+                        ParseTraceFeature("always-via:other-shared-breadcrumb", []),
+                        ParseTraceFeature("always-via:shared-breadcrumb", []),
+                    ],
+                    annotations=[],
                 ),
             ],
         )

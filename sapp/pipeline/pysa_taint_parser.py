@@ -99,6 +99,7 @@ class TraceFragmentKey(NamedTuple):
     port: str
     location: SourceLocationWithFilename
     type_interval: Optional[ParseTypeInterval]
+    features: FrozenSet[TraceFeature]
     trace_annotations: FrozenSet[ParseTraceAnnotation]
 
 
@@ -109,7 +110,7 @@ class TraceFragment(NamedTuple):
     location: SourceLocationWithFilename
     leaves: List[LeafWithDistance]
     titos: List[SourceLocation]
-    features: List[TraceFeature]
+    features: FrozenSet[TraceFeature]
     type_interval: Optional[ParseTypeInterval]
     trace_annotations: FrozenSet[ParseTraceAnnotation]
 
@@ -119,6 +120,7 @@ class TraceFragment(NamedTuple):
             port=self.port,
             location=self.location,
             type_interval=self.type_interval,
+            features=self.features,
             trace_annotations=self.trace_annotations,
         )
 
@@ -132,7 +134,7 @@ class TraceFragment(NamedTuple):
             location=a.location,
             leaves=sorted(set(a.leaves) | set(b.leaves)),
             titos=sorted(set(a.titos) | set(b.titos)),
-            features=sorted(set(a.features) | set(b.features)),
+            features=a.features,
             type_interval=a.type_interval,
             trace_annotations=a.trace_annotations,
         )
@@ -258,7 +260,8 @@ class Parser(BaseParser):
                     callee_port=fragment.port,
                     type_interval=fragment.type_interval,
                     features=[
-                        feature.to_parse_feature() for feature in fragment.features
+                        feature.to_parse_feature()
+                        for feature in sorted(fragment.features)
                     ],
                     annotations=sorted(fragment.trace_annotations),
                 )
@@ -281,7 +284,8 @@ class Parser(BaseParser):
                     callee_port=fragment.port,
                     type_interval=fragment.type_interval,
                     features=[
-                        feature.to_parse_feature() for feature in fragment.features
+                        feature.to_parse_feature()
+                        for feature in sorted(fragment.features)
                     ],
                     annotations=sorted(fragment.trace_annotations),
                 )
@@ -315,7 +319,7 @@ class Parser(BaseParser):
             postconditions=postconditions,
             initial_sources=initial_sources,
             fix_info=None,
-            features=[feature.name for feature in features],
+            features=sorted(feature.name for feature in features),
         )
 
     def _generate_issue_master_handle(self, issue: Dict[str, Any]) -> str:
@@ -381,7 +385,8 @@ class Parser(BaseParser):
                     leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
                     titos=fragment.titos,
                     features=[
-                        feature.to_parse_feature() for feature in fragment.features
+                        feature.to_parse_feature()
+                        for feature in sorted(fragment.features)
                     ],
                     type_interval=fragment.type_interval,
                     annotations=sorted(fragment.trace_annotations),
@@ -420,9 +425,8 @@ class Parser(BaseParser):
             self._parse_location(location)
             for location in trace.get("tito_positions", [])
         ]
-        local_features = self._parse_features(trace.get("local_features", []))
+        shared_local_features = self._parse_features(trace.get("local_features", []))
         type_interval = self._parse_type_interval(trace)
-
         # The old syntax would store `extra_traces` here. We preserve this for backward compatibility.
         shared_trace_annotations = self._parse_extra_traces(trace)
 
@@ -433,6 +437,9 @@ class Parser(BaseParser):
             for flow_details in trace.get("kinds", []):
                 kind = flow_details["kind"]
                 distance = flow_details.get("length", 0)
+                local_features = shared_local_features | self._parse_features(
+                    flow_details.get("local_features", [])
+                )
                 trace_annotations = (
                     self._parse_extra_traces(flow_details) | shared_trace_annotations
                 )
@@ -456,6 +463,9 @@ class Parser(BaseParser):
             for flow_details in trace.get("kinds", []):
                 kind = flow_details["kind"]
                 distance = flow_details.get("length", 0)
+                local_features = shared_local_features | self._parse_features(
+                    flow_details.get("local_features", [])
+                )
                 trace_annotations = (
                     self._parse_extra_traces(flow_details) | shared_trace_annotations
                 )
@@ -538,11 +548,11 @@ class Parser(BaseParser):
 
         return frozenset(trace_annotations)
 
-    def _parse_features(self, json: List[Dict[str, Any]]) -> List[TraceFeature]:
-        return [
+    def _parse_features(self, json: List[Dict[str, Any]]) -> FrozenSet[TraceFeature]:
+        return frozenset(
             TraceFeature(name=feature.name)
             for feature in flatten_features_to_parse_trace_feature(json)
-        ]
+        )
 
     def _parse_location_with_filename(
         self, json: Dict[str, Any]
