@@ -26,14 +26,16 @@ SinkToSharedTextMap = Dict[int, Set[int]]
 SinkToState = Dict[int, PerSinkState]
 
 
-class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[13]
+class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
     """For all issues propagate source kinds and features to all reachable frames
     leading to sinks and propagate features to leaf sinks with anchor ports.
     """
 
     def __init__(self, propagate_sources: bool, propagate_features: bool) -> None:
         super().__init__()
+        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
+        # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
         self.propagate_sources = propagate_sources
         self.propagate_features = propagate_features

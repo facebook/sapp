@@ -55,8 +55,8 @@ class SimilarIssueResultType(graphene.ObjectType):
     score = graphene.Float()
 
 
-# pyre-ignore[13]: unitialized class attribute
 class IssueQueryResultType(graphene.ObjectType):
+    # pyre-fixme[13]: Attribute `concatenated_features` is never initialized.
     concatenated_features: str
 
     class Meta:

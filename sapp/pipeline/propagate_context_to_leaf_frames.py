@@ -27,7 +27,7 @@ TaintKindToFeaturesMap = Dict[int, Set[int]]
 TaintKindToState = Dict[int, PerTaintKindState]
 
 
-class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):  # pyre-fixme[13]
+class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
     """For all issues matching a certain code, propagate features matching a
     pattern to all reachable leaf frames for a particular frame_kind."""
 
@@ -35,7 +35,9 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):  # pyr
         self, issue_code: int, feature_pattern: str, frame_kind: TraceKind
     ) -> None:
         super().__init__()
+        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
+        # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
         self.feature_pattern = feature_pattern
         self.issue_code = issue_code

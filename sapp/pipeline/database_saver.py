@@ -35,7 +35,6 @@ log: logging.Logger = logging.getLogger("sapp")
 TRun = TypeVar("TRun", bound=Run)
 
 
-# pyre-fixme[13]: Attribute `summary` is never initialized.
 class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
     def __init__(
         self,
@@ -55,7 +54,9 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
             self.primary_key_generator, extra_saving_classes=extra_saving_classes
         )
         self.dry_run = dry_run
+        # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
+        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
 
     @log_time
