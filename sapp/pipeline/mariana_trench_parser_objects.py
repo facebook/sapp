@@ -358,6 +358,9 @@ class Kind(NamedTuple):
     ) -> "Kind":
         origins = []
         for origin in kind.get("origins", []):
+            # exploitability_root is only used internally and not required for SAPP.
+            if "exploitability_root" in origin:
+                continue
             origins.append(Origin.from_json(origin, leaf_kind))
         extra_traces = []
         for extra_trace in kind.get("extra_traces", []):
