@@ -111,7 +111,11 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
             for frame in initial_source_frames
         ]
 
-        shared_text_kinds = set.union(*source_kind_list).union(features)
+        shared_text_kinds = (
+            features
+            if not source_kind_list
+            else set.union(*source_kind_list).union(features)
+        )
         if len(shared_text_kinds) == 0:
             return
         initial_trace_length = instance.min_trace_length_to_sources or 0
