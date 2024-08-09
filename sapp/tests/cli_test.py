@@ -162,5 +162,6 @@ def assert_successful_exit(r: Result) -> None:
     assert r.exit_code == 0, (
         f"Command did not exit successfully: {r}\n"
         + f"Command output:\n{r.stdout}\n"
+        # pyre-fixme[32]: Variable argument must be an iterable.
         + f"{os.linesep.join(traceback.format_exception(*r.exc_info))}"
     )
