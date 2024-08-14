@@ -129,12 +129,11 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
                 run_id = self.summary["run"].id.resolved()
                 log.info("Created run: %d", run_id)
 
-            # Get full list of issues before bulk_saver prunes them during _prepare
-            issues = self.bulk_saver.get_items_to_add(Issue)
+            self._save_central_issues_and_sync_local_issues(
+                self.summary["run"], self.bulk_saver.get_items_to_add(Issue)
+            )
 
             self.bulk_saver.save_all(self.database)
-
-            self._save_central_issues(self.summary["run"], issues)
 
             # Now that the run is finished, fetch it from the DB again and set its
             # status to FINISHED.
@@ -172,7 +171,10 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
             ),
         )
 
-    def _save_central_issues(self, run: TRun, issues: List[Issue]) -> None:
-        """Subclasses may implement this to save issue data to a second location before
-        the run status is changed to FINISHED"""
+    def _save_central_issues_and_sync_local_issues(
+        self, run: TRun, local_issues: List[Issue]
+    ) -> None:
+        """Subclasses may implement this to save issue data to a second location before the issues
+        saved and the run status is changed to FINISHED. They can also modify details
+        of yet-to-be-created local issues to match existing central issues."""
         pass
