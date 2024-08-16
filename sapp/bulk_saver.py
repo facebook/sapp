@@ -77,6 +77,7 @@ class BulkSaver:
         self.saving: Dict[str, Any] = {}
         for cls in self.saving_classes_order:
             self.saving[cls.__name__] = []
+        self.prepare_all_done = False
 
     # pyre-fixme[2]: Parameter must be annotated.
     def add(self, item) -> None:
@@ -98,9 +99,7 @@ class BulkSaver:
     def get_items_to_add(self, cls):
         return self.saving[cls.__name__]
 
-    def save_all(
-        self, database: DB, before_save: Optional[Callable[[], None]] = None
-    ) -> None:
+    def prepare_all(self, database: DB) -> None:
         saving_classes = [
             cls
             for cls in self.saving_classes_order
@@ -123,13 +122,20 @@ class BulkSaver:
             )
             self._prepare(database, cls, pk_gen)
 
-        # Used by unit tests to simulate races
-        if before_save:
-            before_save()
+        self.prepare_all_done = True
+
+    def save_all(self, database: DB) -> None:
+        assert self.prepare_all_done, "prepare_all must succeed before calling save_all"
+
+        saving_classes = [
+            cls
+            for cls in self.saving_classes_order
+            if len(self.saving[cls.__name__]) != 0
+        ]
 
         for cls in saving_classes:
             log.info(f"Saving {len(self.saving[cls.__name__])} {cls.__name__}s...")
-            self._save(database, cls, pk_gen)
+            self._save(database, cls, self.primary_key_generator)
 
     @log_time
     # pyre-fixme[2]: Parameter must be annotated.

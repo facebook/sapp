@@ -48,7 +48,10 @@ class FakeObjectGenerator:
     def save_all(self, db, before_save: Optional[Callable[[], None]] = None) -> None:
         if self.graph:
             self.graph.update_bulk_saver(self.saver)
-        self.saver.save_all(db, before_save=before_save)
+        self.saver.prepare_all(db)
+        if before_save is not None:
+            before_save()
+        self.saver.save_all(db)
         self.saver = BulkSaver()
 
     def issue(

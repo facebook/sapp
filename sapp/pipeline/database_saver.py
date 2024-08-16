@@ -129,9 +129,16 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
                 run_id = self.summary["run"].id.resolved()
                 log.info("Created run: %d", run_id)
 
-            self._save_central_issues_and_sync_local_issues(
-                self.summary["run"], self.bulk_saver.get_items_to_add(Issue)
-            )
+            # Get full list of issues before bulk_saver removes existing issues
+            # in prepare_all
+            issues = self.bulk_saver.get_items_to_add(Issue)
+
+            self.bulk_saver.prepare_all(self.database)
+
+            # Save central issues after ids are reserved so they can reference
+            # `first_instance_id` but before local issues are saved as they
+            # may be modified here
+            self._save_central_issues_and_sync_local_issues(self.summary["run"], issues)
 
             self.bulk_saver.save_all(self.database)
 
