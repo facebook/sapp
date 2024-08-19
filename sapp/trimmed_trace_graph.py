@@ -193,6 +193,7 @@ class TrimmedTraceGraph(TraceGraph):
         associations too"""
         instance_id = instance.id.local_id
         self._issue_instances.pop(instance_id, None)
+        self._issues.pop(instance.issue_id.local_id, None)
         for initial_frame_id in self._issue_instance_trace_frame_assoc[instance_id]:
             # initial frames are only associated with one issue
             self._trace_frame_issue_instance_assoc.pop(initial_frame_id, None)
