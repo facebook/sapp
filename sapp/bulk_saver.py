@@ -9,10 +9,11 @@
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from tools.sapp.sapp.models import Base
 
 from .db import DB
 from .decorators import log_time
@@ -191,6 +192,12 @@ class BulkSaver:
                 {k: v for k, v in cls.to_dict(r).items() if k != "model"}
                 for r in batch
             ]
+            # Simulate the behavior of bulk_insert_mappings render_nulls
+            # to avoid errors when a column is missing from some but not all of the
+            # records which can occur when some issues are synced from central issues
+            # and others are created from scratch
+            records_to_save = self._render_nulls(cls, records_to_save)
+
             dialect = database.engine.dialect.name
             if dialect == "mysql":
                 statement = (
@@ -233,6 +240,18 @@ class BulkSaver:
                 f"There are still {len(unsaved_records)} unsaved {cls.__name__} "
                 f"records."
             )
+
+    def _render_nulls(
+        self,
+        cls: Type[Base],
+        records: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        column_keys = cls.__table__.columns.keys()
+        for record in records:
+            for key in column_keys:
+                if key not in record:
+                    record[key] = None
+        return records
 
     # Save a batch of records to the database, failing on duplicate key errors.
     #

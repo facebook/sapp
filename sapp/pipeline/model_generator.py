@@ -204,6 +204,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             status=IssueStatus.UNCATEGORIZED,
             detected_time=int(run.date.timestamp()),
             first_instance_id=instance_id,
+            update_time=0,
+            triage_duration=0,
         )
 
         self.graph.add_issue(issue)

@@ -72,6 +72,8 @@ class FakeObjectGenerator:
             status=status,
             detected_time=int(now.timestamp()),
             first_instance_id=DBID(10072),
+            update_time=0,
+            triage_duration=0,
         )
         if self.graph:
             # pyre-fixme[6]: For 1st param expected `Issue` but got `Munch`.
