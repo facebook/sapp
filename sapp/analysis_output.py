@@ -19,6 +19,51 @@ METADATA_GLOB = "*metadata.json"
 
 
 @dataclass
+class PartialFlowToMark:
+    """
+    This is a specification of a partial flow that the user wishes us to mark.
+
+    `partial_issue_code` and `full_issue_code` are self-descriptive.
+
+    `full_issue_transform` should be the name of the transform we're looking
+    to find in the full issue, and mark matching partial flows.
+
+    `feature` is the schema of the feature to add. `has-{feature}` and
+    `{feature}:{issue_instance_id}` will be the resulting features.
+
+    If `is_prefix_flow` is set to True, it means the partial
+    issue is a prefix of the full issue. Otherwise, we assume that the partial
+    issue is meant to be a suffix of the full issue. If `is_prefix_flow` is true,
+    it means that the transform we're searching for in the larger flow is the sink
+    of the partial flow. Otherwise, the transform is interpreted as the source.
+
+    `is_prefix_flow` has implications how we search for transforms:
+
+    For a prefix flow, if we find a transform in the postcondition trace of the
+    larger issue, we will mark the frame where the transform is applied locally
+    as a frame to add a breadcrumb for. If the transform is found in the
+    precondition, we'll mark the initial postcondition frames.
+
+    For a suffix flow, we'll flip the logic:
+      - If the transform is found in a postcondition trace, the larger
+        issue's initial precondition frames.
+      - If the transform's in the precondition trace, the source frame for
+        the matching precondition callee will be marked.
+
+    The reason for the marking the opposite initial frames from where we started from
+    is that the transform frame will *not* appear during the search from the larger
+    trace. Marking the other side's root frame allows us to detect the same set of flows
+    without doing a complex traversal ourselves.
+    """
+
+    partial_issue_code: int
+    full_issue_code: int
+    full_issue_transform: str
+    is_prefix_flow: bool
+    feature: str
+
+
+@dataclass
 class Metadata:
     # Used to relativize paths in the results
     repo_roots: Set[str] = dataclasses.field(default_factory=set)
@@ -33,6 +78,9 @@ class Metadata:
     rules: Dict[int, Any] = dataclasses.field(default_factory=dict)
     class_type_intervals_filenames: List[str] = dataclasses.field(default_factory=list)
     category_coverage: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    partial_flows_to_mark: list[PartialFlowToMark] = dataclasses.field(
+        default_factory=list
+    )
 
     def merge(self, o: "Metadata") -> "Metadata":
         return Metadata(
@@ -47,6 +95,7 @@ class Metadata:
             class_type_intervals_filenames=self.class_type_intervals_filenames
             + o.class_type_intervals_filenames,
             category_coverage=self.category_coverage,  # should all be the same
+            partial_flows_to_mark=self.partial_flows_to_mark + o.partial_flows_to_mark,
         )
 
 
@@ -148,6 +197,9 @@ class AnalysisOutput:
             class_type_intervals_filenames = _get_remapped_filename(
                 metadata, "class_type_intervals_filename", directory
             )
+            partial_flows_to_mark = _parse_partial_flows_to_mark(
+                metadata, "partial_flows"
+            )
             this_metadata = Metadata(
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
@@ -159,6 +211,7 @@ class AnalysisOutput:
                 rules=rules,
                 class_type_intervals_filenames=class_type_intervals_filenames,
                 category_coverage=metadata.get("category_coverage", []),
+                partial_flows_to_mark=partial_flows_to_mark,
             )
             if not main_metadata:
                 main_metadata = this_metadata
@@ -202,6 +255,7 @@ class AnalysisOutput:
         class_type_intervals_filenames = _get_remapped_filename(
             metadata, "class_type_intervals_filename", directory
         )
+        partial_flows_to_mark = _parse_partial_flows_to_mark(metadata, "partial_flows")
         return cls(
             directory=directory,
             filename_specs=filename_specs,
@@ -217,6 +271,7 @@ class AnalysisOutput:
                 rules=rules,
                 class_type_intervals_filenames=class_type_intervals_filenames,
                 category_coverage=metadata.get("category_coverage", []),
+                partial_flows_to_mark=partial_flows_to_mark,
             ),
         )
 
@@ -287,3 +342,21 @@ def _get_remapped_filename(
         return [filename]
     else:
         return []
+
+
+def _parse_partial_flows_to_mark(
+    metadata_json: dict[str, Any], key: str
+) -> list[PartialFlowToMark]:
+    parsed = []
+    partial_flows_to_mark = metadata_json.get(key, [])
+    for partial_flow in partial_flows_to_mark:
+        parsed.append(
+            PartialFlowToMark(
+                full_issue_code=partial_flow["full_issue_code"],
+                partial_issue_code=partial_flow["partial_issue_code"],
+                full_issue_transform=partial_flow["full_issue_transform"],
+                is_prefix_flow=partial_flow["is_prefix_flow"],
+                feature=partial_flow["feature"],
+            )
+        )
+    return parsed

@@ -10,6 +10,8 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from typing import Iterable
 
+from ..analysis_output import PartialFlowToMark
+
 from ..models import IssueInstance, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, SourceLocation, Summary
@@ -20,51 +22,6 @@ log: logging.Logger = logging.getLogger("sapp")
 class PerTaintKindState:
     def __init__(self) -> None:
         self.shared_texts: set[int] = set()
-
-
-@dataclass
-class PartialFlowToMark:
-    """
-    This is a specification of a partial flow that the user wishes us to mark.
-
-    `partial_issue_code` and `full_issue_code` are self-descriptive.
-
-    `full_issue_transform` should be the name of the transform we're looking
-    to find in the full issue, and mark matching partial flows.
-
-    `feature` is the schema of the feature to add. `has-{feature}` and
-    `{feature}:{issue_instance_id}` will be the resulting features.
-
-    If `is_prefix_flow` is set to True, it means the partial
-    issue is a prefix of the full issue. Otherwise, we assume that the partial
-    issue is meant to be a suffix of the full issue. If `is_prefix_flow` is true,
-    it means that the transform we're searching for in the larger flow is the sink
-    of the partial flow. Otherwise, the transform is interpreted as the source.
-
-    `is_prefix_flow` has implications how we search for transforms:
-
-    For a prefix flow, if we find a transform in the postcondition trace of the
-    larger issue, we will mark the frame where the transform is applied locally
-    as a frame to add a breadcrumb for. If the transform is found in the
-    precondition, we'll mark the initial postcondition frames.
-
-    For a suffix flow, we'll flip the logic:
-      - If the transform is found in a postcondition trace, the larger
-        issue's initial precondition frames.
-      - If the transform's in the precondition trace, the source frame for
-        the matching precondition callee will be marked.
-
-    The reason for the marking the opposite initial frames from where we started from
-    is that the transform frame will *not* appear during the search from the larger
-    trace. Marking the other side's root frame allows us to detect the same set of flows
-    without doing a complex traversal ourselves.
-    """
-
-    partial_issue_code: int
-    full_issue_code: int
-    full_issue_transform: str
-    is_prefix_flow: bool
-    feature: str
 
 
 # A frame key is an issue-code-agnostic identifier for frames we're looking
