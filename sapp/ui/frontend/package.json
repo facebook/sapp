@@ -16,7 +16,8 @@
     "react-codemirror2": "^7.2.1",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "webpack-dev-server": "5.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
