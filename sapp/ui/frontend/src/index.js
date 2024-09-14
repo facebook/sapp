@@ -27,7 +27,9 @@ const {Text} = Typography;
 
 let uri = '/graphql';
 if (process.env.NODE_ENV === "development") {
-  uri = 'http://localhost:13337/graphql';
+  let port = process.env.REACT_APP_SAPP_SERVER_PORT ?? '13337';
+  uri = `http://localhost:${port}/graphql`;
+  console.log("Using local server at", uri);
 }
 const client = new ApolloClient({
   uri: uri,

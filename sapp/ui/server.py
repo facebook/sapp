@@ -97,19 +97,20 @@ def start_server(
         "/export_filter/<string:filter_name>",
         view_func=ServeExportFilter.as_view("filter_export_view", session=session),
     )
+    default_backend_port = int(os.environ.get("SAPP_SERVER_PORT") or 13337)
     if static_resources:
         application.static_folder = static_resources
     if debug:
-        default_port = os.environ.get("PORT") or 3000
+        default_frontend_port = os.environ.get("PORT") or 3000
         host = os.environ.get("HOST") or "localhost"
         CORS(
             application,
             resources={
                 r"/graphql": {
                     "origins": "http://{hostname}:{port}".format(
-                        hostname=host, port=default_port
+                        hostname=host, port=default_frontend_port
                     )
                 }
             },
         )
-    application.run(debug=debug, host="localhost", port=13337)
+    application.run(debug=debug, host="localhost", port=default_backend_port)
