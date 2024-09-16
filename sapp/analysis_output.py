@@ -78,7 +78,7 @@ class Metadata:
     rules: Dict[int, Any] = dataclasses.field(default_factory=dict)
     class_type_intervals_filenames: List[str] = dataclasses.field(default_factory=list)
     category_coverage: Dict[str, Any] = dataclasses.field(default_factory=dict)
-    partial_flows_to_mark: list[PartialFlowToMark] = dataclasses.field(
+    partial_flows_to_mark: List[PartialFlowToMark] = dataclasses.field(
         default_factory=list
     )
 
@@ -345,8 +345,8 @@ def _get_remapped_filename(
 
 
 def _parse_partial_flows_to_mark(
-    metadata_json: dict[str, Any], key: str
-) -> list[PartialFlowToMark]:
+    metadata_json: Dict[str, Any], key: str
+) -> List[PartialFlowToMark]:
     parsed = []
     partial_flows_to_mark = metadata_json.get(key, [])
     for partial_flow in partial_flows_to_mark:

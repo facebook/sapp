@@ -13,12 +13,12 @@ from typing import Any, Dict, List, Optional, Type
 
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
-from tools.sapp.sapp.models import Base
 
 from .db import DB
 from .decorators import log_time
 from .iterutil import split_every
 from .models import (
+    Base,
     ClassTypeInterval,
     Issue,
     IssueInstance,
