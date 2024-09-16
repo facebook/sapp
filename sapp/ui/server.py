@@ -36,9 +36,6 @@ application = Flask(
 session: Optional[Session] = None
 
 
-# pyre-fixme[56]: While applying decorator `application.teardown_request`: For 1st
-#  argument expected `T_teardown` but got `(exception: Optional[Exception] = ...) ->
-#  None`.
 @application.teardown_request
 def shutdown_session(exception: Optional[Exception] = None) -> None:
     if session is not None:
