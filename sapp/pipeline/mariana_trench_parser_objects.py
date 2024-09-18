@@ -126,6 +126,24 @@ class Position(NamedTuple):
         )
 
 
+class ExploitabilityOrigin(NamedTuple):
+    exploitability_root: str
+    callee: str
+    position: Position
+
+    @staticmethod
+    def from_json(leaf_json: Dict[str, Any]) -> "ExploitabilityOrigin":
+        """
+        Represents the exploitability origin json object which is:
+        {"exploitability_root": ..., "callee": ..., "position": ...}
+        """
+        return ExploitabilityOrigin(
+            exploitability_root=leaf_json["exploitability_root"],
+            callee=leaf_json["callee"],
+            position=Position.from_json(leaf_json["position"], None),
+        )
+
+
 class Origin(NamedTuple):
     callee_name: Method
     callee_port: Port
@@ -381,3 +399,76 @@ class Kind(NamedTuple):
         for kind in kinds:
             kinds_by_interval[kind.type_interval].append(kind)
         return kinds_by_interval
+
+
+class IssueCallee(NamedTuple):
+    callee: Union[str, ExploitabilityOrigin]
+
+    @staticmethod
+    def from_json(issue_json: Dict[str, Any]) -> "IssueCallee":
+        """
+        A helper method to parse Issue::Callee variant:
+        - if "callee" key is present, it is a regular source/sink flow and
+          callee is the string itself.
+        - else it is an issue for an exploitability rule and must have
+          the key "exploitability_origin".
+        """
+        if "callee" in issue_json:
+            return IssueCallee(issue_json["callee"])
+        else:
+            return IssueCallee(
+                ExploitabilityOrigin.from_json(issue_json["exploitability_origin"])
+            )
+
+    @staticmethod
+    def _strip_anonymous_class_numbers(
+        callee_signature: str, callable_line: int, issue_line: int
+    ) -> str:
+        """
+        This is meant to remove the compiler-generated anonymous class numbers within
+        the sink callee signature to be included in an issue master handle. The number
+        is replaced with the relative line of the issue within the root callable. This
+        is done because the anonymous class number is more susceptible to changing with
+        unrelated changes in a diff rather than the relative line number of the issue
+        in the root callable.
+        """
+        first_semicolon = callee_signature.find(";")
+        if first_semicolon < 0:
+            return callee_signature
+        class_name = callee_signature[:first_semicolon]
+        class_name_length = len(class_name)
+        stripped_classname = ""
+        index = 0
+        while index < class_name_length:
+            character = class_name[index]
+            stripped_classname += character
+            index += 1
+            if (
+                character != "$"
+                or index == class_name_length
+                or not class_name[index].isdigit()
+            ):
+                continue
+            while index < class_name_length and class_name[index].isdigit():
+                index += 1
+        if stripped_classname == class_name:
+            return callee_signature
+
+        relative_line = -1
+        if issue_line > -1 and issue_line >= callable_line:
+            relative_line = issue_line - callable_line
+        return (
+            f"{stripped_classname}#{relative_line}{callee_signature[first_semicolon:]}"
+        )
+
+    def to_sapp_handle(self, callable_line: int, issue_line: int) -> str:
+        if isinstance(self.callee, ExploitabilityOrigin):
+            return f"{self.callee.exploitability_root}:{self.callee.callee}"
+        elif isinstance(self.callee, str):
+            return IssueCallee._strip_anonymous_class_numbers(
+                self.callee, callable_line, issue_line
+            )
+        else:
+            raise AssertionError(
+                "Unreachable state for IssueCallee.get_handle() method"
+            )

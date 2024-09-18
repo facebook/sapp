@@ -15,13 +15,13 @@ from .. import (
     ParseIssueConditionTuple,
     ParseIssueTuple,
     ParseTraceAnnotation,
-    ParseTraceAnnotationSubtrace,
     ParseTraceFeature,
     ParseTypeInterval,
     SourceLocation,
 )
 from ..base_parser import ParseType
 from ..mariana_trench_parser import Parser
+from ..mariana_trench_parser_objects import IssueCallee
 
 
 class TestParser(unittest.TestCase):
@@ -807,7 +807,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
-                callee_signature="LSink;.sink:(LData;)V",
+                issue_callee=IssueCallee("LSink;.sink:(LData;)V"),
                 sink_index=1,
                 code=4,
                 callable_line=2,
@@ -821,7 +821,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
-                callee_signature="LSink$2$10;.sink:(LData;)V",
+                issue_callee=IssueCallee("LSink$2$10;.sink:(LData;)V"),
                 sink_index=2,
                 code=1,
                 callable_line=2,
@@ -834,7 +834,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
-                callee_signature="LSink$Inner;.sink$default:(LData;)V",
+                issue_callee=IssueCallee("LSink$Inner;.sink$default:(LData;)V"),
                 sink_index=0,
                 code=1,
                 callable_line=2,
@@ -847,7 +847,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
-                callee_signature="LSink$1;.sink:(LData;)V",
+                issue_callee=IssueCallee("LSink$1;.sink:(LData;)V"),
                 sink_index=1,
                 code=5,
                 callable_line=-1,
