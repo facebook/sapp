@@ -225,7 +225,6 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                     for frame in initial_postcondition_frames:
                         context.add(FrameKey.from_frame(frame))
                     break
-                    # context.add(FrameKey.from_frame(frame))
             # Search preconditions for the transform. If we find the transform here
             # for a prefix flow, the initial postcondition frame must be marked instead.
             self._build_flow_context_by_searching_graph(
@@ -291,6 +290,7 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
             context = self._build_full_flow_context(
                 graph, full_issues, partial_flow_to_mark
             )
+            log.info(f"Built full flow context for {len(full_issues)} issues.")
             self._mark_partial_flows(
                 graph, partial_issues, partial_flow_to_mark.feature, context
             )
