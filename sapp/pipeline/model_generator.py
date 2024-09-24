@@ -448,6 +448,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         leaf_records = []
         leaf_mapping_ids: Set[LeafMapping] = set()
         for leaf, depth in leaves:
+            if not isinstance(depth, int) or depth < 0:
+                depth = None  # avoid writing bad stuff to DB
             leaf_record = self._get_shared_text(leaf_kind, leaf)
             caller_leaf_id = self.graph.get_transform_normalized_caller_kind_id(
                 leaf_record
