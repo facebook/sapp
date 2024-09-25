@@ -47,26 +47,27 @@ class FrameKey:
 FullFlowContext = set[FrameKey]
 
 
-# Returns a tuple of (local_transforms, global_transforms) for a given frame.
-def _get_all_transforms(
-    graph: TraceGraph, frame: TraceFrame
-) -> tuple[set[str], set[str]]:
+# Returns a set of transforms for the given frame. `local_only` controls whether non-local
+# transforms are also included in the returned set.
+def _get_transforms(
+    graph: TraceGraph, frame: TraceFrame, *, local_only: bool
+) -> set[str]:
     leaf_mappings = frame.leaf_mapping
     if leaf_mappings is None:
-        return set(), set()
-    all_local_transforms, all_global_transforms = set(), set()
-
+        return set()
+    transforms = set()
     for leaf_mapping in leaf_mappings:
         unparsed = graph.get_shared_text_by_local_id(leaf_mapping.transform).contents
         if "@" in unparsed:
             split_by_local = unparsed.split("@")
             local_transforms = split_by_local[0].split(":")
-            all_local_transforms.update(local_transforms)
-            global_transforms = split_by_local[1].split(":")[:-1]
-            all_global_transforms.update(global_transforms)
-        else:
-            all_global_transforms.update(unparsed.split(":")[:-1])
-    return all_local_transforms, all_global_transforms
+            transforms.update(local_transforms)
+            if not local_only:
+                global_transforms = split_by_local[1].split(":")[:-1]
+                transforms.update(global_transforms)
+        elif not local_only:
+            transforms.update(unparsed.split(":")[:-1])
+    return transforms
 
 
 def _get_local_transform_frame_key(
@@ -81,7 +82,7 @@ def _get_local_transform_frame_key(
     The output is represented as a map from local transform name to frame keys, where
     we return the frame keys each local transform happens in.
     """
-    local_transforms, _ = _get_all_transforms(graph, frame)
+    local_transforms = _get_transforms(graph, frame, local_only=True)
     if desired_transform in local_transforms:
         return FrameKey.from_frame(frame)
     return None
@@ -202,26 +203,19 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         Iterates through an issue, updating `context` in-place.
         """
         # Go through postcondition half of trace.
-        initial_postcondition_frames = [
-            frame
-            for frame in graph.get_issue_instance_trace_frames(full_instance)
-            if frame.kind == TraceKind.POSTCONDITION
-        ]
-        initial_precondition_frames = [
-            frame
-            for frame in graph.get_issue_instance_trace_frames(full_instance)
-            if frame.kind == TraceKind.PRECONDITION
-        ]
+        initial_postcondition_frames, initial_precondition_frames = [], []
+        for frame in graph.get_issue_instance_trace_frames(full_instance):
+            if frame.kind == TraceKind.POSTCONDITION:
+                initial_postcondition_frames.append(frame)
+            else:
+                initial_precondition_frames.append(frame)
         if partial_flow_to_mark.is_prefix_flow:
             # In the prefix flow case, a transform in any precondition frame would
             # cause the root frame to be marked, so avoid traversal and consider all
             # transforms.
             for frame in initial_precondition_frames:
-                local_transforms, global_transforms = _get_all_transforms(graph, frame)
-                if (
-                    partial_flow_to_mark.full_issue_transform in local_transforms
-                    or partial_flow_to_mark.full_issue_transform in global_transforms
-                ):
+                transforms = _get_transforms(graph, frame, local_only=False)
+                if partial_flow_to_mark.full_issue_transform in transforms:
                     for frame in initial_postcondition_frames:
                         context.add(FrameKey.from_frame(frame))
                     break
@@ -237,11 +231,8 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
             )
         else:
             for frame in initial_postcondition_frames:
-                local_transforms, global_transforms = _get_all_transforms(graph, frame)
-                if (
-                    partial_flow_to_mark.full_issue_transform in local_transforms
-                    or partial_flow_to_mark.full_issue_transform in global_transforms
-                ):
+                transforms = _get_transforms(graph, frame, local_only=False)
+                if partial_flow_to_mark.full_issue_transform in transforms:
                     for frame in initial_precondition_frames:
                         context.add(FrameKey.from_frame(frame))
                     break
