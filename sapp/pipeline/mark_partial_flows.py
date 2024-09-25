@@ -282,6 +282,8 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                 graph, full_issues, partial_flow_to_mark
             )
             log.info(f"Built full flow context for {len(full_issues)} issues.")
+            self.partial_flow_features_added = 0
+            self.partial_flow_frames = 0
             self._mark_partial_flows(
                 graph, partial_issues, partial_flow_to_mark.feature, context
             )
