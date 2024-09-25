@@ -41,10 +41,10 @@ class FrameKey:
         )
 
 
-# A full flow context is a set of frame keys, i.e. places where we've seen relevant
-# transforms happen in the full flows. This is used to add breadcrumbs at matching
-# spots for partial flows.
-FullFlowContext = set[FrameKey]
+# A full flow context is a map from a partial issue code to a set of frame keys,
+# i.e. places where we've seen relevant # transforms happen in the full flows.
+# This is used to add breadcrumbs at matching spots for partial flows.
+FullFlowContext = dict[int, set[FrameKey]]
 
 
 # Returns a set of transforms for the given frame. `local_only` controls whether non-local
@@ -99,15 +99,14 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         super().__init__()
 
         self.partial_flows_to_mark = partial_flows_to_mark
-        self.partial_flow_features_added = 0
         self.partial_flow_frames = 0
 
-    def _mark_partial_flows(
+    def _mark_partial_flows_for_code(
         self,
         graph: TraceGraph,
         instances: Iterable[IssueInstance],
         feature_name: str,
-        context: FullFlowContext,
+        context: set[FrameKey],
     ) -> None:
         """
         Goes through the trace subgraphs of each issue instance that's passed
@@ -145,7 +144,6 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                         frame, feature_to_add.id.local_id, depth=None
                     )
                     self.partial_flow_frames += 1
-                    self.partial_flow_features_added += 1
                     added_breadcrumb = True
 
                 queue.extend((frame for frame in next_frames))
@@ -155,11 +153,30 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                     instance, feature_to_add.id.local_id
                 )
 
+    def _mark_partial_flows(
+        self,
+        graph: TraceGraph,
+        issues: dict[int, list[IssueInstance]],
+        context: FullFlowContext,
+    ) -> None:
+        visited_partial_issue_codes = set()
+        for partial_flow_to_mark in self.partial_flows_to_mark:
+            if partial_flow_to_mark.partial_issue_code in visited_partial_issue_codes:
+                continue
+            visited_partial_issue_codes.add(partial_flow_to_mark.partial_issue_code)
+            self._mark_partial_flows_for_code(
+                graph,
+                issues[partial_flow_to_mark.partial_issue_code],
+                partial_flow_to_mark.feature,
+                context[partial_flow_to_mark.partial_issue_code],
+            )
+        pass
+
     def _build_flow_context_by_searching_graph(
         self,
         graph: TraceGraph,
         issue_instance_frames: list[TraceFrame],
-        context: FullFlowContext,
+        context: set[FrameKey],
         instance: IssueInstance,
         visited: set[int],
         transform: str,
@@ -195,8 +212,9 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         self,
         graph: TraceGraph,
         full_instance: IssueInstance,
-        context: FullFlowContext,
-        partial_flow_to_mark: PartialFlowToMark,
+        context: set[FrameKey],
+        is_prefix_flow: bool,
+        full_issue_transform: str,
         visited: set[int],
     ) -> None:
         """
@@ -209,13 +227,13 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                 initial_postcondition_frames.append(frame)
             else:
                 initial_precondition_frames.append(frame)
-        if partial_flow_to_mark.is_prefix_flow:
+        if is_prefix_flow:
             # In the prefix flow case, a transform in any precondition frame would
             # cause the root frame to be marked, so avoid traversal and consider all
             # transforms.
             for frame in initial_precondition_frames:
                 transforms = _get_transforms(graph, frame, local_only=False)
-                if partial_flow_to_mark.full_issue_transform in transforms:
+                if full_issue_transform in transforms:
                     for frame in initial_postcondition_frames:
                         context.add(FrameKey.from_frame(frame))
                     break
@@ -227,12 +245,12 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                 context,
                 full_instance,
                 visited,
-                transform=partial_flow_to_mark.full_issue_transform,
+                transform=full_issue_transform,
             )
         else:
             for frame in initial_postcondition_frames:
                 transforms = _get_transforms(graph, frame, local_only=False)
-                if partial_flow_to_mark.full_issue_transform in transforms:
+                if full_issue_transform in transforms:
                     for frame in initial_precondition_frames:
                         context.add(FrameKey.from_frame(frame))
                     break
@@ -242,52 +260,52 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                 context,
                 full_instance,
                 visited,
-                transform=partial_flow_to_mark.full_issue_transform,
+                transform=full_issue_transform,
             )
 
     def _build_full_flow_context(
         self,
         graph: TraceGraph,
-        issues: Iterable[IssueInstance],
-        partial_flow_to_mark: PartialFlowToMark,
+        issues: dict[int, list[IssueInstance]],
     ) -> FullFlowContext:
         visited = set()
-        context = set()
-        for issue in issues:
-            self._build_candidates_to_transform_from_larger_issue(
-                graph, issue, context, partial_flow_to_mark, visited
-            )
+        # The full flow context is a mapping from partial issue code -> frames to mark. Each issue
+        # will mark frames for the corresponding set of frames to mark.
+        context: FullFlowContext = defaultdict(set)
+        for partial_flow in self.partial_flows_to_mark:
+            for issue in issues[partial_flow.full_issue_code]:
+                self._build_candidates_to_transform_from_larger_issue(
+                    graph,
+                    issue,
+                    context[partial_flow.partial_issue_code],
+                    partial_flow.is_prefix_flow,
+                    partial_flow.full_issue_transform,
+                    visited,
+                )
         return context
 
     def run(self, input: TraceGraph, summary: Summary) -> tuple[TraceGraph, Summary]:
         if len(self.partial_flows_to_mark) == 0:
             return (input, summary)
 
+        log.info("Marking partial flows...")
         graph = input
+        grouped_by_full_issue_transform_and_prefix_flow = defaultdict(list)
+        full_issue_codes: set[int] = set()
+        partial_issue_codes: set[int] = set()
+        issues: dict[int, list[IssueInstance]] = defaultdict(list)
 
         for partial_flow_to_mark in self.partial_flows_to_mark:
-            full_issues: list[IssueInstance] = []
-            partial_issues: list[IssueInstance] = []
-            for instance in graph.get_issue_instances():
-                issue = graph.get_issue(instance.issue_id)
-                if issue.code == partial_flow_to_mark.full_issue_code:
-                    full_issues.append(instance)
-                elif issue.code == partial_flow_to_mark.partial_issue_code:
-                    partial_issues.append(instance)
-            # This is a naive implementation that repeats work. If we end up
-            # having lots of # partial flows, it would be more efficient to
-            # first collect all full # flow categories and then apply the
-            # context to each partial category.
-            context = self._build_full_flow_context(
-                graph, full_issues, partial_flow_to_mark
-            )
-            log.info(f"Built full flow context for {len(full_issues)} issues.")
-            self.partial_flow_features_added = 0
-            self.partial_flow_frames = 0
-            self._mark_partial_flows(
-                graph, partial_issues, partial_flow_to_mark.feature, context
-            )
-            log.info(
-                f"Added {self.partial_flow_features_added} partial flow features to {self.partial_flow_frames} frames."
-            )
+            full_issue_codes.add(partial_flow_to_mark.full_issue_code)
+            partial_issue_codes.add(partial_flow_to_mark.partial_issue_code)
+
+        for instance in graph.get_issue_instances():
+            issue = graph.get_issue(instance.issue_id)
+            if issue.code in full_issue_codes or issue.code in partial_issue_codes:
+                issues[issue.code].append(instance)
+
+        context = self._build_full_flow_context(graph, issues)
+        log.info("Built full flow context.")
+        self._mark_partial_flows(graph, issues, context)
+        log.info(f"Added partial flow features to {self.partial_flow_frames} frames.")
         return graph, summary
