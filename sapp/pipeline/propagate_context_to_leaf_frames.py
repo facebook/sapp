@@ -32,7 +32,11 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
     pattern to all reachable leaf frames for a particular frame_kind."""
 
     def __init__(
-        self, issue_code: int, feature_pattern: str, frame_kind: TraceKind
+        self,
+        issue_code: int,
+        feature_pattern: str,
+        frame_kind: TraceKind,
+        ignore_callee_port: bool = False,
     ) -> None:
         super().__init__()
         # pyre-fixme[13]: Attribute `summary` is never initialized.
@@ -48,6 +52,7 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         )
         self.leaf_features_added = 0
         self.leaf_frames = 0
+        self.ignore_callee_port = ignore_callee_port
 
     def _subtract_kinds(
         self,
@@ -194,10 +199,12 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         )
         is_root = self._is_root_port(trace_frame.caller_port)
         for candidate in candidates:
-            if (
-                candidate.callee_location != trace_frame.callee_location
-                or candidate.callee_port != trace_frame.callee_port
-                or candidate.callee_id.local_id != trace_frame.callee_id.local_id
+            if candidate.callee_id.local_id != trace_frame.callee_id.local_id or (
+                (
+                    candidate.callee_port != trace_frame.callee_port
+                    or candidate.callee_location != trace_frame.callee_location
+                )
+                and (not self.ignore_callee_port)
             ):
                 continue
 
