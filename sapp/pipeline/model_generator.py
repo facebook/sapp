@@ -10,7 +10,7 @@ import datetime
 import json
 import logging
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from ..models import (
     DBID,
@@ -49,6 +49,36 @@ from . import (
 )
 
 log: logging.Logger = logging.getLogger("sapp")
+
+
+# pyre-fixme[2]: Really need Any here
+def bound_int(i: Any, upper_limit: int) -> Optional[int]:
+    if isinstance(i, int):
+        if i < 0:
+            return 0
+        elif i > upper_limit:
+            return upper_limit
+        return i
+    else:
+        return None
+
+
+MAX_TRACE_LENGTH: int = 1000
+
+
+# pyre-fixme[2]: Really need Any here
+def bound_trace_length(depth: Any) -> Optional[int]:
+    # avoid writing bad trace_length to DB
+    return bound_int(depth, MAX_TRACE_LENGTH)
+
+
+MAX_TYPE_INTERVAL: int = (2**31) - 1
+
+
+# pyre-fixme[2]: Really need Any here
+def bound_type_interval_limit(i: Any) -> Optional[int]:
+    # avoid writing bad interval numbers
+    return bound_int(i, MAX_TYPE_INTERVAL)
 
 
 class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
@@ -144,7 +174,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         length = None
         for entry in entries:
             for _leaf, depth in entry.leaves:
-                if length is None or length > depth:
+                depth = bound_trace_length(depth)
+                if length is None or (depth is not None and length > depth):
                     length = depth
         if length is not None:
             return length
@@ -449,13 +480,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         leaf_mapping_ids: Set[LeafMapping] = set()
         for leaf, depth in leaves:
             # avoid writing bad trace_length to DB
-            if isinstance(depth, int):
-                if depth < 0:
-                    depth = 0
-                elif depth > 1000:
-                    depth = 1000
-            else:
-                depth = None
+            depth = bound_trace_length(depth)
             leaf_record = self._get_shared_text(leaf_kind, leaf)
             caller_leaf_id = self.graph.get_transform_normalized_caller_kind_id(
                 leaf_record
@@ -543,7 +568,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         self, ti: Optional[ParseTypeInterval]
     ) -> Tuple[Optional[int], Optional[int], bool]:
         if ti:
-            return (ti.start, ti.finish, ti.preserves_type_context)
+            lower = bound_type_interval_limit(ti.start)
+            upper = bound_type_interval_limit(ti.finish)
+            return (lower, upper, ti.preserves_type_context)
         else:
             return (None, None, False)
 
