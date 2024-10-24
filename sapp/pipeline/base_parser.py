@@ -139,7 +139,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
                 typ = ParseType.ISSUE
                 key = e.handle
             else:
-                raise Exception("Unknown ParseType")
+                raise Exception("Unknown ParseType", e)
             yield typ, key, e
 
     def analysis_output_to_dict_entries(
