@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from glob import glob
 from pathlib import Path
-from typing import Any, Dict, IO, Iterable, List, Optional, Set
+from typing import Any, Dict, IO, Iterable, List, Literal, Optional, Set
 
 from .sharded_files import ShardedFile
 
@@ -64,6 +64,28 @@ class PartialFlowToMark:
 
 
 @dataclass
+class ContextPropagation:
+    """
+    This is a specification of a context propagation that the user wishes us to use.
+    Context propagations are used to propagate context breadcrumbs from one frame
+    in an issue to another.
+
+    `code` represents the issue code that the context/breadcrumb is derived from.
+    `pattern` is the pattern that the breadcrumb should match.
+    `ignore_callee_port_and_location` is a boolean that indicates whether the callee
+    port and location should be ignored when finding frames to propagate the
+    context/breadcrumb to.
+    `frame_type` is a string that indicates the type of the frame the context/breadcrumb
+    will be derived from.
+    """
+
+    code: int
+    pattern: str
+    frame_type: Literal["precondition", "postcondition"]
+    ignore_callee_port_and_location: bool
+
+
+@dataclass
 class Metadata:
     # Used to relativize paths in the results
     repo_roots: Set[str] = dataclasses.field(default_factory=set)
@@ -81,6 +103,9 @@ class Metadata:
     partial_flows_to_mark: List[PartialFlowToMark] = dataclasses.field(
         default_factory=list
     )
+    context_propagation_specs: List[ContextPropagation] = dataclasses.field(
+        default_factory=list
+    )
 
     def merge(self, o: "Metadata") -> "Metadata":
         return Metadata(
@@ -96,6 +121,8 @@ class Metadata:
             + o.class_type_intervals_filenames,
             category_coverage=self.category_coverage,  # should all be the same
             partial_flows_to_mark=self.partial_flows_to_mark + o.partial_flows_to_mark,
+            context_propagation_specs=self.context_propagation_specs
+            + o.context_propagation_specs,
         )
 
 
@@ -200,6 +227,9 @@ class AnalysisOutput:
             partial_flows_to_mark = _parse_partial_flows_to_mark(
                 metadata, "partial_flows"
             )
+            context_propagation_specs = _parse_context_propagation_specs(
+                metadata, "context_propagation_specs"
+            )
             this_metadata = Metadata(
                 analysis_tool_version=metadata["version"],
                 commit_hash=metadata.get("commit"),
@@ -212,6 +242,7 @@ class AnalysisOutput:
                 class_type_intervals_filenames=class_type_intervals_filenames,
                 category_coverage=metadata.get("category_coverage", []),
                 partial_flows_to_mark=partial_flows_to_mark,
+                context_propagation_specs=context_propagation_specs,
             )
             if not main_metadata:
                 main_metadata = this_metadata
@@ -256,6 +287,9 @@ class AnalysisOutput:
             metadata, "class_type_intervals_filename", directory
         )
         partial_flows_to_mark = _parse_partial_flows_to_mark(metadata, "partial_flows")
+        context_propagation_specs = _parse_context_propagation_specs(
+            metadata, "context_propagation_specs"
+        )
         return cls(
             directory=directory,
             filename_specs=filename_specs,
@@ -272,6 +306,7 @@ class AnalysisOutput:
                 class_type_intervals_filenames=class_type_intervals_filenames,
                 category_coverage=metadata.get("category_coverage", []),
                 partial_flows_to_mark=partial_flows_to_mark,
+                context_propagation_specs=context_propagation_specs,
             ),
         )
 
@@ -359,4 +394,30 @@ def _parse_partial_flows_to_mark(
                 feature=partial_flow["feature"],
             )
         )
+    return parsed
+
+
+def _parse_context_propagation_specs(
+    metadata_json: Dict[str, Any], key: str
+) -> List[ContextPropagation]:
+    parsed: List[ContextPropagation] = []
+    context_propagation_specs = metadata_json.get(key, [])
+    for context_propagation_spec in context_propagation_specs:
+        code = context_propagation_spec["code"]
+        context_propagations = context_propagation_spec["context_propagations"]
+        for context_propagation in context_propagations:
+            frame_types = context_propagation["frame_types"]
+            pattern = context_propagation["pattern"]
+            ignore_callee_port_and_location = context_propagation[
+                "ignore_callee_port_and_location"
+            ]
+            for frame_type in frame_types:
+                parsed.append(
+                    ContextPropagation(
+                        code=code,
+                        pattern=pattern,
+                        frame_type=frame_type,
+                        ignore_callee_port_and_location=ignore_callee_port_and_location,
+                    )
+                )
     return parsed

@@ -10,6 +10,7 @@ import logging
 from collections import defaultdict, deque
 from typing import Dict, List, Set, Tuple
 
+from ..analysis_output import ContextPropagation
 from ..models import IssueInstance, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
@@ -33,26 +34,29 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
 
     def __init__(
         self,
-        issue_code: int,
-        feature_pattern: str,
-        frame_kind: TraceKind,
-        ignore_callee_port: bool = False,
+        context_propagation: ContextPropagation,
     ) -> None:
         super().__init__()
         # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
         # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
-        self.feature_pattern = feature_pattern
-        self.issue_code = issue_code
-        self.frame_kind = frame_kind
-        # pyre-fixme[8]: Expected `Dict[FrameID, TaintKindToState]` for 1st param but got `defaultdict`.
+        self.feature_pattern: str = context_propagation.pattern
+        self.issue_code: int = context_propagation.code
+        self.frame_kind: TraceKind = (
+            TraceKind.PRECONDITION
+            if context_propagation.frame_type == "precondition"
+            else TraceKind.POSTCONDITION
+        )
+        # pyre-fixme[8]: Expected `Dict[FrameID, TaintKindToState]` for param 1
         self.visited: Dict[FrameID, TaintKindToState] = defaultdict(
             lambda: defaultdict(lambda: PerTaintKindState())
         )
         self.leaf_features_added = 0
         self.leaf_frames = 0
-        self.ignore_callee_port = ignore_callee_port
+        self.ignore_callee_port_and_location: bool = (
+            context_propagation.ignore_callee_port_and_location
+        )
 
     def _subtract_kinds(
         self,
@@ -204,7 +208,7 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
                     candidate.callee_port != trace_frame.callee_port
                     or candidate.callee_location != trace_frame.callee_location
                 )
-                and (not self.ignore_callee_port)
+                and (not self.ignore_callee_port_and_location)
             ):
                 continue
 
@@ -217,7 +221,10 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         self.graph = graph
 
         log.info(
-            f"Propagating feature {self.feature_pattern} in issues {self.issue_code} to {self.frame_kind} leaves"
+            f"Propagating feature {self.feature_pattern} in issues"
+            + f" {self.issue_code} to {self.frame_kind} leaves."
+            + " Callee port and location will"
+            + f"{'' if self.ignore_callee_port_and_location else ' not'} be ignored"
         )
 
         for instance in graph.get_issue_instances():
@@ -238,7 +245,8 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
                 self._add_contextual_features_to_frame(trace_frame, features)
                 self._add_contextual_features_to_neighbor_frames(trace_frame, features)
         log.info(
-            f"Added {self.leaf_features_added} features to {self.leaf_frames} trace frames"
+            f"Added {self.leaf_features_added} features to {self.leaf_frames}"
+            + " trace frames. "
         )
 
         return graph, summary
