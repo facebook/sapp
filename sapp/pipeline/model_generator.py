@@ -150,7 +150,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
     def _create_empty_run(
         self,
-        status: str = RunStatus.FINISHED,
+        status: RunStatus,
         status_description: Optional[str] = None,
     ) -> Run:
         """setting boilerplate when creating a Run object"""
@@ -158,7 +158,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             job_id=self.summary["job_id"],
             issue_instances=[],
             date=datetime.datetime.now(),
-            status=status,
+            status=status.name,
             status_description=status_description,
             repository=self.summary["repository"],
             branch=self.summary["branch"],

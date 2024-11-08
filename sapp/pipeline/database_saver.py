@@ -9,6 +9,7 @@
 
 import collections
 import logging
+from datetime import datetime
 from typing import Generic, List, Optional, Tuple, Type, TypeVar
 
 from ..bulk_saver import BulkSaver
@@ -147,6 +148,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
             with self.database.make_session() as session:
                 run = session.query(self.run_model).filter_by(id=run_id).one()
                 run.status = RunStatus.FINISHED
+                run.finished_time = int(datetime.now().timestamp())
                 session.add(run)
                 session.commit()
                 run_summary = run.get_summary()

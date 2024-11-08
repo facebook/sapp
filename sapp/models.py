@@ -975,6 +975,12 @@ class Run(Base):
         index=False,
     )
 
+    finished_time: Column[Optional[int]] = Column(
+        BIGINT(20, unsigned=True),
+        doc="unix timestamp that the job was marked as finished or NULL",
+        nullable=True,
+    )
+
     def get_summary(self, **kwargs) -> RunSummary:
         session = Session.object_session(self)
 
