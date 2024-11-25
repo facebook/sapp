@@ -461,13 +461,19 @@ class IssueCallee(NamedTuple):
             f"{stripped_classname}#{relative_line}{callee_signature[first_semicolon:]}"
         )
 
-    def to_sapp_handle(self, callable_line: int, issue_line: int) -> str:
+    def to_sapp_handle(self, callable: str, callable_line: int, issue_line: int) -> str:
         if isinstance(self.callee, ExploitabilityOrigin):
+            # We do not include `callable` in the handle for exploitability issues.
+            # This way, SAPP UI groups all issues with the same exploitability origin
+            # together in the unique issues view.
+            # This does mean that we will write multiple issue instances with the
+            # same issue handle.
             return f"{self.callee.exploitability_root}:{self.callee.callee}"
         elif isinstance(self.callee, str):
-            return IssueCallee._strip_anonymous_class_numbers(
+            callee = IssueCallee._strip_anonymous_class_numbers(
                 self.callee, callable_line, issue_line
             )
+            return f"{callable}:{callee}"
         else:
             raise AssertionError(
                 "Unreachable state for IssueCallee.get_handle() method"

@@ -225,8 +225,7 @@ class Parser(BaseParser):
         issue_line: int,
     ) -> str:
         return BaseParser.compute_handle_from_key(
-            f"{callable}"
-            f":{issue_callee.to_sapp_handle(callable_line, issue_line)}"
+            f"{issue_callee.to_sapp_handle(callable, callable_line, issue_line)}"
             f":{sink_index}"
             f":{code}"
         )
