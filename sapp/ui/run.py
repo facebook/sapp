@@ -7,7 +7,7 @@
 
 from typing import List
 
-import graphene
+import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import distinct, func
 

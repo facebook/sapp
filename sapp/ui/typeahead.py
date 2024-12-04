@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import List
 
-import graphene
+import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
 from sqlalchemy.orm import Session
 
 from ..models import Issue, IssueInstance, SharedText, SharedTextKind

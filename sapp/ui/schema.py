@@ -9,9 +9,13 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import graphene
+import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
+
+# @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
 from graphene import relay
 from graphene_sqlalchemy import get_session
+
+# @manual=fbsource//third-party/pypi/graphql-core-legacy:graphql-core-legacy
 from graphql.execution.base import ResolveInfo
 
 from ..filter import Filter

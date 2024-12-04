@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from typing import List, Optional, Set
 
-import graphene
+import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
+
+# @manual=fbsource//third-party/pypi/graphql-core-legacy:graphql-core-legacy
 from graphql.execution.base import ResolveInfo
 from sqlalchemy import func
 from sqlalchemy.orm import aliased, Session

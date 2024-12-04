@@ -18,7 +18,9 @@ from typing import (
     Union,
 )
 
-import graphene
+import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
+
+# @manual=fbsource//third-party/pypi/graphql-core-legacy:graphql-core-legacy
 from graphql.execution.base import ResolveInfo
 from sqlalchemy.orm import aliased, Session
 from sqlalchemy.orm.util import AliasedClass

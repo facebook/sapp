@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import graphene
+import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
 import sqlalchemy
 from flask.views import View
 from sqlalchemy.orm import Session
