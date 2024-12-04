@@ -22,7 +22,7 @@ logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
 # serializable data. And as a single arg, as far as I can tell. Which is why the
 # args type looks so silly.
 def parse(
-    args: Tuple[Tuple[Type[BaseParser], Set[str], Metadata], str]
+    args: Tuple[Tuple[Type[BaseParser], Set[str], Metadata], str],
 ) -> List[Union[ParseConditionTuple, ParseIssueTuple]]:
     (base_parser, repo_dirs, metadata), path = args
 

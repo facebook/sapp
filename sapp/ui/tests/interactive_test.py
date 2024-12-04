@@ -2567,9 +2567,9 @@ else:
             self.fakes.issue(callable="call3"),
             self.fakes.issue(callable="call2"),
         ]
-        self.fakes.instance(issue_id=issues[0].id, callable="call2"),
-        self.fakes.instance(issue_id=issues[1].id, callable="call3"),
-        self.fakes.instance(issue_id=issues[2].id, callable="call2"),
+        (self.fakes.instance(issue_id=issues[0].id, callable="call2"),)
+        (self.fakes.instance(issue_id=issues[1].id, callable="call3"),)
+        (self.fakes.instance(issue_id=issues[2].id, callable="call2"),)
         self.fakes.save_all(self.db)
 
         with self.db.make_session(expire_on_commit=False) as session:

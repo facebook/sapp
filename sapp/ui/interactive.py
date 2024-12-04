@@ -1607,7 +1607,7 @@ json CALLABLE        show the original json output for the matching callable
     ) -> Set[str]:
         ids = [
             int(id)
-            for id, in session.query(SharedText.id)
+            for (id,) in session.query(SharedText.id)
             .distinct(SharedText.id)
             .join(
                 IssueInstanceSharedTextAssoc,

@@ -84,9 +84,9 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
                 kind = self.graph.get_shared_text_by_local_id(shared_text).kind
                 if kind is SharedTextKind.FEATURE:
                     trace_length_to_use = 0
-                visited_frame[sink_kind].shared_text_trace_lengths[
-                    shared_text
-                ] = trace_length_to_use
+                visited_frame[sink_kind].shared_text_trace_lengths[shared_text] = (
+                    trace_length_to_use
+                )
 
     def _propagate_shared_texts(self, instance: IssueInstance) -> None:
         """Propagate the source kinds and features of this issue instance to all

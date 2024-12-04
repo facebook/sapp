@@ -187,7 +187,7 @@ ParseIssueLeaf = Tuple[Optional[str], str, int]  # (callable, kind, distance)
 
 
 def flatten_feature_to_parse_trace_feature(
-    feature: Dict[str, Any]
+    feature: Dict[str, Any],
 ) -> Iterable[ParseTraceFeature]:
     for key, value in feature.items():
         if isinstance(value, str) and value:
@@ -197,7 +197,7 @@ def flatten_feature_to_parse_trace_feature(
 
 
 def flatten_features_to_parse_trace_feature(
-    features: Iterable[Dict[str, Any]]
+    features: Iterable[Dict[str, Any]],
 ) -> List[ParseTraceFeature]:
     ret = []
     for feature in features:

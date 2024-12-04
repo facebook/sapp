@@ -557,7 +557,7 @@ def _get_leaves(
 ) -> Set[str]:
     message_ids = [
         int(id)
-        for id, in session.query(SharedText.id)
+        for (id,) in session.query(SharedText.id)
         .distinct(SharedText.id)
         .join(
             IssueInstanceSharedTextAssoc,

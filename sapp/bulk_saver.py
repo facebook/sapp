@@ -5,8 +5,7 @@
 
 # pyre-strict
 
-"""Bulk saving objects for performance
-"""
+"""Bulk saving objects for performance"""
 
 import logging
 from typing import Any, Dict, List, Optional, Type
@@ -201,7 +200,8 @@ class BulkSaver:
             dialect = database.engine.dialect.name
             if dialect == "mysql":
                 statement = (
-                    mysql_insert(cls).values(records_to_save)
+                    mysql_insert(cls)
+                    .values(records_to_save)
                     # Setting a field to itself is a standard way of doing a no-op in
                     # case of existing rows. This is better than using "INSERT IGNORE"
                     # because that ignores all sorts of other errors too.

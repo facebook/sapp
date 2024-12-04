@@ -45,7 +45,6 @@ def all_filters(session: Session) -> List[Filter]:
 
 
 def save_filter(session: Session, filter: Filter) -> None:
-
     existing = (
         session.query(FilterRecord).filter(FilterRecord.name == filter.name).first()
     )

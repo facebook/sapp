@@ -423,7 +423,7 @@ def get_leaves_trace_frame(
 ) -> Set[str]:
     ids = [
         int(id)
-        for id, in session.query(SharedText.id)
+        for (id,) in session.query(SharedText.id)
         .distinct(SharedText.id)
         .join(TraceFrameLeafAssoc, SharedText.id == TraceFrameLeafAssoc.leaf_id)
         .filter(TraceFrameLeafAssoc.trace_frame_id == trace_frame_id)
@@ -442,7 +442,7 @@ def trace_kind_to_shared_text_kind(trace_kind: Optional[TraceKind]) -> SharedTex
 
 
 def create_trace_tuples(
-    navigation: Iterable[Tuple[TraceFrameQueryResult, int]]
+    navigation: Iterable[Tuple[TraceFrameQueryResult, int]],
 ) -> List[TraceTuple]:
     return [
         TraceTuple(
