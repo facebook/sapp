@@ -24,7 +24,7 @@ from .extensions import prompt_extension
 from .filesystem import find_root
 from .json_cmd import json_cmd
 from .models import PrimaryKeyGenerator, Run
-from .pipeline import Pipeline, Summary
+from .pipeline import PipelineBuilder, Summary
 from .pipeline.add_features import AddFeatures
 from .pipeline.create_database import CreateDatabase
 from .pipeline.database_saver import DatabaseSaver
@@ -192,19 +192,16 @@ def analyze(
     else:
         analysis_output = AnalysisOutput.from_file(input_file)
 
-    pipeline_steps = [
-        ctx.parser_class(),
-        CreateDatabase(ctx.database),
-        AddFeatures(add_feature),
-        ModelGenerator(),
-        TrimTraceGraph(),
-        DatabaseSaver(ctx.database, Run, PrimaryKeyGenerator(), dry_run),
-    ]
-    # pyre-fixme[6]: Expected
-    #  `List[tools.sapp.sapp.pipeline.PipelineStep[typing.Any, typing.Any]]` for 1st
-    #  param but got `List[typing.Union[DatabaseSaver, ModelGenerator, TrimTraceGraph,
-    #  tools.sapp.sapp.base_parser.BaseParser]]`.
-    pipeline = Pipeline(pipeline_steps)
+    pipeline = (
+        PipelineBuilder()
+        .append(ctx.parser_class())
+        .append(CreateDatabase(ctx.database))
+        .append(AddFeatures(add_feature))
+        .append(ModelGenerator())
+        .append(TrimTraceGraph())
+        .append(DatabaseSaver(ctx.database, Run, PrimaryKeyGenerator(), dry_run))
+        .build()
+    )
     pipeline.run(analysis_output, summary_blob)
 
 

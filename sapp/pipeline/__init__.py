@@ -365,3 +365,16 @@ class Pipeline:
             ", ".join([f"{name} took {time_str(delta)}" for name, delta in timing]),
         )
         return next_input, summary
+
+
+class PipelineBuilder(Generic[T_in]):
+    def __init__(self) -> None:
+        # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
+        self.steps: List[PipelineStep[Any, Any]] = []
+
+    def append(self, step: PipelineStep[T_in, T_out]) -> "PipelineBuilder[T_out]":
+        self.steps.append(step)
+        return cast(PipelineBuilder[T_out], self)
+
+    def build(self) -> Pipeline:
+        return Pipeline(self.steps)
