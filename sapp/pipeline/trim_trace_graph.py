@@ -17,12 +17,13 @@ log: logging.Logger = logging.getLogger("sapp")
 
 class TrimTraceGraph(PipelineStep[TraceGraph, TraceGraph]):
     def run(self, input: TraceGraph, summary: Summary) -> Tuple[TraceGraph, Summary]:
-        if summary.get("affected_files") is None:
+        affected_files = summary.get("affected_files")
+        if affected_files is None:
             return input, summary
 
         log.info("Trimming graph to affected files.")
         trimmed_graph = TrimmedTraceGraph(
-            summary["affected_files"], summary.get("affected_issues_only", False)
+            affected_files, summary.get("affected_issues_only", False)
         )
         trimmed_graph.populate_from_trace_graph(input)
         return trimmed_graph, summary

@@ -50,7 +50,7 @@ from .db_support import (
     RecordMixin,
 )
 from .decorators import classproperty
-from .pipeline import SourceLocation
+from .source_location import SourceLocation
 
 log: logging.Logger = logging.getLogger("sapp")
 

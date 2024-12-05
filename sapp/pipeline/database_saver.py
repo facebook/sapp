@@ -10,10 +10,11 @@
 import collections
 import logging
 from datetime import datetime
-from typing import Generic, List, Optional, Tuple, Type, TypeVar
+from typing import cast, Generic, List, Optional, Tuple, Type, TypeVar
 
 from ..bulk_saver import BulkSaver
 from ..db import DB
+from ..db_support import DBID
 from ..decorators import log_time
 from ..models import (
     ClassTypeInterval,
@@ -120,7 +121,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
                 if meta_run_identifier is not None:
                     session.add(
                         MetaRunToRunAssoc(
-                            meta_run_id=meta_run_identifier,
+                            meta_run_id=cast(DBID, meta_run_identifier),
                             run_id=self.summary["run"].id,
                             run_label=self.summary.get("meta_run_child_label", None),
                         )
@@ -139,7 +140,7 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
             # Additionally, this allow us to sync information from existing
             # central issues into yet-to-be created local issues here.
             self._save_central_issues_and_sync_local_issues(
-                self.summary["run"], self.bulk_saver.get_items_to_add(Issue)
+                cast(TRun, self.summary["run"]), self.bulk_saver.get_items_to_add(Issue)
             )
 
             self.bulk_saver.save_all(self.database)

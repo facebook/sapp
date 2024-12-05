@@ -9,7 +9,7 @@ import logging
 import os
 import pathlib
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import click
 import click_log
@@ -24,7 +24,7 @@ from .extensions import prompt_extension
 from .filesystem import find_root
 from .json_cmd import json_cmd
 from .models import PrimaryKeyGenerator, Run
-from .pipeline import Pipeline
+from .pipeline import Pipeline, Summary
 from .pipeline.add_features import AddFeatures
 from .pipeline.create_database import CreateDatabase
 from .pipeline.database_saver import DatabaseSaver
@@ -170,7 +170,7 @@ def analyze(
     add_feature: Optional[List[str]],
 ) -> None:
     # Store all options in the right places
-    summary_blob: Dict[str, Any] = {
+    summary_blob: Summary = {
         "run_kind": run_kind,
         "repository": ctx.repository,
         "branch": branch,

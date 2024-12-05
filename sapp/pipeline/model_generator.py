@@ -10,7 +10,7 @@ import datetime
 import json
 import logging
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from ..models import (
     DBID,
@@ -34,6 +34,7 @@ from ..models import (
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
     DictEntries,
+    DictKey,
     meta_run_issue_duplicate_filter,
     ParseConditionTuple,
     ParseFeature,
@@ -106,7 +107,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         self.summary = summary
 
         self.summary["trace_entries"] = defaultdict(
-            lambda: defaultdict(list)
+            lambda: cast(Dict[DictKey, List[ParseConditionTuple]], defaultdict(list))
         )  # : Dict[TraceKind, Dict[Tuple[str, str], List[ParseCondition]]]
         self.summary["missing_traces"] = defaultdict(
             set

@@ -10,18 +10,24 @@ import sys
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
 from typing import (
     Any,
+    cast,
     Dict,
     Generic,
     Iterable,
     List,
     NamedTuple,
     Optional,
+    Set,
     Tuple,
     TypeVar,
     Union,
 )
+
+from tools.sapp.sapp.analysis_output import Metadata
+from tools.sapp.sapp.models import Run, SourceLocation, TraceKind
 
 if sys.version_info >= (3, 8):
     from typing import Literal, TypedDict
@@ -53,54 +59,6 @@ class ParseType(Enum):
     ISSUE = "issue"
     PRECONDITION = "precondition"
     POSTCONDITION = "postcondition"
-
-
-class ParsePosition(TypedDict, total=False):
-    filename: str
-    line: int
-    start: int
-    end: int
-
-
-class SourceLocation(NamedTuple):
-    """The location in a source file that an error occurred in
-
-    If end_column is defined then we have a range, otherwise it defaults to
-    begin_column and we have a single point.
-    """
-
-    line_no: int
-    begin_column: int
-    end_column: int
-
-    @staticmethod
-    def of(
-        line_no: int, begin_column: int, end_column: Optional[int] = None
-    ) -> "SourceLocation":
-        return SourceLocation(line_no, begin_column, end_column or begin_column)
-
-    def __str__(self) -> str:
-        return SourceLocation.to_string(self)
-
-    @staticmethod
-    def from_typed_dict(d: ParsePosition) -> "SourceLocation":
-        return SourceLocation(
-            d["line"],
-            d["start"],
-            d["end"],
-        )
-
-    @staticmethod
-    def from_string(location_string: str) -> "SourceLocation":
-        location_points = location_string.split("|")
-        assert len(location_points) == 3, "Invalid location string %s" % location_string
-        return SourceLocation(*map(int, location_points))
-
-    @staticmethod
-    def to_string(location: "SourceLocation") -> str:
-        return "|".join(
-            map(str, [location.line_no, location.begin_column, location.end_column])
-        )
 
 
 class ParseTypeInterval(NamedTuple):
@@ -332,7 +290,29 @@ class DictEntries(TypedDict):
     issues: List[ParseIssueTuple]
 
 
-Summary = Dict[str, Any]  # blob of objects that gets passed through the pipeline
+class Summary(TypedDict, total=False):
+    affected_files: Optional[List[str]]
+    affected_issues_only: bool
+    big_tito: Set[Tuple[str, str, int]]
+    branch: Optional[str]
+    codes: Optional[List[int]]
+    commit_hash: Optional[str]
+    input_metadata: Metadata
+    job_id: Optional[str]
+    logger_tier: Optional[str]
+    meta_run_child_label: Optional[str]
+    meta_run_identifier: Optional[str]
+    missing_traces: Dict[TraceKind, Set[Tuple[str, str]]]
+    old_linemap_file: Optional[str]
+    previous_issue_handles: Optional[Path]
+    project: Optional[str]
+    repo_dir: str
+    repository: Optional[str]
+    run: Run
+    run_attributes: object  # List[RunAttribute]
+    run_kind: Optional[str]
+    store_unused_models: bool
+    trace_entries: Dict[TraceKind, Dict[DictKey, List[ParseConditionTuple]]]
 
 
 # pyre-fixme[3]: Return type must be annotated.
@@ -373,7 +353,7 @@ class Pipeline:
         summary: Optional[Summary] = None,
     ) -> Tuple[Any, Summary]:
         if summary is None:
-            summary = {}
+            summary = cast(Summary, {})
         next_input = first_input
         timing = []
         for step in self.steps:
