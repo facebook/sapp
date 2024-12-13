@@ -279,7 +279,8 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         nullable=False,
     )
 
-    kind: Column[str] = Column(
+    # pyre-fixme[8]: Attribute has type `Column[str]`; used as `Column[SharedTextKind]`.
+    kind: Column[SharedTextKind] = Column(
         Enum(SharedTextKind), server_default="feature", nullable=False
     )
 
@@ -930,7 +931,8 @@ class Run(Base):
         viewonly=True,
     )
 
-    status: Column[str] = Column(
+    # pyre-fixme[8]: Attribute has type `Column[str]`; used as `Column[RunStatus]`.
+    status: Column[RunStatus] = Column(
         Enum(RunStatus), server_default="finished", nullable=False, index=True
     )
 
@@ -962,7 +964,8 @@ class Run(Base):
         server_default="0",
     )
 
-    purge_status: Column[str] = Column(
+    # pyre-fixme[8]: Attribute has type `Column[str]`; used as `Column[PurgeStatus]`.
+    purge_status: Column[PurgeStatus] = Column(
         Enum(PurgeStatus),
         server_default="unpurged",
         nullable=False,
@@ -1058,7 +1061,8 @@ class MetaRun(Base):
         default=CURRENT_DB_VERSION,
     )
 
-    status: Column[str] = Column(
+    # pyre-fixme[8]: Attribute has type `Column[str]`; used as `Column[RunStatus]`.
+    status: Column[RunStatus] = Column(
         Enum(RunStatus), server_default="finished", nullable=False, index=True
     )
 
@@ -1262,7 +1266,8 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         server_default="",
     )
 
-    reachability: Column[str] = Column(
+    # pyre-fixme[8]: Attribute has type `Column[str]`; used as `Column[FrameReachability]`.
+    reachability: Column[FrameReachability] = Column(
         Enum(FrameReachability),
         server_default="unreachable",
         nullable=False,

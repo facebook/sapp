@@ -15,7 +15,6 @@ import sys
 from collections import defaultdict
 from typing import (
     Any,
-    Callable,
     DefaultDict,
     Dict,
     Iterable,
@@ -88,7 +87,7 @@ class LeafOrderBy(str, enum.Enum):
     number_issues = "number_issues"
 
 
-ScopeVariables = Dict[str, Union[Callable[..., None], TraceKind]]
+ScopeVariables = Dict[str, object]
 
 
 class Interactive:

@@ -5,7 +5,7 @@
 
 # pyre-strict
 
-from typing import Any, List
+from typing import Any, cast, List
 from unittest import TestCase
 
 from ...db import DB, DBType
@@ -129,7 +129,11 @@ class QueryTest(TestCase):
             session.commit()
 
             next_frames = trace_module.next_frames(
-                session, frames[1], {"sink1"}, set(), backwards=True
+                session,
+                cast(trace_module.TraceFrameQueryResult, frames[1]),
+                {"sink1"},
+                set(),
+                backwards=True,
             )
 
             self.assertEqual(len(next_frames), 1)

@@ -17,6 +17,7 @@ from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import Session
+from typing_extensions import Self
 
 from .db import DB
 from .iterutil import inclusive_range, split_every
@@ -346,7 +347,7 @@ class PrimaryKeyGeneratorBase:
         #  `typing.Type` to avoid runtime subscripting errors.
         saving_classes: List[Type],
         item_counts: Optional[Dict[str, int]] = None,
-    ) -> "PrimaryKeyGeneratorBase":
+    ) -> Self:
         """
         session - Session for DB operations.
         saving_classes - class objects that need to be saved e.g. Issue, Run

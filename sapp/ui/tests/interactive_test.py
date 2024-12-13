@@ -4,13 +4,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# pyre-unsafe
+# pyre-strict
 
 import os
 import sys
 from datetime import datetime
 from io import StringIO
-from typing import List
+from typing import cast, List, Union
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
@@ -64,7 +64,11 @@ class InteractiveTest(TestCase):
         self.stdout = StringIO()
         sys.stdout = self.stdout
 
-    def _add_to_session(self, session, data) -> None:
+    def _add_to_session(
+        self,
+        session: Session,
+        data: Union[List[IssueInstanceSharedTextAssoc], List[Run], List[SharedText]],
+    ) -> None:
         if not isinstance(data, list):
             session.add(data)
             return
@@ -206,6 +210,7 @@ class InteractiveTest(TestCase):
         self._list_issues_filter_setup()
 
         self.interactive.setup()
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(codes="a string")
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'codes' should be", stderr)
@@ -227,6 +232,7 @@ class InteractiveTest(TestCase):
         self._list_issues_filter_setup()
 
         self.interactive.setup()
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(callables=1234)
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'callables' should be", stderr)
@@ -248,6 +254,7 @@ class InteractiveTest(TestCase):
         self._list_issues_filter_setup()
 
         self.interactive.setup()
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(filenames=1234)
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'filenames' should be", stderr)
@@ -270,21 +277,25 @@ class InteractiveTest(TestCase):
 
         self.interactive.setup()
 
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(exact_trace_length_to_sources="1")
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'exact_trace_length_to_sources' should be", stderr)
         self._clear_stdout()
 
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(exact_trace_length_to_sinks="1")
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'exact_trace_length_to_sinks' should be", stderr)
         self._clear_stdout()
 
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(max_trace_length_to_sources="1")
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'max_trace_length_to_sources' should be", stderr)
         self._clear_stdout()
 
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(max_trace_length_to_sinks="1")
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'max_trace_length_to_sinks' should be", stderr)
@@ -538,6 +549,7 @@ class InteractiveTest(TestCase):
         self._list_issues_filter_setup()
 
         self.interactive.setup()
+        # pyre-ignore[6]: Intentional wrong type for testing.
         self.interactive.issues(statuses=1234)
         stderr = self.stderr.getvalue().strip()
         self.assertIn("'statuses' should be", stderr)
@@ -588,7 +600,7 @@ class InteractiveTest(TestCase):
             session.commit()
 
         self.interactive.setup()
-        self.interactive.run(1)
+        self.interactive.run(cast(DBID, 1))
         self.interactive.issues()
         output = self.stdout.getvalue().strip()
 
@@ -606,8 +618,8 @@ class InteractiveTest(TestCase):
             session.commit()
 
         self.interactive.setup()
-        self.interactive.run(2)
-        self.interactive.run(3)
+        self.interactive.run(cast(DBID, 2))
+        self.interactive.run(cast(DBID, 3))
         stderr = self.stderr.getvalue().strip()
 
         self.assertIn("Run 2 doesn't exist", stderr)
@@ -654,14 +666,14 @@ class InteractiveTest(TestCase):
 
         self.interactive.setup()
 
-        self.interactive.issue(2)
+        self.interactive.issue(cast(DBID, 2))
         self.assertEqual(int(self.interactive.current_issue_instance_id), 2)
         stdout = self.stdout.getvalue().strip()
         self.assertNotIn("Issue 1", stdout)
         self.assertIn("Issue 2", stdout)
         self.assertNotIn("Issue 3", stdout)
 
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self.assertEqual(int(self.interactive.current_issue_instance_id), 1)
         stdout = self.stdout.getvalue().strip()
         self.assertIn("Issue 1", stdout)
@@ -675,7 +687,7 @@ class InteractiveTest(TestCase):
             session.commit()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         stderr = self.stderr.getvalue().strip()
 
         self.assertIn("Issue 1 doesn't exist", stderr)
@@ -697,7 +709,7 @@ class InteractiveTest(TestCase):
 
         self.interactive.setup()
         self.assertEqual(int(self.interactive._current_run_id), 2)
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self.assertEqual(int(self.interactive._current_run_id), 1)
 
     def testGetSources(self) -> None:
@@ -793,7 +805,7 @@ class InteractiveTest(TestCase):
         self.assertIn("via:feature1", features)
         self.assertIn("via:feature2", features)
 
-    def _basic_trace_frames(self):
+    def _basic_trace_frames(self) -> List[TraceFrame]:
         return [
             self.fakes.precondition(
                 caller="call1",
@@ -1083,7 +1095,7 @@ class InteractiveTest(TestCase):
         stderr = self.stderr.getvalue().strip()
         self.assertIn("Use 'issue ID' or 'frame ID'", stderr)
 
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self._clear_stdout()
         self.interactive.trace()
         self.assertEqual(
@@ -1182,7 +1194,7 @@ class InteractiveTest(TestCase):
             session.commit()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self.interactive.trace()
         stdout = self.stdout.getvalue().strip()
         self.assertIn("Missing trace frame: call2:param0", stdout)
@@ -1238,7 +1250,7 @@ class InteractiveTest(TestCase):
 
         self.assertIsNone(self.interactive.callable())
 
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self.assertEqual(self.interactive.callable(), "Issue callable")
         self.assertEqual(self.interactive.current_trace_frame_index, 1)
 
@@ -1295,7 +1307,7 @@ class InteractiveTest(TestCase):
             session.commit()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self.assertEqual(self.interactive.current_trace_frame_index, 1)
 
         self.interactive.jump(1)
@@ -1337,7 +1349,7 @@ class InteractiveTest(TestCase):
 
         self.interactive.setup()
         self.interactive.sources = {"source1"}
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self._clear_stdout()
         self.interactive.trace()
         self.assertEqual(
@@ -1438,7 +1450,7 @@ class InteractiveTest(TestCase):
         self._set_up_branched_trace()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
 
         self.assertEqual(self.interactive.sources, {"source1"})
         self.assertEqual(self.interactive.sinks, {"sink1"})
@@ -1461,7 +1473,7 @@ class InteractiveTest(TestCase):
         self._set_up_branched_trace()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         # Parent at root
         self.interactive.prev_cursor_location()
         with patch("click.prompt", return_value=0):
@@ -1523,7 +1535,7 @@ class InteractiveTest(TestCase):
         frames = self._set_up_branched_trace()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         # Parent at root
         self.interactive.prev_cursor_location()
 
@@ -1547,7 +1559,7 @@ class InteractiveTest(TestCase):
         self._set_up_branched_trace()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
         self.interactive.prev_cursor_location()
 
         # We are testing for the source location, which differs between branches
@@ -1664,7 +1676,7 @@ class InteractiveTest(TestCase):
             session.commit()
 
         self.interactive.setup()
-        self.interactive.issue(1)
+        self.interactive.issue(cast(DBID, 1))
 
         self._clear_stdout()
         self.interactive.prev_cursor_location()
@@ -1878,7 +1890,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
-            status=IssueStatus.UNCATEGORIZED,
+            status=IssueStatus.UNCATEGORIZED.name,
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -1945,7 +1957,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1"],
-            status=IssueStatus.UNCATEGORIZED,
+            status=cast(str, IssueStatus.UNCATEGORIZED),
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -2010,7 +2022,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
-            status=IssueStatus.UNCATEGORIZED,
+            status=cast(str, IssueStatus.UNCATEGORIZED),
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -2059,7 +2071,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
-            status=IssueStatus.UNCATEGORIZED,
+            status=cast(str, IssueStatus.UNCATEGORIZED),
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -2303,7 +2315,7 @@ else:
 
     def testListFramesWithLimit(self) -> None:
         frames = self._set_up_branched_trace()
-        self.interactive.run(1)
+        self.interactive.run(cast(DBID, 1))
 
         self._clear_stdout()
         self.interactive.frames(limit=3)
@@ -2567,9 +2579,9 @@ else:
             self.fakes.issue(callable="call3"),
             self.fakes.issue(callable="call2"),
         ]
-        (self.fakes.instance(issue_id=issues[0].id, callable="call2"),)
-        (self.fakes.instance(issue_id=issues[1].id, callable="call3"),)
-        (self.fakes.instance(issue_id=issues[2].id, callable="call2"),)
+        self.fakes.instance(issue_id=issues[0].id, callable="call2")
+        self.fakes.instance(issue_id=issues[1].id, callable="call3")
+        self.fakes.instance(issue_id=issues[2].id, callable="call2")
         self.fakes.save_all(self.db)
 
         with self.db.make_session(expire_on_commit=False) as session:
@@ -2640,7 +2652,7 @@ else:
         self.assertIn("sink_detail_1", output)
         self.assertIn("sink_detail_2", output)
 
-    def mock_pager(self, output_string) -> None:
+    def mock_pager(self, output_string: str) -> None:
         # pyre-fixme[16]: `InteractiveTest` has no attribute `pager_calls`.
         self.pager_calls += 1
 

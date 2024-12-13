@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# pyre-unsafe
+# pyre-strict
 
 import datetime
 import logging
@@ -11,21 +11,24 @@ import sys
 import time
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, List, Optional
+from typing import Callable, Generator, List, Optional, ParamSpec, Type, TypeVar
 
-log = logging.getLogger("sapp")
+log: logging.Logger = logging.getLogger("sapp")
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 class retryable:
     def __init__(
-        self, num_tries: int = 1, retryable_exs: Optional[List[Any]] = None
+        self, num_tries: int = 1, retryable_exs: Optional[List[Type[Exception]]] = None
     ) -> None:
         self.num_tries = num_tries
         self.retryable_exs = retryable_exs
 
-    def __call__(self, func):
+    def __call__(self, func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
-        def new_func(*args, **kwargs):
+        def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
             try_num = 1
             while True:
                 try:
@@ -41,12 +44,12 @@ class retryable:
         return new_func
 
 
-def log_time(func: Callable[..., Any]) -> Callable[..., Any]:
+def log_time(func: Callable[P, R]) -> Callable[P, R]:
     """Log the time it takes to run a function. It's sort of like timeit, but
     prettier.
     """
 
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         start_time = time.time()
         log.info("%s starting...", func.__name__.title())
         ret = func(*args, **kwargs)
@@ -65,7 +68,7 @@ class UserError(Exception):
 
 
 @contextmanager
-def catch_user_error():
+def catch_user_error() -> Generator[None, None, None]:
     try:
         yield
     except UserError as error:
@@ -73,7 +76,7 @@ def catch_user_error():
 
 
 @contextmanager
-def catch_keyboard_interrupt():
+def catch_keyboard_interrupt() -> Generator[None, None, None]:
     try:
         yield
     except KeyboardInterrupt:
@@ -81,9 +84,6 @@ def catch_keyboard_interrupt():
 
 
 # For use on enums to alias upper case value.
-#
-# FLAKE8 does not understand that this is a static property
-# flake8: noqa B902
 class classproperty(property):
-    def __get__(self, cls, owner):
-        return classmethod(self.fget).__get__(None, owner)()
+    def __get__(self, cls: object, owner: Optional[Type[R]]) -> R:
+        return classmethod(self.fget or (lambda _: None)).__get__(None, owner)()

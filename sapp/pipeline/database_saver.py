@@ -61,7 +61,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
 
-    @log_time
+    @log_time  # pyre-ignore[56]: Pyre can't support this yet.
     def run(
         self, input: List[TraceGraph], summary: Summary
     ) -> Tuple[RunSummary, Summary]:

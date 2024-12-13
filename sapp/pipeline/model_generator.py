@@ -159,7 +159,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             job_id=self.summary["job_id"],
             issue_instances=[],
             date=datetime.datetime.now(),
-            status=status.name,
+            status=status,
             status_description=status_description,
             repository=self.summary["repository"],
             branch=self.summary["branch"],

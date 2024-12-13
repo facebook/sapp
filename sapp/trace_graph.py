@@ -260,9 +260,9 @@ class TraceGraph:
 
         # Allow look up of SharedTexts by name and kind (to optimize
         # get_shared_text which is called when parsing each issue instance)
-        self._shared_text_lookup[
-            SharedTextKind.from_string_with_exception(shared_text.kind)
-        ][shared_text.contents] = shared_text.id.local_id
+        self._shared_text_lookup[shared_text.kind][shared_text.contents] = (
+            shared_text.id.local_id
+        )
 
     def get_or_add_shared_text(self, kind: SharedTextKind, name: str) -> SharedText:
         name = name[:SHARED_TEXT_LENGTH]
@@ -523,9 +523,7 @@ class TraceGraph:
         )
         if "@" in leaf_kind.contents or "!" in leaf_kind.contents:
             normal_name = self.get_transform_normalized_caller_kind(leaf_kind.contents)
-            normal_kind = self.get_or_add_shared_text(
-                SharedTextKind.from_string_with_exception(leaf_kind.kind), normal_name
-            )
+            normal_kind = self.get_or_add_shared_text(leaf_kind.kind, normal_name)
             return normal_kind.id.local_id
         else:
             return leaf_kind.id.local_id
@@ -544,9 +542,7 @@ class TraceGraph:
         )
         if "@" in leaf_kind.contents or "!" in leaf_kind.contents:
             rest = self.get_transformed_callee_kind(leaf_kind.contents)
-            remaining_kind = self.get_or_add_shared_text(
-                SharedTextKind.from_string_with_exception(leaf_kind.kind), rest
-            )
+            remaining_kind = self.get_or_add_shared_text(leaf_kind.kind, rest)
             return remaining_kind.id.local_id
         else:
             return leaf_kind.id.local_id
