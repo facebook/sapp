@@ -37,7 +37,7 @@ log: logging.Logger = logging.getLogger("sapp")
 TRun = TypeVar("TRun", bound=Run)
 
 
-class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
+class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
     def __init__(
         self,
         database: DB,
@@ -56,14 +56,16 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
             self.primary_key_generator, extra_saving_classes=extra_saving_classes
         )
         self.dry_run = dry_run
-        # pyre-fixme[13]: Attribute `graph` is never initialized.
-        self.graph: TraceGraph
+        # pyre-fixme[13]: Attribute `graphs` is never initialized.
+        self.graphs: List[TraceGraph]
         # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
 
     @log_time
-    def run(self, input: TraceGraph, summary: Summary) -> Tuple[RunSummary, Summary]:
-        self.graph = input
+    def run(
+        self, input: List[TraceGraph], summary: Summary
+    ) -> Tuple[RunSummary, Summary]:
+        self.graphs = input
         self.summary = summary
 
         self._prep_save()
@@ -74,7 +76,8 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
         database.
         """
         log.info("Preparing bulk save.")
-        self.graph.update_bulk_saver(self.bulk_saver)
+        for graph in self.graphs:
+            graph.update_bulk_saver(self.bulk_saver)
 
         for trace_kind, unused in self.summary["trace_entries"].items():
             log.info(
@@ -176,9 +179,11 @@ class DatabaseSaver(PipelineStep[TraceGraph, RunSummary], Generic[TRun]):
             id=None,
             job_id=run.job_id,
             num_new_issues=0,
-            num_total_issues=self.graph.get_number_issues(),
+            num_total_issues=sum(graph.get_number_issues() for graph in self.graphs),
             alarm_counts=dict(
-                collections.Counter(issue.code for issue in self.graph.get_issues())
+                collections.Counter(
+                    issue.code for graph in self.graphs for issue in graph.get_issues()
+                )
             ),
         )
 
