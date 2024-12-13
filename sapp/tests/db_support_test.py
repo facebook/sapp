@@ -7,7 +7,7 @@
 
 from unittest import TestCase
 
-from ..db_support import DBID
+from ..db_support import DBID, dbid_resolution_context
 
 
 class DBSupportTest(TestCase):
@@ -38,3 +38,20 @@ class DBSupportTest(TestCase):
     def test_dbid_resolved_to_none(self) -> None:
         primary_key = DBID()
         self.assertEqual(None, primary_key.resolved())
+
+    def test_dbid_resolution_context(self) -> None:
+        primary_key = DBID()
+        foreign_key = DBID(primary_key)
+        with dbid_resolution_context():
+            primary_key.resolve(1)
+            self.assertEqual(primary_key.resolved(), 1)
+            self.assertEqual(foreign_key.resolved(), 1)
+        self.assertIsNone(primary_key.resolved())
+        self.assertIsNone(foreign_key.resolved())
+        primary_key.resolve(2)
+        with dbid_resolution_context():
+            primary_key.resolve(3)
+            self.assertEqual(primary_key.resolved(), 3)
+            self.assertEqual(foreign_key.resolved(), 3)
+        self.assertEqual(primary_key.resolved(), 2)
+        self.assertEqual(foreign_key.resolved(), 2)

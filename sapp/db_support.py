@@ -7,9 +7,22 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from collections import namedtuple
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, Union
+from typing import (
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from munch import Munch
 from sqlalchemy import Column, exc, inspect, String, tuple_, types
@@ -150,6 +163,23 @@ class BIGDBIDType(DBIDType):
             # - https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#sqlite-autoincrement  # noqa: B950
             return dialect.type_descriptor(sqlite.INTEGER())
         return self.impl
+
+
+@contextlib.contextmanager
+def dbid_resolution_context() -> Generator[None, None, None]:
+    """Track the resolution of DBIDs and unresolve them on exiting the context."""
+
+    def resolve(self: DBID, id: Union[int, None, DBID], is_new: bool = True) -> DBID:
+        dbids.append((self, getattr(self, "_id", None), getattr(self, "is_new", None)))
+        return old_resolve(self, id, is_new)
+
+    dbids: List[Tuple[DBID, Union[int, None, DBID], bool]] = []
+    old_resolve: Callable[[DBID, Union[int, None, DBID], bool], DBID] = DBID.resolve
+    DBID.resolve = resolve  # pyre-ignore[8] Pyre doesn't like patching methods
+    yield
+    DBID.resolve = old_resolve
+    for dbid, id, is_new in reversed(dbids):
+        dbid.resolve(id, is_new)
 
 
 class PrepareMixin:
