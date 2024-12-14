@@ -8,8 +8,10 @@
 #!/usr/bin/env python3
 
 import collections
+import json
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import cast, Generic, List, Optional, Tuple, Type, TypeVar
 
 from ..bulk_saver import BulkSaver
@@ -32,6 +34,7 @@ from ..models import (
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
 
+
 log: logging.Logger = logging.getLogger("sapp")
 
 TRun = TypeVar("TRun", bound=Run)
@@ -45,6 +48,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         primary_key_generator: Optional[PrimaryKeyGenerator] = None,
         dry_run: bool = False,
         extra_saving_classes: Optional[List[Type[object]]] = None,
+        info_path: Optional[str] = None,
     ) -> None:
         self.dbname: str = database.dbname
         self.database = database
@@ -60,6 +64,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         self.graphs: List[TraceGraph]
         # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
+        self.info_path = info_path
 
     @log_time  # pyre-ignore[56]: Pyre can't support this yet.
     def run(
@@ -147,6 +152,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
             )
 
             self.bulk_saver.save_all(self.database)
+            self._save_info()
 
             # Now that the run is finished, fetch it from the DB again and set its
             # status to FINISHED.
@@ -170,6 +176,40 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         )
 
         return run_summary
+
+    def _save_info(self) -> None:
+        if not self.info_path:
+            return
+        Path(self.info_path).mkdir(parents=True, exist_ok=True)
+        messages: dict[int, str] = {}
+        instances = []
+
+        def message_id(graph: TraceGraph, id: DBID) -> int:
+            local_id = id.local_id
+            if local_id not in messages:
+                messages[local_id] = {"id": local_id, "text": graph.get_text(id)}
+            return local_id
+
+        for graph in self.graphs:
+            for instance in graph.get_issue_instances():
+                issue = graph.get_issue(instance.issue_id)
+                instances.append(
+                    {
+                        "instance_id": instance.id.resolved(),
+                        "code": issue.code,
+                        "callable_id": message_id(graph, instance.callable_id),
+                        "filename_id": message_id(graph, instance.filename_id),
+                        "location": instance.location,
+                    }
+                )
+        with open(f"{self.info_path}/messages.ndjson", "w") as f:
+            for message in messages.values():
+                json.dump(message, f)
+                f.write("\n")
+        with open(f"{self.info_path}/instances.ndjson", "w") as f:
+            for instance in instances:
+                json.dump(instance, f)
+                f.write("\n")
 
     def _get_dry_run_summary(self) -> RunSummary:
         run = self.summary["run"]
