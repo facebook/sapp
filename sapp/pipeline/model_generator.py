@@ -115,8 +115,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         self.summary["big_tito"] = set()  # Set[Tuple[str, str, int]]
 
         self.graph = TraceGraph()
-        self.summary["run"] = self._create_empty_run(status=RunStatus.INCOMPLETE)
-        self.summary["run"].id = DBID()
+        self.summary["runs"] = [self._create_empty_run(status=RunStatus.INCOMPLETE)]
+        for run in self.summary["runs"]:
+            run.id = DBID()
 
         self.summary["trace_entries"][TraceKind.precondition] = input["preconditions"]
         self.summary["trace_entries"][TraceKind.postcondition] = input["postconditions"]
@@ -124,15 +125,15 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         log.info("Generating issues and traces")
         for entry in input["issues"]:
-            self._generate_issue(self.summary["run"], entry, callables)
+            for run in self.summary["runs"]:
+                self._generate_issue(run, entry, callables)
 
         if self.summary.get("store_unused_models"):
             for trace_kind, traces in self.summary["trace_entries"].items():
                 for entries in traces.values():
                     for entry in entries:
-                        self._generate_trace_frame(
-                            trace_kind, self.summary["run"], entry
-                        )
+                        for run in self.summary["runs"]:
+                            self._generate_trace_frame(trace_kind, run, entry)
 
         return self.graph, self.summary
 

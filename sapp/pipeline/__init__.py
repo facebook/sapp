@@ -308,8 +308,8 @@ class Summary(TypedDict, total=False):
     project: Optional[str]
     repo_dir: str
     repository: Optional[str]
-    run: Run
-    run_attributes: object  # List[RunAttribute]
+    runs: List[Run]
+    runs_attributes: List[object]  # List[List[RunAttribute]]
     run_kind: Optional[str]
     store_unused_models: bool
     trace_entries: Dict[TraceKind, Dict[DictKey, List[ParseConditionTuple]]]

@@ -16,7 +16,7 @@ from typing import cast, Generic, List, Optional, Tuple, Type, TypeVar
 
 from ..bulk_saver import BulkSaver
 from ..db import DB
-from ..db_support import DBID
+from ..db_support import DBID, dbid_resolution_context
 from ..decorators import log_time
 from ..models import (
     ClassTypeInterval,
@@ -69,12 +69,16 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
     @log_time  # pyre-ignore[56]: Pyre can't support this yet.
     def run(
         self, input: List[TraceGraph], summary: Summary
-    ) -> Tuple[RunSummary, Summary]:
+    ) -> Tuple[List[RunSummary], Summary]:
         self.graphs = input
         self.summary = summary
 
         self._prep_save()
-        return self._save(), self.summary
+        run_summaries = []
+        for run in self.summary["runs"]:
+            with dbid_resolution_context():
+                run_summaries.append(self._save(run))
+        return run_summaries, self.summary
 
     def _prep_save(self) -> None:
         """Prepares the bulk saver to load the trace graph info into the
@@ -92,9 +96,8 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 len(self.summary["missing_traces"][trace_kind]),
             )
 
-    def _save(self) -> RunSummary:
+    def _save(self, run: Run) -> RunSummary:
         """Saves bulk saver's info into the databases in bulk."""
-        assert self.summary["run"] is not None, "Must have called process before"
 
         trace_frames = self.bulk_saver.get_items_to_add(TraceFrame)
         log.info(
@@ -123,20 +126,20 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         if not self.dry_run:
             with self.database.make_session() as session:
                 pk_gen = self.primary_key_generator.reserve(session, [Run])
-                self.summary["run"].id.resolve(id=pk_gen.get(Run), is_new=True)
-                session.add(self.summary["run"])
+                run.id.resolve(id=pk_gen.get(Run), is_new=True)
+                session.add(run)
                 meta_run_identifier = self.summary.get("meta_run_identifier")
                 if meta_run_identifier is not None:
                     session.add(
                         MetaRunToRunAssoc(
                             meta_run_id=cast(DBID, meta_run_identifier),
-                            run_id=self.summary["run"].id,
+                            run_id=run.id,
                             run_label=self.summary.get("meta_run_child_label", None),
                         )
                     )
                 session.commit()
 
-                run_id = self.summary["run"].id.resolved()
+                run_id = run.id.resolved()
                 log.info("Created run: %d", run_id)
 
             # Reserves IDs and removes items that have already been saved
@@ -148,7 +151,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
             # Additionally, this allow us to sync information from existing
             # central issues into yet-to-be created local issues here.
             self._save_central_issues_and_sync_local_issues(
-                cast(TRun, self.summary["run"]), self.bulk_saver.get_items_to_add(Issue)
+                cast(TRun, run), self.bulk_saver.get_items_to_add(Issue)
             )
 
             self.bulk_saver.save_all(self.database)
@@ -164,7 +167,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 session.commit()
                 run_summary = run.get_summary()
         else:
-            run_summary = self._get_dry_run_summary()
+            run_summary = self._get_dry_run_summary(run)
 
         # pyre-fixme[16]: `RunSummary` has no attribute `num_invisible_issues`.
         run_summary.num_invisible_issues = 0
@@ -211,8 +214,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 json.dump(instance, f)
                 f.write("\n")
 
-    def _get_dry_run_summary(self) -> RunSummary:
-        run = self.summary["run"]
+    def _get_dry_run_summary(self, run: Run) -> RunSummary:
         return RunSummary(
             commit_hash=run.commit_hash,
             differential_id=run.differential_id,

@@ -983,8 +983,8 @@ class Run(Base):
         nullable=True,
     )
 
-    def get_summary(self, **kwargs) -> RunSummary:
-        session = Session.object_session(self)
+    def get_summary(self, session: Optional[Session] = None, **kwargs) -> RunSummary:
+        session = session or Session.object_session(self)
 
         return RunSummary(
             commit_hash=self.commit_hash,
