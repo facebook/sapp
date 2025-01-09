@@ -8,7 +8,7 @@
 import logging
 from collections import Counter
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import cast, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from .models import (
     DBID,
@@ -73,12 +73,16 @@ class TrimmedTraceGraph(TraceGraph):
     """
 
     def __init__(
-        self, affected_files: List[str], affected_issues_only: bool = False
+        self,
+        affected_files: List[str],
+        affected_issues_only: bool = False,
+        run_id: Optional[DBID] = None,
     ) -> None:
         """Creates an empty TrimmedTraceGraph."""
         super().__init__()
         self._affected_files = affected_files
         self._affected_issues_only = affected_issues_only
+        self._run_id = run_id
         self._visited_trace_frame_ids: Set[int] = set()
 
     def populate_from_trace_graph(self, graph: TraceGraph) -> None:
@@ -137,6 +141,50 @@ class TrimmedTraceGraph(TraceGraph):
                     )
 
         self._recompute_instance_properties(graph)
+        if self._run_id is not None:
+            self._trim_to_run_id()
+
+    def _trim_to_run_id(self) -> None:
+        for class_name, interval in self._class_type_intervals.copy().items():
+            if interval.run_id is not self._run_id:
+                del self._class_type_intervals[class_name]
+        for instance_id, instance in self._issue_instances.copy().items():
+            if instance.run_id is not self._run_id:
+                del self._issue_instances[instance_id]
+                self._issues.pop(instance.issue_id.local_id, None)
+                self._issue_instance_fix_info.pop(instance_id, None)
+                self._meta_run_issue_instances.pop(instance_id, None)
+                for shared_text_id in self._issue_instance_shared_text_assoc.pop(
+                    instance_id, set()
+                ):
+                    self._shared_text_issue_instance_assoc.get(
+                        shared_text_id, set()
+                    ).remove(instance_id)
+                for trace_frame_id in self._issue_instance_trace_frame_assoc.pop(
+                    instance_id, set()
+                ):
+                    self._trace_frame_issue_instance_assoc.get(
+                        trace_frame_id, set()
+                    ).remove(instance_id)
+        for trace_frame_id, trace_frame in self._trace_frames.copy().items():
+            if trace_frame.run_id is not self._run_id:
+                del self._trace_frames[trace_frame_id]
+                self._trace_frame_leaf_assoc.pop(trace_frame_id, None)
+                self._trace_frames_map.get(cast(TraceKind, trace_frame.kind), {}).get(
+                    trace_frame.caller_id.local_id, {}
+                ).get(trace_frame.caller_port, set()).remove(trace_frame_id)
+                self._trace_frames_rev_map.get(
+                    cast(TraceKind, trace_frame.kind), {}
+                ).get(
+                    (trace_frame.callee_id.local_id, trace_frame.callee_port), set()
+                ).remove(trace_frame_id)
+                for annotation_id in self._trace_frame_trace_frame_annotation_assoc.pop(
+                    trace_frame_id, set()
+                ):
+                    self._trace_annotations.pop(annotation_id, None)
+                    self._trace_frame_annotation_trace_frame_assoc.get(
+                        annotation_id, set()
+                    ).remove(trace_frame_id)
 
     def _recompute_instance_properties(self, graph: TraceGraph) -> None:
         """Some properties of issue instances will be affected after trimming

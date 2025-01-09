@@ -291,7 +291,7 @@ class DictEntries(TypedDict):
 
 
 class Summary(TypedDict, total=False):
-    affected_files: Optional[List[str]]
+    affected_file_sets: List[Optional[List[str]]]
     affected_issues_only: bool
     big_tito: Set[Tuple[str, str, int]]
     branch: Optional[str]

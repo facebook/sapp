@@ -172,15 +172,18 @@ class TraceGraph:
         return None
 
     def has_trace_frames_with_caller(
-        self, kind: TraceKind, caller_id: DBID, caller_port: str
+        self,
+        kind: TraceKind,
+        caller_id: DBID,
+        caller_port: str,
+        run_id: Optional[DBID] = None,
     ) -> bool:
-        if self._trace_frames_map[kind]:
-            return (
-                caller_id.local_id in self._trace_frames_map[kind]
-                and caller_port in self._trace_frames_map[kind][caller_id.local_id]
-            )
-        else:
-            return False
+        return any(
+            run_id in (None, self._trace_frames[trace_frame_id].run_id)
+            for trace_frame_id in self._trace_frames_map.get(kind, {})
+            .get(caller_id.local_id, {})
+            .get(caller_port, set())
+        )
 
     def has_postconditions_with_caller(self, caller_id: DBID, caller_port: str) -> bool:
         return self.has_trace_frames_with_caller(
@@ -224,13 +227,18 @@ class TraceGraph:
         self._trace_frames[trace_frame.id.local_id] = trace_frame
 
     def get_trace_frames_from_caller(
-        self, kind: TraceKind, caller_id: DBID, caller_port: str
+        self,
+        kind: TraceKind,
+        caller_id: DBID,
+        caller_port: str,
+        run_id: Optional[DBID] = None,
     ) -> List[TraceFrame]:
         return [
             self._trace_frames[trace_frame_id]
             for trace_frame_id in self._trace_frames_map[kind][caller_id.local_id][
                 caller_port
             ]
+            if run_id in (None, self._trace_frames[trace_frame_id].run_id)
         ]
 
     def get_all_trace_frames_from_caller(

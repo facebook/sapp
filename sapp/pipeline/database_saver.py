@@ -56,12 +56,8 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         self.primary_key_generator: PrimaryKeyGenerator = (
             primary_key_generator or PrimaryKeyGenerator()
         )
-        self.bulk_saver = BulkSaver(
-            self.primary_key_generator, extra_saving_classes=extra_saving_classes
-        )
+        self.extra_saving_classes = extra_saving_classes
         self.dry_run = dry_run
-        # pyre-fixme[13]: Attribute `graphs` is never initialized.
-        self.graphs: List[TraceGraph]
         # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
         self.info_path = info_path
@@ -70,24 +66,24 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
     def run(
         self, input: List[TraceGraph], summary: Summary
     ) -> Tuple[List[RunSummary], Summary]:
-        self.graphs = input
         self.summary = summary
-
-        self._prep_save()
         run_summaries = []
-        for run in self.summary["runs"]:
+        for graph, run in zip(input, self.summary["runs"], strict=True):
+            bulk_saver = BulkSaver(
+                self.primary_key_generator,
+                extra_saving_classes=self.extra_saving_classes,
+            )
+            self._prep_save(graph, bulk_saver)
             with dbid_resolution_context():
-                run_summaries.append(self._save(run))
+                run_summaries.append(self._save(graph, run, bulk_saver))
         return run_summaries, self.summary
 
-    def _prep_save(self) -> None:
+    def _prep_save(self, graph: TraceGraph, bulk_saver: BulkSaver) -> None:
         """Prepares the bulk saver to load the trace graph info into the
         database.
         """
         log.info("Preparing bulk save.")
-        for graph in self.graphs:
-            graph.update_bulk_saver(self.bulk_saver)
-
+        graph.update_bulk_saver(bulk_saver)
         for trace_kind, unused in self.summary["trace_entries"].items():
             log.info(
                 "Dropped %d unused %s, %d are missing",
@@ -96,18 +92,18 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 len(self.summary["missing_traces"][trace_kind]),
             )
 
-    def _save(self, run: Run) -> RunSummary:
+    def _save(self, graph: TraceGraph, run: Run, bulk_saver: BulkSaver) -> RunSummary:
         """Saves bulk saver's info into the databases in bulk."""
 
-        trace_frames = self.bulk_saver.get_items_to_add(TraceFrame)
+        trace_frames = bulk_saver.get_items_to_add(TraceFrame)
         log.info(
             "Saving %d issues, %d trace frames, %d trace annotations, "
             + "%d trace frame leaf assocs, %d class type intervals",
-            len(self.bulk_saver.get_items_to_add(Issue)),
-            len(self.bulk_saver.get_items_to_add(TraceFrame)),
-            len(self.bulk_saver.get_items_to_add(TraceFrameAnnotation)),
-            len(self.bulk_saver.get_items_to_add(TraceFrameLeafAssoc)),
-            len(self.bulk_saver.get_items_to_add(ClassTypeInterval)),
+            len(bulk_saver.get_items_to_add(Issue)),
+            len(bulk_saver.get_items_to_add(TraceFrame)),
+            len(bulk_saver.get_items_to_add(TraceFrameAnnotation)),
+            len(bulk_saver.get_items_to_add(TraceFrameLeafAssoc)),
+            len(bulk_saver.get_items_to_add(ClassTypeInterval)),
         )
 
         num_pre = 0
@@ -143,7 +139,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 log.info("Created run: %d", run_id)
 
             # Reserves IDs and removes items that have already been saved
-            self.bulk_saver.prepare_all(self.database)
+            bulk_saver.prepare_all(self.database)
 
             # Central issues are saved before local issues. This allows us to
             # only save central issues for new local issues here.
@@ -151,11 +147,11 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
             # Additionally, this allow us to sync information from existing
             # central issues into yet-to-be created local issues here.
             self._save_central_issues_and_sync_local_issues(
-                cast(TRun, run), self.bulk_saver.get_items_to_add(Issue)
+                cast(TRun, run), bulk_saver.get_items_to_add(Issue)
             )
 
-            self.bulk_saver.save_all(self.database)
-            self._save_info()
+            bulk_saver.save_all(self.database)
+            self._save_info(graph)
 
             # Now that the run is finished, fetch it from the DB again and set its
             # status to FINISHED.
@@ -167,7 +163,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 session.commit()
                 run_summary = run.get_summary()
         else:
-            run_summary = self._get_dry_run_summary(run)
+            run_summary = self._get_dry_run_summary(graph, run)
 
         # pyre-fixme[16]: `RunSummary` has no attribute `num_invisible_issues`.
         run_summary.num_invisible_issues = 0
@@ -180,7 +176,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
 
         return run_summary
 
-    def _save_info(self) -> None:
+    def _save_info(self, graph: TraceGraph) -> None:
         if not self.info_path:
             return
         Path(self.info_path).mkdir(parents=True, exist_ok=True)
@@ -193,18 +189,17 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 messages[local_id] = {"id": local_id, "text": graph.get_text(id)}
             return local_id
 
-        for graph in self.graphs:
-            for instance in graph.get_issue_instances():
-                issue = graph.get_issue(instance.issue_id)
-                instances.append(
-                    {
-                        "instance_id": instance.id.resolved(),
-                        "code": issue.code,
-                        "callable_id": message_id(graph, instance.callable_id),
-                        "filename_id": message_id(graph, instance.filename_id),
-                        "location": instance.location,
-                    }
-                )
+        for instance in graph.get_issue_instances():
+            issue = graph.get_issue(instance.issue_id)
+            instances.append(
+                {
+                    "instance_id": instance.id.resolved(),
+                    "code": issue.code,
+                    "callable_id": message_id(graph, instance.callable_id),
+                    "filename_id": message_id(graph, instance.filename_id),
+                    "location": instance.location,
+                }
+            )
         with open(f"{self.info_path}/messages.ndjson", "w") as f:
             for message in messages.values():
                 json.dump(message, f)
@@ -214,25 +209,24 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 json.dump(instance, f)
                 f.write("\n")
 
-    def _get_dry_run_summary(self, run: Run) -> RunSummary:
+    def _get_dry_run_summary(self, graph: TraceGraph, run: Run) -> RunSummary:
         return RunSummary(
             commit_hash=run.commit_hash,
             differential_id=run.differential_id,
             id=None,
             job_id=run.job_id,
             num_new_issues=0,
-            num_total_issues=sum(graph.get_number_issues() for graph in self.graphs),
+            num_total_issues=graph.get_number_issues(),
             alarm_counts=dict(
-                collections.Counter(
-                    issue.code for graph in self.graphs for issue in graph.get_issues()
-                )
+                collections.Counter(issue.code for issue in graph.get_issues())
             ),
         )
 
     def _save_central_issues_and_sync_local_issues(
         self, run: TRun, local_issues: List[Issue]
     ) -> None:
-        """Subclasses may implement this to save issue data to a second location before the issues
-        saved and the run status is changed to FINISHED. They can also modify details
-        of yet-to-be-created local issues to match existing central issues."""
+        """Subclasses may implement this to save issue data to a second location
+        before the issues saved and the run status is changed to FINISHED. They
+        can also modify details of yet-to-be-created local issues to match
+        existing central issues."""
         pass

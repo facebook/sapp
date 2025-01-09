@@ -19,13 +19,22 @@ class TrimTraceGraph(PipelineStep[TraceGraph, List[TraceGraph]]):
     def run(
         self, input: TraceGraph, summary: Summary
     ) -> Tuple[List[TraceGraph], Summary]:
-        affected_files = summary.get("affected_files")
-        if affected_files is None:
+        if not summary["affected_file_sets"]:
             return [input], summary
 
-        log.info("Trimming graph to affected files.")
-        trimmed_graph = TrimmedTraceGraph(
-            affected_files, summary.get("affected_issues_only", False)
-        )
-        trimmed_graph.populate_from_trace_graph(input)
-        return [trimmed_graph], summary
+        trimmed_graphs = []
+        for run, affected_files in zip(
+            summary["runs"], summary["affected_file_sets"], strict=True
+        ):
+            if affected_files is None:
+                trimmed_graphs.append(input)
+            else:
+                log.info("Trimming graph to affected files.")
+                trimmed_graph = TrimmedTraceGraph(
+                    affected_files,
+                    summary.get("affected_issues_only", False),
+                    run.id,
+                )
+                trimmed_graph.populate_from_trace_graph(input)
+                trimmed_graphs.append(trimmed_graph)
+        return trimmed_graphs, summary

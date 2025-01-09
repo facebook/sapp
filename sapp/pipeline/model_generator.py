@@ -115,9 +115,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         self.summary["big_tito"] = set()  # Set[Tuple[str, str, int]]
 
         self.graph = TraceGraph()
-        self.summary["runs"] = [self._create_empty_run(status=RunStatus.INCOMPLETE)]
-        for run in self.summary["runs"]:
-            run.id = DBID()
+        self.summary["runs"] = self._create_empty_runs(status=RunStatus.INCOMPLETE)
 
         self.summary["trace_entries"][TraceKind.precondition] = input["preconditions"]
         self.summary["trace_entries"][TraceKind.postcondition] = input["postconditions"]
@@ -150,13 +148,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         return count
 
-    def _create_empty_run(
+    def _create_empty_runs(
         self,
         status: RunStatus,
         status_description: Optional[str] = None,
-    ) -> Run:
+    ) -> List[Run]:
         """setting boilerplate when creating a Run object"""
         run = Run(
+            id=DBID(),
             job_id=self.summary["job_id"],
             issue_instances=[],
             date=datetime.datetime.now(),
@@ -168,7 +167,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             kind=self.summary["run_kind"],
             purge_status=PurgeStatus.UNPURGED,
         )
-        return run
+        return [run]
 
     def _get_minimum_trace_length(
         self, entries: Iterable[ParseIssueConditionTuple]
@@ -421,12 +420,16 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
     def _get_or_populate_trace_frames(
         self, kind: TraceKind, run: Run, caller_id: DBID, caller_port: str
     ) -> List[TraceFrame]:
-        if self.graph.has_trace_frames_with_caller(kind, caller_id, caller_port):
-            return self.graph.get_trace_frames_from_caller(kind, caller_id, caller_port)
+        if self.graph.has_trace_frames_with_caller(
+            kind, caller_id, caller_port, run.id
+        ):
+            return self.graph.get_trace_frames_from_caller(
+                kind, caller_id, caller_port, run.id
+            )
         key = (self.graph.get_text(caller_id), caller_port)
         new = [
             self._generate_trace_frame(kind, run, e)
-            for e in self.summary["trace_entries"][kind].pop(key, [])
+            for e in self.summary["trace_entries"][kind].get(key, [])
         ]
         if len(new) == 0 and not self.graph.is_leaf_port(key[1]):
             self.summary["missing_traces"][kind].add(key)
