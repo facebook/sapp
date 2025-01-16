@@ -36,6 +36,7 @@ application = Flask(
 session: Optional[Session] = None
 
 
+# pyre-ignore: Invalid decoration [56]
 @application.teardown_request
 def shutdown_session(exception: Optional[Exception] = None) -> None:
     if session is not None:
