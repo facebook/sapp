@@ -125,7 +125,7 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
                     start_frame,
                     {
                         taint_kind_id: features_to_propagate
-                        for taint_kind_id in graph.get_caller_leaf_kinds_of_frame(
+                        for taint_kind_id in graph.get_callee_leaf_kinds_of_frame(
                             start_frame
                         )
                     },
@@ -234,11 +234,16 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         # Create new assocs based on the visited leaf frames.
         for trace_frame_id, taint_kind_to_state in self.visited.items():
             trace_frame = graph.get_trace_frame_from_id(trace_frame_id)
+            acceptable_incoming_kinds = graph.get_callee_leaf_kinds_of_frame(
+                trace_frame
+            )
             if self.graph.is_leaf_port(trace_frame.callee_port):
                 # union propagated features (now independent of kind)
                 features = functools.reduce(
-                    lambda a, b: a.union(b.shared_texts),
-                    taint_kind_to_state.values(),
+                    lambda a, p: a.union(p[1].shared_texts)
+                    if p[0] in acceptable_incoming_kinds
+                    else a,
+                    taint_kind_to_state.items(),
                     set(),
                 )
                 self.leaf_frames += 1
