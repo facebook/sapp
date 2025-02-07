@@ -130,6 +130,31 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
                 for instance_id in instance_ids:
                     self.instance_features[instance_id].update(features)
 
+            elif self._is_subtrace_root_port(frame.caller_port):
+                annotations = self.graph._trace_frame_trace_frame_annotation_assoc[
+                    frame_id
+                ]
+                # Grab all features independent of kind from subtrace to push towards
+                # main trace.  as we don't know how to map kinds from subtrace to main
+                # trace
+                parent_features = set()
+                for _, extra_features in kind_map.items():
+                    parent_features.update(extra_features)
+                for annotation_id in annotations:
+                    annotation = self.graph.get_trace_annotation(annotation_id)
+                    parent_frame_id = annotation.trace_frame_id
+                    parent_frame = self.graph.get_trace_frame_from_id(
+                        parent_frame_id.local_id
+                    )
+                    queue.append(
+                        (
+                            parent_frame,
+                            {
+                                leaf_map.caller_leaf: parent_features
+                                for leaf_map in parent_frame.leaf_mapping
+                            },
+                        )
+                    )
             else:
                 # Otherwise find previous frames
                 prev_frames = self.graph.get_trace_frames_from_callee(
@@ -154,6 +179,9 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
 
     def _is_root_port(self, port: str) -> bool:
         return port == "root" or port.startswith("root:")
+
+    def _is_subtrace_root_port(self, port: str) -> bool:
+        return port == "subtrace_root" or port.startswith("subtrace_root:")
 
     def run(self, input: TraceGraph, summary: Summary) -> Tuple[TraceGraph, Summary]:
         graph = input
