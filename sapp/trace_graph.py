@@ -31,6 +31,10 @@ log: logging.Logger = logging.getLogger("sapp")
 
 LeafIDToDepthMap = Dict[int, Optional[int]]
 
+FrameID = int
+FeatureID = int
+InstanceID = int
+
 
 class TraceGraph:
     """Represents a graph of the Zoncolan trace steps. Nodes of the graph are
@@ -82,9 +86,11 @@ class TraceGraph:
             defaultdict(set)
         )
 
+        # Associates an annotation with subtrace root frames
         self._trace_frame_annotation_trace_frame_assoc: DefaultDict[int, Set[int]] = (
             defaultdict(set)
         )
+        # Reverse associates a subtrace root frame with its annotations (typically just 1)
         self._trace_frame_trace_frame_annotation_assoc: DefaultDict[int, Set[int]] = (
             defaultdict(set)
         )
@@ -102,14 +108,22 @@ class TraceGraph:
 
         self._meta_run_issue_instances: Dict[int, MetaRunIssueInstanceIndex] = {}
 
-        # !!!!! IMPORTANT !!!!!
-        # IF YOU ARE ADDING MORE FIELDS/EDGES TO THIS GRAPH, CHECK IF
-        # TrimmedTraceGraph NEEDS TO BE UPDATED AS WELL.
-        #
-        # TrimmedTraceGraph will populate itself from this object. It searches
-        # TrimmedGraph for nodes and edges of 'affected_files' and copies them
-        # over. If new fields/edges are added, these may need to be copied in
-        # TrimmedTraceGraph as well.
+        # Holds features that are added during processing and that should be propagated
+        # upward along traces to issue instances
+        # NOTE: upward propagation happens before trimming, so trimmed graphs don't need
+        # this.
+        self._extra_features_to_propagate_up: Dict[FrameID, Set[FeatureID]] = cast(
+            Dict[FrameID, Set[FeatureID]], defaultdict(lambda: set())
+        )
+
+    # !!!!! IMPORTANT !!!!!
+    # IF YOU ARE ADDING MORE FIELDS/EDGES TO THIS GRAPH, CHECK IF
+    # TrimmedTraceGraph NEEDS TO BE UPDATED AS WELL.
+    #
+    # TrimmedTraceGraph will populate itself from this object. It searches
+    # TrimmedGraph for nodes and edges of 'affected_files' and copies them
+    # over. If new fields/edges are added, these may need to be copied in
+    # TrimmedTraceGraph as well.
 
     def add_issue(self, issue: Issue) -> None:
         assert issue.id.local_id not in self._issues, "Issue already exists"
@@ -198,6 +212,9 @@ class TraceGraph:
     def add_trace_annotation(self, annotation: TraceFrameAnnotation) -> None:
         self._trace_annotations[annotation.id.local_id] = annotation
 
+    def get_trace_annotation(self, annotation_id: int) -> TraceFrameAnnotation:
+        return self._trace_annotations[annotation_id]
+
     def get_condition_annotations(self, cond_id: int) -> List[TraceFrameAnnotation]:
         return [
             t
@@ -239,6 +256,16 @@ class TraceGraph:
                 caller_port
             ]
             if run_id in (None, self._trace_frames[trace_frame_id].run_id)
+        ]
+
+    def get_trace_frames_from_callee(
+        self, kind: TraceKind, callee_id: DBID, callee_port: str
+    ) -> List[TraceFrame]:
+        return [
+            self._trace_frames[trace_frame_id]
+            for trace_frame_id in self._trace_frames_rev_map[kind][
+                (callee_id.local_id, callee_port)
+            ]
         ]
 
     def get_all_trace_frames_from_caller(
@@ -349,13 +376,22 @@ class TraceGraph:
     def add_issue_instance_shared_text_assoc_id(
         self, instance: IssueInstance, shared_text_id: int
     ) -> None:
-        self._issue_instance_shared_text_assoc[instance.id.local_id].add(shared_text_id)
-        self._shared_text_issue_instance_assoc[shared_text_id].add(instance.id.local_id)
+        self.add_issue_instance_id_shared_text_assoc_id(
+            instance.id.local_id, shared_text_id
+        )
 
     def add_issue_instance_shared_text_assoc(
         self, instance: IssueInstance, shared_text: SharedText
     ) -> None:
-        self.add_issue_instance_shared_text_assoc_id(instance, shared_text.id.local_id)
+        self.add_issue_instance_id_shared_text_assoc_id(
+            instance.id.local_id, shared_text.id.local_id
+        )
+
+    def add_issue_instance_id_shared_text_assoc_id(
+        self, instance_id: int, shared_text_id: int
+    ) -> None:
+        self._issue_instance_shared_text_assoc[instance_id].add(shared_text_id)
+        self._shared_text_issue_instance_assoc[shared_text_id].add(instance_id)
 
     def get_issue_instance_shared_texts(
         self, instance_id: int, kind: SharedTextKind
@@ -570,3 +606,24 @@ class TraceGraph:
         leaf_mapping = trace_frame.leaf_mapping
         assert leaf_mapping is not None
         return {leaf_map.caller_leaf for leaf_map in leaf_mapping}
+
+    def add_extra_frame_feature(self, trace_frame: TraceFrame, feature: str) -> None:
+        """Adds the feature to the given frame and schedules its upward propagation to
+        reachable issue instances
+        """
+        shared_text_to_add = self.get_or_add_shared_text(
+            SharedTextKind.FEATURE,
+            feature,
+        )
+        self.add_trace_frame_leaf_by_local_id_assoc(
+            trace_frame, shared_text_to_add.id.local_id, depth=None
+        )
+        self._extra_features_to_propagate_up[trace_frame.id.local_id].add(
+            shared_text_to_add.id.local_id
+        )
+
+    def get_extra_features_to_propagate_up(self) -> Dict[FrameID, Set[FeatureID]]:
+        return self._extra_features_to_propagate_up
+
+    def get_issue_instances_for_root_frame(self, frame_id: FrameID) -> Set[InstanceID]:
+        return self._trace_frame_issue_instance_assoc[frame_id]

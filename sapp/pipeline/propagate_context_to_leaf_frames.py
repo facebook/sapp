@@ -176,13 +176,7 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         for feature_id in features:
             feature_text = self.graph.get_shared_text_by_local_id(feature_id)
             feature_to_add = self._final_feature_text(feature_text.contents)
-            shared_text_to_add = self.graph.get_or_add_shared_text(
-                SharedTextKind.FEATURE,
-                feature_to_add,
-            )
-            self.graph.add_trace_frame_leaf_by_local_id_assoc(
-                trace_frame, shared_text_to_add.id.local_id, depth=None
-            )
+            self.graph.add_extra_frame_feature(trace_frame, feature_to_add)
             self.leaf_features_added += 1
 
     def _is_root_port(self, port: str) -> bool:
