@@ -317,6 +317,11 @@ class TraceGraph:
     ) -> None:
         self._trace_frame_leaf_assoc[trace_frame.id.local_id][leaf_id] = depth
 
+    def add_trace_frame_id_leaf_by_local_id_assoc(
+        self, trace_frame_id: int, leaf_id: int, depth: Optional[int]
+    ) -> None:
+        self._trace_frame_leaf_assoc[trace_frame_id][leaf_id] = depth
+
     def get_trace_frame_leaf_ids(self, trace_frame: TraceFrame) -> Set[int]:
         return set(self._trace_frame_leaf_assoc[trace_frame.id.local_id])
 

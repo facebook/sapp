@@ -53,8 +53,16 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
         self.instance_features: Dict[InstanceID, Set[FeatureID]] = defaultdict(
             lambda: set()
         )
+        # Intermediate points where subtraces connect to parent traces. We need to
+        # inline the breadcrumbs here to until we perform search generally on all
+        # subtraces.
+        self.parent_frame_features: Dict[FrameID, Set[FeatureID]] = defaultdict(
+            lambda: set()
+        )
         self.instance_features_added: int = 0
         self.instances: int = 0
+        self.parent_frames: int = 0
+        self.parent_frame_features_added: int = 0
 
     def _subtract_kinds(
         self,
@@ -146,6 +154,11 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
                     parent_frame = self.graph.get_trace_frame_from_id(
                         parent_frame_id.local_id
                     )
+                    # Record inlining features onto parent frame until we search
+                    # subtraces in general from UI/scripts, etc
+                    self.parent_frame_features[parent_frame_id.local_id].update(
+                        parent_features
+                    )
                     queue.append(
                         (
                             parent_frame,
@@ -197,6 +210,15 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
             frame = graph.get_trace_frame_from_id(frame_id)
             self._propagate_features_by_kinds_along_traces(frame, features)
 
+        # Add breadcrumbs to parent_frames
+        for parent_frame_id, features in self.parent_frame_features.items():
+            self.parent_frames += 1
+            for feature_id in features:
+                self.graph.add_trace_frame_id_leaf_by_local_id_assoc(
+                    parent_frame_id, feature_id, 0
+                )
+                self.parent_frame_features_added += 1
+
         # Add breadcrumbs to instances
         for instance_id, features in self.instance_features.items():
             self.instances += 1
@@ -211,7 +233,8 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
 
         log.info(
             f"Added {self.instance_features_added} features to {self.instances}"
-            + " instances."
+            + f" instances, and {self.parent_frame_features_added}"
+            + f" features to {self.parent_frames}"
         )
 
         return graph, summary
