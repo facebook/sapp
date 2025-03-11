@@ -12,7 +12,7 @@ from typing import Iterable
 
 from ..analysis_output import PartialFlowToMark
 
-from ..models import IssueInstance, SharedTextKind, TraceFrame, TraceKind
+from ..models import IssueInstance, SharedText, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, SourceLocation, Summary
 
@@ -101,6 +101,78 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         self.partial_flows_to_mark = partial_flows_to_mark
         self.partial_flow_frames = 0
 
+    def _dfs_mark_partial_flows_for_frame_memoized(
+        self,
+        graph: TraceGraph,
+        frame: TraceFrame,
+        feature_to_add: SharedText,
+        context: set[FrameKey],
+        visited: dict[int, bool],
+    ) -> bool:
+        """
+        Evaluates to whether we added a partial flow anywhere reachable from `frame`.
+
+        After evaluation, this function will mutate `visited` for `frame`
+        with the information of whether anything transitively reachable from
+        `frame` was marked with a partial flow, keyed by the frame's local id.
+        """
+
+        # We use an explicit stack to avoid Python's recursion limits (Python
+        # stack frames are quite expensive).
+        # The gist of the algorithm is that we add every frame to the stack twice,
+        # the first time to mark the children for DFS, and the second time in order
+        # to set the final result for the frame.
+        # If true, the bool parameter indicates that all children are already
+        # processed, and that we can trust the visited[frame_id] value for all
+        # children as being final.
+        stack: list[tuple[TraceFrame, bool]] = [(frame, False)]
+        while stack:
+            frame, children_processed = stack.pop()
+            frame_id = frame.id.local_id
+            if not children_processed:
+                # This is the first time we're visiting the node, push ourselves
+                # and all children to the stack and continue. The second
+                # pass will be responsible for ensuring the value of
+                # `visited[frame_id]` is correct.
+                if frame_id in visited:
+                    continue
+                # Add a dummy value to visited to avoid re-queueing this frame.
+                visited[frame_id] = False
+                # We add the current frame with True first so that it gets processed
+                # after all children are done.
+                stack.append((frame, True))
+                next_frames = graph.get_trace_frames_from_caller(
+                    # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
+                    frame.kind,
+                    frame.callee_id,
+                    frame.callee_port,
+                )
+                for next_frame in next_frames:
+                    stack.append((next_frame, False))
+            else:
+                # This is the second time we're seeing the node, we need to populate
+                # `visited` for this frame id with the final result.
+                key = FrameKey.from_frame(frame)
+                added_breadcrumb = False
+                if key in context:
+                    graph.add_trace_frame_leaf_by_local_id_assoc(
+                        frame, feature_to_add.id.local_id, depth=None
+                    )
+                    self.partial_flow_frames += 1
+                    added_breadcrumb = True
+                next_frames = graph.get_trace_frames_from_caller(
+                    # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
+                    frame.kind,
+                    frame.callee_id,
+                    frame.callee_port,
+                )
+                for next_frame in next_frames:
+                    added_breadcrumb = (
+                        added_breadcrumb or visited[next_frame.id.local_id]
+                    )
+                visited[frame_id] = added_breadcrumb
+        return visited[frame.id.local_id]
+
     def _mark_partial_flows_for_code(
         self,
         graph: TraceGraph,
@@ -118,35 +190,19 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         feature_to_add = graph.get_or_add_shared_text(
             SharedTextKind.FEATURE, f"{feature_name}"
         )
+        visited = {}
         for instance in instances:
             issue_instance_frames = list(
                 graph.get_issue_instance_trace_frames(instance)
             )
-            queue = deque(issue_instance_frames)
             added_breadcrumb = False
-            visited = set()
-            while len(queue) > 0:
-                frame = queue.popleft()
-                frame_id = frame.id.local_id
-                if frame_id in visited:
-                    continue
-                visited.add(frame_id)
-                # Queue next frames.
-                next_frames = graph.get_trace_frames_from_caller(
-                    # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-                    frame.kind,
-                    frame.callee_id,
-                    frame.callee_port,
-                )
-                key = FrameKey.from_frame(frame)
-                if key in context:
-                    graph.add_trace_frame_leaf_by_local_id_assoc(
-                        frame, feature_to_add.id.local_id, depth=None
+            for frame in issue_instance_frames:
+                added_breadcrumb = (
+                    added_breadcrumb
+                    or self._dfs_mark_partial_flows_for_frame_memoized(
+                        graph, frame, feature_to_add, context, visited
                     )
-                    self.partial_flow_frames += 1
-                    added_breadcrumb = True
-
-                queue.extend((frame for frame in next_frames))
+                )
 
             if added_breadcrumb:
                 graph.add_issue_instance_shared_text_assoc_id(
