@@ -100,7 +100,6 @@ class TestParser(unittest.TestCase):
                         "is_self_call": false,
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 14,
                             "start": 15,
                             "end": 16
@@ -150,7 +149,6 @@ class TestParser(unittest.TestCase):
                         "is_self_call": true,
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 20,
                             "start": 21,
                             "end": 22
@@ -344,7 +342,6 @@ class TestParser(unittest.TestCase):
                           { "lower": 30, "upper": 41 }
                         ],
                         "origin": {
-                          "filename": "foo.py",
                           "line": 100,
                           "start": 101,
                           "end": 102
@@ -365,7 +362,6 @@ class TestParser(unittest.TestCase):
                         "receiver_interval": [{ "lower": 22, "upper": 23 }],
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 120,
                             "start": 121,
                             "end": 122
@@ -392,7 +388,6 @@ class TestParser(unittest.TestCase):
                       {
                         "receiver_interval": [{ "lower": 30, "upper": 31 }],
                         "origin": {
-                          "filename": "foo.py",
                           "line": 200,
                           "start": 201,
                           "end": 202
@@ -410,7 +405,6 @@ class TestParser(unittest.TestCase):
                         "receiver_interval": [{ "lower": 32, "upper": 33 }],
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 220,
                             "start": 221,
                             "end": 222
@@ -578,7 +572,6 @@ class TestParser(unittest.TestCase):
                     "roots": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 100,
                           "start": 101,
                           "end": 102
@@ -602,7 +595,6 @@ class TestParser(unittest.TestCase):
                     "roots": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 200,
                           "start": 201,
                           "end": 202
@@ -778,7 +770,6 @@ class TestParser(unittest.TestCase):
                         ],
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 14,
                             "start": 15,
                             "end": 16
@@ -808,7 +799,6 @@ class TestParser(unittest.TestCase):
                         "receiver_interval": [{ "lower": 42, "upper": 43 }],
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 20,
                             "start": 21,
                             "end": 22
@@ -982,7 +972,6 @@ class TestParser(unittest.TestCase):
                         ],
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 14,
                             "start": 15,
                             "end": 16
@@ -1014,7 +1003,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 20,
                             "start": 21,
                             "end": 22
@@ -1154,7 +1142,6 @@ class TestParser(unittest.TestCase):
                     "roots": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 20,
                           "start": 21,
                           "end": 22
@@ -1179,7 +1166,6 @@ class TestParser(unittest.TestCase):
                     "roots": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 100,
                           "start": 101,
                           "end": 102
@@ -1302,13 +1288,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -1383,13 +1369,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result[attribute]",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -1477,13 +1463,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -1755,6 +1741,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result[field]",
@@ -1762,7 +1749,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -1845,6 +1831,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
@@ -1852,7 +1839,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -1946,13 +1932,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -1973,7 +1959,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 100,
                             "start": 101,
                             "end": 102
@@ -2093,13 +2078,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -2148,6 +2133,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
@@ -2155,7 +2141,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -2182,7 +2167,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -2251,6 +2235,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
@@ -2258,7 +2243,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -2427,6 +2411,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
@@ -2434,7 +2419,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -2567,6 +2551,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
@@ -2574,7 +2559,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -2685,6 +2669,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
@@ -2692,7 +2677,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -2885,6 +2869,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sources": [
                   {
                     "port": "result",
@@ -2892,7 +2877,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -3034,13 +3018,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sinks": [
                   {
                     "port": "formal(x)",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -3114,13 +3098,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sinks": [
                   {
                     "port": "formal(x)",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -3208,13 +3192,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sinks": [
                   {
                     "port": "formal(y)[attribute]",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -3371,6 +3355,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sinks": [
                   {
                     "port": "formal(x)",
@@ -3378,7 +3363,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -3460,6 +3444,7 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sinks": [
                   {
                     "port": "formal(x)",
@@ -3467,7 +3452,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 1,
                             "start": 2,
                             "end": 3
@@ -3565,13 +3549,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sinks": [
                   {
                     "port": "formal(x)",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3
@@ -3592,7 +3576,6 @@ class TestParser(unittest.TestCase):
                       {
                         "call": {
                           "position": {
-                            "filename": "foo.py",
                             "line": 100,
                             "start": 101,
                             "end": 102
@@ -3712,13 +3695,13 @@ class TestParser(unittest.TestCase):
               "kind": "model",
               "data": {
                 "callable": "foo.bar",
+                "filename": "foo.py",
                 "sinks": [
                   {
                     "port": "formal(x)",
                     "taint": [
                       {
                         "origin": {
-                          "filename": "foo.py",
                           "line": 1,
                           "start": 2,
                           "end": 3

@@ -64,20 +64,6 @@ class TraceFeature(NamedTuple):
         return ParseTraceFeature(name=self.name, locations=[])
 
 
-class SourceLocationWithFilename(NamedTuple):
-    filename: str
-    line: int
-    start: int
-    end: int
-
-    def drop_filename(self) -> SourceLocation:
-        return SourceLocation(
-            line_no=self.line,
-            begin_column=self.start,
-            end_column=self.end,
-        )
-
-
 class LeafWithDistance(NamedTuple):
     name: Optional[str]
     kind: str
@@ -97,7 +83,7 @@ class LeafWithPortDistance(NamedTuple):
 class TraceFragmentKey(NamedTuple):
     callee: str
     port: str
-    location: SourceLocationWithFilename
+    location: SourceLocation
     type_interval: Optional[ParseTypeInterval]
     features: FrozenSet[TraceFeature]
     trace_annotations: FrozenSet[ParseTraceAnnotation]
@@ -107,7 +93,7 @@ class TraceFragmentKey(NamedTuple):
 class TraceFragment(NamedTuple):
     callee: str
     port: str
-    location: SourceLocationWithFilename
+    location: SourceLocation
     leaves: List[LeafWithDistance]
     titos: List[SourceLocation]
     features: FrozenSet[TraceFeature]
@@ -237,11 +223,14 @@ class Parser(BaseParser):
     @log_trace_keyerror_in_generator
     def _parse_model(self, json: Dict[str, Any]) -> Iterable[ParseConditionTuple]:
         callable = json["callable"]
-        yield from self._parse_model_sources(callable, json.get("sources", []))
-        yield from self._parse_model_sinks(callable, json.get("sinks", []))
+        filename = json["filename"]
+        yield from self._parse_model_sources(
+            callable, filename, json.get("sources", [])
+        )
+        yield from self._parse_model_sinks(callable, filename, json.get("sinks", []))
 
     def _parse_model_sources(
-        self, callable: str, source_traces: List[Dict[str, Any]]
+        self, callable: str, filename: str, source_traces: List[Dict[str, Any]]
     ) -> Iterable[ParseConditionTuple]:
         for source_trace in source_traces:
             port = source_trace["port"]
@@ -252,8 +241,8 @@ class Parser(BaseParser):
                     type=ParseType.POSTCONDITION,
                     caller=callable,
                     callee=fragment.callee,
-                    callee_location=fragment.location.drop_filename(),
-                    filename=fragment.location.filename,
+                    callee_location=fragment.location,
+                    filename=filename,
                     titos=fragment.titos,
                     leaves=[(leaf.kind, leaf.distance) for leaf in fragment.leaves],
                     caller_port=port,
@@ -267,7 +256,7 @@ class Parser(BaseParser):
                 )
 
     def _parse_model_sinks(
-        self, callable: str, sink_traces: List[Dict[str, Any]]
+        self, callable: str, filename: str, sink_traces: List[Dict[str, Any]]
     ) -> Iterable[ParseConditionTuple]:
         for sink_trace in sink_traces:
             port = sink_trace["port"]
@@ -276,8 +265,8 @@ class Parser(BaseParser):
                     type=ParseType.PRECONDITION,
                     caller=callable,
                     callee=fragment.callee,
-                    callee_location=fragment.location.drop_filename(),
-                    filename=fragment.location.filename,
+                    callee_location=fragment.location,
+                    filename=filename,
                     titos=fragment.titos,
                     leaves=[(leaf.kind, leaf.distance) for leaf in fragment.leaves],
                     caller_port=port,
@@ -301,19 +290,19 @@ class Parser(BaseParser):
             initial_sources,
         ) = self._parse_issue_traces(json["traces"], "forward", "source")
 
-        location = self._parse_location_with_filename(json)
+        location = self._parse_location(json)
         features = self._parse_features(json["features"])
 
         yield ParseIssueTuple(
             code=json["code"],
-            line=location.line,
+            line=location.line_no,
             callable_line=json["callable_line"],
-            start=location.start,
-            end=location.end,
+            start=location.begin_column,
+            end=location.end_column,
             callable=json["callable"],
             handle=self._generate_issue_master_handle(json),
             message=json["message"],
-            filename=self._extract_filename(location.filename),
+            filename=self._extract_filename(json["filename"]),
             preconditions=preconditions,
             final_sinks=final_sinks,
             postconditions=postconditions,
@@ -381,7 +370,7 @@ class Parser(BaseParser):
                 ParseIssueConditionTuple(
                     callee=fragment.callee,
                     port=fragment.port,
-                    location=fragment.location.drop_filename(),
+                    location=fragment.location,
                     leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
                     titos=fragment.titos,
                     features=[
@@ -431,7 +420,7 @@ class Parser(BaseParser):
         shared_trace_annotations = self._parse_extra_traces(trace)
 
         if "origin" in trace:
-            location = self._parse_location_with_filename(trace["origin"])
+            location = self._parse_location(trace["origin"])
 
             # Turn leaves into direct callees and group by (callee, port)
             for flow_details in trace.get("kinds", []):
@@ -457,7 +446,7 @@ class Parser(BaseParser):
         elif "call" in trace:
             call = trace["call"]
             port = call["port"]
-            location = self._parse_location_with_filename(call["position"])
+            location = self._parse_location(call["position"])
             resolves_to = call.get("resolves_to", [])
 
             for flow_details in trace.get("kinds", []):
@@ -552,16 +541,6 @@ class Parser(BaseParser):
         return frozenset(
             TraceFeature(name=feature.name)
             for feature in flatten_features_to_parse_trace_feature(json)
-        )
-
-    def _parse_location_with_filename(
-        self, json: Dict[str, Any]
-    ) -> SourceLocationWithFilename:
-        return SourceLocationWithFilename(
-            filename=json["filename"],
-            line=json["line"],
-            start=self._adjust_start_location(json["start"]),
-            end=json["end"],
         )
 
     def _parse_location(self, json: Dict[str, Any]) -> SourceLocation:
