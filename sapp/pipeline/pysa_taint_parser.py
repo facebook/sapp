@@ -223,20 +223,27 @@ class Parser(BaseParser):
     @log_trace_keyerror_in_generator
     def _parse_model(self, json: Dict[str, Any]) -> Iterable[ParseConditionTuple]:
         callable = json["callable"]
-        filename = json["filename"]
+        filename = json.get("filename")
         yield from self._parse_model_sources(
             callable, filename, json.get("sources", [])
         )
         yield from self._parse_model_sinks(callable, filename, json.get("sinks", []))
 
     def _parse_model_sources(
-        self, callable: str, filename: str, source_traces: List[Dict[str, Any]]
+        self,
+        callable: str,
+        filename: Optional[str],
+        source_traces: List[Dict[str, Any]],
     ) -> Iterable[ParseConditionTuple]:
         for source_trace in source_traces:
             port = source_trace["port"]
             for fragment in self._parse_trace_fragments(
                 "source", source_trace["taint"]
             ):
+                if filename is None:
+                    raise ParseError(
+                        f"Model for `{callable}` has a source but no filename"
+                    )
                 yield ParseConditionTuple(
                     type=ParseType.POSTCONDITION,
                     caller=callable,
@@ -256,11 +263,15 @@ class Parser(BaseParser):
                 )
 
     def _parse_model_sinks(
-        self, callable: str, filename: str, sink_traces: List[Dict[str, Any]]
+        self, callable: str, filename: Optional[str], sink_traces: List[Dict[str, Any]]
     ) -> Iterable[ParseConditionTuple]:
         for sink_trace in sink_traces:
             port = sink_trace["port"]
             for fragment in self._parse_trace_fragments("sink", sink_trace["taint"]):
+                if filename is None:
+                    raise ParseError(
+                        f"Model for `{callable}` has a sink but no filename"
+                    )
                 yield ParseConditionTuple(
                     type=ParseType.PRECONDITION,
                     caller=callable,
