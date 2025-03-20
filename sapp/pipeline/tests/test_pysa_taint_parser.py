@@ -62,7 +62,9 @@ class TestParser(unittest.TestCase):
             input="""
             {
               "kind": "model",
-              "data": {}
+              "data": {
+                "callable": "foo.bar"
+              }
             }
             """,
             expected=[],
@@ -3749,6 +3751,7 @@ class TestParser(unittest.TestCase):
             {
               "kind": "model",
               "data": {
+                "callable": "foo.bar",
                 "modes": [ "Obscure" ]
               }
             }
@@ -3762,6 +3765,7 @@ class TestParser(unittest.TestCase):
             {
               "kind": "model",
               "data": {
+                "callable": "foo.bar",
                 "global_sanitizer": { "sources": "All" }
               }
             }
@@ -3775,6 +3779,7 @@ class TestParser(unittest.TestCase):
             {
               "kind": "model",
               "data": {
+                "callable": "foo.bar",
                 "tito": [
                   {
                     "port": "formal(value)",

@@ -41,12 +41,7 @@ from . import (
     ParseTypeInterval,
     SourceLocation,
 )
-from .base_parser import (
-    BaseParser,
-    EntryPosition,
-    log_trace_keyerror_in_generator,
-    ParseType,
-)
+from .base_parser import BaseParser, EntryPosition, ParseType
 
 if sys.version_info >= (3, 8):
     from typing import Literal, TypedDict
@@ -220,7 +215,6 @@ class Parser(BaseParser):
     def _get_callable(callable: str) -> str:
         return callable
 
-    @log_trace_keyerror_in_generator
     def _parse_model(self, json: Dict[str, Any]) -> Iterable[ParseConditionTuple]:
         callable = json["callable"]
         filename = json.get("filename")
@@ -290,7 +284,6 @@ class Parser(BaseParser):
                     annotations=sorted(fragment.trace_annotations),
                 )
 
-    @log_trace_keyerror_in_generator
     def _parse_issue(self, json: Dict[str, Any]) -> Iterable[ParseIssueTuple]:
         (
             preconditions,
