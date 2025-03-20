@@ -1773,5 +1773,4 @@ json CALLABLE        show the original json output for the matching callable
         if len(output_pretty) > 0:
             page.page("".join(output_pretty))
 
-        # pyre-ignore
         self.scope_vars["_json"] = output_dict

@@ -161,7 +161,7 @@ const Issues = (props: $ReadOnly<{ match: any }>): React$Node => {
             const issues = fetchMoreResult.data.issues;
             setCursor(issues.pageInfo.endCursor);
             setMoreData([...moreData, ...issues.edges])
-            setCanFetchMore(issues.edges.length == PAGE_SIZE)
+            setCanFetchMore(issues.edges.length === PAGE_SIZE)
           });
         }}
         canFetchMore={issues.length >= PAGE_SIZE && canFetchMore}

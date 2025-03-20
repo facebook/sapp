@@ -74,7 +74,7 @@ test("Renders traces", async () => {
         frame_id: "116",
         callee: "TestCallee",
         callee_id: "19",
-        filename: "test.js",
+        filename: "tests.js",
         callee_location: "1|0|0",
         trace_length: 0,
         is_leaf: true,
@@ -88,7 +88,7 @@ test("Renders traces", async () => {
         frame_id: "115",
         callee: "TestCallee",
         callee_id: "4",
-        filename: "test.js",
+        filename: "tests.js",
         callee_location: "1|0|0",
         trace_length: 0,
         is_leaf: true,
@@ -151,7 +151,7 @@ test("Renders traces", async () => {
     request: {
       query: SourceQuery,
       variables: {
-        path: "test.js"
+        path: "tests.js"
       },
     },
     result: {

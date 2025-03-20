@@ -36,9 +36,8 @@ application = Flask(
 session: Optional[Session] = None
 
 
-# pyre-ignore: Invalid decoration [56]
 @application.teardown_request
-def shutdown_session(exception: Optional[Exception] = None) -> None:
+def shutdown_session(exception: Optional[BaseException] = None) -> None:
     if session is not None:
         # pyre-fixme[16]: `Session` has no attribute `remove`.
         session.remove()

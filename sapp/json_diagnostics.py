@@ -163,8 +163,6 @@ class JSONDiagnostics:
 
         # Check cache validity.
         indexed_files = set(table.file_index.values())
-        # pyre-fixme[6]: For 1st argument expected `(_T1) -> _S` but got `(path:
-        #  Union[PathLike[AnyStr], AnyStr]) -> AnyStr`.
         filenames = set(map(os.path.abspath, self.analysis_output.file_names()))
         if not filenames.issubset(indexed_files):
             logger.info("Lookup table is invalidated, ignoring it.")
@@ -182,8 +180,6 @@ class JSONDiagnostics:
 
     def _generate_lookup_table(self) -> LookupTable:
         logger.info("Generating lookup table")
-        # pyre-fixme[6]: For 1st argument expected `(_T1) -> _S` but got `(path:
-        #  Union[PathLike[AnyStr], AnyStr]) -> AnyStr`.
         filenames = list(map(os.path.abspath, self.analysis_output.file_names()))
 
         table = LookupTable()

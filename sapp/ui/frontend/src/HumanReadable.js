@@ -49,7 +49,7 @@ export function HumanReadablePort(props: $ReadOnly<{port: string}>) {
 }
 
 function makeDalvikParametersHumanReadable(input: string): Array<string> {
-  if (input.length == 0) {
+  if (input.length === 0) {
     return [];
   }
 
@@ -70,6 +70,7 @@ export function makeDalvikClassHumanReadable(input: string): string {
     case 'I': return 'int';
     case 'V': return 'void';
     case 'Z': return 'boolean';
+    default: break;
   }
 
   const split = input.split('/');

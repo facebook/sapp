@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v2
 
       - name: Install black
-        run: pip install black==24.2.0
+        run: pip install black==24.4.2
 
       - name: Run black
         run: black --exclude 'stubs\/' --check --diff .
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/setup-python@v2
 
       - name: Install flake8
-        run: pip install flake8
+        run: pip install flake8==6.1.0
 
       - name: Run flake8
         run: flake8
@@ -46,4 +46,4 @@ jobs:
           cd sapp/ui/frontend
           npm install
           npm install -g eslint
-          npm run lint
+          BABEL_ENV=development npm run lint

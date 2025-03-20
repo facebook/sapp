@@ -26,8 +26,8 @@ from typing import (
     Union,
 )
 
-from tools.sapp.sapp.analysis_output import Metadata
-from tools.sapp.sapp.models import Run, SourceLocation, TraceKind
+from ..analysis_output import Metadata
+from ..models import Run, SourceLocation, TraceKind
 
 if sys.version_info >= (3, 8):
     from typing import Literal, TypedDict
