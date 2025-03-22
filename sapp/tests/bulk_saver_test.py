@@ -11,9 +11,7 @@ from pyre_extensions import none_throws
 from sqlalchemy.exc import IntegrityError
 
 from ..db import DB, DBType
-
 from ..models import create as create_tables, Issue, IssueInstance, PrimaryKey
-
 from .fake_object_generator import FakeObjectGenerator
 
 

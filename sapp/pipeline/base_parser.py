@@ -39,7 +39,6 @@ from . import (
     Summary,
 )
 
-
 log: logging.Logger = logging.getLogger("sapp")
 
 

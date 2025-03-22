@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from ..analysis_output import PartialFlowToMark
-
 from ..models import IssueInstance, SharedText, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, SourceLocation, Summary

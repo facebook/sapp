@@ -6,7 +6,6 @@
 # pyre-strict
 
 import datetime
-
 from typing import Any, Dict, FrozenSet, List, NamedTuple, Set, Union
 
 from ..models import DBID, SourceLocation

@@ -42,7 +42,6 @@ from pygments.lexers import JsonLexer
 from .analysis_output import AnalysisOutput
 from .pipeline.base_parser import BaseParser
 
-
 logger: logging.Logger = logging.getLogger("sapp")
 
 DEFAULT_LOOKUP_TABLE_PATH = "json_lookup_table.db"

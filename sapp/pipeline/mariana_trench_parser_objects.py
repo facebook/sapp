@@ -7,12 +7,10 @@
 
 
 import re
-
 from collections import defaultdict
 from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 from .. import pipeline as sapp
-
 
 UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1

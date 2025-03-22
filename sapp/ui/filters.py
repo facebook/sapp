@@ -24,7 +24,6 @@ from ..models import DBID, Run, RunStatus
 from ..sarif import SARIF
 from .issues import Instance
 
-
 LOG: logging.Logger = logging.getLogger(__name__)
 
 

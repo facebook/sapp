@@ -34,7 +34,6 @@ from ..models import (
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
 
-
 log: logging.Logger = logging.getLogger("sapp")
 
 TRun = TypeVar("TRun", bound=Run)

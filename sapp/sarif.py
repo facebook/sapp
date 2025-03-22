@@ -28,7 +28,6 @@ from .ui import trace
 from .ui.issues import IssueQueryResult
 from .ui.trace import TraceFrameQueryResult, TraceKind
 
-
 SARIFOutput: TypeAlias = Dict[
     str,
     Union[

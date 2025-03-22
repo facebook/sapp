@@ -12,6 +12,7 @@ import json
 import logging
 import sys
 from collections import defaultdict
+
 from typing import (
     Any,
     Dict,
@@ -19,6 +20,7 @@ from typing import (
     IO,
     Iterable,
     List,
+    Literal,
     NamedTuple,
     Optional,
     Set,
@@ -42,11 +44,6 @@ from . import (
     SourceLocation,
 )
 from .base_parser import BaseParser, EntryPosition, ParseType
-
-if sys.version_info >= (3, 8):
-    from typing import Literal, TypedDict
-else:
-    from typing_extensions import Literal, TypedDict
 
 
 log: logging.Logger = logging.getLogger("sapp")

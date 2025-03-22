@@ -18,7 +18,6 @@ from ..models import (
     SharedText,
     TraceFrame,
 )
-
 from .fake_object_generator import FakeObjectGenerator
 
 

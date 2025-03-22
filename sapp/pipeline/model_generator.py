@@ -6,7 +6,6 @@
 # pyre-strict
 
 import datetime
-
 import json
 import logging
 from collections import defaultdict
