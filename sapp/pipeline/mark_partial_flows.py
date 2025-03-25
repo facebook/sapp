@@ -345,7 +345,6 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
 
         log.info("Marking partial flows...")
         graph = input
-        grouped_by_full_issue_transform_and_prefix_flow = defaultdict(list)
         full_issue_codes: set[int] = set()
         partial_issue_codes: set[int] = set()
         issues: dict[int, list[IssueInstance]] = defaultdict(list)

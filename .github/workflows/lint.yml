@@ -20,7 +20,7 @@ jobs:
         run: pip install ufmt==2.8.0 black==24.4.2 ruff-api==0.1.0
 
       - name: Add configuration for ufmt
-        run: echo '[tool.ufmt]\nformatter = "ruff-api"\nsorter = "ruff-api"' > pyproject.toml
+        run: echo -e '[tool.ufmt]\nformatter = "ruff-api"\nsorter = "ruff-api"' > pyproject.toml
 
       - name: Run ufmt
         run: ufmt check sapp scripts
