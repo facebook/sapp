@@ -12,7 +12,6 @@ import json
 import logging
 import sys
 from collections import defaultdict
-
 from typing import (
     Any,
     Dict,
@@ -44,7 +43,6 @@ from . import (
     SourceLocation,
 )
 from .base_parser import BaseParser, EntryPosition, ParseType
-
 
 log: logging.Logger = logging.getLogger("sapp")
 

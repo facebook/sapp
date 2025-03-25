@@ -23,7 +23,7 @@ jobs:
         run: echo -e '[tool.ufmt]\nformatter = "ruff-api"\nsorter = "ruff-api"' > pyproject.toml
 
       - name: Run ufmt
-        run: ufmt check sapp scripts
+        run: ufmt diff sapp scripts
 
   flake8:
     runs-on: ubuntu-latest
