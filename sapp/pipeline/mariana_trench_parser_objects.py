@@ -16,18 +16,45 @@ UNKNOWN_PATH: str = "unknown"
 UNKNOWN_LINE: int = -1
 
 
-def _parse_kind_name(kind: Union[str, Dict[str, Any]]) -> str:
-    if type(kind) is str:
-        return kind
-    # Parse the name in case this is a TransformKind
+def _parse_partial_kind_name(kind: Dict[str, Any]) -> str:
+    partial_label = kind.get("partial_label")
+    name = kind.get("name")
+    if name is None:
+        raise AssertionError(f"PartialKind must have a name. Kind: {kind}")
+    return f"Partial:{name}:{partial_label}"
+
+
+def _parse_transform_kind_name(kind: Dict[str, Any]) -> str:
     name = ""
     if local_transform := kind.get("local"):
         name += f"{local_transform}@"
     if global_transform := kind.get("global"):
         name += f"{global_transform}:"
-    name += kind["base"]
 
+    # At least one of local or global transform should be present in a
+    # transform kind
+    if len(name) == 0:
+        raise AssertionError(
+            f"TransformKind must have a local or global transform. Kind: {kind}"
+        )
+
+    name += kind["base"]
     return name
+
+
+def _parse_kind_name(kind: Union[str, Dict[str, Any]]) -> str:
+    if type(kind) is str:
+        return kind
+
+    if "base" in kind:
+        return _parse_transform_kind_name(kind)
+    elif "partial_label" in kind:
+        return _parse_partial_kind_name(kind)
+
+    raise AssertionError(
+        "Unable to parse kind object. Must have either 'base' or "
+        f"'partial_label' key. Kind: {kind}"
+    )
 
 
 class Method(NamedTuple):
