@@ -830,6 +830,47 @@ class TestParser(unittest.TestCase):
             "LClass;.flow:()V:LSink$$#8;.sink:(LData;)V:2:1:67e997f12486978a",
         )
 
+        # Replace synthetic lambda name $$ExternalSyntheticLamdba with the relative line
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                issue_callee=IssueCallee(
+                    "LSink$$ExternalSyntheticLambda10;.sink:(LData;)V"
+                ),
+                sink_index=2,
+                code=1,
+                callable_line=2,
+                issue_line=10,
+            ),
+            "LClass;.flow:()V:LSink$#8;.sink:(LData;)V:2:1:9d5b2c903b450986",
+        )
+
+        # Replace synthetic lambda names $$Lambda$ with the relative line
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                issue_callee=IssueCallee("LSink$$Lambda$42;.sink:(LData;)V"),
+                sink_index=2,
+                code=1,
+                callable_line=2,
+                issue_line=10,
+            ),
+            "LClass;.flow:()V:LSink$#8;.sink:(LData;)V:2:1:9d5b2c903b450986",
+        )
+
+        # Replace nested synthetic lambda names with the relative line
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                issue_callee=IssueCallee("LSink$10$$Lambda$42;.sink:(LData;)V"),
+                sink_index=2,
+                code=1,
+                callable_line=2,
+                issue_line=10,
+            ),
+            "LClass;.flow:()V:LSink$$#8;.sink:(LData;)V:2:1:67e997f12486978a",
+        )
+
         # Don't replace an inner class that is named rather than numbered and ignore $'s in the method name
         self.assertEqual(
             Parser.get_master_handle(

@@ -430,6 +430,16 @@ class Kind(NamedTuple):
         return kinds_by_interval
 
 
+EXTERNAL_SYNTHETIC_LAMBDA_PATTERNS: List[str] = [
+    # https://r8.googlesource.com/r8/+/refs/tags/3.1.34/src/main/java/com/android/tools/r8/synthesis/SyntheticNaming.java#140
+    "$$ExternalSyntheticLambda",
+    #  Desugared lambda classes from older versions of D8.
+    "$$Lambda$",
+    # $n for java anonymous classes. This should be checked last.
+    "$",
+]
+
+
 class IssueCallee(NamedTuple):
     callee: Union[str, ExploitabilityOrigin]
 
@@ -450,6 +460,37 @@ class IssueCallee(NamedTuple):
             )
 
     @staticmethod
+    def _split_class_name_at_lambda_pattern(class_name: str) -> Tuple[str, str]:
+        """
+        This method splits the input class_name at lambda pattern boundaries and
+        returns the prefix and the remainder of the class_name after the removal
+        of the lambda pattern.
+        """
+        substring_index = class_name.find("$")
+        if substring_index < 0:
+            return (class_name, "")
+
+        # Keep the $ in prefix to separate nested anonymous classes.
+        prefix = class_name[: (substring_index + 1)]
+        remaining = class_name[substring_index:]
+
+        for pattern in EXTERNAL_SYNTHETIC_LAMBDA_PATTERNS:
+            if remaining.startswith(pattern):
+                # Found lambda pattern. Strip it from remaining
+                remaining = remaining.lstrip(pattern)
+                break
+
+        # Remove digits after lambda patterns
+        remaining_length = len(remaining)
+        index = 0
+
+        while index < remaining_length and remaining[index].isdigit():
+            index += 1
+        remaining = remaining[index:]
+
+        return (prefix, remaining)
+
+    @staticmethod
     def _strip_anonymous_class_numbers(
         callee_signature: str, callable_line: int, issue_line: int
     ) -> str:
@@ -464,22 +505,19 @@ class IssueCallee(NamedTuple):
         first_semicolon = callee_signature.find(";")
         if first_semicolon < 0:
             return callee_signature
+
         class_name = callee_signature[:first_semicolon]
-        class_name_length = len(class_name)
-        stripped_classname = ""
-        index = 0
-        while index < class_name_length:
-            character = class_name[index]
-            stripped_classname += character
-            index += 1
-            if (
-                character != "$"
-                or index == class_name_length
-                or not class_name[index].isdigit()
-            ):
-                continue
-            while index < class_name_length and class_name[index].isdigit():
-                index += 1
+
+        stripped_classname, remaining = IssueCallee._split_class_name_at_lambda_pattern(
+            class_name
+        )
+
+        while len(remaining) > 0:
+            prefix, remaining = IssueCallee._split_class_name_at_lambda_pattern(
+                remaining
+            )
+            stripped_classname += prefix
+
         if stripped_classname == class_name:
             return callee_signature
 
@@ -497,7 +535,10 @@ class IssueCallee(NamedTuple):
             # together in the unique issues view.
             # This does mean that we will write multiple issue instances with the
             # same issue handle.
-            return f"{self.callee.exploitability_root}:{self.callee.callee}"
+            callee = IssueCallee._strip_anonymous_class_numbers(
+                self.callee.callee, callable_line, issue_line
+            )
+            return f"{self.callee.exploitability_root}:{callee}"
         elif isinstance(self.callee, str):
             callee = IssueCallee._strip_anonymous_class_numbers(
                 self.callee, callable_line, issue_line
