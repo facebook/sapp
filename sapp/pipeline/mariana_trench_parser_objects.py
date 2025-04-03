@@ -250,6 +250,9 @@ class CallInfo(NamedTuple):
     def is_origin(self) -> bool:
         return "Origin" in self.call_kind
 
+    def is_callsite(self) -> bool:
+        return "CallSite" in self.call_kind
+
     def is_propagation_without_trace(self) -> bool:
         return "Propagation" == self.call_kind
 
@@ -349,14 +352,19 @@ class ExtraTrace(NamedTuple):
             else []
         )
 
+        # Since we currently do not track callee.method when CallInfo is Origin,
+        # we do not attach subtraces for them. Indicate if the subtrace is expected
+        # only when the callinfo is a callsite.
+        message = "Subtrace: " if self.callee.is_callsite() else ""
+        if self.callee.is_propagation_with_trace():
+            message += f"Propagation through {self.kind}"
+        else:
+            message += f"To {self.frame_type} kind: {self.kind}"
+
         return sapp.ParseTraceAnnotation(
             location=self.callee.position.to_sapp(),
             kind=self.frame_type,
-            msg=(
-                f"Propagation through {self.kind}"
-                if self.callee.is_propagation_with_trace()
-                else f"To {self.frame_type} kind: {self.kind}"
-            ),
+            msg=message,
             leaf_kind=self.kind,
             leaf_depth=0,
             type_interval=None,
