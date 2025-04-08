@@ -75,7 +75,7 @@ attributes like the status of an issue.
 class LeafMapping(NamedTuple):
     caller_leaf: int
     callee_leaf: int
-    transform: int
+    raw_kind: int
 
 
 class SourceLocationType(types.TypeDecorator):

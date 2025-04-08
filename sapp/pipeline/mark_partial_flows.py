@@ -56,7 +56,11 @@ def _get_transforms(
         return set()
     transforms = set()
     for leaf_mapping in leaf_mappings:
-        unparsed = graph.get_shared_text_by_local_id(leaf_mapping.transform).contents
+        unparsed = graph.get_shared_text_by_local_id(leaf_mapping.raw_kind).contents
+        # determine if it is a full callee -> caller format
+        splits = unparsed.split("->")
+        if len(splits) == 2:
+            unparsed = splits[1]  # Grab caller side and assume it's not normalized
         if "@" in unparsed:
             split_by_local = unparsed.split("@")
             local_transforms = split_by_local[0].split(":")

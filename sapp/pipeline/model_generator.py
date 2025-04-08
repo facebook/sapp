@@ -494,7 +494,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 LeafMapping(
                     caller_leaf=caller_leaf_id,
                     callee_leaf=callee_leaf_id,
-                    transform=leaf_record.id.local_id,
+                    raw_kind=leaf_record.id.local_id,
                 )
             )
             leaf_records.append((leaf_record, depth))

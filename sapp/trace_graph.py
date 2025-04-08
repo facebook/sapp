@@ -490,7 +490,7 @@ class TraceGraph:
         else:
             callee_leaf_ids = set()
         return {
-            leaf_map.transform
+            leaf_map.raw_kind
             for leaf_map in leaf_mapping
             if is_leaf_frame or (leaf_map.callee_leaf in callee_leaf_ids)
         }
@@ -555,6 +555,10 @@ class TraceGraph:
         return next_kinds
 
     def get_transform_normalized_caller_kind(self, leaf: str) -> str:
+        # determine if it is a full callee -> caller format
+        splits = leaf.split("->")
+        if len(splits) == 2:
+            leaf = splits[1]  # transformations may exist. Keep going
         # remove resolved conditional kinds
         splits = [
             part
@@ -570,7 +574,11 @@ class TraceGraph:
             leaf_kind.kind == SharedTextKind.SINK
             or leaf_kind.kind == SharedTextKind.SOURCE
         )
-        if "@" in leaf_kind.contents or "!" in leaf_kind.contents:
+        if (
+            "->" in leaf_kind.contents
+            or "@" in leaf_kind.contents
+            or "!" in leaf_kind.contents
+        ):
             normal_name = self.get_transform_normalized_caller_kind(leaf_kind.contents)
             normal_kind = self.get_or_add_shared_text(leaf_kind.kind, normal_name)
             return normal_kind.id.local_id
@@ -578,6 +586,10 @@ class TraceGraph:
             return leaf_kind.id.local_id
 
     def get_transformed_callee_kind(self, leaf: str) -> str:
+        # determine if it is a full callee -> caller format
+        splits = leaf.split("->")
+        if len(splits) == 2:
+            leaf = splits[0]  # transformations may exist. Keep going
         if "@" in leaf:
             rest = leaf.split("@", 1)[1]
         else:
@@ -589,7 +601,11 @@ class TraceGraph:
             leaf_kind.kind == SharedTextKind.SINK
             or leaf_kind.kind == SharedTextKind.SOURCE
         )
-        if "@" in leaf_kind.contents or "!" in leaf_kind.contents:
+        if (
+            "->" in leaf_kind.contents
+            or "@" in leaf_kind.contents
+            or "!" in leaf_kind.contents
+        ):
             rest = self.get_transformed_callee_kind(leaf_kind.contents)
             remaining_kind = self.get_or_add_shared_text(leaf_kind.kind, rest)
             return remaining_kind.id.local_id
