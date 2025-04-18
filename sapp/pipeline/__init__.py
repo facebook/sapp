@@ -7,8 +7,8 @@
 
 import logging
 import sys
+import time
 from abc import ABCMeta, abstractmethod
-from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import (
@@ -27,6 +27,7 @@ from typing import (
 )
 
 from ..analysis_output import Metadata
+from ..metrics_logger import MetricsLogger
 from ..models import Run, SourceLocation, TraceKind
 
 if sys.version_info >= (3, 8):
@@ -315,9 +316,8 @@ class Summary(TypedDict, total=False):
     trace_entries: Dict[TraceKind, Dict[DictKey, List[ParseConditionTuple]]]
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def time_str(delta: timedelta):
-    minutes, seconds = divmod(delta.total_seconds(), 60)
+def time_str(delta_in_seconds: float) -> str:
+    minutes, seconds = divmod(delta_in_seconds, 60)
     seconds_string = f"{int(seconds)}s"
     if minutes > 0:
         return f"{int(minutes)}m {seconds_string}"
@@ -351,15 +351,22 @@ class Pipeline:
         # pyre-fixme[2]: Parameter must be annotated.
         first_input,
         summary: Optional[Summary] = None,
+        metrics_logger: Optional[MetricsLogger] = None,
     ) -> Tuple[Any, Summary]:
         if summary is None:
             summary = cast(Summary, {})
         next_input = first_input
         timing = []
         for step in self.steps:
-            start_time = datetime.now()
+            step_name = step.__class__.__name__
+            start_perf_counter = time.perf_counter()
             next_input, summary = step.run(next_input, summary)
-            timing.append((step.__class__.__name__, datetime.now() - start_time))
+            timing.append((step_name, time.perf_counter() - start_perf_counter))
+            if metrics_logger is not None:
+                metrics_logger.log_timing(
+                    key=f"Processing:{step_name}",
+                    start_perf_counter=start_perf_counter,
+                )
         log.info(
             "Step timing: %s",
             ", ".join([f"{name} took {time_str(delta)}" for name, delta in timing]),
