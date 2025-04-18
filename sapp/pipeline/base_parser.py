@@ -28,6 +28,7 @@ from typing import (
 import xxhash
 
 from ..analysis_output import AnalysisOutput, Metadata
+from ..metrics_logger import ScopedMetricsLogger
 from . import (
     DictEntries,
     DictKey,
@@ -146,6 +147,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         inputfile: AnalysisOutput,
         previous_issue_handles: Optional[Path],
         linemapfile: Optional[str],
+        scoped_metrics_logger: ScopedMetricsLogger,
     ) -> DictEntries:
         """Here we take input generators and return a dict with issues,
         preconditions, and postconditions separated. If there is only a single
@@ -181,8 +183,11 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
             previous_handles = BaseParser.parse_handles_file(previous_issue_handles)
 
         log.info("Parsing analysis output...")
+        parsed_issues = 0
+        parsed_frames = 0
         for typ, key, e in self._analysis_output_to_parsed_tuples(inputfile):
             if typ == ParseType.ISSUE:
+                parsed_issues += 1
                 e = cast(ParseIssueTuple, e)
                 # We are only interested in issues that weren't in the previous
                 # analysis.
@@ -190,8 +195,12 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
                     issues.append(e.interned())
 
             elif typ == ParseType.PRECONDITION or typ == ParseType.POSTCONDITION:
+                parsed_frames += 1
                 e = cast(ParseConditionTuple, e)
                 conditions[typ][key].append(e.interned())
+
+        scoped_metrics_logger.add_data("parsed_issues", str(parsed_issues))
+        scoped_metrics_logger.add_data("parsed_frames", str(parsed_frames))
 
         return {
             "issues": issues,
@@ -227,13 +236,17 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         return False
 
     def run(
-        self, input: AnalysisOutput, summary: Summary
+        self,
+        input: AnalysisOutput,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[DictEntries, Summary]:
         return (
             self.analysis_output_to_dict_entries(
                 input,
                 summary.get("previous_issue_handles"),
                 summary.get("old_linemap_file"),
+                scoped_metrics_logger,
             ),
             summary,
         )

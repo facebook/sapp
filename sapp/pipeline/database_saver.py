@@ -18,6 +18,7 @@ from ..bulk_saver import BulkSaver
 from ..db import DB
 from ..db_support import DBID, dbid_resolution_context
 from ..decorators import log_time
+from ..metrics_logger import ScopedMetricsLogger
 from ..models import (
     ClassTypeInterval,
     Issue,
@@ -63,7 +64,10 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
 
     @log_time  # pyre-ignore[56]: Pyre can't support this yet.
     def run(
-        self, input: List[TraceGraph], summary: Summary
+        self,
+        input: List[TraceGraph],
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[List[RunSummary], Summary]:
         self.summary = summary
         run_summaries = []
@@ -74,7 +78,9 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
             )
             self._prep_save(graph, bulk_saver)
             with dbid_resolution_context():
-                run_summaries.append(self._save(graph, run, bulk_saver))
+                run_summaries.append(
+                    self._save(graph, run, bulk_saver, scoped_metrics_logger)
+                )
         return run_summaries, self.summary
 
     def _prep_save(self, graph: TraceGraph, bulk_saver: BulkSaver) -> None:
@@ -91,7 +97,13 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 len(self.summary["missing_traces"][trace_kind]),
             )
 
-    def _save(self, graph: TraceGraph, run: Run, bulk_saver: BulkSaver) -> RunSummary:
+    def _save(
+        self,
+        graph: TraceGraph,
+        run: Run,
+        bulk_saver: BulkSaver,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> RunSummary:
         """Saves bulk saver's info into the databases in bulk."""
 
         trace_frames = bulk_saver.get_items_to_add(TraceFrame)
@@ -149,7 +161,8 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 cast(TRun, run), bulk_saver.get_items_to_add(Issue)
             )
 
-            bulk_saver.save_all(self.database)
+            saved_items = bulk_saver.save_all(self.database)
+            scoped_metrics_logger.add_data("saved_items", str(saved_items))
             self._save_info(graph)
 
             # Now that the run is finished, fetch it from the DB again and set its

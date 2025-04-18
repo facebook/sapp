@@ -99,6 +99,9 @@ class BulkSaver:
     def get_items_to_add(self, cls):
         return self.saving[cls.__name__]
 
+    def get_total_item_count(self) -> int:
+        return sum(len(items) for items in self.saving.values())
+
     def prepare_all(self, database: DB) -> None:
         saving_classes = [
             cls
@@ -124,7 +127,10 @@ class BulkSaver:
 
         self.prepare_all_done = True
 
-    def save_all(self, database: DB) -> None:
+    def save_all(self, database: DB) -> int:
+        """
+        Save all items to the database, return the number of items saved
+        """
         assert self.prepare_all_done, "prepare_all must succeed before calling save_all"
 
         saving_classes = [
@@ -133,9 +139,14 @@ class BulkSaver:
             if len(self.saving[cls.__name__]) != 0
         ]
 
+        saved_items = 0
         for cls in saving_classes:
-            log.info(f"Saving {len(self.saving[cls.__name__])} {cls.__name__}s...")
+            cls_count = len(self.saving[cls.__name__])
+            log.info(f"Saving {cls_count} {cls.__name__}s...")
             self._save(database, cls, self.primary_key_generator)
+            saved_items += cls_count
+
+        return saved_items
 
     @log_time
     # pyre-fixme[2]: Parameter must be annotated.

@@ -11,6 +11,7 @@ from collections import defaultdict, deque
 from typing import Dict, List, Set, Tuple
 
 from ..analysis_output import ContextPropagation
+from ..metrics_logger import ScopedMetricsLogger
 from ..models import IssueInstance, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
@@ -209,7 +210,12 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
             if self._is_root_port(candidate.caller_port) or is_root:
                 self._add_contextual_features_to_frame(candidate, features)
 
-    def run(self, input: TraceGraph, summary: Summary) -> Tuple[TraceGraph, Summary]:
+    def run(
+        self,
+        input: TraceGraph,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[TraceGraph, Summary]:
         graph = input
         self.summary = summary
         self.graph = graph

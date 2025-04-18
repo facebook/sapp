@@ -9,6 +9,8 @@ import logging
 from collections import defaultdict, deque
 from typing import Dict, Set, Tuple
 
+from ..metrics_logger import ScopedMetricsLogger
+
 from ..models import SharedTextKind, TraceFrame
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
@@ -196,7 +198,12 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
     def _is_subtrace_root_port(self, port: str) -> bool:
         return port == "subtrace_root" or port.startswith("subtrace_root:")
 
-    def run(self, input: TraceGraph, summary: Summary) -> Tuple[TraceGraph, Summary]:
+    def run(
+        self,
+        input: TraceGraph,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[TraceGraph, Summary]:
         graph = input
         self.summary = summary
         self.graph = graph

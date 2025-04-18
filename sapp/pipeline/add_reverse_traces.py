@@ -9,6 +9,8 @@ import logging
 from collections import deque
 from typing import Set, Tuple
 
+from ..metrics_logger import ScopedMetricsLogger
+
 from ..models import DBID, SharedText, SharedTextKind
 from ..trace_graph import LeafMapping, TraceGraph
 from . import PipelineStep, Summary
@@ -39,7 +41,12 @@ class AddReverseTraces(PipelineStep[TraceGraph, TraceGraph]):
         self.new_leaf_name = new_leaf_name
         self.new_leaf_kind = new_leaf_kind
 
-    def run(self, input: TraceGraph, summary: Summary) -> Tuple[TraceGraph, Summary]:
+    def run(
+        self,
+        input: TraceGraph,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[TraceGraph, Summary]:
         graph = input
 
         orig_leaf = graph.get_shared_text(self.orig_leaf_kind, self.orig_leaf_name)

@@ -9,6 +9,8 @@ import logging
 from collections import defaultdict, deque
 from typing import Dict, List, Set, Tuple
 
+from ..metrics_logger import ScopedMetricsLogger
+
 from ..models import IssueInstance, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary
@@ -180,7 +182,12 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
                 for frame in next_frames
             )
 
-    def run(self, input: TraceGraph, summary: Summary) -> Tuple[TraceGraph, Summary]:
+    def run(
+        self,
+        input: TraceGraph,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[TraceGraph, Summary]:
         if not (self.propagate_sources or self.propagate_features):
             return input, summary
 

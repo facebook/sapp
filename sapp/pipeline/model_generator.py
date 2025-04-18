@@ -11,6 +11,8 @@ import logging
 from collections import defaultdict
 from typing import Any, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
 
+from ..metrics_logger import ScopedMetricsLogger
+
 from ..models import (
     DBID,
     FrameReachability,
@@ -102,7 +104,12 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         )
         self.skip_traces: bool = skip_traces
 
-    def run(self, input: DictEntries, summary: Summary) -> Tuple[TraceGraph, Summary]:
+    def run(
+        self,
+        input: DictEntries,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[TraceGraph, Summary]:
         self.summary = summary
 
         self.summary["trace_entries"] = defaultdict(

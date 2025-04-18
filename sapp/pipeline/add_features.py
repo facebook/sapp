@@ -8,6 +8,8 @@
 import logging
 from typing import List, Optional, Set, Tuple
 
+from ..metrics_logger import ScopedMetricsLogger
+
 from . import DictEntries, PipelineStep, Summary
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -22,7 +24,12 @@ class AddFeatures(PipelineStep[DictEntries, DictEntries]):
         super().__init__()
         self.features: Set[str] = set(features or [])
 
-    def run(self, input: DictEntries, summary: Summary) -> Tuple[DictEntries, Summary]:
+    def run(
+        self,
+        input: DictEntries,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[DictEntries, Summary]:
         if len(self.features) > 0:
             log.info("Attaching provided features")
             input["issues"] = [

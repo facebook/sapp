@@ -27,7 +27,7 @@ from typing import (
 )
 
 from ..analysis_output import Metadata
-from ..metrics_logger import MetricsLogger
+from ..metrics_logger import MetricsLogger, NoOpMetricsLogger, ScopedMetricsLogger
 from ..models import Run, SourceLocation, TraceKind
 
 if sys.version_info >= (3, 8):
@@ -334,7 +334,9 @@ class PipelineStep(Generic[T_in, T_out], metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def run(self, input: T_in, summary: Summary) -> Tuple[T_out, Summary]:
+    def run(
+        self, input: T_in, summary: Summary, scoped_metrics_logger: ScopedMetricsLogger
+    ) -> Tuple[T_out, Summary]:
         raise NotImplementedError("PipelineStep.run is abstract")
 
 
@@ -355,18 +357,20 @@ class Pipeline:
     ) -> Tuple[Any, Summary]:
         if summary is None:
             summary = cast(Summary, {})
+        if metrics_logger is None:
+            metrics_logger = NoOpMetricsLogger()
         next_input = first_input
         timing = []
         for step in self.steps:
             step_name = step.__class__.__name__
-            start_perf_counter = time.perf_counter()
-            next_input, summary = step.run(next_input, summary)
-            timing.append((step_name, time.perf_counter() - start_perf_counter))
-            if metrics_logger is not None:
-                metrics_logger.log_timing(
-                    key=f"Processing:{step_name}",
-                    start_perf_counter=start_perf_counter,
+            with metrics_logger.log_timing(
+                key=f"Processing:{step_name}"
+            ) as scoped_metrics_logger:
+                start_perf_counter = time.perf_counter()
+                next_input, summary = step.run(
+                    next_input, summary, scoped_metrics_logger
                 )
+                timing.append((step_name, time.perf_counter() - start_perf_counter))
         log.info(
             "Step timing: %s",
             ", ".join([f"{name} took {time_str(delta)}" for name, delta in timing]),

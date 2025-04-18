@@ -12,6 +12,7 @@ import xxhash
 from sqlalchemy.orm import Session
 
 from ..db import DB
+from ..metrics_logger import ScopedMetricsLogger
 from ..models import MetaRunIssueInstanceIndex
 from . import Any, Dict, DictEntries, ParseIssueTuple, PipelineStep, Summary, Union
 
@@ -87,7 +88,12 @@ class MetaRunIssueDuplicateFilter(PipelineStep[DictEntries, DictEntries]):
         )
         return found is None
 
-    def run(self, input: DictEntries, summary: Summary) -> Tuple[DictEntries, Summary]:
+    def run(
+        self,
+        input: DictEntries,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[DictEntries, Summary]:
         number_initial_issues = len(input["issues"])
         LOG.info(
             "Filtering out issues that already exist in meta run %d",

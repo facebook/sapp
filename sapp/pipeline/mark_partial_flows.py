@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from ..analysis_output import PartialFlowToMark
+from ..metrics_logger import ScopedMetricsLogger
 from ..models import IssueInstance, SharedText, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, SourceLocation, Summary
@@ -343,7 +344,12 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                 )
         return context
 
-    def run(self, input: TraceGraph, summary: Summary) -> tuple[TraceGraph, Summary]:
+    def run(
+        self,
+        input: TraceGraph,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> tuple[TraceGraph, Summary]:
         if len(self.partial_flows_to_mark) == 0:
             return (input, summary)
 

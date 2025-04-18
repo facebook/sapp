@@ -9,6 +9,7 @@ import logging
 from typing import Tuple
 
 from ..db import DB
+from ..metrics_logger import ScopedMetricsLogger
 from ..models import create as create_models
 from . import DictEntries, PipelineStep, Summary
 
@@ -20,6 +21,11 @@ class CreateDatabase(PipelineStep[DictEntries, DictEntries]):
         super().__init__()
         self.database = database
 
-    def run(self, input: DictEntries, summary: Summary) -> Tuple[DictEntries, Summary]:
+    def run(
+        self,
+        input: DictEntries,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[DictEntries, Summary]:
         create_models(self.database)
         return input, summary

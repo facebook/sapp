@@ -7,6 +7,8 @@
 
 from typing import Set, Tuple
 
+from ..metrics_logger import ScopedMetricsLogger
+
 from . import DictEntries, ParseIssueTuple, PipelineStep, Summary
 
 
@@ -20,7 +22,12 @@ class IssueCallableFilter(PipelineStep[DictEntries, DictEntries]):
     def _should_keep_issue(self, issue: ParseIssueTuple) -> bool:
         return issue.callable in self.issue_callable_allowlist
 
-    def run(self, input: DictEntries, summary: Summary) -> Tuple[DictEntries, Summary]:
+    def run(
+        self,
+        input: DictEntries,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[DictEntries, Summary]:
         input["issues"] = [
             issue for issue in input["issues"] if self._should_keep_issue(issue)
         ]

@@ -8,6 +8,8 @@
 import logging
 from typing import List, Tuple
 
+from ..metrics_logger import ScopedMetricsLogger
+
 from ..trace_graph import TraceGraph
 from ..trimmed_trace_graph import TrimmedTraceGraph
 from . import PipelineStep, Summary
@@ -17,7 +19,10 @@ log: logging.Logger = logging.getLogger("sapp")
 
 class TrimTraceGraph(PipelineStep[TraceGraph, List[TraceGraph]]):
     def run(
-        self, input: TraceGraph, summary: Summary
+        self,
+        input: TraceGraph,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[List[TraceGraph], Summary]:
         if not summary["affected_file_sets"]:
             return [input], summary
