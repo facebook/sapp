@@ -10,7 +10,6 @@ from collections import defaultdict, deque
 from typing import Dict, List, Set, Tuple
 
 from ..metrics_logger import ScopedMetricsLogger
-
 from ..models import IssueInstance, SharedTextKind, TraceFrame, TraceKind
 from ..trace_graph import TraceGraph
 from . import PipelineStep, Summary

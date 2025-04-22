@@ -10,7 +10,6 @@ from collections import deque
 from typing import Set, Tuple
 
 from ..metrics_logger import ScopedMetricsLogger
-
 from ..models import DBID, SharedText, SharedTextKind
 from ..trace_graph import LeafMapping, TraceGraph
 from . import PipelineStep, Summary

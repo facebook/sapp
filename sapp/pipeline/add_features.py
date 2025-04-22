@@ -9,7 +9,6 @@ import logging
 from typing import List, Optional, Set, Tuple
 
 from ..metrics_logger import ScopedMetricsLogger
-
 from . import DictEntries, PipelineStep, Summary
 
 log: logging.Logger = logging.getLogger("sapp")

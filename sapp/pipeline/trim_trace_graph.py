@@ -9,7 +9,6 @@ import logging
 from typing import List, Tuple
 
 from ..metrics_logger import ScopedMetricsLogger
-
 from ..trace_graph import TraceGraph
 from ..trimmed_trace_graph import TrimmedTraceGraph
 from . import PipelineStep, Summary

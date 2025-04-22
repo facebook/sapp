@@ -8,7 +8,6 @@
 from typing import Set, Tuple
 
 from ..metrics_logger import ScopedMetricsLogger
-
 from . import DictEntries, ParseIssueTuple, PipelineStep, Summary
 
 

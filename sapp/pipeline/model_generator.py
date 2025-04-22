@@ -12,7 +12,6 @@ from collections import defaultdict
 from typing import Any, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from ..metrics_logger import ScopedMetricsLogger
-
 from ..models import (
     DBID,
     FrameReachability,
