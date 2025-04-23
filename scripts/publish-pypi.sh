@@ -15,6 +15,6 @@ cd "$(dirname "$0")/.." || exit 1
 (cd sapp/ui/frontend && npm install && npm run build)
 
 rm -rf dist
-pip install wheel twine
+pip install -U pip setuptools wheel twine
 python setup.py sdist bdist_wheel
 python -m twine upload dist/*
