@@ -23,7 +23,7 @@ class TrimTraceGraph(PipelineStep[TraceGraph, List[TraceGraph]]):
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[List[TraceGraph], Summary]:
-        if not summary["affected_file_sets"]:
+        if not summary.get("affected_file_sets"):
             return [input], summary
 
         trimmed_graphs = []
