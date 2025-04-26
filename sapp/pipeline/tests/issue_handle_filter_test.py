@@ -7,7 +7,7 @@
 
 from unittest import TestCase
 
-from .. import ParseIssueTuple, Pipeline
+from .. import DictEntries, ParseIssueTuple, Pipeline
 from ..issue_handle_filter import IssueHandleFilter
 
 
@@ -37,11 +37,13 @@ class TestIssueHandleFilter(TestCase):
         return issue
 
     def test_filter_handles(self) -> None:
-        dict_entries = {
-            "issues": list(map(self.make_fake_issue, ["alpaca", "b", "llama", "a"]))
-        }
+        dict_entries = DictEntries(
+            issues=list(map(self.make_fake_issue, ["alpaca", "b", "llama", "a"])),
+            preconditions={},
+            postconditions={},
+        )
         output, _ = Pipeline([self.warning_code_filter]).run(dict_entries)
 
-        self.assertEqual(len(output["issues"]), 2)
-        self.assertEqual(output["issues"][0].handle, "b")
-        self.assertEqual(output["issues"][1].handle, "a")
+        self.assertEqual(len(output.issues), 2)
+        self.assertEqual(output.issues[0].handle, "b")
+        self.assertEqual(output.issues[1].handle, "a")

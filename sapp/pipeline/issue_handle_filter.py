@@ -27,7 +27,7 @@ class IssueHandleFilter(PipelineStep[DictEntries, DictEntries]):
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[DictEntries, Summary]:
-        input["issues"] = [
-            issue for issue in input["issues"] if self._should_keep_issue(issue)
+        input.issues = [
+            issue for issue in input.issues if self._should_keep_issue(issue)
         ]
         return input, summary

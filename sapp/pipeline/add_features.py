@@ -31,8 +31,8 @@ class AddFeatures(PipelineStep[DictEntries, DictEntries]):
     ) -> Tuple[DictEntries, Summary]:
         if len(self.features) > 0:
             log.info("Attaching provided features")
-            input["issues"] = [
+            input.issues = [
                 issue._replace(features=list(set(issue.features) | self.features))
-                for issue in input["issues"]
+                for issue in input.issues
             ]
         return input, summary

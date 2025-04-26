@@ -25,11 +25,11 @@ class WarningCodeFilter(PipelineStep[DictEntries, DictEntries]):
         scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[DictEntries, Summary]:
         filtered_issues = []
-        for issue in input["issues"]:
+        for issue in input.issues:
             if self._should_skip_issue(issue):
                 continue
             filtered_issues.append(issue)
 
-        input["issues"] = filtered_issues
+        input.issues = filtered_issues
 
         return input, summary

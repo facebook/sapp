@@ -9,6 +9,8 @@ import logging
 import sys
 import time
 from abc import ABCMeta, abstractmethod
+
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import (
@@ -31,9 +33,9 @@ from ..metrics_logger import MetricsLogger, NoOpMetricsLogger, ScopedMetricsLogg
 from ..models import Run, SourceLocation, TraceKind
 
 if sys.version_info >= (3, 8):
-    from typing import Literal, TypedDict
+    from typing import Literal
 else:
-    from typing_extensions import Literal, TypedDict
+    from typing_extensions import Literal
 
 
 # pyre-fixme[5]: Global expression must be annotated.
@@ -285,35 +287,39 @@ class ParseIssueTuple(NamedTuple):
 DictKey = Union[str, Tuple[str, str]]  # handle or (caller, caller_port)
 
 
-class DictEntries(TypedDict):
+@dataclass
+class DictEntries:
     preconditions: Dict[DictKey, List[ParseConditionTuple]]
     postconditions: Dict[DictKey, List[ParseConditionTuple]]
     issues: List[ParseIssueTuple]
 
 
-class Summary(TypedDict, total=False):
-    affected_file_sets: List[Optional[List[str]]]
-    affected_issues_only: bool
-    big_tito: Set[Tuple[str, str, int]]
-    branch: Optional[str]
-    codes: Optional[List[int]]
-    commit_hash: Optional[str]
-    input_metadata: Metadata
-    job_id: Optional[str]
-    logger_tier: Optional[str]
-    meta_run_child_label: Optional[str]
-    meta_run_identifier: Optional[str]
-    missing_traces: Dict[TraceKind, Set[Tuple[str, str]]]
-    old_linemap_file: Optional[str]
-    previous_issue_handles: Optional[Path]
-    project: Optional[str]
-    repo_dir: str
-    repository: Optional[str]
-    runs: List[Run]
-    runs_attributes: List[object]  # List[List[RunAttribute]]
-    run_kind: Optional[str]
-    store_unused_models: bool
-    trace_entries: Dict[TraceKind, Dict[DictKey, List[ParseConditionTuple]]]
+@dataclass
+class Summary:
+    affected_file_sets: Optional[List[Optional[List[str]]]] = None
+    affected_issues_only: Optional[bool] = None
+    big_tito: Optional[Set[Tuple[str, str, int]]] = None
+    branch: Optional[str] = None
+    codes: Optional[List[int]] = None
+    commit_hash: Optional[str] = None
+    input_metadata: Optional[Metadata] = None
+    job_id: Optional[str] = None
+    logger_tier: Optional[str] = None
+    meta_run_child_label: Optional[str] = None
+    meta_run_identifier: Optional[str] = None
+    missing_traces: Optional[Dict[TraceKind, Set[Tuple[str, str]]]] = None
+    old_linemap_file: Optional[str] = None
+    previous_issue_handles: Optional[Path] = None
+    project: Optional[str] = None
+    repo_dir: Optional[str] = None
+    repository: Optional[str] = None
+    runs: Optional[List[Run]] = None
+    runs_attributes: Optional[List[List[object]]] = None  # List[List[RunAttribute]]
+    run_kind: Optional[str] = None
+    store_unused_models: Optional[bool] = None
+    trace_entries: Optional[
+        Dict[TraceKind, Dict[DictKey, List[ParseConditionTuple]]]
+    ] = None
 
 
 def time_str(delta_in_seconds: float) -> str:
@@ -356,7 +362,7 @@ class Pipeline:
         metrics_logger: Optional[MetricsLogger] = None,
     ) -> Tuple[Any, Summary]:
         if summary is None:
-            summary = cast(Summary, {})
+            summary = Summary()
         if metrics_logger is None:
             metrics_logger = NoOpMetricsLogger()
         next_input = first_input

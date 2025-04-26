@@ -7,7 +7,7 @@
 
 from unittest import TestCase
 
-from .. import ParseIssueTuple, Pipeline
+from .. import DictEntries, ParseIssueTuple, Pipeline
 from ..issue_callable_filter import IssueCallableFilter
 
 
@@ -39,11 +39,13 @@ class TestIssueCallableFilter(TestCase):
         return issue
 
     def test_filter_callables(self) -> None:
-        dict_entries = {
-            "issues": list(map(self.make_fake_issue, ["alpaca", "b", "llama", "a"]))
-        }
+        dict_entries = DictEntries(
+            issues=list(map(self.make_fake_issue, ["alpaca", "b", "llama", "a"])),
+            preconditions={},
+            postconditions={},
+        )
         output, _ = Pipeline([self.issue_callable_filter]).run(dict_entries)
 
-        self.assertEqual(len(output["issues"]), 2)
-        self.assertEqual(output["issues"][0].callable, "b")
-        self.assertEqual(output["issues"][1].callable, "a")
+        self.assertEqual(len(output.issues), 2)
+        self.assertEqual(output.issues[0].callable, "b")
+        self.assertEqual(output.issues[1].callable, "a")

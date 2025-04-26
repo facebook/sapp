@@ -202,11 +202,11 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         scoped_metrics_logger.add_data("parsed_issues", str(parsed_issues))
         scoped_metrics_logger.add_data("parsed_frames", str(parsed_frames))
 
-        return {
-            "issues": issues,
-            "preconditions": conditions[ParseType.PRECONDITION],
-            "postconditions": conditions[ParseType.POSTCONDITION],
-        }
+        return DictEntries(
+            issues=issues,
+            preconditions=conditions[ParseType.PRECONDITION],
+            postconditions=conditions[ParseType.POSTCONDITION],
+        )
 
     def _is_existing_issue(
         self,
@@ -244,8 +244,8 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         return (
             self.analysis_output_to_dict_entries(
                 input,
-                summary.get("previous_issue_handles"),
-                summary.get("old_linemap_file"),
+                summary.previous_issue_handles,
+                summary.old_linemap_file,
                 scoped_metrics_logger,
             ),
             summary,

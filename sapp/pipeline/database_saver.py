@@ -14,6 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import cast, Generic, List, Optional, Tuple, Type, TypeVar
 
+from pyre_extensions import none_throws
+
 from ..bulk_saver import BulkSaver
 from ..db import DB
 from ..db_support import DBID, dbid_resolution_context
@@ -71,7 +73,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
     ) -> Tuple[List[RunSummary], Summary]:
         self.summary = summary
         run_summaries = []
-        for graph, run in zip(input, self.summary["runs"], strict=True):
+        for graph, run in zip(input, none_throws(self.summary.runs), strict=True):
             bulk_saver = BulkSaver(
                 self.primary_key_generator,
                 extra_saving_classes=self.extra_saving_classes,
@@ -89,12 +91,12 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         """
         log.info("Preparing bulk save.")
         graph.update_bulk_saver(bulk_saver)
-        for trace_kind, unused in self.summary["trace_entries"].items():
+        for trace_kind, unused in none_throws(self.summary.trace_entries).items():
             log.info(
                 "Dropped %d unused %s, %d are missing",
                 sum(len(v) for v in unused.values()),
                 trace_kind,
-                len(self.summary["missing_traces"][trace_kind]),
+                len(none_throws(self.summary.missing_traces)[trace_kind]),
             )
 
     def _save(
@@ -135,13 +137,13 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
                 pk_gen = self.primary_key_generator.reserve(session, [Run])
                 run.id.resolve(id=pk_gen.get(Run), is_new=True)
                 session.add(run)
-                meta_run_identifier = self.summary.get("meta_run_identifier")
+                meta_run_identifier = self.summary.meta_run_identifier
                 if meta_run_identifier is not None:
                     session.add(
                         MetaRunToRunAssoc(
                             meta_run_id=cast(DBID, meta_run_identifier),
                             run_id=run.id,
-                            run_label=self.summary.get("meta_run_child_label", None),
+                            run_label=self.summary.meta_run_child_label,
                         )
                     )
                 session.commit()
@@ -180,10 +182,10 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         # pyre-fixme[16]: `RunSummary` has no attribute `num_invisible_issues`.
         run_summary.num_invisible_issues = 0
         run_summary.num_missing_preconditions = len(
-            self.summary["missing_traces"][TraceKind.precondition]
+            none_throws(self.summary.missing_traces)[TraceKind.precondition]
         )
         run_summary.num_missing_postconditions = len(
-            self.summary["missing_traces"][TraceKind.postcondition]
+            none_throws(self.summary.missing_traces)[TraceKind.postcondition]
         )
 
         return run_summary

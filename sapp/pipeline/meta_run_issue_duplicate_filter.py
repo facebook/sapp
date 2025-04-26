@@ -94,22 +94,22 @@ class MetaRunIssueDuplicateFilter(PipelineStep[DictEntries, DictEntries]):
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[DictEntries, Summary]:
-        number_initial_issues = len(input["issues"])
+        number_initial_issues = len(input.issues)
         LOG.info(
             "Filtering out issues that already exist in meta run %d",
             self.meta_run_identifier,
         )
 
         with self.database.make_session() as session:
-            input["issues"] = [
+            input.issues = [
                 issue
-                for issue in input["issues"]
+                for issue in input.issues
                 if self._should_keep_issue(session, issue)
             ]
 
         LOG.info(
             "Removed %d issues existing in meta run %d (out of %d issues)",
-            number_initial_issues - len(input["issues"]),
+            number_initial_issues - len(input.issues),
             self.meta_run_identifier,
             number_initial_issues,
         )

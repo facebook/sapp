@@ -170,21 +170,19 @@ def analyze(
     add_feature: Optional[List[str]],
 ) -> None:
     # Store all options in the right places
-    summary_blob: Summary = {
-        "run_kind": run_kind,
-        "repository": ctx.repository,
-        "branch": branch,
-        "commit_hash": commit_hash,
-        "old_linemap_file": linemap,
-        "store_unused_models": store_unused_models,
-    }
-
     if job_id is None and differential_id is not None:
         job_id = "user_input_" + str(differential_id)
-    summary_blob["job_id"] = job_id
 
-    if previous_issue_handles:
-        summary_blob["previous_issue_handles"] = previous_issue_handles
+    summary_blob = Summary(
+        run_kind=run_kind,
+        repository=ctx.repository,
+        branch=branch,
+        commit_hash=commit_hash,
+        old_linemap_file=linemap,
+        store_unused_models=store_unused_models,
+        job_id=job_id,
+        previous_issue_handles=previous_issue_handles,
+    )
 
     # Construct pipeline
     if os.path.isdir(input_file):

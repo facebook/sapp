@@ -57,12 +57,12 @@ class TestSappCli(TestCase):
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def verify_base_summary_blob(self, input_files, summary_blob) -> None:
-        self.assertEqual(summary_blob["run_kind"], "master")
-        self.assertTrue(tempfile.gettempdir() in summary_blob["repository"])
-        self.assertEqual(summary_blob["branch"], "master")
-        self.assertEqual(summary_blob["commit_hash"], "abc123")
-        self.assertTrue(tempfile.gettempdir() in summary_blob["old_linemap_file"])
-        self.assertEqual(summary_blob["store_unused_models"], True)
+        self.assertEqual(summary_blob.run_kind, "master")
+        self.assertTrue(tempfile.gettempdir() in summary_blob.repository)
+        self.assertEqual(summary_blob.branch, "master")
+        self.assertEqual(summary_blob.commit_hash, "abc123")
+        self.assertTrue(tempfile.gettempdir() in summary_blob.old_linemap_file)
+        self.assertEqual(summary_blob.store_unused_models, True)
 
     # pyre-fixme[2]: Parameter must be annotated.
     def test_base_summary_blob(self, mock_analysis_output) -> None:
@@ -89,17 +89,17 @@ class TestSappCli(TestCase):
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def verify_option_job_id(self, input_files, summary_blob) -> None:
-        self.assertEqual(summary_blob["job_id"], "job-id-1")
+        self.assertEqual(summary_blob.job_id, "job-id-1")
 
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def verify_option_job_id_none(self, input_files, summary_blob) -> None:
-        self.assertIsNone(summary_blob["job_id"])
+        self.assertIsNone(summary_blob.job_id)
 
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def verify_option_differential_id(self, input_files, summary_blob) -> None:
-        self.assertEqual(summary_blob["job_id"], "user_input_1234567")
+        self.assertEqual(summary_blob.job_id, "user_input_1234567")
 
     # pyre-fixme[2]: Parameter must be annotated.
     def test_option_job_id(self, mock_analysis_output) -> None:
@@ -132,7 +132,7 @@ class TestSappCli(TestCase):
         # pyre-fixme[2]: Parameter must be annotated.
         summary_blob,
     ) -> None:
-        self.assertEqual(summary_blob["previous_issue_handles"], expected_path)
+        self.assertEqual(summary_blob.previous_issue_handles, expected_path)
 
     # pyre-fixme[2]: Parameter must be annotated.
     def test_previous_input(self, mock_analysis_output) -> None:

@@ -9,7 +9,9 @@ import datetime
 import json
 import logging
 from collections import defaultdict
-from typing import Any, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+
+from pyre_extensions import none_throws
 
 from ..metrics_logger import ScopedMetricsLogger
 from ..models import (
@@ -111,31 +113,33 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
     ) -> Tuple[TraceGraph, Summary]:
         self.summary = summary
 
-        self.summary["trace_entries"] = defaultdict(
-            lambda: cast(Dict[DictKey, List[ParseConditionTuple]], defaultdict(list))
-        )  # : Dict[TraceKind, Dict[Tuple[str, str], List[ParseCondition]]]
-        self.summary["missing_traces"] = defaultdict(
+        trace_entries = {
+            TraceKind.precondition: input.preconditions,
+            TraceKind.postcondition: input.postconditions,
+        }
+        self.summary.trace_entries = trace_entries
+        self.summary.missing_traces = defaultdict(
             set
         )  # Dict[TraceKind, Set[Tuple[str, str]]]
-        self.summary["big_tito"] = set()  # Set[Tuple[str, str, int]]
+        self.summary.big_tito = set()  # Set[Tuple[str, str, int]]
 
         self.graph = TraceGraph()
-        self.summary["runs"] = self._create_empty_runs(status=RunStatus.INCOMPLETE)
 
-        self.summary["trace_entries"][TraceKind.precondition] = input["preconditions"]
-        self.summary["trace_entries"][TraceKind.postcondition] = input["postconditions"]
-        callables = self._compute_callables_count(input["issues"])
+        runs = self._create_empty_runs(status=RunStatus.INCOMPLETE)
+        self.summary.runs = runs
+
+        callables = self._compute_callables_count(input.issues)
 
         log.info("Generating issues and traces")
-        for entry in input["issues"]:
-            for run in self.summary["runs"]:
+        for entry in input.issues:
+            for run in runs:
                 self._generate_issue(run, entry, callables)
 
-        if self.summary.get("store_unused_models"):
-            for trace_kind, traces in self.summary["trace_entries"].items():
+        if self.summary.store_unused_models:
+            for trace_kind, traces in trace_entries.items():
                 for entries in traces.values():
                     for entry in entries:
-                        for run in self.summary["runs"]:
+                        for run in runs:
                             self._generate_trace_frame(trace_kind, run, entry)
 
         return self.graph, self.summary
@@ -161,15 +165,15 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         """setting boilerplate when creating a Run object"""
         run = Run(
             id=DBID(),
-            job_id=self.summary["job_id"],
+            job_id=self.summary.job_id,
             issue_instances=[],
             date=datetime.datetime.now(),
             status=status,
             status_description=status_description,
-            repository=self.summary["repository"],
-            branch=self.summary["branch"],
-            commit_hash=self.summary["commit_hash"],
-            kind=self.summary["run_kind"],
+            repository=self.summary.repository,
+            branch=self.summary.branch,
+            commit_hash=self.summary.commit_hash,
+            kind=self.summary.run_kind,
             purge_status=PurgeStatus.UNPURGED,
         )
         return [run]
@@ -327,9 +331,10 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         titos = list(entry.titos)
         if len(titos) > 200:
             pre_key: Tuple[str, str, int] = (filename, callable, len(titos))
-            if pre_key not in self.summary["big_tito"]:
+            big_tito = none_throws(self.summary.big_tito)
+            if pre_key not in big_tito:
                 log.info("Big Tito: %s", str(pre_key))
-                self.summary["big_tito"].add(pre_key)
+                big_tito.add(pre_key)
             titos = titos[:200]
         return titos
 
@@ -434,10 +439,10 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         key = (self.graph.get_text(caller_id), caller_port)
         new = [
             self._generate_trace_frame(kind, run, e)
-            for e in self.summary["trace_entries"][kind].get(key, [])
+            for e in none_throws(self.summary.trace_entries)[kind].get(key, [])
         ]
         if len(new) == 0 and not self.graph.is_leaf_port(key[1]):
-            self.summary["missing_traces"][kind].add(key)
+            none_throws(self.summary.missing_traces)[kind].add(key)
         return new
 
     def _generate_trace_frame(
