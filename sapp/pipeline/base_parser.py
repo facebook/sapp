@@ -201,6 +201,7 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
 
         scoped_metrics_logger.add_data("parsed_issues", str(parsed_issues))
         scoped_metrics_logger.add_data("parsed_frames", str(parsed_frames))
+        scoped_metrics_logger.add_data("new_issues", str(len(issues)))
 
         return DictEntries(
             issues=issues,
