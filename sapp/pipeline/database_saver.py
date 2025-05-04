@@ -12,7 +12,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import cast, ClassVar, Generic, List, Optional, Tuple, Type, TypeVar
+from typing import cast, Generic, List, Optional, Tuple, Type, TypeVar
 
 from pyre_extensions import none_throws
 
@@ -43,8 +43,6 @@ TRun = TypeVar("TRun", bound=Run)
 
 
 class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
-    BULK_SAVER_CLASS: ClassVar[Type[BulkSaver]] = BulkSaver
-
     def __init__(
         self,
         database: DB,
@@ -76,7 +74,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         self.summary = summary
         run_summaries = []
         for graph, run in zip(input, none_throws(self.summary.runs), strict=True):
-            bulk_saver = self.BULK_SAVER_CLASS(
+            bulk_saver = BulkSaver(
                 self.primary_key_generator,
                 extra_saving_classes=self.extra_saving_classes,
             )
