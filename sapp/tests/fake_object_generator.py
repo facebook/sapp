@@ -101,6 +101,7 @@ class FakeObjectGenerator:
         type_interval_lower: int = 5,
         type_interval_upper: int = 7,
         run_id: Optional[int] = None,
+        titos: Optional[List[SourceLocation]] = None,
     ) -> TraceFrame:
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -122,7 +123,7 @@ class FakeObjectGenerator:
             callee_port=callee_port,
             callee_location=SourceLocation(location[0], location[1], location[2]),
             filename_id=filename_record.id,
-            titos=[],
+            titos=titos or [],
             run_id=run_id or self.run_id,
             type_interval_lower=type_interval_lower,
             type_interval_upper=type_interval_upper,
@@ -152,6 +153,7 @@ class FakeObjectGenerator:
         type_interval_lower: int = 5,
         type_interval_upper: int = 7,
         run_id: Optional[int] = None,
+        titos: Optional[List[SourceLocation]] = None,
     ) -> TraceFrame:
         leaves = leaves or []
         filename_record = self.filename(filename)
@@ -173,7 +175,7 @@ class FakeObjectGenerator:
             callee_port=callee_port,
             callee_location=SourceLocation(location[0], location[1], location[2]),
             filename_id=filename_record.id,
-            titos=[],
+            titos=titos or [],
             run_id=run_id or self.run_id,
             type_interval_lower=type_interval_lower,
             type_interval_upper=type_interval_upper,
