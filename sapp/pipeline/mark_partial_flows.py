@@ -199,16 +199,18 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
             issue_instance_frames = list(
                 graph.get_issue_instance_trace_frames(instance)
             )
-            added_breadcrumb = False
+            added_breadcrumb_to_instance = False
             for frame in issue_instance_frames:
-                added_breadcrumb = (
-                    added_breadcrumb
-                    or self._dfs_mark_partial_flows_for_frame_memoized(
+                added_breadcrumb_to_frame = (
+                    self._dfs_mark_partial_flows_for_frame_memoized(
                         graph, frame, feature_to_add, context, visited
                     )
                 )
+                added_breadcrumb_to_instance = (
+                    added_breadcrumb_to_instance or added_breadcrumb_to_frame
+                )
 
-            if added_breadcrumb:
+            if added_breadcrumb_to_instance:
                 graph.add_issue_instance_shared_text_assoc_id(
                     instance, feature_to_add.id.local_id
                 )
