@@ -31,6 +31,8 @@ from ..analysis_output import Metadata
 from ..metrics_logger import MetricsLogger, NoOpMetricsLogger, ScopedMetricsLogger
 from ..models import Run, SourceLocation, TraceKind
 
+from ..operating_system import get_rss_in_gb
+
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
@@ -375,6 +377,7 @@ class Pipeline:
                 next_input, summary = step.run(
                     next_input, summary, scoped_metrics_logger
                 )
+                scoped_metrics_logger.add_data("rss_in_gb", f"{get_rss_in_gb():.3}")
                 timing.append((step_name, time.perf_counter() - start_perf_counter))
         log.info(
             "Step timing: %s",
