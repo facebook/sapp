@@ -330,11 +330,21 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         graph: TraceGraph,
         issues: dict[int, list[IssueInstance]],
     ) -> FullFlowContext:
-        visited = set()
         # The full flow context is a mapping from partial issue code -> frames to mark. Each issue
         # will mark frames for the corresponding set of frames to mark.
+        visited_map = defaultdict(
+            set
+        )  # can cache visited for same partial issue code,prefix, transform
+
         context: FullFlowContext = defaultdict(set)
         for partial_flow in self.partial_flows_to_mark:
+            visited = visited_map[
+                (
+                    partial_flow.partial_issue_code,
+                    partial_flow.is_prefix_flow,
+                    partial_flow.full_issue_transform,
+                )
+            ]
             for issue in issues[partial_flow.full_issue_code]:
                 self._build_candidates_to_transform_from_larger_issue(
                     graph,
