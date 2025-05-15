@@ -210,7 +210,7 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
         log.info("Propagating extra features from previous steps towards issues")
 
         marker_feature = graph.get_or_add_shared_text(
-            SharedTextKind.FEATURE, "sapp-upward-propagated-breadcrumbs"
+            SharedTextKind.feature, "sapp-upward-propagated-breadcrumbs"
         )
         for frame_id, features in graph.get_extra_features_to_propagate_up().items():
             frame = graph.get_trace_frame_from_id(frame_id)

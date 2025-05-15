@@ -48,7 +48,7 @@ def latest_run_id(
 ) -> DBID:
     return (
         session.query(func.max(Run.id))
-        .filter(Run.status == RunStatus.FINISHED)
+        .filter(Run.status == RunStatus.finished)
         .scalar()
     )
 

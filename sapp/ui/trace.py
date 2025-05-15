@@ -160,9 +160,9 @@ class LeafLookup:
         self, sources: Dict[int, str], sinks: Dict[int, str], features: Dict[int, str]
     ) -> None:
         self._lookup: Dict[SharedTextKind, Dict[int, str]] = {
-            SharedTextKind.SOURCE: sources,
-            SharedTextKind.SINK: sinks,
-            SharedTextKind.FEATURE: features,
+            SharedTextKind.source: sources,
+            SharedTextKind.sink: sinks,
+            SharedTextKind.feature: features,
         }
 
     @staticmethod
@@ -172,27 +172,27 @@ class LeafLookup:
                 int(id): contents
                 for id, contents in session.query(
                     SharedText.id, SharedText.contents
-                ).filter(SharedText.kind == SharedTextKind.SOURCE)
+                ).filter(SharedText.kind == SharedTextKind.source)
             },
             {
                 int(id): contents
                 for id, contents in session.query(
                     SharedText.id, SharedText.contents
-                ).filter(SharedText.kind == SharedTextKind.SINK)
+                ).filter(SharedText.kind == SharedTextKind.sink)
             },
             {
                 int(id): contents
                 for id, contents in session.query(
                     SharedText.id, SharedText.contents
-                ).filter(SharedText.kind == SharedTextKind.FEATURE)
+                ).filter(SharedText.kind == SharedTextKind.feature)
             },
         )
 
     def resolve(self, ids: Sequence[int], kind: SharedTextKind) -> Set[str]:
         if kind not in [
-            SharedTextKind.SOURCE,
-            SharedTextKind.SINK,
-            SharedTextKind.FEATURE,
+            SharedTextKind.source,
+            SharedTextKind.sink,
+            SharedTextKind.feature,
         ]:
             raise ValueError(f"Cannot resolve ids of kind `{kind}`")
 
@@ -265,14 +265,14 @@ def navigate_trace_frames(
     visited_ids: Set[int] = {int(initial_trace_frames[index].id)}
     while not trace_frames[-1][0].is_leaf():
         trace_frame, branches = trace_frames[-1]
-        if trace_frame.kind == TraceKind.POSTCONDITION:
+        if trace_frame.kind == TraceKind.postcondition:
             leaf_kind = sources
-        elif trace_frame.kind == TraceKind.PRECONDITION:
+        elif trace_frame.kind == TraceKind.precondition:
             leaf_kind = sinks
         else:
             assert (
-                trace_frame.kind == TraceKind.POSTCONDITION
-                or trace_frame.kind == TraceKind.PRECONDITION
+                trace_frame.kind == TraceKind.postcondition
+                or trace_frame.kind == TraceKind.precondition
             )
         next_nodes = next_frames(
             session,
@@ -433,10 +433,10 @@ def get_leaves_trace_frame(
 
 
 def trace_kind_to_shared_text_kind(trace_kind: Optional[TraceKind]) -> SharedTextKind:
-    if trace_kind == TraceKind.POSTCONDITION:
-        return SharedTextKind.SOURCE
-    if trace_kind == TraceKind.PRECONDITION:
-        return SharedTextKind.SINK
+    if trace_kind == TraceKind.postcondition:
+        return SharedTextKind.source
+    if trace_kind == TraceKind.precondition:
+        return SharedTextKind.sink
 
     raise AssertionError(f"{trace_kind} is invalid")
 

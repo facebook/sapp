@@ -124,7 +124,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         self.graph = TraceGraph()
 
-        runs = self._create_empty_runs(status=RunStatus.INCOMPLETE)
+        runs = self._create_empty_runs(status=RunStatus.incomplete)
         self.summary.runs = runs
 
         callables = self._compute_callables_count(input.issues)
@@ -173,7 +173,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             branch=self.summary.branch,
             commit_hash=self.summary.commit_hash,
             kind=self.summary.run_kind,
-            purge_status=PurgeStatus.UNPURGED,
+            purge_status=PurgeStatus.unpurged,
         )
         return [run]
 
@@ -203,14 +203,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         initial_source_kinds = set()
         for p in entry.preconditions:
             tf, new_sink_ids = self._generate_issue_traces(
-                TraceKind.PRECONDITION, run, entry, p
+                TraceKind.precondition, run, entry, p
             )
             final_sink_kinds.update(new_sink_ids)
             trace_frames.append(tf)
 
         for p in entry.postconditions:
             tf, new_source_ids = self._generate_issue_traces(
-                TraceKind.POSTCONDITION, run, entry, p
+                TraceKind.postcondition, run, entry, p
             )
             initial_source_kinds.update(new_source_ids)
             trace_frames.append(tf)
@@ -218,17 +218,17 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         callable = entry.callable
 
         source_details = {
-            self._get_shared_text(SharedTextKind.SOURCE_DETAIL, name)
+            self._get_shared_text(SharedTextKind.source_detail, name)
             for (name, _kind, _depth) in entry.initial_sources
             if name
         }
         sink_details = {
-            self._get_shared_text(SharedTextKind.SINK_DETAIL, name)
+            self._get_shared_text(SharedTextKind.sink_detail, name)
             for (name, _kind, _depth) in entry.final_sinks
             if name
         }
 
-        callable_record = self._get_shared_text(SharedTextKind.CALLABLE, callable)
+        callable_record = self._get_shared_text(SharedTextKind.callable, callable)
 
         # create id ahead so we can link the issue below. Note, issues are only saved if
         # first seen, i.e., their handle hasn't been seen before. So we can always set
@@ -241,7 +241,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             code=entry.code,
             handle=entry.handle,
             callable_id=callable_record.id,
-            status=IssueStatus.UNCATEGORIZED,
+            status=IssueStatus.uncategorized,
             detected_time=int(run.date.timestamp()),
             first_instance_id=instance_id,
             update_time=0,
@@ -259,8 +259,8 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             )
             fix_info_id = fix_info.id
 
-        message = self._get_shared_text(SharedTextKind.MESSAGE, entry.message)
-        filename_record = self._get_shared_text(SharedTextKind.FILENAME, entry.filename)
+        message = self._get_shared_text(SharedTextKind.message, entry.message)
+        filename_record = self._get_shared_text(SharedTextKind.filename, entry.filename)
 
         # pyre-fixme [9] Incompatible variable type: issue is declared to have type `Issue` but is used as type `munch.Munch`
         instance: IssueInstance = IssueInstance.Record(
@@ -299,7 +299,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             self.graph.add_issue_instance_trace_frame_assoc(instance, trace_frame)
 
         for feature in entry.features:
-            feature = self._get_shared_text(SharedTextKind.FEATURE, feature)
+            feature = self._get_shared_text(SharedTextKind.feature, feature)
             self.graph.add_issue_instance_shared_text_assoc(instance, feature)
 
         self.graph.add_issue_instance(instance)
@@ -481,14 +481,14 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         features: List[ParseTraceFeature],
     ) -> TraceFrame:
         leaf_kind = (
-            SharedTextKind.SOURCE
-            if kind is TraceKind.POSTCONDITION
-            else SharedTextKind.SINK
+            SharedTextKind.source
+            if kind is TraceKind.postcondition
+            else SharedTextKind.sink
         )
         lb, ub, preserves_type_context = self._get_interval(type_interval)
-        caller_record = self._get_shared_text(SharedTextKind.CALLABLE, caller)
-        callee_record = self._get_shared_text(SharedTextKind.CALLABLE, callee)
-        filename_record = self._get_shared_text(SharedTextKind.FILENAME, filename)
+        caller_record = self._get_shared_text(SharedTextKind.callable, caller)
+        callee_record = self._get_shared_text(SharedTextKind.callable, callee)
+        filename_record = self._get_shared_text(SharedTextKind.filename, filename)
 
         leaf_records = []
         leaf_mapping_ids: Set[LeafMapping] = set()
@@ -525,7 +525,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             type_interval_lower=lb,
             type_interval_upper=ub,
             leaf_mapping=leaf_mapping_ids,
-            reachability=FrameReachability.UNREACHABLE,
+            reachability=FrameReachability.unreachable,
         )
 
         for leaf_record, depth in leaf_records:
@@ -539,7 +539,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         # using "bulk_saver.add_trace_frame_leaf_assoc()" to drop into this table
         # as documented in models.py "class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin)"
         for f in features:
-            feature_record = self._get_shared_text(SharedTextKind.FEATURE, f.name)
+            feature_record = self._get_shared_text(SharedTextKind.feature, f.name)
             self.graph.add_trace_frame_leaf_assoc(trace_frame, feature_record, 0)
 
             if f.locations:
@@ -601,9 +601,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             leaf_kind = annotation.leaf_kind
             kind = annotation.kind
             (trace_leaf_kind, trace_kind) = (
-                (SharedTextKind.SINK, TraceKind.PRECONDITION)
+                (SharedTextKind.sink, TraceKind.precondition)
                 if kind == "tito_transform" or kind == "sink"
-                else (SharedTextKind.SOURCE, TraceKind.POSTCONDITION)
+                else (SharedTextKind.source, TraceKind.postcondition)
             )
             annotation_record = TraceFrameAnnotation.Record(
                 id=DBID(),

@@ -49,7 +49,6 @@ from .db_support import (
     PrimaryKeyGeneratorBase,
     RecordMixin,
 )
-from .decorators import classproperty
 from .source_location import SourceLocation
 
 log: logging.Logger = logging.getLogger("sapp")
@@ -209,38 +208,6 @@ class SharedTextKind(enum.Enum):
     source_detail = enum.auto()
     sink_detail = enum.auto()
 
-    @classproperty
-    def FEATURE(cls) -> "SharedTextKind":  # noqa
-        return cls.feature
-
-    @classproperty
-    def MESSAGE(cls) -> "SharedTextKind":  # noqa
-        return cls.message
-
-    @classproperty
-    def SOURCE(cls) -> "SharedTextKind":  # noqa
-        return cls.source
-
-    @classproperty
-    def SINK(cls) -> "SharedTextKind":  # noqa
-        return cls.sink
-
-    @classproperty
-    def CALLABLE(cls) -> "SharedTextKind":  # noqa
-        return cls.callable
-
-    @classproperty
-    def FILENAME(cls) -> "SharedTextKind":  # noqa
-        return cls.filename
-
-    @classproperty
-    def SOURCE_DETAIL(cls) -> "SharedTextKind":  # noqa
-        return cls.source_detail
-
-    @classproperty
-    def SINK_DETAIL(cls) -> "SharedTextKind":  # noqa
-        return cls.sink_detail
-
     @classmethod
     def from_string(cls, string: str) -> Optional[SharedTextKind]:
         return cls.__members__.get(string)
@@ -383,14 +350,6 @@ class TraceKind(enum.Enum):
     precondition = enum.auto()
     postcondition = enum.auto()
 
-    @classproperty
-    def PRECONDITION(cls) -> "TraceKind":  # noqa
-        return cls.precondition
-
-    @classproperty
-    def POSTCONDITION(cls) -> "TraceKind":  # noqa
-        return cls.postcondition
-
     @classmethod
     def create_from_string(cls, value: str) -> TraceKind:
         if value == "precondition":
@@ -414,21 +373,6 @@ class PurgeStatusForInstance(enum.Enum):
     archive = enum.auto()
     # The instance's dependencies have been marked for archiving
     marked = enum.auto()
-
-    @classproperty
-    def NONE(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.none
-
-    @classproperty
-    def ARCHIVE(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.archive
-
-    @classproperty
-    def MARKED(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.marked
 
 
 class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
@@ -610,26 +554,6 @@ class IssueStatus(enum.Enum):
     but still want to see issues of this kind."""
     do_not_care = enum.auto()
 
-    @classproperty
-    def UNCATEGORIZED(cls) -> "IssueStatus":  # noqa
-        return cls.uncategorized
-
-    @classproperty
-    def BAD_PRACTICE(cls) -> "IssueStatus":  # noqa
-        return cls.bad_practice
-
-    @classproperty
-    def FALSE_POSITIVE(cls) -> "IssueStatus":  # noqa
-        return cls.false_positive
-
-    @classproperty
-    def VALID_BUG(cls) -> "IssueStatus":  # noqa
-        return cls.valid_bug
-
-    @classproperty
-    def DO_NOT_CARE(cls) -> "IssueStatus":  # noqa
-        return cls.do_not_care
-
 
 class Severity(enum.Enum):
     """Severity is Null by default, but set when status is triaged to Valid."""
@@ -792,22 +716,6 @@ class RunStatus(enum.Enum):
     skipped = enum.auto()
     failed = enum.auto()
 
-    @classproperty
-    def FINISHED(cls) -> "RunStatus":  # noqa
-        return cls.finished
-
-    @classproperty
-    def INCOMPLETE(cls) -> "RunStatus":  # noqa
-        return cls.incomplete
-
-    @classproperty
-    def SKIPPED(cls) -> "RunStatus":  # noqa
-        return cls.skipped
-
-    @classproperty
-    def FAILED(cls) -> "RunStatus":  # noqa
-        return cls.failed
-
 
 class PurgeStatus(enum.Enum):
     "Purge status of a run"
@@ -828,26 +736,6 @@ class PurgeStatus(enum.Enum):
     # Runs with archive are never purged
     archive = enum.auto()
 
-    @classproperty
-    def UNPURGED(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.unpurged
-
-    @classproperty
-    def READY_TO_PURGE(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.ready_to_purge
-
-    @classproperty
-    def PURGED(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.purged
-
-    @classproperty
-    def ARCHIVE(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.archive
-
 
 class FrameReachability(enum.Enum):
     "Internal reachability status of a trace frame"
@@ -858,16 +746,6 @@ class FrameReachability(enum.Enum):
     # also means that new enums should be added AT THE END of the list.
     unreachable = enum.auto()
     reachable = enum.auto()
-
-    @classproperty
-    def UNREACHABLE(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.unreachable
-
-    @classproperty
-    def REACHABLE(cls) -> str:  # noqa
-        # pyre-ignore[7]: Coerce to string for SQLAlchemy
-        return cls.reachable
 
 
 CURRENT_DB_VERSION = 1
@@ -1474,14 +1352,6 @@ class WarningCodeCategory(enum.Enum):
     # also means that new enums should be added AT THE END of the list.
     bug = enum.auto()
     code_smell = enum.auto()
-
-    @classproperty
-    def BUG(cls) -> "WarningCodeCategory":  # noqa
-        return cls.bug
-
-    @classproperty
-    def CODE_SMELL(cls) -> "WarningCodeCategory":  # noqa
-        return cls.code_smell
 
 
 class WarningCodeProperties(Base):

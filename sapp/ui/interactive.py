@@ -143,8 +143,8 @@ json CALLABLE        show the original json output for the matching callable
     ) -> None:
         self.db = database
         self.scope_vars: ScopeVariables = {
-            "precondition": TraceKind.PRECONDITION,
-            "postcondition": TraceKind.POSTCONDITION,
+            "precondition": TraceKind.precondition,
+            "postcondition": TraceKind.postcondition,
             "help": self.help,
             "state": self.state,
             "runs": self.runs,
@@ -245,7 +245,7 @@ json CALLABLE        show the original json output for the matching callable
         pager = self._resolve_pager(use_pager)
 
         with self.db.make_session() as session:
-            runs = session.query(Run).filter(Run.status == RunStatus.FINISHED)
+            runs = session.query(Run).filter(Run.status == RunStatus.finished)
 
             run_strings = [
                 "\n".join([f"Run {run.id}", f"Date: {run.date}", "-" * 80])
@@ -261,7 +261,7 @@ json CALLABLE        show the original json output for the matching callable
         with self.db.make_session() as session:
             selected_run = (
                 session.query(Run)
-                .filter(Run.status == RunStatus.FINISHED)
+                .filter(Run.status == RunStatus.finished)
                 .filter(Run.id == run_id)
                 .scalar()
             )
@@ -355,7 +355,7 @@ json CALLABLE        show the original json output for the matching callable
             selected_run_id = (
                 session.query(func.max(Run.id))
                 .filter(Run.kind == run_kind)
-                .filter(Run.status == RunStatus.FINISHED)
+                .filter(Run.status == RunStatus.finished)
                 .scalar()
             )
 
@@ -390,15 +390,15 @@ json CALLABLE        show the original json output for the matching callable
                 return
 
             self.sources = self._get_leaves_issue_instance(
-                session, issue_instance_id, SharedTextKind.SOURCE
+                session, issue_instance_id, SharedTextKind.source
             )
 
             self.sinks = self._get_leaves_issue_instance(
-                session, issue_instance_id, SharedTextKind.SINK
+                session, issue_instance_id, SharedTextKind.sink
             )
 
             self.features = self._get_leaves_issue_instance(
-                session, issue_instance_id, SharedTextKind.FEATURE
+                session, issue_instance_id, SharedTextKind.feature
             )
 
         self.current_issue_instance_id = selected_issue.id
@@ -690,7 +690,7 @@ json CALLABLE        show the original json output for the matching callable
                 )
 
             if kind is not None:
-                if kind not in {TraceKind.PRECONDITION, TraceKind.POSTCONDITION}:
+                if kind not in {TraceKind.precondition, TraceKind.postcondition}:
                     raise UserError(
                         "Try 'frames kind=postcondition'"
                         " or 'frames kind=precondition'."
@@ -727,15 +727,15 @@ json CALLABLE        show the original json output for the matching callable
                 )
                 return
 
-            if selected_frame.kind == TraceKind.POSTCONDITION:
+            if selected_frame.kind == TraceKind.postcondition:
                 self.sinks = set()
                 self.sources = trace.get_leaves_trace_frame(
-                    session, int(selected_frame.id), SharedTextKind.SOURCE
+                    session, int(selected_frame.id), SharedTextKind.source
                 )
 
             else:
                 self.sinks = trace.get_leaves_trace_frame(
-                    session, int(selected_frame.id), SharedTextKind.SINK
+                    session, int(selected_frame.id), SharedTextKind.sink
                 )
 
                 self.sources = set()
@@ -824,14 +824,14 @@ json CALLABLE        show the original json output for the matching callable
             ]
 
         with self.db.make_session() as session:
-            if current_trace_tuple.trace_frame.kind == TraceKind.POSTCONDITION:
+            if current_trace_tuple.trace_frame.kind == TraceKind.postcondition:
                 leaf_kind = self.sources
-            elif current_trace_tuple.trace_frame.kind == TraceKind.PRECONDITION:
+            elif current_trace_tuple.trace_frame.kind == TraceKind.precondition:
                 leaf_kind = self.sinks
             else:
                 assert (
-                    current_trace_tuple.trace_frame.kind == TraceKind.POSTCONDITION
-                    or current_trace_tuple.trace_frame.kind == TraceKind.PRECONDITION
+                    current_trace_tuple.trace_frame.kind == TraceKind.postcondition
+                    or current_trace_tuple.trace_frame.kind == TraceKind.precondition
                 )
 
             parent_trace_frames = trace.next_frames(
@@ -861,12 +861,12 @@ json CALLABLE        show the original json output for the matching callable
             postcondition_initial_frames = trace.initial_frames(
                 session,
                 issue.issue_instance_id,
-                TraceKind.POSTCONDITION,
+                TraceKind.postcondition,
             )
             precondition_initial_frames = trace.initial_frames(
                 session,
                 issue.issue_instance_id,
-                TraceKind.PRECONDITION,
+                TraceKind.precondition,
             )
 
             postcondition_navigation = trace.navigate_trace_frames(
@@ -939,7 +939,7 @@ json CALLABLE        show the original json output for the matching callable
 
         self.trace_tuples = self._create_trace_tuples(navigation)
 
-        if trace_frame.kind == TraceKind.POSTCONDITION:
+        if trace_frame.kind == TraceKind.postcondition:
             self.trace_tuples = self.trace_tuples[::-1] + placeholder_tuple
             self.current_trace_frame_index = len(self.trace_tuples) - 1
             return
@@ -986,7 +986,7 @@ json CALLABLE        show the original json output for the matching callable
         current_trace_tuple = self.trace_tuples[self.current_trace_frame_index]
         filter_leaves = (
             self.sources
-            if current_trace_tuple.trace_frame.kind == TraceKind.POSTCONDITION
+            if current_trace_tuple.trace_frame.kind == TraceKind.postcondition
             else self.sinks
         )
 
@@ -1130,7 +1130,7 @@ json CALLABLE        show the original json output for the matching callable
         self._verify_entrypoint_selected()
         if limit is not None and not isinstance(limit, int):
             raise UserError("'limit' should be an int or None.")
-        if kind not in {TraceKind.PRECONDITION, TraceKind.POSTCONDITION, None}:
+        if kind not in {TraceKind.precondition, TraceKind.postcondition, None}:
             raise UserError(
                 "Try 'details kind=postcondition'" " or 'details kind=precondition'."
             )
@@ -1145,13 +1145,13 @@ json CALLABLE        show the original json output for the matching callable
             self._num_issues_with_callable(current_trace_frame.callee),
         )
 
-        if kind is None or kind == TraceKind.POSTCONDITION:
+        if kind is None or kind == TraceKind.postcondition:
             print(f"\nPostconditions with caller ({callable}):")
-            self.frames(callers=callable, kind=TraceKind.POSTCONDITION, limit=limit)
+            self.frames(callers=callable, kind=TraceKind.postcondition, limit=limit)
 
-        if kind is None or kind == TraceKind.PRECONDITION:
+        if kind is None or kind == TraceKind.precondition:
             print(f"\nPreconditions with caller ({callable}):")
-            self.frames(callers=callable, kind=TraceKind.PRECONDITION, limit=limit)
+            self.frames(callers=callable, kind=TraceKind.precondition, limit=limit)
 
     def warning(self, message: str) -> None:
         print(message, file=sys.stderr)
@@ -1165,22 +1165,22 @@ json CALLABLE        show the original json output for the matching callable
 
         if self._is_root_trace_tuple(parent_trace_tuple):
             kind = (
-                TraceKind.POSTCONDITION
+                TraceKind.postcondition
                 if self._is_before_root()
-                else TraceKind.PRECONDITION
+                else TraceKind.precondition
             )
             return trace.initial_frames(session, self.current_issue_instance_id, kind)
 
         parent_trace_frame = self.trace_tuples[parent_index].trace_frame
 
-        if parent_trace_frame.kind == TraceKind.POSTCONDITION:
+        if parent_trace_frame.kind == TraceKind.postcondition:
             leaf_kind = self.sources
-        elif parent_trace_frame.kind == TraceKind.PRECONDITION:
+        elif parent_trace_frame.kind == TraceKind.precondition:
             leaf_kind = self.sinks
         else:
             assert (
-                parent_trace_frame.kind == TraceKind.POSTCONDITION
-                or parent_trace_frame.kind == TraceKind.PRECONDITION
+                parent_trace_frame.kind == TraceKind.postcondition
+                or parent_trace_frame.kind == TraceKind.precondition
             )
 
         return trace.next_frames(
@@ -1194,7 +1194,7 @@ json CALLABLE        show the original json output for the matching callable
 
     def _is_before_root(self) -> bool:
         trace_tuple = self.trace_tuples[self.current_trace_frame_index]
-        return trace_tuple.trace_frame.kind == TraceKind.POSTCONDITION
+        return trace_tuple.trace_frame.kind == TraceKind.postcondition
 
     def _is_root_trace_tuple(self, trace_tuple: TraceTuple) -> bool:
         return trace_tuple.trace_frame.callee_port == "root"
@@ -1442,7 +1442,7 @@ json CALLABLE        show the original json output for the matching callable
                 frame_features = [
                     text.contents
                     for text in trace_tuple.trace_frame.shared_texts
-                    if text.kind is SharedTextKind.FEATURE
+                    if text.kind is SharedTextKind.feature
                 ]
                 if frame_features:
                     prefix = " " * 11 + "--F:"
@@ -1501,7 +1501,7 @@ json CALLABLE        show the original json output for the matching callable
         self, trace_frame: TraceFrameQueryResult
     ) -> str:
         leaf_kind = trace.trace_kind_to_shared_text_kind(trace_frame.kind)
-        leaves_label = "Sources" if leaf_kind == SharedTextKind.SOURCE else "Sinks"
+        leaves_label = "Sources" if leaf_kind == SharedTextKind.source else "Sinks"
 
         with self.db.make_session() as session:
             leaves_output = f"\n{' ' * 13}".join(
@@ -1559,7 +1559,7 @@ json CALLABLE        show the original json output for the matching callable
             TraceTuple(trace_frame=parent_trace_frame),
         ]
 
-        if parent_trace_frame.kind == TraceKind.POSTCONDITION:
+        if parent_trace_frame.kind == TraceKind.postcondition:
             # If current state is: C in [A,B,C,D,E]
             # Then new state is:   [A,B] + new_tail
             new_tail = new_head[::-1]

@@ -124,9 +124,9 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         num_pre = 0
         num_post = 0
         for frame in trace_frames:
-            if frame.kind == TraceKind.PRECONDITION:
+            if frame.kind == TraceKind.precondition:
                 num_pre += 1
-            elif frame.kind == TraceKind.POSTCONDITION:
+            elif frame.kind == TraceKind.postcondition:
                 num_post += 1
         log.info(
             "Within trace frames: %d preconditions, %d postconditions",
@@ -173,7 +173,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
             # status to FINISHED.
             with self.database.make_session() as session:
                 run = session.query(self.run_model).filter_by(id=run_id).one()
-                run.status = RunStatus.FINISHED
+                run.status = RunStatus.finished
                 run.finished_time = int(datetime.now().timestamp())
                 session.add(run)
                 session.commit()

@@ -567,9 +567,9 @@ class InteractiveTest(TestCase):
 
     def testListRuns(self) -> None:
         runs = [
-            Run(id=DBID(1), date=datetime.now(), status=RunStatus.FINISHED),
-            Run(id=DBID(2), date=datetime.now(), status=RunStatus.INCOMPLETE),
-            Run(id=DBID(3), date=datetime.now(), status=RunStatus.FINISHED),
+            Run(id=DBID(1), date=datetime.now(), status=RunStatus.finished),
+            Run(id=DBID(2), date=datetime.now(), status=RunStatus.incomplete),
+            Run(id=DBID(3), date=datetime.now(), status=RunStatus.finished),
         ]
 
         with self.db.make_session() as session:
@@ -609,8 +609,8 @@ class InteractiveTest(TestCase):
 
     def testSetRunNonExistent(self) -> None:
         runs = [
-            Run(id=DBID(1), date=datetime.now(), status=RunStatus.FINISHED),
-            Run(id=DBID(2), date=datetime.now(), status=RunStatus.INCOMPLETE),
+            Run(id=DBID(1), date=datetime.now(), status=RunStatus.finished),
+            Run(id=DBID(2), date=datetime.now(), status=RunStatus.incomplete),
         ]
 
         with self.db.make_session() as session:
@@ -627,12 +627,12 @@ class InteractiveTest(TestCase):
 
     def testSetLatestRun(self) -> None:
         runs = [
-            Run(id=DBID(1), date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
-            Run(id=DBID(2), date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
-            Run(id=DBID(3), date=datetime.now(), status=RunStatus.FINISHED, kind="a"),
-            Run(id=DBID(4), date=datetime.now(), status=RunStatus.FINISHED, kind="b"),
-            Run(id=DBID(5), date=datetime.now(), status=RunStatus.FINISHED, kind="b"),
-            Run(id=DBID(6), date=datetime.now(), status=RunStatus.FINISHED, kind="c"),
+            Run(id=DBID(1), date=datetime.now(), status=RunStatus.finished, kind="a"),
+            Run(id=DBID(2), date=datetime.now(), status=RunStatus.finished, kind="a"),
+            Run(id=DBID(3), date=datetime.now(), status=RunStatus.finished, kind="a"),
+            Run(id=DBID(4), date=datetime.now(), status=RunStatus.finished, kind="b"),
+            Run(id=DBID(5), date=datetime.now(), status=RunStatus.finished, kind="b"),
+            Run(id=DBID(6), date=datetime.now(), status=RunStatus.finished, kind="c"),
         ]
 
         with self.db.make_session() as session:
@@ -736,7 +736,7 @@ class InteractiveTest(TestCase):
                 session,
                 # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
                 1,
-                SharedTextKind.SOURCE,
+                SharedTextKind.source,
             )
 
         self.assertEqual(len(sources), 2)
@@ -767,7 +767,7 @@ class InteractiveTest(TestCase):
                 session,
                 # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
                 1,
-                SharedTextKind.SINK,
+                SharedTextKind.sink,
             )
 
         self.assertEqual(len(sinks), 2)
@@ -798,7 +798,7 @@ class InteractiveTest(TestCase):
                 session,
                 # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
                 1,
-                SharedTextKind.FEATURE,
+                SharedTextKind.feature,
             )
 
         self.assertEqual(len(features), 2)
@@ -876,9 +876,9 @@ class InteractiveTest(TestCase):
 
     def testOutputTraceTuples(self) -> None:
         features = [
-            SharedText(kind=SharedTextKind.FEATURE, contents="one"),
-            SharedText(kind=SharedTextKind.FEATURE, contents="two"),
-            SharedText(kind=SharedTextKind.FEATURE, contents="three"),
+            SharedText(kind=SharedTextKind.feature, contents="one"),
+            SharedText(kind=SharedTextKind.feature, contents="two"),
+            SharedText(kind=SharedTextKind.feature, contents="three"),
         ]
         trace_tuples = [
             TraceTuple(
@@ -1890,7 +1890,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
-            status=IssueStatus.UNCATEGORIZED.name,
+            status=IssueStatus.uncategorized.name,
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -1957,7 +1957,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1"],
-            status=cast(str, IssueStatus.UNCATEGORIZED),
+            status=cast(str, IssueStatus.uncategorized),
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -2022,7 +2022,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
-            status=cast(str, IssueStatus.UNCATEGORIZED),
+            status=cast(str, IssueStatus.uncategorized),
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -2071,7 +2071,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
             #  `List[str]`.
             sink_kinds=["sink1", "sink2"],
-            status=cast(str, IssueStatus.UNCATEGORIZED),
+            status=cast(str, IssueStatus.uncategorized),
             detected_time=datetime.today(),
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
@@ -2257,7 +2257,7 @@ else:
         # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.
         self.interactive._current_run_id = 1
         self._clear_stdout()
-        self.interactive.frames(kind=TraceKind.POSTCONDITION)
+        self.interactive.frames(kind=TraceKind.postcondition)
         self.assertEqual(
             self.stdout.getvalue().split("\n"),
             [
@@ -2275,7 +2275,7 @@ else:
         )
 
         self._clear_stdout()
-        self.interactive.frames(kind=TraceKind.PRECONDITION)
+        self.interactive.frames(kind=TraceKind.precondition)
         self.assertEqual(self.stdout.getvalue().strip(), "No trace frames found.")
 
     def testListTracesFilterCallersCallees(self) -> None:
@@ -2410,10 +2410,10 @@ else:
         self.interactive.trace_tuples = [
             # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
             #  `TraceFrame`.
-            TraceTuple(trace_frame=TraceFrame(kind=TraceKind.POSTCONDITION)),
+            TraceTuple(trace_frame=TraceFrame(kind=TraceKind.postcondition)),
             # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
             #  `TraceFrame`.
-            TraceTuple(trace_frame=TraceFrame(kind=TraceKind.PRECONDITION)),
+            TraceTuple(trace_frame=TraceFrame(kind=TraceKind.precondition)),
         ]
 
         self.interactive.current_trace_frame_index = 0
@@ -2511,7 +2511,7 @@ else:
             callee_port="callee_port",
             filename="file.py",
             callee_location=SourceLocation(1, 1, 1),
-            kind=TraceKind.POSTCONDITION,
+            kind=TraceKind.postcondition,
         )
         self.interactive._update_trace_tuples_new_parent(trace_frame)
         self.assertEqual(self.interactive.current_trace_frame_index, 3)
@@ -2543,7 +2543,7 @@ else:
             callee_port="callee_port",
             filename="file.py",
             callee_location=SourceLocation(1, 1, 1),
-            kind=TraceKind.PRECONDITION,
+            kind=TraceKind.precondition,
         )
         self.interactive._update_trace_tuples_new_parent(trace_frame)
         self.assertEqual(self.interactive.current_trace_frame_index, 0)

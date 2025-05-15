@@ -83,7 +83,7 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
                 # actual distance visited, so that
                 # work is not wasted propagating such decreases.
                 kind = self.graph.get_shared_text_by_local_id(shared_text).kind
-                if kind is SharedTextKind.FEATURE:
+                if kind is SharedTextKind.feature:
                     trace_length_to_use = 0
                 visited_frame[sink_kind].shared_text_trace_lengths[shared_text] = (
                     trace_length_to_use
@@ -97,15 +97,15 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
         features = {
             text.id.local_id
             for text in graph.get_issue_instance_shared_texts(
-                instance.id.local_id, SharedTextKind.FEATURE
+                instance.id.local_id, SharedTextKind.feature
             )
         }
         initial_frames = graph.get_issue_instance_trace_frames(instance)
         initial_source_frames = [
-            frame for frame in initial_frames if frame.kind == TraceKind.POSTCONDITION
+            frame for frame in initial_frames if frame.kind == TraceKind.postcondition
         ]
         initial_sink_frames = [
-            frame for frame in initial_frames if frame.kind == TraceKind.PRECONDITION
+            frame for frame in initial_frames if frame.kind == TraceKind.precondition
         ]
         source_kind_list = [
             graph.get_caller_leaf_kinds_of_frame(frame)
@@ -221,7 +221,7 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
                     ).kind
                     if (
                         self.propagate_sources
-                        and shared_text_kind == SharedTextKind.SOURCE
+                        and shared_text_kind == SharedTextKind.source
                     ):
                         graph.add_trace_frame_leaf_by_local_id_assoc(
                             trace_frame, shared_text, trace_length
@@ -230,7 +230,7 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
                     if (
                         self.propagate_features
                         and is_anchor_port
-                        and shared_text_kind == SharedTextKind.FEATURE
+                        and shared_text_kind == SharedTextKind.feature
                     ):
                         graph.add_trace_frame_leaf_by_local_id_assoc(
                             trace_frame, shared_text, depth=None

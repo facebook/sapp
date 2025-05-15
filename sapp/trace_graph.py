@@ -459,7 +459,7 @@ class TraceGraph:
             for leaf_id, depth in leaf_ids.items():
                 leaf_text = self._shared_texts[leaf_id]
                 if (
-                    leaf_text.kind is SharedTextKind.FEATURE
+                    leaf_text.kind is SharedTextKind.feature
                     or leaf_id in valid_frame_leaf_ids
                     or self._is_opposite_leaf(frame, leaf_text)
                 ):
@@ -472,9 +472,9 @@ class TraceGraph:
         """We may be propagating sources along sink traces or vice versa. These should
         not be filtered and are identified here."""
         return (
-            frame.kind == TraceKind.PRECONDITION and leaf.kind == SharedTextKind.SOURCE
+            frame.kind == TraceKind.precondition and leaf.kind == SharedTextKind.source
         ) or (
-            frame.kind == TraceKind.POSTCONDITION and leaf.kind == SharedTextKind.SINK
+            frame.kind == TraceKind.postcondition and leaf.kind == SharedTextKind.sink
         )
 
     def _compute_valid_frame_leaves(self, frame: TraceFrame) -> Set[int]:
@@ -571,8 +571,8 @@ class TraceGraph:
 
     def get_transform_normalized_caller_kind_id(self, leaf_kind: SharedText) -> int:
         assert (
-            leaf_kind.kind == SharedTextKind.SINK
-            or leaf_kind.kind == SharedTextKind.SOURCE
+            leaf_kind.kind == SharedTextKind.sink
+            or leaf_kind.kind == SharedTextKind.source
         )
         if (
             "->" in leaf_kind.contents
@@ -598,8 +598,8 @@ class TraceGraph:
 
     def get_transformed_callee_kind_id(self, leaf_kind: SharedText) -> int:
         assert (
-            leaf_kind.kind == SharedTextKind.SINK
-            or leaf_kind.kind == SharedTextKind.SOURCE
+            leaf_kind.kind == SharedTextKind.sink
+            or leaf_kind.kind == SharedTextKind.source
         )
         if (
             "->" in leaf_kind.contents
@@ -633,7 +633,7 @@ class TraceGraph:
         reachable issue instances
         """
         shared_text_to_add = self.get_or_add_shared_text(
-            SharedTextKind.FEATURE,
+            SharedTextKind.feature,
             feature,
         )
         self.add_trace_frame_leaf_by_local_id_assoc(

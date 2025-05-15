@@ -163,7 +163,7 @@ class Instance:
                 FeatureText.id == IssueInstanceSharedTextAssoc.shared_text_id,
                 isouter=True,
             )
-            .filter(FeatureText.kind == SharedTextKind.FEATURE)
+            .filter(FeatureText.kind == SharedTextKind.feature)
             .group_by(IssueInstance)
             .subquery()
         )
@@ -182,7 +182,7 @@ class Instance:
                 SourceNameText,
                 SourceNameText.id == IssueInstanceSharedTextAssoc.shared_text_id,
             )
-            .filter(SourceNameText.kind == SharedTextKind.SOURCE_DETAIL)
+            .filter(SourceNameText.kind == SharedTextKind.source_detail)
             .group_by(IssueInstance)
             .subquery()
         )
@@ -201,7 +201,7 @@ class Instance:
                 SourceKindText,
                 SourceKindText.id == IssueInstanceSharedTextAssoc.shared_text_id,
             )
-            .filter(SourceKindText.kind == SharedTextKind.SOURCE)
+            .filter(SourceKindText.kind == SharedTextKind.source)
             .group_by(IssueInstance)
             .subquery()
         )
@@ -220,7 +220,7 @@ class Instance:
                 SinkNameText,
                 SinkNameText.id == IssueInstanceSharedTextAssoc.shared_text_id,
             )
-            .filter(SinkNameText.kind == SharedTextKind.SINK_DETAIL)
+            .filter(SinkNameText.kind == SharedTextKind.sink_detail)
             .group_by(IssueInstance)
             .subquery()
         )
@@ -239,7 +239,7 @@ class Instance:
                 SinkKindText,
                 SinkKindText.id == IssueInstanceSharedTextAssoc.shared_text_id,
             )
-            .filter(SinkKindText.kind == SharedTextKind.SINK)
+            .filter(SinkKindText.kind == SharedTextKind.sink)
             .group_by(IssueInstance)
             .subquery()
         )
@@ -533,23 +533,23 @@ class Instance:
 
 
 def sources(session: Session, issue_id: DBID) -> Set[str]:
-    return _get_leaves(session, issue_id, SharedTextKind.SOURCE)
+    return _get_leaves(session, issue_id, SharedTextKind.source)
 
 
 def source_names(session: Session, issue_id: DBID) -> Set[str]:
-    return _get_leaves(session, issue_id, SharedTextKind.SOURCE_DETAIL)
+    return _get_leaves(session, issue_id, SharedTextKind.source_detail)
 
 
 def sinks(session: Session, issue_id: DBID) -> Set[str]:
-    return _get_leaves(session, issue_id, SharedTextKind.SINK)
+    return _get_leaves(session, issue_id, SharedTextKind.sink)
 
 
 def sink_names(session: Session, issue_id: DBID) -> Set[str]:
-    return _get_leaves(session, issue_id, SharedTextKind.SINK_DETAIL)
+    return _get_leaves(session, issue_id, SharedTextKind.sink_detail)
 
 
 def features(session: Session, issue_id: DBID) -> Set[str]:
-    return _get_leaves(session, issue_id, SharedTextKind.FEATURE)
+    return _get_leaves(session, issue_id, SharedTextKind.feature)
 
 
 def _get_leaves(
@@ -578,11 +578,11 @@ def _get_leaves(
 
 def update_status(session: Session, id: str, status: str) -> None:
     status_enums = {
-        "bad_practice": IssueStatus.BAD_PRACTICE,
-        "false_positive": IssueStatus.FALSE_POSITIVE,
-        "valid_bug": IssueStatus.VALID_BUG,
-        "do_not_care": IssueStatus.DO_NOT_CARE,
-        "uncategorized": IssueStatus.UNCATEGORIZED,
+        "bad_practice": IssueStatus.bad_practice,
+        "false_positive": IssueStatus.false_positive,
+        "valid_bug": IssueStatus.valid_bug,
+        "do_not_care": IssueStatus.do_not_care,
+        "uncategorized": IssueStatus.uncategorized,
     }
     session.query(Issue).filter(Issue.id == id).update({"status": status_enums[status]})
     session.commit()

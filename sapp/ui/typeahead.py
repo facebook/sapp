@@ -43,7 +43,7 @@ class SourceName(graphene.ObjectType):
 def all_source_names(session: Session) -> List[SourceName]:
     return (
         session.query(IssueInstance, SharedText.contents.label("source_name"))
-        .join(SharedText, SharedText.kind == SharedTextKind.SOURCE_DETAIL)
+        .join(SharedText, SharedText.kind == SharedTextKind.source_detail)
         .group_by(SharedText)
         .all()
     )
@@ -56,7 +56,7 @@ class SourceKind(graphene.ObjectType):
 def all_source_kinds(session: Session) -> List[SourceName]:
     return (
         session.query(IssueInstance, SharedText.contents.label("source_kind"))
-        .join(SharedText, SharedText.kind == SharedTextKind.SOURCE)
+        .join(SharedText, SharedText.kind == SharedTextKind.source)
         .group_by(SharedText)
         .all()
     )
@@ -69,7 +69,7 @@ class SinkName(graphene.ObjectType):
 def all_sink_names(session: Session) -> List[SourceName]:
     return (
         session.query(IssueInstance, SharedText.contents.label("sink_name"))
-        .join(SharedText, SharedText.kind == SharedTextKind.SINK_DETAIL)
+        .join(SharedText, SharedText.kind == SharedTextKind.sink_detail)
         .group_by(SharedText)
         .all()
     )
@@ -82,7 +82,7 @@ class SinkKind(graphene.ObjectType):
 def all_sink_kinds(session: Session) -> List[SourceName]:
     return (
         session.query(IssueInstance, SharedText.contents.label("sink_kind"))
-        .join(SharedText, SharedText.kind == SharedTextKind.SINK)
+        .join(SharedText, SharedText.kind == SharedTextKind.sink)
         .group_by(SharedText)
         .all()
     )
@@ -116,6 +116,6 @@ class Feature(graphene.ObjectType):
 def all_features(session: Session) -> List[Feature]:
     return (
         session.query(SharedText, SharedText.contents.label("feature"))
-        .filter(SharedText.kind == SharedTextKind.FEATURE)
+        .filter(SharedText.kind == SharedTextKind.feature)
         .all()
     )

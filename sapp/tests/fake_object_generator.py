@@ -96,7 +96,7 @@ class FakeObjectGenerator:
         filename: str = "lib/server/posts/request.py",
         location: Tuple[int, ...] = (4, 5, 6),
         leaves: Optional[List[Tuple[SharedText, object]]] = None,
-        reachability: FrameReachability = FrameReachability.UNREACHABLE,
+        reachability: FrameReachability = FrameReachability.unreachable,
         preserves_type_context: bool = False,
         type_interval_lower: int = 5,
         type_interval_upper: int = 7,
@@ -116,7 +116,7 @@ class FakeObjectGenerator:
                 or leaf.kind == SharedTextKind.sink
             },
             id=DBID(),
-            kind=TraceKind.PRECONDITION,
+            kind=TraceKind.precondition,
             caller_id=caller_record.id,
             caller_port=caller_port,
             callee_id=callee_record.id,
@@ -168,7 +168,7 @@ class FakeObjectGenerator:
                 or leaf.kind == SharedTextKind.sink
             },
             id=DBID(),
-            kind=TraceKind.POSTCONDITION,
+            kind=TraceKind.postcondition,
             caller_id=caller_record.id,
             caller_port=caller_port,
             callee_id=callee_record.id,
@@ -180,7 +180,7 @@ class FakeObjectGenerator:
             type_interval_lower=type_interval_lower,
             type_interval_upper=type_interval_upper,
             preserves_type_context=preserves_type_context,
-            reachability=FrameReachability.UNREACHABLE,
+            reachability=FrameReachability.unreachable,
         )
         if self.graph:
             self.graph.add_trace_frame(trace_frame)
@@ -224,7 +224,7 @@ class FakeObjectGenerator:
         )
 
     def metarun(
-        self, status: RunStatus = RunStatus.FINISHED, kind: str = "test_metarun"
+        self, status: RunStatus = RunStatus.finished, kind: str = "test_metarun"
     ) -> MetaRun:
         self.metarun_id += 1
         # Not added to bulksaver or graph
@@ -236,28 +236,28 @@ class FakeObjectGenerator:
         )
 
     def feature(self, name: str = "via:feature") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.FEATURE)
+        return self.shared_text(contents=name, kind=SharedTextKind.feature)
 
     def source(self, name: str = "source") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.SOURCE)
+        return self.shared_text(contents=name, kind=SharedTextKind.source)
 
     def source_detail(self, name: str = "source_detail") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.SOURCE_DETAIL)
+        return self.shared_text(contents=name, kind=SharedTextKind.source_detail)
 
     def sink(self, name: str = "sink") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.SINK)
+        return self.shared_text(contents=name, kind=SharedTextKind.sink)
 
     def sink_detail(self, name: str = "sink_detail") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.SINK_DETAIL)
+        return self.shared_text(contents=name, kind=SharedTextKind.sink_detail)
 
     def filename(self, name: str = "/r/some/filename.py") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.FILENAME)
+        return self.shared_text(contents=name, kind=SharedTextKind.filename)
 
     def callable(self, name: str = "Foo.barMethod") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.CALLABLE)
+        return self.shared_text(contents=name, kind=SharedTextKind.callable)
 
     def message(self, name: str = "this is bad") -> SharedText:
-        return self.shared_text(contents=name, kind=SharedTextKind.MESSAGE)
+        return self.shared_text(contents=name, kind=SharedTextKind.message)
 
     def instance(
         self,

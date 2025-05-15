@@ -115,12 +115,12 @@ class SARIF:
         postcondition_initial_frames = trace.initial_frames(
             session,
             issue.issue_instance_id,
-            TraceKind.POSTCONDITION,
+            TraceKind.postcondition,
         )
         precondition_initial_frames = trace.initial_frames(
             session,
             issue.issue_instance_id,
-            TraceKind.PRECONDITION,
+            TraceKind.precondition,
         )
         postcondition_navigation = trace.navigate_trace_frames(
             session,
@@ -171,7 +171,7 @@ class SARIF:
             frame_features = [
                 text.contents
                 for text in trace_frame.shared_texts
-                if text.kind is SharedTextKind.FEATURE
+                if text.kind is SharedTextKind.feature
             ]
             if frame_features:
                 features_str = f"features: {frame_features}"

@@ -293,9 +293,9 @@ class Query(graphene.ObjectType):
         session = info.context.get("session")
 
         trace_kind = TraceKind.create_from_string(kind)
-        if trace_kind == TraceKind.POSTCONDITION:
+        if trace_kind == TraceKind.postcondition:
             leaf_kind = issues.sources(session, DBID(issue_instance_id))
-        elif trace_kind == TraceKind.PRECONDITION:
+        elif trace_kind == TraceKind.precondition:
             leaf_kind = issues.sinks(session, DBID(issue_instance_id))
 
         trace_frame = session.query(TraceFrame).get(frame_id)

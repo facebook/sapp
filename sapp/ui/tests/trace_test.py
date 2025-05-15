@@ -48,11 +48,11 @@ class QueryTest(TestCase):
 
     def testLeafLookup(self) -> None:
         shared_texts = [
-            SharedText(id=DBID(1), contents="source1", kind=SharedTextKind.SOURCE),
-            SharedText(id=DBID(2), contents="source2", kind=SharedTextKind.SOURCE),
-            SharedText(id=DBID(3), contents="source3", kind=SharedTextKind.SOURCE),
-            SharedText(id=DBID(4), contents="sink4", kind=SharedTextKind.SINK),
-            SharedText(id=DBID(5), contents="sink5", kind=SharedTextKind.SINK),
+            SharedText(id=DBID(1), contents="source1", kind=SharedTextKind.source),
+            SharedText(id=DBID(2), contents="source2", kind=SharedTextKind.source),
+            SharedText(id=DBID(3), contents="source3", kind=SharedTextKind.source),
+            SharedText(id=DBID(4), contents="sink4", kind=SharedTextKind.sink),
+            SharedText(id=DBID(5), contents="sink5", kind=SharedTextKind.sink),
         ]
         with self.db.make_session() as session:
             for shared_text in shared_texts:
@@ -62,15 +62,15 @@ class QueryTest(TestCase):
             leaf_lookup = LeafLookup.create(session)
 
             self.assertEqual(
-                leaf_lookup.resolve([1, 2], SharedTextKind.SOURCE),
+                leaf_lookup.resolve([1, 2], SharedTextKind.source),
                 {"source1", "source2"},
             )
             self.assertEqual(
-                leaf_lookup.resolve([3], SharedTextKind.SOURCE),
+                leaf_lookup.resolve([3], SharedTextKind.source),
                 {"source3"},
             )
             self.assertEqual(
-                leaf_lookup.resolve([4, 5], SharedTextKind.SINK),
+                leaf_lookup.resolve([4, 5], SharedTextKind.sink),
                 {"sink4", "sink5"},
             )
 

@@ -28,7 +28,7 @@ def latest(session: Session) -> DBID:
     return DBID(
         (
             session.query(func.max(RunColumn.id))
-            .filter(RunColumn.status == RunStatus.FINISHED)
+            .filter(RunColumn.status == RunStatus.finished)
             .scalar()
         )
     )
@@ -51,7 +51,7 @@ def runs(session: Session) -> List[Run]:
         .group_by(IssueInstance.run_id)
         .join(IssueInstance, IssueInstance.run_id == RunColumn.id)
         .join(Issue, Issue.id == IssueInstance.issue_id)
-        .filter(Issue.status != IssueStatus.UNCATEGORIZED)
+        .filter(Issue.status != IssueStatus.uncategorized)
         .subquery()
     )
     return (

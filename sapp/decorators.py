@@ -81,9 +81,3 @@ def catch_keyboard_interrupt() -> Generator[None, None, None]:
         yield
     except KeyboardInterrupt:
         print("\nOperation aborted.", file=sys.stderr)
-
-
-# For use on enums to alias upper case value.
-class classproperty(property):
-    def __get__(self, cls: object, owner: Optional[Type[R]]) -> R:
-        return classmethod(self.fget or (lambda _: None)).__get__(None, owner)()

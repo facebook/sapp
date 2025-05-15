@@ -45,9 +45,9 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         self.feature_pattern: str = context_propagation.pattern
         self.issue_code: int = context_propagation.code
         self.frame_kind: TraceKind = (
-            TraceKind.PRECONDITION
+            TraceKind.precondition
             if context_propagation.frame_type == "precondition"
-            else TraceKind.POSTCONDITION
+            else TraceKind.postcondition
         )
         # pyre-fixme[8]: Expected `Dict[FrameID, TaintKindToState]` for param 1
         self.visited: Dict[FrameID, TaintKindToState] = defaultdict(
@@ -96,7 +96,7 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         features = {
             text.id.local_id
             for text in graph.get_issue_instance_shared_texts(
-                instance.id.local_id, SharedTextKind.FEATURE
+                instance.id.local_id, SharedTextKind.feature
             )
             if self._feature_matches(text.contents)
         }

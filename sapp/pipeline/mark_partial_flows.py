@@ -192,7 +192,7 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         """
 
         feature_to_add = graph.get_or_add_shared_text(
-            SharedTextKind.FEATURE, f"{feature_name}"
+            SharedTextKind.feature, f"{feature_name}"
         )
         visited = {}
         for instance in instances:
@@ -285,7 +285,7 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
         # Go through postcondition half of trace.
         initial_postcondition_frames, initial_precondition_frames = [], []
         for frame in graph.get_issue_instance_trace_frames(full_instance):
-            if frame.kind == TraceKind.POSTCONDITION:
+            if frame.kind == TraceKind.postcondition:
                 initial_postcondition_frames.append(frame)
             else:
                 initial_precondition_frames.append(frame)

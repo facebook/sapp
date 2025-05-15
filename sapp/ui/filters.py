@@ -208,7 +208,7 @@ def filter_run(
     with context.database.make_session() as session:
         run_id: Run = (
             session.query(Run)
-            .filter(Run.status == RunStatus.FINISHED)
+            .filter(Run.status == RunStatus.finished)
             .filter(Run.id == run_id_input)
             .scalar()
         )

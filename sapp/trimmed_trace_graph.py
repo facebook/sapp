@@ -123,21 +123,21 @@ class TrimmedTraceGraph(TraceGraph):
                 fwd_trace_ids = {
                     tf_id
                     for tf_id in first_hop_ids
-                    if self._trace_frames[tf_id].kind == TraceKind.POSTCONDITION
+                    if self._trace_frames[tf_id].kind == TraceKind.postcondition
                 }
                 bwd_trace_ids = {
                     tf_id
                     for tf_id in first_hop_ids
-                    if self._trace_frames[tf_id].kind == TraceKind.PRECONDITION
+                    if self._trace_frames[tf_id].kind == TraceKind.precondition
                 }
                 if len(fwd_trace_ids) == 0:
                     self._populate_issue_trace(
-                        graph, instance_id, TraceKind.POSTCONDITION
+                        graph, instance_id, TraceKind.postcondition
                     )
 
                 if len(bwd_trace_ids) == 0:
                     self._populate_issue_trace(
-                        graph, instance_id, TraceKind.PRECONDITION
+                        graph, instance_id, TraceKind.precondition
                     )
 
         self._recompute_instance_properties(graph)
@@ -265,7 +265,7 @@ class TrimmedTraceGraph(TraceGraph):
         first_hop_tf_ids = {
             tf_id
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
-            if self.get_trace_frame_from_id(tf_id).kind == TraceKind.POSTCONDITION
+            if self.get_trace_frame_from_id(tf_id).kind == TraceKind.postcondition
         }
         return self._recompute_trace_length_association(
             visited, first_hop_tf_ids, SharedTextKind.source
@@ -281,7 +281,7 @@ class TrimmedTraceGraph(TraceGraph):
         first_hop_tf_ids = {
             tf_id
             for tf_id in self._issue_instance_trace_frame_assoc[instance_id]
-            if self.get_trace_frame_from_id(tf_id).kind == TraceKind.PRECONDITION
+            if self.get_trace_frame_from_id(tf_id).kind == TraceKind.precondition
         }
         return self._recompute_trace_length_association(
             visited, first_hop_tf_ids, SharedTextKind.sink
@@ -605,12 +605,12 @@ class TrimmedTraceGraph(TraceGraph):
             self._populate_issue_and_traces(graph, instance_id)
 
     def _get_sink_kinds(self, graph: TraceGraph, instance_id: int) -> Set[int]:
-        kind: SharedTextKind = SharedTextKind.SINK
+        kind: SharedTextKind = SharedTextKind.sink
         sinks = graph.get_issue_instance_shared_texts(instance_id, kind)
         return {sink.id.local_id for sink in sinks}
 
     def _get_source_kinds(self, graph: TraceGraph, instance_id: int) -> Set[int]:
-        kind: SharedTextKind = SharedTextKind.SOURCE
+        kind: SharedTextKind = SharedTextKind.source
         sources = graph.get_issue_instance_shared_texts(instance_id, kind)
         return {source.id.local_id for source in sources}
 
