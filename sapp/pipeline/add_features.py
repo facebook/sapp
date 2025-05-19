@@ -32,7 +32,6 @@ class AddFeatures(PipelineStep[DictEntries, DictEntries]):
         if len(self.features) > 0:
             log.info("Attaching provided features")
             input.issues = [
-                issue._replace(features=list(set(issue.features) | self.features))
-                for issue in input.issues
+                issue.with_added_features(self.features) for issue in input.issues
             ]
         return input, summary

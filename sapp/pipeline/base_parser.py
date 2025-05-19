@@ -132,14 +132,11 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         entries = self.parse(input)
 
         for e in entries:
-            if isinstance(e, ParseConditionTuple):
-                typ = e.type
-                key = (e.caller, e.caller_port)
-            elif isinstance(e, ParseIssueTuple):
-                typ = ParseType.ISSUE
-                key = e.handle
-            else:
-                raise Exception("Unknown ParseType", e)
+            # Parsers may return duck types, but we need a real
+            # tools.sapp.sapp.pipeline.ParseType for identity comparisons to work.
+            typ = ParseType(e.type)
+
+            key = e.get_key()
             yield typ, key, e
 
     def analysis_output_to_dict_entries(
@@ -198,6 +195,9 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
                 parsed_frames += 1
                 e = cast(ParseConditionTuple, e)
                 conditions[typ][key].append(e.interned())
+
+            else:
+                raise Exception(f"Unhandled type: {typ}")
 
         scoped_metrics_logger.add_data("parsed_issues", str(parsed_issues))
         scoped_metrics_logger.add_data("parsed_frames", str(parsed_frames))

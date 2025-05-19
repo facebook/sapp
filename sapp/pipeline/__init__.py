@@ -200,6 +200,9 @@ class ParseConditionTuple(NamedTuple):
     titos: Iterable[SourceLocation]
     annotations: Iterable[ParseTraceAnnotation]
 
+    def get_key(self) -> "DictKey":
+        return (self.caller, self.caller_port)
+
     def interned(self) -> "ParseConditionTuple":
         "Return self, but with certain strings interned"
         return ParseConditionTuple(
@@ -260,6 +263,10 @@ class ParseIssueTuple(NamedTuple):
     features: List[str]
     callable_line: Optional[int]
     fix_info: Optional[Dict[str, Any]]
+    type: Literal[ParseType.ISSUE] = ParseType.ISSUE
+
+    def get_key(self) -> "DictKey":
+        return self.handle
 
     def interned(self) -> "ParseIssueTuple":
         return ParseIssueTuple(
@@ -283,6 +290,9 @@ class ParseIssueTuple(NamedTuple):
             features=list(map(sys.intern, self.features)),
             fix_info=self.fix_info,
         )
+
+    def with_added_features(self, features_to_add: Set[str]) -> "ParseIssueTuple":
+        return self._replace(features=list(set(self.features) | features_to_add))
 
 
 DictKey = Union[str, Tuple[str, str]]  # handle or (caller, caller_port)

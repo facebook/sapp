@@ -358,7 +358,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             caller_port=callinfo.root_port or "root",
             callee=callinfo.callee,
             callee_port=callinfo.port,
-            callee_location=callinfo.location,
+            callee_location=self._convert_to_source_location(callinfo.location),
             leaves=callinfo.leaves,
             type_interval=callinfo.type_interval,
             titos=titos,
@@ -456,7 +456,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             caller_port=entry.caller_port,
             callee=entry.callee,
             callee_port=entry.callee_port,
-            callee_location=entry.callee_location,
+            callee_location=self._convert_to_source_location(entry.callee_location),
             titos=titos,
             leaves=entry.leaves,
             type_interval=entry.type_interval,
@@ -517,9 +517,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             caller_port=caller_port,
             callee_id=callee_record.id,
             callee_port=callee_port,
-            callee_location=callee_location,
+            callee_location=self._convert_to_source_location(callee_location),
             filename_id=filename_record.id,
-            titos=titos,
+            titos=[self._convert_to_source_location(t) for t in titos],
             run_id=run.id,
             preserves_type_context=preserves_type_context,
             type_interval_lower=lb,
@@ -552,7 +552,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                         TraceFrameAnnotation.Record(
                             id=DBID(),
                             trace_frame_id=trace_frame.id,
-                            location=loc,
+                            location=self._convert_to_source_location(loc),
                             kind=None,
                             message=f.name,
                             leaf_id=None,
@@ -566,6 +566,21 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             trace_frame.id, filename, caller, annotations, run
         )
         return trace_frame
+
+    def _convert_to_source_location(
+        self, source_location: SourceLocation
+    ) -> SourceLocation:
+        if isinstance(source_location, SourceLocation):
+            return source_location
+
+        # Parsers may return duck types, so let's convert to
+        # real SourceLocations so later pipeline steps can do hash/equality
+        # checks on them like normal
+        return SourceLocation(
+            source_location.line_no,
+            source_location.begin_column,
+            source_location.end_column,
+        )
 
     def _generate_issue_feature_contents(self, feature: ParseFeature) -> Set[str]:
         # Generates a synthetic feature from the extra/feature
@@ -608,7 +623,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             annotation_record = TraceFrameAnnotation.Record(
                 id=DBID(),
                 trace_frame_id=parent_id,
-                location=location,
+                location=self._convert_to_source_location(location),
                 kind=kind,
                 message=annotation.msg,
                 leaf_id=(
