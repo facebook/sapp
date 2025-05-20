@@ -179,11 +179,13 @@ class TraceGraph:
     def get_shared_text(
         self, kind: SharedTextKind, content: str
     ) -> Optional[SharedText]:
-        if kind in self._shared_text_lookup:
-            contents = self._shared_text_lookup[kind]
-            if content in contents and contents[content] in self._shared_texts:
-                return self._shared_texts[contents[content]]
-        return None
+        contents = self._shared_text_lookup.get(kind)
+        if contents is None:
+            return None
+        shared_text_local_id = contents.get(content)
+        if shared_text_local_id is None:
+            return None
+        return self._shared_texts[shared_text_local_id]
 
     def has_trace_frames_with_caller(
         self,
