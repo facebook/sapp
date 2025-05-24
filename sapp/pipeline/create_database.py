@@ -11,21 +11,21 @@ from typing import Tuple
 from ..db import DB
 from ..metrics_logger import ScopedMetricsLogger
 from ..models import create as create_models
-from . import DictEntries, PipelineStep, Summary
+from . import IssuesAndFrames, PipelineStep, Summary
 
 log: logging.Logger = logging.getLogger("sapp")
 
 
-class CreateDatabase(PipelineStep[DictEntries, DictEntries]):
+class CreateDatabase(PipelineStep[IssuesAndFrames, IssuesAndFrames]):
     def __init__(self, database: DB) -> None:
         super().__init__()
         self.database = database
 
     def run(
         self,
-        input: DictEntries,
+        input: IssuesAndFrames,
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
-    ) -> Tuple[DictEntries, Summary]:
+    ) -> Tuple[IssuesAndFrames, Summary]:
         create_models(self.database)
         return input, summary

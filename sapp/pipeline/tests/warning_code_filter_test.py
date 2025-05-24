@@ -7,7 +7,7 @@
 
 from unittest import TestCase
 
-from .. import DictEntries, ParseIssueTuple, Pipeline
+from .. import Frames, IssuesAndFrames, ParseIssueTuple, Pipeline
 from ..warning_code_filter import WarningCodeFilter
 
 
@@ -36,10 +36,10 @@ class TestWarningCodeFilter(TestCase):
         )
 
     def test_filter_codes(self) -> None:
-        dict_entries = DictEntries(
+        dict_entries = IssuesAndFrames(
             issues=list(map(TestWarningCodeFilter.make_fake_issue, [6000, 6001, 6002])),
-            preconditions={},
-            postconditions={},
+            preconditions=Frames({}),
+            postconditions=Frames({}),
         )
         output, _ = Pipeline([self.warning_code_filter]).run(dict_entries)
 

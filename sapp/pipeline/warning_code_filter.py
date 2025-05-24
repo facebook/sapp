@@ -8,10 +8,10 @@
 from typing import Set, Tuple
 
 from ..metrics_logger import ScopedMetricsLogger
-from . import DictEntries, ParseIssueTuple, PipelineStep, Summary
+from . import IssuesAndFrames, ParseIssueTuple, PipelineStep, Summary
 
 
-class WarningCodeFilter(PipelineStep[DictEntries, DictEntries]):
+class WarningCodeFilter(PipelineStep[IssuesAndFrames, IssuesAndFrames]):
     def __init__(self, codes_to_keep: Set[int]) -> None:
         self.codes_to_keep: Set[int] = codes_to_keep
 
@@ -20,10 +20,10 @@ class WarningCodeFilter(PipelineStep[DictEntries, DictEntries]):
 
     def run(
         self,
-        input: DictEntries,
+        input: IssuesAndFrames,
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
-    ) -> Tuple[DictEntries, Summary]:
+    ) -> Tuple[IssuesAndFrames, Summary]:
         filtered_issues = []
         for issue in input.issues:
             if self._should_skip_issue(issue):

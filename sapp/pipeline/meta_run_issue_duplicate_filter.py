@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from ..db import DB
 from ..metrics_logger import ScopedMetricsLogger
 from ..models import MetaRunIssueInstanceIndex
-from . import Any, Dict, DictEntries, ParseIssueTuple, PipelineStep, Summary, Union
+from . import Any, Dict, IssuesAndFrames, ParseIssueTuple, PipelineStep, Summary, Union
 
 LOG: logging.Logger = logging.getLogger("sapp")
 
@@ -57,7 +57,7 @@ def compute_issue_instance_hash(json: ParseIssueTuple) -> str:
     return hash_generator.hexdigest()
 
 
-class MetaRunIssueDuplicateFilter(PipelineStep[DictEntries, DictEntries]):
+class MetaRunIssueDuplicateFilter(PipelineStep[IssuesAndFrames, IssuesAndFrames]):
     """
     This pipeline step automatically filters out issues that already exist in the
     database, within the given metarun. This is useful for metaruns with runs on
@@ -90,10 +90,10 @@ class MetaRunIssueDuplicateFilter(PipelineStep[DictEntries, DictEntries]):
 
     def run(
         self,
-        input: DictEntries,
+        input: IssuesAndFrames,
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
-    ) -> Tuple[DictEntries, Summary]:
+    ) -> Tuple[IssuesAndFrames, Summary]:
         number_initial_issues = len(input.issues)
         LOG.info(
             "Filtering out issues that already exist in meta run %d",

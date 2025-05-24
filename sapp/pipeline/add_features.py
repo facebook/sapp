@@ -9,12 +9,12 @@ import logging
 from typing import List, Optional, Set, Tuple
 
 from ..metrics_logger import ScopedMetricsLogger
-from . import DictEntries, PipelineStep, Summary
+from . import IssuesAndFrames, PipelineStep, Summary
 
 log: logging.Logger = logging.getLogger("sapp")
 
 
-class AddFeatures(PipelineStep[DictEntries, DictEntries]):
+class AddFeatures(PipelineStep[IssuesAndFrames, IssuesAndFrames]):
     """Optional pipeline that attaches given features to all issues.
     If the features list is empty, the input is simply passed without
     change as the output"""
@@ -25,10 +25,10 @@ class AddFeatures(PipelineStep[DictEntries, DictEntries]):
 
     def run(
         self,
-        input: DictEntries,
+        input: IssuesAndFrames,
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
-    ) -> Tuple[DictEntries, Summary]:
+    ) -> Tuple[IssuesAndFrames, Summary]:
         if len(self.features) > 0:
             log.info("Attaching provided features")
             input.issues = [

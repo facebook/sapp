@@ -34,10 +34,10 @@ from ..models import (
     TraceKind,
 )
 
-from ..pipeline import DictKey
+from ..pipeline import Frames
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
-    DictEntries,
+    IssuesAndFrames,
     meta_run_issue_duplicate_filter,
     ParseConditionTuple,
     ParseFeature,
@@ -85,7 +85,7 @@ def bound_type_interval_limit(i: Any) -> Optional[int]:
     return bound_int(i, MAX_TYPE_INTERVAL)
 
 
-class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
+class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
     def __init__(
         self,
         record_meta_run_issue_instances: bool = False,
@@ -105,13 +105,11 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             archive_issue_instances_of_new_issues
         )
         self.skip_traces: bool = skip_traces
-        self.trace_entries: Dict[
-            TraceKind, Dict[DictKey, List[ParseConditionTuple]]
-        ] = {}
+        self.trace_entries: Dict[TraceKind, Frames] = {}
 
     def run(
         self,
-        input: DictEntries,
+        input: IssuesAndFrames,
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[TraceGraph, Summary]:
@@ -119,16 +117,15 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
 
         log.info("Freeing parsed issues and frames")
         input.issues = []
-        self.trace_entries = {}
-        input.preconditions = {}
-        input.postconditions = {}
+        input.preconditions.dispose()
+        input.postconditions.dispose()
         log.info("Done freeing parsed issues and frames")
 
         return result
 
     def _run_inner(
         self,
-        input: DictEntries,
+        input: IssuesAndFrames,
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[TraceGraph, Summary]:
@@ -156,11 +153,13 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 self._generate_issue(run, entry, callables)
 
         if self.summary.store_unused_models:
-            for trace_kind, traces in self.trace_entries.items():
-                for entries in traces.values():
-                    for entry in entries:
-                        for run in runs:
-                            self._generate_trace_frame(trace_kind, run, entry)
+            for (
+                trace_kind,
+                traces,
+            ) in self.trace_entries.items():
+                for entry in traces.all_frames():
+                    for run in runs:
+                        self._generate_trace_frame(trace_kind, run, entry)
 
         return self.graph, self.summary
 
@@ -456,10 +455,13 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             return self.graph.get_trace_frames_from_caller(
                 kind, caller_id, caller_port, run.id
             )
-        key = (self.graph.get_text(caller_id), caller_port)
+        caller = self.graph.get_text(caller_id)
+        key = (caller, caller_port)
         new = [
             self._generate_trace_frame(kind, run, e)
-            for e in none_throws(self.trace_entries)[kind].get(key, [])
+            for e in none_throws(self.trace_entries)[kind].frames_from_caller(
+                caller, caller_port
+            )
         ]
         if len(new) == 0 and not self.graph.is_leaf_port(key[1]):
             none_throws(self.summary.missing_traces)[kind].add(key)

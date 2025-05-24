@@ -51,8 +51,14 @@ class TestParser(unittest.TestCase):
             else:
                 return e.callable
 
+        issues_and_frames = parser.parse_analysis_output(analysis_output)
+        entries = (
+            issues_and_frames.issues
+            + list(issues_and_frames.preconditions.all_frames())
+            + list(issues_and_frames.postconditions.all_frames())
+        )
         self.assertEqual(
-            sorted(parser.parse(analysis_output), key=sort_entry),
+            sorted(entries, key=sort_entry),
             expected,
         )
 

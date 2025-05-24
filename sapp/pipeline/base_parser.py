@@ -11,11 +11,13 @@ import json
 import logging
 import pprint
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import (
     Any,
     cast,
     Dict,
+    Generator,
     Iterable,
     List,
     NamedTuple,
@@ -28,10 +30,14 @@ from typing import (
 import xxhash
 
 from ..analysis_output import AnalysisOutput, Metadata
-from ..metrics_logger import ScopedMetricsLogger
+from ..metrics_logger import (
+    NoOpMetricsLogger,
+    NoOpScopedMetricsLogger,
+    ScopedMetricsLogger,
+)
 from . import (
-    DictEntries,
-    DictKey,
+    Frames,
+    IssuesAndFrames,
     Optional,
     ParseConditionTuple,
     ParseIssueTuple,
@@ -94,7 +100,7 @@ def log_trace_keyerror_in_generator(func):
     return wrapper
 
 
-class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
+class BaseParser(PipelineStep[AnalysisOutput, IssuesAndFrames]):
     """The parser takes a json file as input, and provides a simplified output
     for the Processor.
     """
@@ -110,42 +116,61 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
     def initialize(self, metadata: Optional[Metadata]) -> None:
         return
 
+    @dataclass
+    class ParsedFrames:
+        preconditions: Frames
+        postconditions: Frames
+
     # @abstractmethod
     def parse(
         self, input: AnalysisOutput
-    ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
-        """Must return objects with a 'type': ParseType field."""
+    ) -> Iterable[Union[ParseIssueTuple, ParseConditionTuple]]:
         raise NotImplementedError("Abstract method called!")
 
     # @abstractmethod
     def parse_handle(
         self, handle: TextIO
-    ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
-        """Must return objects with a 'type': ParseType field."""
+    ) -> Iterable[Union[ParseIssueTuple, ParseConditionTuple]]:
         raise NotImplementedError("Abstract method called!")
 
-    def _analysis_output_to_parsed_tuples(
+    def parse_issues_and_collect_frames(
         self, input: AnalysisOutput
-    ) -> Iterable[
-        Tuple[ParseType, DictKey, Union[ParseConditionTuple, ParseIssueTuple]]
-    ]:
-        entries = self.parse(input)
+    ) -> Generator[ParseIssueTuple, None, ParsedFrames]:
+        """Generator that yields issues during parsing
+        and finally returns a ParsedFrames containing collected frames
+        after parsing is complete.
 
-        for e in entries:
-            # Parsers may return duck types, but we need a real
-            # tools.sapp.sapp.pipeline.ParseType for identity comparisons to work.
-            typ = ParseType(e.type)
+        Can be overridden instead of `parse` to provide more efficent
+        `Frames` implementations
+        """
+        preconditions = defaultdict(list)
+        postconditions = defaultdict(list)
+        for e in self.parse(input):
+            if isinstance(e, ParseIssueTuple):
+                yield e
+            elif isinstance(e, ParseConditionTuple):
+                key = (e.caller, e.caller_port)
+                if e.type == ParseType.PRECONDITION:
+                    preconditions[key].append(e)
+                elif e.type == ParseType.POSTCONDITION:
+                    postconditions[key].append(e)
+                else:
+                    raise TypeError(f"Unexpected frame type: {type(e.kind)}")
+            else:
+                raise TypeError(f"Unexpected parsed entry type: {type(e)}")
 
-            key = e.get_key()
-            yield typ, key, e
+        return self.ParsedFrames(  # noqa intionally returning a value from a generator
+            preconditions=Frames(preconditions),
+            postconditions=Frames(postconditions),
+        )
 
-    def analysis_output_to_dict_entries(
+    def parse_analysis_output(
         self,
         inputfile: AnalysisOutput,
-        previous_issue_handles: Optional[Path],
-        linemapfile: Optional[str],
-        scoped_metrics_logger: ScopedMetricsLogger,
-    ) -> DictEntries:
+        previous_issue_handles: Optional[Path] = None,
+        linemapfile: Optional[str] = None,
+        scoped_metrics_logger: Optional[ScopedMetricsLogger] = None,
+    ) -> IssuesAndFrames:
         """Here we take input generators and return a dict with issues,
         preconditions, and postconditions separated. If there is only a single
         generator file, it's simple. If we also pass in a generator from a
@@ -158,11 +183,11 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         position. This is used to adjust handles to we can recognize when issues
         moved.
         """
+        if scoped_metrics_logger is None:
+            scoped_metrics_logger = NoOpScopedMetricsLogger(NoOpMetricsLogger())
 
         issues: List[ParseIssueTuple] = []
         previous_handles: Set[str] = set()
-        preconditions: Dict[DictKey, List[ParseConditionTuple]] = defaultdict(list)
-        postconditions: Dict[DictKey, List[ParseConditionTuple]] = defaultdict(list)
 
         # If we have a mapfile, create the map.
         if linemapfile:
@@ -178,44 +203,37 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
             previous_handles = BaseParser.parse_handles_file(previous_issue_handles)
 
         log.info("Parsing analysis output...")
+        parser_generator = self.parse_issues_and_collect_frames(inputfile)
         parsed_issue_count = 0
-        parsed_precondition_count = 0
-        parsed_postcondition_count = 0
-        for typ, key, e in self._analysis_output_to_parsed_tuples(inputfile):
-            if typ == ParseType.ISSUE:
+        while True:
+            try:
+                issue = next(parser_generator)
                 parsed_issue_count += 1
-                e = cast(ParseIssueTuple, e)
                 # We are only interested in issues that weren't in the previous
                 # analysis.
-                if not self._is_existing_issue(linemap, previous_handles, e, key):
-                    issues.append(e.interned())
+                if not self._is_existing_issue(linemap, previous_handles, issue):
+                    issues.append(issue.interned())
+            except StopIteration as e:
+                parsed_frames = e.value
+                break
 
-            elif typ == ParseType.PRECONDITION:
-                parsed_precondition_count += 1
-                e = cast(ParseConditionTuple, e)
-                preconditions[key].append(e.interned())
-
-            elif typ == ParseType.POSTCONDITION:
-                parsed_postcondition_count += 1
-                e = cast(ParseConditionTuple, e)
-                postconditions[key].append(e.interned())
-
-            else:
-                raise Exception(f"Unhandled type: {typ}")
+        preconditions = parsed_frames.preconditions
+        postconditions = parsed_frames.postconditions
 
         log.info(
             f"Parsed {parsed_issue_count} issues ({len(issues)} new), "
-            f"{parsed_precondition_count} preconditions with {len(preconditions)} keys, "
-            f"and {parsed_postcondition_count} postconditions with {len(postconditions)} keys"
+            f"{preconditions.frame_count()} preconditions with {preconditions.key_count()} keys, "
+            f"and {postconditions.frame_count()} postconditions with {postconditions.key_count()} keys"
         )
 
         scoped_metrics_logger.add_data("parsed_issues", str(parsed_issue_count))
         scoped_metrics_logger.add_data(
-            "parsed_frames", str(parsed_precondition_count + parsed_postcondition_count)
+            "parsed_frames",
+            str(preconditions.frame_count() + postconditions.frame_count()),
         )
         scoped_metrics_logger.add_data("new_issues", str(len(issues)))
 
-        return DictEntries(
+        return IssuesAndFrames(
             issues=issues,
             preconditions=preconditions,
             postconditions=postconditions,
@@ -226,9 +244,8 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         linemap: Dict[str, Any],
         old_handles: Set[str],
         new_issue: ParseIssueTuple,
-        new_handle: DictKey,
     ) -> bool:
-        if new_handle in old_handles:
+        if new_issue.handle in old_handles:
             return True
         if not linemap:
             return False
@@ -253,9 +270,9 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
         input: AnalysisOutput,
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
-    ) -> Tuple[DictEntries, Summary]:
+    ) -> Tuple[IssuesAndFrames, Summary]:
         return (
-            self.analysis_output_to_dict_entries(
+            self.parse_analysis_output(
                 input,
                 summary.previous_issue_handles,
                 summary.old_linemap_file,

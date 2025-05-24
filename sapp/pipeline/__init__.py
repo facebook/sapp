@@ -200,9 +200,6 @@ class ParseConditionTuple(NamedTuple):
     titos: Iterable[SourceLocation]
     annotations: Iterable[ParseTraceAnnotation]
 
-    def get_key(self) -> "DictKey":
-        return (self.caller, self.caller_port)
-
     def interned(self) -> "ParseConditionTuple":
         "Return self, but with certain strings interned"
         return ParseConditionTuple(
@@ -265,9 +262,6 @@ class ParseIssueTuple(NamedTuple):
     fix_info: Optional[Dict[str, Any]]
     type: Literal[ParseType.ISSUE] = ParseType.ISSUE
 
-    def get_key(self) -> "DictKey":
-        return self.handle
-
     def interned(self) -> "ParseIssueTuple":
         return ParseIssueTuple(
             code=self.code,
@@ -295,14 +289,51 @@ class ParseIssueTuple(NamedTuple):
         return self._replace(features=list(set(self.features) | features_to_add))
 
 
-DictKey = Union[str, Tuple[str, str]]  # handle or (caller, caller_port)
+FrameKey = Tuple[str, str]  # (caller, caller_port)
 
 
 @dataclass
-class DictEntries:
-    preconditions: Dict[DictKey, List[ParseConditionTuple]]
-    postconditions: Dict[DictKey, List[ParseConditionTuple]]
+class Frames:
+    _frames: Dict[FrameKey, List[ParseConditionTuple]]
+    _disposed: bool = False
+
+    def __init__(self, frames: Dict[FrameKey, List[ParseConditionTuple]]) -> None:
+        self._frames = frames
+
+    def frames_from_caller(
+        self, caller: str, caller_port: str
+    ) -> List[ParseConditionTuple]:
+        self._assert_not_disposed()
+        return self._frames.get((caller, caller_port), [])
+
+    def all_frames(self) -> Iterable[ParseConditionTuple]:
+        self._assert_not_disposed()
+        for frame in self._frames.values():
+            yield from frame
+
+    def key_count(self) -> int:
+        self._assert_not_disposed()
+        return len(self._frames)
+
+    def frame_count(self) -> int:
+        self._assert_not_disposed()
+        return sum(len(frames) for frames in self._frames.values())
+
+    def dispose(self) -> None:
+        self._assert_not_disposed()
+        self._disposed = True
+        self._frames = {}
+
+    def _assert_not_disposed(self) -> None:
+        if self._disposed:
+            raise Exception("dispose has already been called")
+
+
+@dataclass
+class IssuesAndFrames:
     issues: List[ParseIssueTuple]
+    preconditions: Frames
+    postconditions: Frames
 
 
 @dataclass
