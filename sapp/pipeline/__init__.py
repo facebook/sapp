@@ -328,9 +328,6 @@ class Summary:
     runs_attributes: Optional[List[List[object]]] = None  # List[List[RunAttribute]]
     run_kind: Optional[str] = None
     store_unused_models: Optional[bool] = None
-    trace_entries: Optional[
-        Dict[TraceKind, Dict[DictKey, List[ParseConditionTuple]]]
-    ] = None
 
 
 def time_str(delta_in_seconds: float) -> str:

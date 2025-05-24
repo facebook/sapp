@@ -93,12 +93,13 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         """
         log.info("Preparing bulk save.")
         graph.update_bulk_saver(bulk_saver)
-        for trace_kind, unused in none_throws(self.summary.trace_entries).items():
+        for trace_kind, missing_keys in none_throws(
+            self.summary.missing_traces
+        ).items():
             log.info(
-                "Dropped %d unused %s, %d are missing",
-                sum(len(v) for v in unused.values()),
+                "%d missing %s",
+                len(missing_keys),
                 trace_kind,
-                len(none_throws(self.summary.missing_traces)[trace_kind]),
             )
 
     def _save(

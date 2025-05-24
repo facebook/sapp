@@ -161,10 +161,8 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
 
         issues: List[ParseIssueTuple] = []
         previous_handles: Set[str] = set()
-        conditions: Dict[ParseType, Dict[DictKey, List[ParseConditionTuple]]] = {
-            ParseType.PRECONDITION: defaultdict(list),
-            ParseType.POSTCONDITION: defaultdict(list),
-        }
+        preconditions: Dict[DictKey, List[ParseConditionTuple]] = defaultdict(list)
+        postconditions: Dict[DictKey, List[ParseConditionTuple]] = defaultdict(list)
 
         # If we have a mapfile, create the map.
         if linemapfile:
@@ -180,33 +178,47 @@ class BaseParser(PipelineStep[AnalysisOutput, DictEntries]):
             previous_handles = BaseParser.parse_handles_file(previous_issue_handles)
 
         log.info("Parsing analysis output...")
-        parsed_issues = 0
-        parsed_frames = 0
+        parsed_issue_count = 0
+        parsed_precondition_count = 0
+        parsed_postcondition_count = 0
         for typ, key, e in self._analysis_output_to_parsed_tuples(inputfile):
             if typ == ParseType.ISSUE:
-                parsed_issues += 1
+                parsed_issue_count += 1
                 e = cast(ParseIssueTuple, e)
                 # We are only interested in issues that weren't in the previous
                 # analysis.
                 if not self._is_existing_issue(linemap, previous_handles, e, key):
                     issues.append(e.interned())
 
-            elif typ == ParseType.PRECONDITION or typ == ParseType.POSTCONDITION:
-                parsed_frames += 1
+            elif typ == ParseType.PRECONDITION:
+                parsed_precondition_count += 1
                 e = cast(ParseConditionTuple, e)
-                conditions[typ][key].append(e.interned())
+                preconditions[key].append(e.interned())
+
+            elif typ == ParseType.POSTCONDITION:
+                parsed_postcondition_count += 1
+                e = cast(ParseConditionTuple, e)
+                postconditions[key].append(e.interned())
 
             else:
                 raise Exception(f"Unhandled type: {typ}")
 
-        scoped_metrics_logger.add_data("parsed_issues", str(parsed_issues))
-        scoped_metrics_logger.add_data("parsed_frames", str(parsed_frames))
+        log.info(
+            f"Parsed {parsed_issue_count} issues ({len(issues)} new), "
+            f"{parsed_precondition_count} preconditions with {len(preconditions)} keys, "
+            f"and {parsed_postcondition_count} postconditions with {len(postconditions)} keys"
+        )
+
+        scoped_metrics_logger.add_data("parsed_issues", str(parsed_issue_count))
+        scoped_metrics_logger.add_data(
+            "parsed_frames", str(parsed_precondition_count + parsed_postcondition_count)
+        )
         scoped_metrics_logger.add_data("new_issues", str(len(issues)))
 
         return DictEntries(
             issues=issues,
-            preconditions=conditions[ParseType.PRECONDITION],
-            postconditions=conditions[ParseType.POSTCONDITION],
+            preconditions=preconditions,
+            postconditions=postconditions,
         )
 
     def _is_existing_issue(

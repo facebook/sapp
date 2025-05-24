@@ -33,6 +33,8 @@ from ..models import (
     TraceFrameAnnotation,
     TraceKind,
 )
+
+from ..pipeline import DictKey
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (
     DictEntries,
@@ -103,6 +105,9 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
             archive_issue_instances_of_new_issues
         )
         self.skip_traces: bool = skip_traces
+        self.trace_entries: Dict[
+            TraceKind, Dict[DictKey, List[ParseConditionTuple]]
+        ] = {}
 
     def run(
         self,
@@ -110,13 +115,29 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         summary: Summary,
         scoped_metrics_logger: ScopedMetricsLogger,
     ) -> Tuple[TraceGraph, Summary]:
+        result = self._run_inner(input, summary, scoped_metrics_logger)
+
+        log.info("Freeing parsed issues and frames")
+        input.issues = []
+        self.trace_entries = {}
+        input.preconditions = {}
+        input.postconditions = {}
+        log.info("Done freeing parsed issues and frames")
+
+        return result
+
+    def _run_inner(
+        self,
+        input: DictEntries,
+        summary: Summary,
+        scoped_metrics_logger: ScopedMetricsLogger,
+    ) -> Tuple[TraceGraph, Summary]:
         self.summary = summary
 
-        trace_entries = {
+        self.trace_entries = {
             TraceKind.precondition: input.preconditions,
             TraceKind.postcondition: input.postconditions,
         }
-        self.summary.trace_entries = trace_entries
         self.summary.missing_traces = defaultdict(
             set
         )  # Dict[TraceKind, Set[Tuple[str, str]]]
@@ -135,7 +156,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
                 self._generate_issue(run, entry, callables)
 
         if self.summary.store_unused_models:
-            for trace_kind, traces in trace_entries.items():
+            for trace_kind, traces in self.trace_entries.items():
                 for entries in traces.values():
                     for entry in entries:
                         for run in runs:
@@ -438,7 +459,7 @@ class ModelGenerator(PipelineStep[DictEntries, TraceGraph]):
         key = (self.graph.get_text(caller_id), caller_port)
         new = [
             self._generate_trace_frame(kind, run, e)
-            for e in none_throws(self.summary.trace_entries)[kind].get(key, [])
+            for e in none_throws(self.trace_entries)[kind].get(key, [])
         ]
         if len(new) == 0 and not self.graph.is_leaf_port(key[1]):
             none_throws(self.summary.missing_traces)[kind].add(key)
