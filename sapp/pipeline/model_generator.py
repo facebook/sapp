@@ -33,7 +33,6 @@ from ..models import (
     TraceFrameAnnotation,
     TraceKind,
 )
-
 from ..pipeline import Frames
 from ..trace_graph import LeafMapping, TraceGraph
 from . import (

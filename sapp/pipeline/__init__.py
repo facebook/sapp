@@ -30,7 +30,6 @@ from typing import (
 from ..analysis_output import Metadata
 from ..metrics_logger import MetricsLogger, NoOpMetricsLogger, ScopedMetricsLogger
 from ..models import Run, SourceLocation, TraceKind
-
 from ..operating_system import get_rss_in_gb
 
 if sys.version_info >= (3, 8):
