@@ -259,7 +259,6 @@ class ParseIssueTuple(NamedTuple):
     features: List[str]
     callable_line: Optional[int]
     fix_info: Optional[Dict[str, Any]]
-    type: Literal[ParseType.ISSUE] = ParseType.ISSUE
 
     def interned(self) -> "ParseIssueTuple":
         return ParseIssueTuple(
