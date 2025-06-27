@@ -151,6 +151,7 @@ class DBIDType(types.TypeDecorator):
 
 class BIGDBIDType(DBIDType):
     impl = types.BigInteger
+    cache_ok = True
 
     # pyre-fixme[3]: Return type must be annotated.
     def load_dialect_impl(self, dialect: Dialect):
