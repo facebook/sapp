@@ -126,12 +126,10 @@ class SARIF:
             session,
             postcondition_initial_frames,
             set(issue.source_kinds),
-            set(issue.sink_kinds),
         )
         precondition_navigation = trace.navigate_trace_frames(
             session,
             precondition_initial_frames,
-            set(issue.source_kinds),
             set(issue.sink_kinds),
         )
         trace_tuples = trace.create_trace_tuples(

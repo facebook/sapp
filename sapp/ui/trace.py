@@ -263,32 +263,23 @@ def initial_frames(
 def navigate_trace_frames(
     session: Session,
     initial_trace_frames: List[TraceFrameQueryResult],
-    sources: Set[str],
-    sinks: Set[str],
+    initial_leaf_kinds: Set[str],
     index: int = 0,
 ) -> List[Tuple[TraceFrameQueryResult, int]]:
     leaf_lookup = LeafLookup.create(session)
 
     if not initial_trace_frames:
         return []
-    trace_frames = [(initial_trace_frames[index], len(initial_trace_frames))]
+    trace_frames: List[Tuple[TraceFrameQueryResult, Set[str], int]] = [
+        (initial_trace_frames[index], initial_leaf_kinds, len(initial_trace_frames))
+    ]
     visited_ids: Set[int] = {int(initial_trace_frames[index].id)}
     while not trace_frames[-1][0].is_leaf():
-        trace_frame, branches = trace_frames[-1]
-        if trace_frame.kind == TraceKind.postcondition:
-            leaf_kind = sources
-        elif trace_frame.kind == TraceKind.precondition:
-            leaf_kind = sinks
-        else:
-            assert (
-                trace_frame.kind == TraceKind.postcondition
-                or trace_frame.kind == TraceKind.precondition
-            )
+        trace_frame, leaf_kinds, branches = trace_frames[-1]
         next_nodes = next_frames(
             session,
             trace_frame,
-            # pyre-fixme[61]: `leaf_kind` may not be initialized here.
-            leaf_kind,
+            leaf_kinds,
             visited_ids,
             leaf_lookup=leaf_lookup,
         )
@@ -304,25 +295,42 @@ def navigate_trace_frames(
                         caller="",
                         caller_port="",
                     ),
+                    set(),
                     0,
                 )
             )
-            return trace_frames
+            break
 
-        visited_ids.add(int(next_nodes[0].id))
-        trace_frames.append((next_nodes[0], len(next_nodes)))
-    return trace_frames
+        first_next_frame, first_leaf_kinds = next_nodes[0]
+        visited_ids.add(int(first_next_frame.id))
+        trace_frames.append((first_next_frame, first_leaf_kinds, len(next_nodes)))
+
+    return [
+        (trace_frame, branches) for trace_frame, leaf_kinds, branches in trace_frames
+    ]
+
+
+def leaf_kind_matches_caller(callee_kind: str, caller_kinds: Set[str]) -> bool:
+    callee_kind = callee_kind.replace("@", ":")
+    for caller_kind in caller_kinds:
+        if "@" in caller_kind:
+            # Compare with global transform kind only
+            caller_kind = caller_kind.split("@", 1)[1]
+        if caller_kind == callee_kind:
+            return True
+
+    return False
 
 
 def next_frames(
     session: Session,
     pre_frame: TraceFrameQueryResult,
-    leaf_kinds: Set[str],
+    pre_leaf_kinds: Set[str],
     visited_ids: Set[int],
     run_id: Optional[DBID] = None,
     leaf_lookup: Optional[LeafLookup] = None,
     backwards: bool = False,
-) -> List[TraceFrameQueryResult]:
+) -> List[Tuple[TraceFrameQueryResult, Set[str]]]:
     """Finds all trace frames that the given trace_frame flows to.
 
     When backwards=True, the result will include the parameter trace_frame,
@@ -375,16 +383,19 @@ def next_frames(
     for frame in results:
         if int(frame.id) in visited_ids:
             continue
-        if not leaf_kinds.intersection(
-            set(
-                get_leaves_trace_frame(
-                    session,
-                    int(frame.id),
-                    trace_kind_to_shared_text_kind(frame.kind),
-                    _leaf_lookup(session, leaf_lookup),
-                )
+        frame_leaf_kinds = [
+            leaf_kind
+            for leaf_kind in get_leaves_trace_frame(
+                session,
+                int(frame.id),
+                trace_kind_to_shared_text_kind(frame.kind),
+                _leaf_lookup(session, leaf_lookup),
             )
-        ):
+            if leaf_kind_matches_caller(
+                callee_kind=leaf_kind, caller_kinds=pre_leaf_kinds
+            )
+        ]
+        if len(frame_leaf_kinds) == 0:
             continue
 
         if not TraceFrame.type_intervals_match_or_ignored(
@@ -406,11 +417,11 @@ def next_frames(
             .all()
         )
 
-        filtered_results.append((frame, shared_texts))
+        filtered_results.append((frame, frame_leaf_kinds, shared_texts))
 
     return [
-        TraceFrameQueryResult.from_record(frame, shared_texts)
-        for frame, shared_texts in filtered_results
+        (TraceFrameQueryResult.from_record(frame, shared_texts), leaf_kinds)
+        for frame, leaf_kinds, shared_texts in filtered_results
     ]
 
 

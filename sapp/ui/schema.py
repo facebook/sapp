@@ -7,7 +7,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
 
@@ -289,14 +289,16 @@ class Query(graphene.ObjectType):
 
     def resolve_next_trace_frames(
         self, info: ResolveInfo, issue_instance_id: int, frame_id: int, kind: str
-    ) -> List[TraceFrameQueryResult]:
+    ) -> List[Tuple[TraceFrameQueryResult, Set[str]]]:
         session = info.context.get("session")
 
         trace_kind = TraceKind.create_from_string(kind)
-        if trace_kind == TraceKind.postcondition:
-            leaf_kind = issues.sources(session, DBID(issue_instance_id))
-        elif trace_kind == TraceKind.precondition:
-            leaf_kind = issues.sinks(session, DBID(issue_instance_id))
+
+        leaf_kinds = (
+            issues.sources(session, DBID(issue_instance_id))
+            if trace_kind == TraceKind.postcondition
+            else issues.sinks(session, DBID(issue_instance_id))
+        )
 
         trace_frame = session.query(TraceFrame).get(frame_id)
         if trace_frame is None:
@@ -305,8 +307,7 @@ class Query(graphene.ObjectType):
         return trace.next_frames(
             session,
             trace_frame,
-            # pyre-fixme[61]: `leaf_kind` may not be initialized here.
-            leaf_kind,
+            leaf_kinds,
             visited_ids=set(),
         )
 

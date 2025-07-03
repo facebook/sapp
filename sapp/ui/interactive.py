@@ -824,21 +824,16 @@ json CALLABLE        show the original json output for the matching callable
             ]
 
         with self.db.make_session() as session:
-            if current_trace_tuple.trace_frame.kind == TraceKind.postcondition:
-                leaf_kind = self.sources
-            elif current_trace_tuple.trace_frame.kind == TraceKind.precondition:
-                leaf_kind = self.sinks
-            else:
-                assert (
-                    current_trace_tuple.trace_frame.kind == TraceKind.postcondition
-                    or current_trace_tuple.trace_frame.kind == TraceKind.precondition
-                )
+            leaf_kinds = (
+                self.sources
+                if current_trace_tuple.trace_frame.kind == TraceKind.postcondition
+                else self.sinks
+            )
 
             parent_trace_frames = trace.next_frames(
                 session,
                 current_trace_tuple.trace_frame,
-                # pyre-fixme[61]: `leaf_kind` may not be initialized here.
-                leaf_kind,
+                leaf_kinds,
                 set(),
                 self._current_run_id,
                 backwards=True,
@@ -873,12 +868,10 @@ json CALLABLE        show the original json output for the matching callable
                 session,
                 postcondition_initial_frames,
                 self.sources,
-                self.sinks,
             )
             precondition_navigation = trace.navigate_trace_frames(
                 session,
                 precondition_initial_frames,
-                self.sources,
                 self.sinks,
             )
 
@@ -925,11 +918,15 @@ json CALLABLE        show the original json output for the matching callable
                 .join(FilenameText, FilenameText.id == TraceFrame.filename_id)
                 .one()
             )
+            leaf_kinds = (
+                self.sources
+                if trace_frame.kind == TraceKind.postcondition
+                else self.sinks
+            )
             navigation = trace.navigate_trace_frames(
                 session,
                 [TraceFrameQueryResult.from_record(trace_frame)],
-                self.sources,
-                self.sinks,
+                leaf_kinds,
             )
 
         first_trace_frame = navigation[0][0]
@@ -1058,11 +1055,15 @@ json CALLABLE        show the original json output for the matching callable
                     "Branch number invalid "
                     f"(expected 1-{len(branches)} but got {selected_number})."
                 )
+            leaf_kinds = (
+                self.sources
+                if len(branches) > 0 and branches[0].kind == TraceKind.postcondition
+                else self.sinks
+            )
             new_navigation = trace.navigate_trace_frames(
                 session,
                 branches,
-                self.sources,
-                self.sinks,
+                leaf_kinds,
                 selected_number - 1,
             )
 
@@ -1173,24 +1174,20 @@ json CALLABLE        show the original json output for the matching callable
 
         parent_trace_frame = self.trace_tuples[parent_index].trace_frame
 
-        if parent_trace_frame.kind == TraceKind.postcondition:
-            leaf_kind = self.sources
-        elif parent_trace_frame.kind == TraceKind.precondition:
-            leaf_kind = self.sinks
-        else:
-            assert (
-                parent_trace_frame.kind == TraceKind.postcondition
-                or parent_trace_frame.kind == TraceKind.precondition
-            )
+        leaf_kinds = (
+            self.sources
+            if parent_trace_frame.kind == TraceKind.postcondition
+            else self.sinks
+        )
 
-        return trace.next_frames(
+        frames_with_kinds = trace.next_frames(
             session,
             parent_trace_frame,
-            # pyre-fixme[61]: `leaf_kind` may not be initialized here.
-            leaf_kind,
+            leaf_kinds,
             set(),
             self._current_run_id,
         )
+        return [trace_frame for trace_frame, _ in frames_with_kinds]
 
     def _is_before_root(self) -> bool:
         trace_tuple = self.trace_tuples[self.current_trace_frame_index]
@@ -1523,14 +1520,14 @@ json CALLABLE        show the original json output for the matching callable
         )
 
     def _select_parent_trace_frame(
-        self, parent_trace_frames: List[TraceFrameQueryResult]
+        self, parent_trace_frames: List[Tuple[TraceFrameQueryResult, Set[str]]]
     ) -> TraceFrameQueryResult:
-        for i, parent in enumerate(parent_trace_frames):
+        for i, (parent, _) in enumerate(parent_trace_frames):
             print(f"[{i + 1}] {parent.caller} : {parent.caller_port}")
         parent_number = self._prompt_for_number(
             "Parent number", len(parent_trace_frames)
         )
-        return parent_trace_frames[parent_number - 1]
+        return parent_trace_frames[parent_number - 1][0]
 
     def _select_branch_trace_frame(
         self, branch_trace_frames: List[TraceFrameQueryResult], leaves_string: List[str]

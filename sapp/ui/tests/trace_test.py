@@ -91,7 +91,7 @@ class QueryTest(TestCase):
 
             next_frames = trace_module.next_frames(session, frames[0], {"sink1"}, set())
             self.assertEqual(len(next_frames), 1)
-            self.assertEqual(int(next_frames[0].id), int(frames[1].id))
+            self.assertEqual(int(next_frames[0][0].id), int(frames[1].id))
 
     def testNextTraceFramesBackwards(self) -> None:
         run = self.fakes.run()
@@ -137,7 +137,7 @@ class QueryTest(TestCase):
             )
 
             self.assertEqual(len(next_frames), 1)
-            self.assertEqual(int(next_frames[0].id), int(frames[0].id))
+            self.assertEqual(int(next_frames[0][0].id), int(frames[0].id))
 
     def testNextTraceFramesMultipleRuns(self) -> None:
         run1 = self.fakes.run()
@@ -167,4 +167,4 @@ class QueryTest(TestCase):
 
             next_frames = trace_module.next_frames(session, frames[2], {"sink1"}, set())
             self.assertEqual(len(next_frames), 1)
-            self.assertEqual(int(next_frames[0].id), int(frames[3].id))
+            self.assertEqual(int(next_frames[0][0].id), int(frames[3].id))
