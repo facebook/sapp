@@ -44,7 +44,17 @@ CalleeText: AliasedClass = aliased(SharedText)
 MessageText: AliasedClass = aliased(SharedText)
 
 
-LEAF_NAMES: Set[str] = {"source", "sink", "leaf"}
+def is_leaf_port(port: str) -> bool:
+    return (
+        port == "leaf"
+        or port == "source"
+        or port == "sink"
+        or port.startswith("anchor:")
+        or port.startswith("producer:")
+        or port.startswith("leaf:")
+        or port.startswith("source:")
+        or port.startswith("sink:")
+    )
 
 
 class TraceFrameQueryResultType(graphene.ObjectType):
@@ -70,7 +80,7 @@ class TraceFrameQueryResultType(graphene.ObjectType):
         return self.id
 
     def resolve_is_leaf(self, info: ResolveInfo) -> bool:
-        return self.callee_port in LEAF_NAMES
+        return is_leaf_port(str(self.callee_port))
 
 
 class TraceFrameQueryResult(NamedTuple):
@@ -116,7 +126,7 @@ class TraceFrameQueryResult(NamedTuple):
         )
 
     def is_leaf(self) -> bool:
-        return self.callee_port in LEAF_NAMES
+        return is_leaf_port(self.callee_port)
 
     def get_human_readable_caller(self, tool: str) -> str:
         return self._human_readable_callable(self.caller, tool)
@@ -125,7 +135,7 @@ class TraceFrameQueryResult(NamedTuple):
         return self._human_readable_callable(self.callee, tool)
 
     def _human_readable_callable(self, name: str, tool: str, depth: int = 1) -> str:
-        if name in LEAF_NAMES:
+        if is_leaf_port(name):
             return name
         if tool == "mariana-trench":
             # convert name from dalvik byte code e.g.,
