@@ -351,9 +351,7 @@ def next_frames(
         .join(CallerText, CallerText.id == TraceFrame.caller_id)
         .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
         .join(FilenameText, FilenameText.id == TraceFrame.filename_id)
-        .filter(
-            TraceFrame.caller_id != TraceFrame.callee_id
-        )  # skip recursive calls for now
+        .filter(TraceFrame.id != pre_frame.id)  # skip trivial loops
     )
     if backwards:
         query = query.filter(TraceFrame.callee_id == pre_frame.caller_id).filter(
