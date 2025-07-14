@@ -76,8 +76,7 @@ class TestParser(unittest.TestCase):
             expected=[],
         )
 
-    def testIssueV3(self) -> None:
-        # Indirect source to indirect sink.
+    def testIssueV3_indirectSourceToIndirectSink(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -318,7 +317,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Direct source + indirect source to direct sink + indirect sink.
+
+    def testIssueV3_directAndIndirectSourceToDirectAndIndirectSink(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -552,7 +552,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # direct source with multiple leaves to direct sinks with multiple leaves.
+
+    def testIssueV3_directWithMultipleLeaves(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -745,7 +746,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Indirect source with multiple callees to indirect sinks with multiple callees.
+
+    def testIssueV3_indirectWithMultipleCallees(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -947,7 +949,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Indirect source with multiple kinds to indirect sinks with multiple kinds.
+
+    def testIssueV3_indirectWithMultipleKinds(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -1122,7 +1125,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Indirect source into a return sink.
+
+    def testIssueV3_indirectSourceToReturnSink(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -1258,8 +1262,7 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-    def testSourceModelV3(self) -> None:
-        # User-declared source.
+    def testSourceModelV3_userDeclared(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -1288,7 +1291,8 @@ class TestParser(unittest.TestCase):
             """,
             expected=[],
         )
-        # Direct source.
+
+    def testSourceModelV3_direct(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -1369,7 +1373,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Direct source with multiple leaves.
+
+    def testSourceModelV3_directWithMultipleLeaves(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -1463,7 +1468,9 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Direct source with ports on leaves (e.g, cross-repo),
+
+    def testSourceModelV3_directWithPortsOnLeaves(self) -> None:
+        # (e.g, cross-repo),
         self.assertParsed(
             version=3,
             input="""
@@ -1741,7 +1748,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Indirect source.
+
+    def testSourceModelV3_indirect(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -1831,7 +1839,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Indirect source with multiple callees.
+
+    def testSourceModelV3_indirectWithMultipleCallees(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -1932,7 +1941,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Mix of direct and indirect sources.
+
+    def testSourceModelV3_directAndIndirect(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -2049,7 +2059,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # User-declared parameter source.
+
+    def testSourceModelV3_userDeclaredParameter(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -2078,7 +2089,8 @@ class TestParser(unittest.TestCase):
             """,
             expected=[],
         )
-        # Implicit source.
+
+    def testSourceModelV3_implicit(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -2131,7 +2143,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # direct and indirect sources with the same callee and callee port.
+
+    def testSourceModelV3_directAndIndirectWithSameCalleeAndPort(self) -> None:
         # Note: Pysa would NOT actually emit this, it would emit a single "taint".
         # This is only for test purposes.
         self.assertParsed(
@@ -2235,7 +2248,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Sources with different subtraces
+
+    def testSourceModelV3_differentSubtraces(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -2411,7 +2425,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Source with one subtrace and one without subtrace
+
+    def testSourceModelV3_withAndWithoutSubtrace(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -2551,6 +2566,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
+
+    def testSourceModelV3_oldSubtraceSyntax(self) -> None:
         # Properly parse old subtrace syntax.
         self.assertParsed(
             version=3,
@@ -2669,7 +2686,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Combine old and new subtrace syntax.
+
+    def testSourceModelV3_combinedOldAndNewSubtraceSyntax(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -2869,7 +2887,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Kind-specific breadcrumbs.
+
+    def testSourceModelV3_kindSpecificBreadcrumbs(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -2988,8 +3007,7 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-    def testSinkModelV3(self) -> None:
-        # User-declared sink.
+    def testSinkModelV3_userDeclared(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3018,7 +3036,8 @@ class TestParser(unittest.TestCase):
             """,
             expected=[],
         )
-        # Direct sink.
+
+    def testSinkModelV3_direct(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3098,7 +3117,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Direct sink with multiple leaves.
+
+    def testSinkModelV3_directWithMultipleLeaves(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3192,7 +3212,9 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Direct sink with ports on leaves (e.g, cross-repo),
+
+    def testSinkModelV3_directWithPortsOnLeaves(self) -> None:
+        # (e.g, cross-repo),
         self.assertParsed(
             version=3,
             input="""
@@ -3355,7 +3377,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Indirect sink.
+
+    def testSinkModelV3_indirect(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3444,7 +3467,8 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
-        # Indirect sink with multiple callees.
+
+    def testSinkModelV3_indirectWithMultipleCallees(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3549,7 +3573,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # Mix of direct and indirect sinks.
+
+    def testSinkModelV3_directAndIndirect(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3666,7 +3691,8 @@ class TestParser(unittest.TestCase):
                 ),
             ],
         )
-        # User-declared return sink.
+
+    def testSinkModelV3_userDeclaredReturn(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3695,7 +3721,8 @@ class TestParser(unittest.TestCase):
             """,
             expected=[],
         )
-        # Implicit sink.
+
+    def testSinkModelV3_implicit(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3749,8 +3776,7 @@ class TestParser(unittest.TestCase):
             ],
         )
 
-    def testIgnoreModelsV3(self) -> None:
-        # Ignore modes.
+    def testIgnoreModelsV3_modes(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3764,7 +3790,8 @@ class TestParser(unittest.TestCase):
             """,
             expected=[],
         )
-        # Ignore sanitizers.
+
+    def testIgnoreModelsV3_sanitizers(self) -> None:
         self.assertParsed(
             version=3,
             input="""
@@ -3778,7 +3805,8 @@ class TestParser(unittest.TestCase):
             """,
             expected=[],
         )
-        # Ignore tito.
+
+    def testIgnoreModelsV3_tito(self) -> None:
         self.assertParsed(
             version=3,
             input="""
