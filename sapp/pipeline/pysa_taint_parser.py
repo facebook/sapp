@@ -84,8 +84,8 @@ class TraceFragment(NamedTuple):
     callee: str
     port: str
     location: SourceLocation
-    leaves: List[LeafWithDistance]
-    titos: List[SourceLocation]
+    leaves: Set[LeafWithDistance]
+    titos: Set[SourceLocation]
     features: FrozenSet[TraceFeature]
     type_interval: Optional[ParseTypeInterval]
     trace_annotations: FrozenSet[ParseTraceAnnotation]
@@ -108,8 +108,8 @@ class TraceFragment(NamedTuple):
             callee=a.callee,
             port=a.port,
             location=a.location,
-            leaves=sorted(set(a.leaves) | set(b.leaves)),
-            titos=sorted(set(a.titos) | set(b.titos)),
+            leaves=a.leaves | b.leaves,
+            titos=a.titos | b.titos,
             features=a.features,
             type_interval=a.type_interval,
             trace_annotations=a.trace_annotations,
@@ -239,8 +239,11 @@ class Parser(BaseParser):
                     callee=fragment.callee,
                     callee_location=fragment.location,
                     filename=filename,
-                    titos=fragment.titos,
-                    leaves=[(leaf.kind, leaf.distance) for leaf in fragment.leaves],
+                    titos=sorted(fragment.titos),
+                    leaves=sorted(
+                        # drop leaves with different names but same (kind, distance)
+                        {(leaf.kind, leaf.distance) for leaf in fragment.leaves}
+                    ),
                     caller_port=port,
                     callee_port=fragment.port,
                     type_interval=fragment.type_interval,
@@ -267,8 +270,11 @@ class Parser(BaseParser):
                     callee=fragment.callee,
                     callee_location=fragment.location,
                     filename=filename,
-                    titos=fragment.titos,
-                    leaves=[(leaf.kind, leaf.distance) for leaf in fragment.leaves],
+                    titos=sorted(fragment.titos),
+                    leaves=sorted(
+                        # drop leaves with different names but same (kind, distance)
+                        {(leaf.kind, leaf.distance) for leaf in fragment.leaves}
+                    ),
                     caller_port=port,
                     callee_port=fragment.port,
                     type_interval=fragment.type_interval,
@@ -370,8 +376,11 @@ class Parser(BaseParser):
                     callee=fragment.callee,
                     port=fragment.port,
                     location=fragment.location,
-                    leaves=[(leaf.kind, leaf.distance) for leaf in leaves],
-                    titos=fragment.titos,
+                    leaves=sorted(
+                        # drop leaves with different names but same (kind, distance)
+                        {(leaf.kind, leaf.distance) for leaf in leaves}
+                    ),
+                    titos=sorted(fragment.titos),
                     features=[
                         feature.to_parse_feature()
                         for feature in sorted(fragment.features)
@@ -409,10 +418,11 @@ class Parser(BaseParser):
         leaf_port: Union[Literal["source"], Literal["sink"]],
         trace: Dict[str, Any],
     ) -> Iterable[TraceFragment]:
-        tito_positions = [
+        tito_positions = {
             self._parse_location(location)
             for location in trace.get("tito_positions", [])
-        ]
+        }
+
         shared_local_features = self._parse_features(trace.get("local_features", []))
         type_interval = self._parse_type_interval(trace)
         # The old syntax would store `extra_traces` here. We preserve this for backward compatibility.
@@ -436,7 +446,7 @@ class Parser(BaseParser):
                         callee=leaf.name or "leaf",
                         port=leaf.port or leaf_port,
                         location=location,
-                        leaves=[leaf.discard_port()],
+                        leaves={leaf.discard_port()},
                         titos=tito_positions,
                         features=local_features,
                         type_interval=type_interval,
@@ -457,10 +467,10 @@ class Parser(BaseParser):
                 trace_annotations = (
                     self._parse_extra_traces(flow_details) | shared_trace_annotations
                 )
-                leaves: List[LeafWithDistance] = [
+                leaves = {
                     leaf.discard_port()
                     for leaf in self._parse_leaves(kind, distance, flow_details)
-                ]
+                }
 
                 for resolved in resolves_to:
                     yield TraceFragment(

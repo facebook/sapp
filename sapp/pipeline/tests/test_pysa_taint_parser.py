@@ -1262,6 +1262,445 @@ class TestParser(unittest.TestCase):
             ],
         )
 
+    def testIssueV3_duplicateLeaves(self) -> None:
+        # Duplicate leaves with the same (port, kind) should be merged and sorted
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "issue",
+              "data": {
+                "callable": "foo.bar",
+                "callable_line": 10,
+                "code": 1,
+                "line": 11,
+                "start": 12,
+                "end": 13,
+                "filename": "foo.py",
+                "message": "[UserControlled, Header] to [RCE, SQL]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
+                "traces": [
+                  {
+                    "name": "forward",
+                    "roots": [
+                      {
+                        "receiver_interval": [
+                          { "lower": 50, "upper": 51 },
+                          { "lower": 60, "upper": 71 }
+                        ],
+                        "call": {
+                          "position": {
+                            "line": 14,
+                            "start": 15,
+                            "end": 16
+                          },
+                          "resolves_to": ["foo.source"],
+                          "port": "result"
+                        },
+                        "tito_positions": [ { "line": 17, "start": 18, "end": 19 } ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled_a" } ],
+                            "features": [ { "always-via": "source-feature" } ]
+                          },
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled_b" } ],
+                            "features": [ { "always-via": "source-feature" } ]
+                          },
+                          {
+                            "kind": "Header",
+                            "length": 2,
+                            "leaves": [ { "name": "_header" } ],
+                            "features": [ { "always-via": "source-other-feature" } ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "backward",
+                    "roots": [
+                      {
+                        "call": {
+                          "position": {
+                            "line": 20,
+                            "start": 21,
+                            "end": 22
+                          },
+                          "resolves_to": ["foo.sink"],
+                          "port": "formal(x)[parameter]"
+                        },
+                        "tito_positions": [ { "line": 23, "start": 24, "end": 25 } ],
+                        "kinds": [
+                          {
+                            "kind": "SQL",
+                            "length": 2,
+                            "leaves": [ { "name": "_sql" } ],
+                            "features": [ { "always-via": "sink-other-feature" } ]
+                          },
+                          {
+                            "kind": "RCE",
+                            "length": 1,
+                            "leaves": [ { "name": "_remote_code_execution_a" } ],
+                            "features": [ { "always-via": "sink-feature" } ]
+                          },
+                          {
+                            "kind": "RCE",
+                            "length": 1,
+                            "leaves": [ { "name": "_remote_code_execution_b" } ],
+                            "features": [ { "always-via": "sink-feature" } ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "features": [
+                  { "always-via": "foo" },
+                  { "via": "bar" }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseIssueTuple(
+                    code=1,
+                    message="[UserControlled, Header] to [RCE, SQL]",
+                    callable="foo.bar",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
+                    filename="foo.py",
+                    callable_line=10,
+                    line=11,
+                    start=13,
+                    end=13,
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="foo.source",
+                            port="result",
+                            location=SourceLocation(
+                                line_no=14,
+                                begin_column=16,
+                                end_column=16,
+                            ),
+                            leaves=[
+                                ("Header", 2),
+                                ("UserControlled", 1),
+                            ],
+                            titos=[
+                                SourceLocation(
+                                    line_no=17, begin_column=19, end_column=19
+                                ),
+                            ],
+                            features=[],
+                            type_interval=ParseTypeInterval(
+                                start=50,
+                                finish=71,
+                                preserves_type_context=False,
+                            ),
+                            annotations=[],
+                        ),
+                    ],
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="foo.sink",
+                            port="formal(x)[parameter]",
+                            location=SourceLocation(
+                                line_no=20,
+                                begin_column=22,
+                                end_column=22,
+                            ),
+                            leaves=[
+                                ("RCE", 1),
+                                ("SQL", 2),
+                            ],
+                            titos=[
+                                SourceLocation(
+                                    line_no=23, begin_column=25, end_column=25
+                                )
+                            ],
+                            features=[],
+                            type_interval=ParseTypeInterval(
+                                start=0,
+                                finish=sys.maxsize,
+                                preserves_type_context=False,
+                            ),
+                            annotations=[],
+                        ),
+                    ],
+                    initial_sources={
+                        ("_user_controlled_a", "UserControlled", 1),
+                        ("_user_controlled_b", "UserControlled", 1),
+                        ("_header", "Header", 2),
+                    },
+                    final_sinks={
+                        ("_remote_code_execution_a", "RCE", 1),
+                        ("_remote_code_execution_b", "RCE", 1),
+                        ("_sql", "SQL", 2),
+                    },
+                    features=["always-via:foo", "via:bar"],
+                    fix_info=None,
+                )
+            ],
+        )
+
+    def testIssueV3_duplicateTitos(self) -> None:
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "issue",
+              "data": {
+                "callable": "foo.bar",
+                "callable_line": 10,
+                "code": 1,
+                "line": 11,
+                "start": 12,
+                "end": 13,
+                "filename": "foo.py",
+                "message": "[UserControlled] to [RCE]",
+                "sink_handle": {
+                  "kind": "Call",
+                  "callee": "foo.sink",
+                  "index": 0,
+                  "parameter": "formal(x)"
+                },
+                "master_handle": "foo.bar:1:0:Call|foo.sink|0|formal(x)",
+                "traces": [
+                  {
+                    "name": "forward",
+                    "roots": [
+                      {
+                        "receiver_interval": [{ "lower": 23, "upper": 24 }],
+                        "is_self_call": false,
+                        "call": {
+                          "position": {
+                            "line": 14,
+                            "start": 15,
+                            "end": 16
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "tito_positions": [
+                          { "line": 17, "start": 18, "end": 19 },
+                          { "line": 17, "start": 18, "end": 19 }
+                        ],
+                        "local_features": [ { "always-via": "source-local" } ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "source-feature" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": {
+                                    "line": 117,
+                                    "start": 22,
+                                    "end": 24
+                                  },
+                                  "resolves_to": [
+                                    "extra_trace.transform_yz"
+                                  ],
+                                  "port": "formal(arg)"
+                                },
+                                "kind": "TransformY:TransformZ:ExtraTraceSink"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "backward",
+                    "roots": [
+                      {
+                        "caller_interval": [{
+                          "lower": 10,
+                          "upper": 11
+                        }],
+                        "is_self_call": true,
+                        "call": {
+                          "position": {
+                            "line": 20,
+                            "start": 21,
+                            "end": 22
+                          },
+                          "resolves_to": [
+                            "foo.sink"
+                          ],
+                          "port": "formal(x)[parameter]"
+                        },
+                        "tito_positions": [
+                          { "line": 23, "start": 24, "end": 25 },
+                          { "line": 23, "start": 24, "end": 25 }
+                        ],
+                        "local_features": [ { "always-via": "sink-local" } ],
+                        "kinds": [
+                          {
+                            "kind": "RCE",
+                            "length": 2,
+                            "leaves": [ { "name": "_remote_code_execution" } ],
+                            "features": [ { "always-via": "sink-feature" } ],
+                            "extra_traces": [
+                              {
+                                "call": {
+                                  "position": {
+                                    "line": 117,
+                                    "start": 22,
+                                    "end": 24
+                                  },
+                                  "resolves_to": [
+                                    "extra_trace.transform_yz"
+                                  ],
+                                  "port": "formal(arg)"
+                                },
+                                "leaf_kind": "TransformY:TransformZ:ExtraTraceSink",
+                                "trace_kind": "sink"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "features": [
+                  { "always-via": "foo" },
+                  { "via": "bar" }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseIssueTuple(
+                    code=1,
+                    message="[UserControlled] to [RCE]",
+                    callable="foo.bar",
+                    handle="foo.bar:1:0:Call|foo.sink|0|formal(x)",
+                    filename="foo.py",
+                    callable_line=10,
+                    line=11,
+                    start=13,
+                    end=13,
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="foo.source",
+                            port="result",
+                            location=SourceLocation(
+                                line_no=14,
+                                begin_column=16,
+                                end_column=16,
+                            ),
+                            leaves=[("UserControlled", 1)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=17, begin_column=19, end_column=19
+                                ),
+                            ],
+                            features=[ParseTraceFeature("always-via:source-local", [])],
+                            type_interval=ParseTypeInterval(
+                                start=23,
+                                finish=24,
+                                preserves_type_context=False,
+                            ),
+                            annotations=[
+                                ParseTraceAnnotation(
+                                    location=SourceLocation(
+                                        line_no=117, begin_column=23, end_column=24
+                                    ),
+                                    kind="tito_transform",
+                                    msg="",
+                                    leaf_kind="TransformY:TransformZ:ExtraTraceSink",
+                                    leaf_depth=0,
+                                    type_interval=None,
+                                    link=None,
+                                    trace_key=None,
+                                    titos=[],
+                                    subtraces=[
+                                        ParseTraceAnnotationSubtrace(
+                                            callee="extra_trace.transform_yz",
+                                            port="formal(arg)",
+                                            position=SourceLocation(
+                                                line_no=117,
+                                                begin_column=23,
+                                                end_column=24,
+                                            ),
+                                        )
+                                    ],
+                                )
+                            ],
+                        )
+                    ],
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="foo.sink",
+                            port="formal(x)[parameter]",
+                            location=SourceLocation(
+                                line_no=20,
+                                begin_column=22,
+                                end_column=22,
+                            ),
+                            leaves=[("RCE", 2)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=23, begin_column=25, end_column=25
+                                )
+                            ],
+                            features=[ParseTraceFeature("always-via:sink-local", [])],
+                            type_interval=ParseTypeInterval(
+                                start=0, finish=sys.maxsize, preserves_type_context=True
+                            ),
+                            annotations=[
+                                ParseTraceAnnotation(
+                                    location=SourceLocation(
+                                        line_no=117, begin_column=23, end_column=24
+                                    ),
+                                    kind="sink",
+                                    msg="",
+                                    leaf_kind="TransformY:TransformZ:ExtraTraceSink",
+                                    leaf_depth=0,
+                                    type_interval=None,
+                                    link=None,
+                                    trace_key=None,
+                                    titos=[],
+                                    subtraces=[
+                                        ParseTraceAnnotationSubtrace(
+                                            callee="extra_trace.transform_yz",
+                                            port="formal(arg)",
+                                            position=SourceLocation(
+                                                line_no=117,
+                                                begin_column=23,
+                                                end_column=24,
+                                            ),
+                                        )
+                                    ],
+                                )
+                            ],
+                        )
+                    ],
+                    initial_sources={("_user_controlled", "UserControlled", 1)},
+                    final_sinks={("_remote_code_execution", "RCE", 2)},
+                    features=["always-via:foo", "via:bar"],
+                    fix_info=None,
+                )
+            ],
+        )
+
     def testSourceModelV3_userDeclared(self) -> None:
         self.assertParsed(
             version=3,
@@ -2233,8 +2672,8 @@ class TestParser(unittest.TestCase):
                         SourceLocation(line_no=13, begin_column=15, end_column=15),
                     ],
                     leaves=[
-                        ("UserControlled", 2),
                         ("UserControlled", 1),
+                        ("UserControlled", 2),
                     ],
                     caller_port="result",
                     callee_port="result",
@@ -3007,6 +3446,164 @@ class TestParser(unittest.TestCase):
             ],
         )
 
+    def testSourceModelV3_duplicateLeaves(self) -> None:
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "filename": "foo.py",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "line": 14,
+                            "start": 15,
+                            "end": 16
+                          },
+                          "resolves_to": [
+                            "foo.source"
+                          ],
+                          "port": "result"
+                        },
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "length": 1,
+                            "leaves": [
+                              {
+                                "name": "_user_controlled_a"
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "UserControlled",
+                            "leaves": [
+                              {
+                                "name": "_user_controlled_b"
+                              },
+                              {
+                                "name": "_user_controlled_c"
+                              }
+                            ]
+                          }
+                        ],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="foo.source",
+                    callee_location=SourceLocation(
+                        line_no=14,
+                        begin_column=16,
+                        end_column=16,
+                    ),
+                    filename="foo.py",
+                    titos=[],
+                    leaves=[("UserControlled", 0), ("UserControlled", 1)],
+                    caller_port="result",
+                    callee_port="result",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+            ],
+        )
+
+    def testSourceModelV3_duplicateTitos(self) -> None:
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "filename": "foo.py",
+                "sources": [
+                  {
+                    "port": "result",
+                    "taint": [
+                      {
+                        "origin": {
+                          "line": 1,
+                          "start": 2,
+                          "end": 3
+                        },
+                        "tito_positions": [
+                          { "line": 13, "start": 14, "end": 15 },
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 10, "start": 11, "end": 12 }
+                        ],
+                        "local_features": [ { "always-via": "source-local" } ],
+                        "kinds": [
+                          {
+                            "kind": "UserControlled",
+                            "leaves": [ { "name": "_user_controlled" } ],
+                            "features": [ { "always-via": "direct-source" } ]
+                          }
+                        ],
+                        "caller_interval": [{
+                          "lower": 10,
+                          "upper": 11
+                        }],
+                        "receiver_interval": [
+                          { "lower": 25, "upper": 30 },
+                          { "lower": 35, "upper": 40 }
+                        ],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="foo.bar",
+                    callee="_user_controlled",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[
+                        ("UserControlled", 0),
+                    ],
+                    caller_port="result",
+                    callee_port="source",
+                    type_interval=ParseTypeInterval(
+                        start=25, finish=40, preserves_type_context=False
+                    ),
+                    features=[ParseTraceFeature("always-via:source-local", [])],
+                    annotations=[],
+                )
+            ],
+        )
+
     def testSinkModelV3_userDeclared(self) -> None:
         self.assertParsed(
             version=3,
@@ -3773,6 +4370,163 @@ class TestParser(unittest.TestCase):
                     features=[],
                     annotations=[],
                 ),
+            ],
+        )
+
+    def testSinkModelV3_duplicateLeaves(self) -> None:
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "filename": "foo.py",
+                "sinks": [
+                  {
+                    "port": "formal(x)",
+                    "taint": [
+                      {
+                        "call": {
+                          "position": {
+                            "line": 1,
+                            "start": 2,
+                            "end": 3
+                          },
+                          "resolves_to": [
+                            "foo.sink"
+                          ],
+                          "port": "formal(y)[attribute]"
+                        },
+                        "kinds": [
+                          {
+                            "kind": "RCE",
+                            "length": 1,
+                            "leaves": [
+                              {
+                                "name": "_remote_code_execution_a"
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "RCE",
+                            "leaves": [
+                              {
+                                "name": "_remote_code_execution_b"
+                              },
+                              {
+                                "name": "_remote_code_execution_c"
+                              }
+                            ]
+                          }
+                        ],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="foo.bar",
+                    callee="foo.sink",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[],
+                    leaves=[("RCE", 0), ("RCE", 1)],
+                    caller_port="formal(x)",
+                    callee_port="formal(y)[attribute]",
+                    type_interval=ParseTypeInterval(
+                        start=0,
+                        finish=sys.maxsize,
+                        preserves_type_context=False,
+                    ),
+                    features=[],
+                    annotations=[],
+                ),
+            ],
+        )
+
+    def testSinkModelV3_duplicateTitos(self) -> None:
+        self.assertParsed(
+            version=3,
+            input="""
+            {
+              "kind": "model",
+              "data": {
+                "callable": "foo.bar",
+                "filename": "foo.py",
+                "sinks": [
+                  {
+                    "port": "formal(x)",
+                    "taint": [
+                      {
+                        "origin": {
+                          "line": 1,
+                          "start": 2,
+                          "end": 3
+                        },
+                        "tito_positions": [
+                          { "line": 13, "start": 14, "end": 15 },
+                          { "line": 10, "start": 11, "end": 12 },
+                          { "line": 10, "start": 11, "end": 12 }
+                        ],
+                        "local_features": [ { "always-via": "local-sink" } ],
+                        "kinds": [
+                          {
+                            "kind": "SQL",
+                            "leaves": [ { "name": "_sql" } ],
+                            "features": [ { "always-via": "direct-sink" } ]
+                          }
+                        ],
+                        "caller_interval": [
+                          {
+                            "lower": 13,
+                            "upper": 14
+                          }
+                        ],
+                        "receiver_interval": [{ "lower": 27, "upper": 32 }],
+                        "is_self_call": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """,
+            expected=[
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="foo.bar",
+                    callee="_sql",
+                    callee_location=SourceLocation(
+                        line_no=1,
+                        begin_column=3,
+                        end_column=3,
+                    ),
+                    filename="foo.py",
+                    titos=[
+                        SourceLocation(line_no=10, begin_column=12, end_column=12),
+                        SourceLocation(line_no=13, begin_column=15, end_column=15),
+                    ],
+                    leaves=[
+                        ("SQL", 0),
+                    ],
+                    caller_port="formal(x)",
+                    callee_port="sink",
+                    type_interval=ParseTypeInterval(
+                        start=27, finish=32, preserves_type_context=False
+                    ),
+                    features=[ParseTraceFeature("always-via:local-sink", [])],
+                    annotations=[],
+                )
             ],
         )
 
