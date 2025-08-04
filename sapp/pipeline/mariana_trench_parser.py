@@ -208,13 +208,6 @@ class Parser(BaseParser):
         self._initialized: bool = False
 
     @staticmethod
-    def is_supported(metadata: Metadata) -> bool:
-        return (
-            metadata.tool == "mariana_trench"
-            and metadata.analysis_tool_version == "0.2"
-        )
-
-    @staticmethod
     def get_master_handle(
         callable: str,
         issue_callee: mariana_trench.IssueCallee,

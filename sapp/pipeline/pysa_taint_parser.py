@@ -576,7 +576,3 @@ class Parser(BaseParser):
                 )
             )
         return leaves
-
-    @staticmethod
-    def is_supported(metadata: Metadata) -> bool:
-        return metadata.tool == "pysa"

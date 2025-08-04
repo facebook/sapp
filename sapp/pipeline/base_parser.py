@@ -307,10 +307,6 @@ class BaseParser(PipelineStep[AnalysisOutput, IssuesAndFrames]):
         return key[: 255 - len(hash_) - 1] + ":" + hash_
 
     @staticmethod
-    def is_supported(metadata: Metadata) -> bool:
-        raise NotImplementedError("Subclasses should implement this!")
-
-    @staticmethod
     def parse_handles_file(path: Path) -> Set[str]:
         with open(path) as f:
             lines = (line.rstrip("\n") for line in f)
