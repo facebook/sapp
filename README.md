@@ -361,6 +361,29 @@ Run the flask server and react app in development mode:
 
 Then visit `http://localhost:3000` (or `http://<HOST>:<PORT>` if you have set the `HOST` and/or `PORT` environment variable).
 
+### Partial Flows
+
+SAPP supports the concept of partial flows, which helps with triaging the issues more easily. In particular, supporting partial flows allows to filter out issues from the generic rules if they exist in the more specific one. When we have two rules, one of the form (`SourceA` -> `SinkB`), and a second one of the form (`SourceA` -> `TransformB` -> `SinkC`), we can associate `SinkB` and `TransformB`, and add breadcrumbs (such as `some-feature`) to all instances of the `SourceA` -> `SinkB` rule when a corresponding `SourceA` -> `TransformB` -> `SinkC` rule exists. These breadcrumbs allow us to filter away these issues, improving triage SNR.
+
+SAPP supports partial flows by modifying the static analysis outputs (based on the configurations from those tools) before writing them into the database. To leverage this capability in SAPP, you can provide the following configurations in the metadata file from the static analysis outputs:
+```json
+"partial_flows": [
+  {
+    "full_issue_code": 4101,
+    "partial_issue_code": 4100,
+    "full_issue_transform": "TransformB",
+    "is_prefix_flow": true,
+    "feature": "some_feature"
+  }
+]
+```
+Now we explain the meaning of the above configurations:
+- `full_issue_code`: The rule code of the full issue, such as `SourceA` -> `TransformB` -> `SinkC` from the above example.
+- `partial_issue_code`: The rule code of the partial issue, such as `SourceA` -> `SinkB` from the above example.
+- `full_issue_transform`: The transform of the full issue, such as `TransformB` from the above example.
+- `is_prefix_flow`: Whether the partial flow is a prefix flow or a suffix flow. In the above example, since the partial issue is a prefix of the full issue, we set this field to `true`.
+- `feature`: The feature or breadcrumb to add to an issue, such as `some-feature` from the above example.
+
 ## License
 
 SAPP is licensed under the MIT license.
