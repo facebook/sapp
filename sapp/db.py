@@ -71,6 +71,9 @@ class DB:
         else:
             raise errors.AIException(f"Invalid db type: {dbtype}")
 
+    def is_local_only(self) -> bool:
+        return self.dbtype == DBType.MEMORY or self.dbtype == DBType.SQLITE
+
     def _create_xdb_engine(self) -> None:
         raise NotImplementedError
 
