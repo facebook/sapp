@@ -55,12 +55,6 @@ class BulkSaver:
         MetaRunIssueInstanceIndex,
     ]
 
-    # These will be saved using `_save_batch_and_handle_key_conflicts`
-    # since duplicate keys may be created from two seperate runs
-    CLASSES_WITH_POTENTIAL_KEY_CONFLICTS = {
-        Issue,
-    }
-
     BATCH_SIZE = 30000
 
     def __init__(
@@ -170,7 +164,7 @@ class BulkSaver:
         # To update an existing object, just modify its attribute(s)
         # and call session.commit()
         for batch in split_every(self.BATCH_SIZE, items):
-            if cls in self.CLASSES_WITH_POTENTIAL_KEY_CONFLICTS:
+            if cls.has_potential_for_key_races():
                 self._save_batch_and_handle_key_conflicts(database, cls, batch)
             else:
                 self._save_batch(database, cls, batch)
@@ -207,6 +201,12 @@ class BulkSaver:
             # records which can occur when some issues are synced from central issues
             # and others are created from scratch
             records_to_save = self._render_nulls(cls, records_to_save)
+
+            # Bypass the requirement to have final ID values
+            # before trying to write them to the database, since we don't know which
+            # values will be final until we try to write them.
+            for r in records_to_save:
+                r["id"] = r["id"].resolved_allow_provisional()
 
             dialect = database.engine.dialect.name
             if dialect == "mysql":
@@ -251,6 +251,11 @@ class BulkSaver:
                 f"There are still {len(unsaved_records)} unsaved {cls.__name__} "
                 f"records."
             )
+
+        # Above, we extracted ID values without first ensuring they were finalized
+        # Freeze IDs now that we know they are final
+        for item in batch:
+            item.id.freeze()
 
     def _render_nulls(
         self,

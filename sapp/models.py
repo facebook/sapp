@@ -277,10 +277,10 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         cls.perform_merging = merge
 
     @classmethod
-    def merge(cls, session, items):
+    def merge(cls, database, items):
         if cls.perform_merging:
             return cls._merge_by_keys(
-                session,
+                database,
                 items,
                 cls.contents,
                 cls.kind,
@@ -700,6 +700,12 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     def _take(cls, n, iterable):
         "Return first n items of the iterable as a list"
         return list(islice(iterable, n))
+
+    @staticmethod
+    def has_potential_for_key_races() -> bool:
+        # Two runs may race to create Issue records with the same handle.
+        # Returning True here causes the bulk_saver to handle this correctly
+        return True
 
     @classmethod
     def merge(cls, session, issues):

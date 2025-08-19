@@ -59,7 +59,7 @@ BASE_TABLE_ARGS = (
 
 
 class DBID:
-    __slots__ = ["_id", "is_new", "local_id"]
+    __slots__ = ["_id", "_frozen", "is_new", "local_id"]
 
     # Temporary IDs that are local per run (local_id) are assigned for each
     # DBID object on creation. This acts as a key for the object in map-like
@@ -67,30 +67,81 @@ class DBID:
     # each of them. next_id tracks the next available int to act as an id.
     next_id: int = 0
 
+    enforce_dbid_freezing: bool = False
+
     def __init__(self, id: Union[int, None, DBID] = None) -> None:
-        self.resolve(id)
+        self._id: Union[int, None, DBID] = None
+        self._frozen = False
+        self.is_new = True
+        if id is not None:
+            self.resolve(id)
         self.local_id: int = DBID.next_id
         DBID.next_id += 1
 
-    def resolve(self, id: Union[int, None, DBID], is_new: bool = True) -> DBID:
+    def resolve(self, id: Union[int, DBID], is_new: bool = True) -> DBID:
+        """
+        Set a final assigned value for the DBID
+        """
+        self.resolve_provisional(id, is_new)
+        self.freeze()
+        return self
+
+    def resolve_provisional(self, id: Union[int, DBID], is_new: bool = True) -> DBID:
+        """
+        Set a provisional assigned value for the DBID that may be changed later
+        """
+        if self.enforce_dbid_freezing and self._frozen:
+            raise ValueError(
+                f"Cannot reassign {repr(self)} to {repr(id)} because"
+                " it is frozen and therefore may already be persisted"
+            )
         self._check_type(id)
         self._id = id
         self.is_new = is_new
         return self
 
     def resolved(self) -> Optional[int]:
-        id = self._id
+        """
+        Get the assigned value for the DBID only if the value is final
+        and safe to be persisted
+        """
+        return self._resolved_internal(require_frozen=True)
 
-        # We allow one level of a DBID pointing to another DBID
-        if isinstance(id, DBID):
-            id = id.resolved()
+    def resolved_allow_provisional(self) -> Optional[int]:
+        """
+        Get the assigned value for the DBID, even if value is not final
 
-        return id
+        Use with care and call `freeze` as soon as you can ensure that the ID
+        will not change.
+        """
+        return self._resolved_internal(require_frozen=False)
 
-    def _check_type(self, id: Union[int, None, DBID]) -> None:
-        if not isinstance(id, (int, type(None), DBID)):
+    def freeze(self) -> None:
+        self._frozen = True
+
+    def _resolved_internal(self, require_frozen: bool) -> Optional[int]:
+        if self.enforce_dbid_freezing and require_frozen and not self._frozen:
+            raise ValueError(
+                f"{repr(self)} was not frozen before being resolved."
+                " DBIDs must be frozen before being persisted"
+            )
+
+        value = self._id
+
+        # We allow a DBID to point to another DBID
+        #
+        # This is necessary to point multiple DBID references
+        # to the same resolved id after multiple records are merged
+        # into one record in `PrepareMixin._merge_by_keys`
+        if isinstance(value, DBID):
+            value = value._resolved_internal(require_frozen)
+
+        return value
+
+    def _check_type(self, id: Union[int, DBID]) -> None:
+        if not isinstance(id, (int, DBID)):
             raise TypeError(
-                "id expected to be type '{}' but was type '{}'".format(int, type(id))
+                "id expected to be `int` or `DBID` but was '{}'".format(type(id))
             )
 
     # Allow DBIDs to be added and compared as ints
@@ -120,7 +171,7 @@ class DBID:
 
     def __repr__(self) -> str:
         return "<{}(id={}) object at 0x{:x}>".format(
-            self.__class__.__name__, self._id, id(self)
+            self.__class__.__name__, repr(self._id), id(self)
         )
 
 
@@ -137,10 +188,11 @@ class DBIDType(types.TypeDecorator):
         else:
             return value
 
-    def process_result_value(
-        self, value: Optional[Union[int, DBID]], dialect: Dialect
-    ) -> DBID:
-        return DBID(value)
+    def process_result_value(self, value: Optional[int], dialect: Dialect) -> DBID:
+        dbid = DBID(value)
+        # Even if NULL, represents a value in the database that should not be reassigned
+        dbid.freeze()
+        return dbid
 
     # pyre-fixme[3]: Return type must be annotated.
     def load_dialect_impl(self, dialect: Dialect):
@@ -170,17 +222,30 @@ class BIGDBIDType(DBIDType):
 def dbid_resolution_context() -> Generator[None, None, None]:
     """Track the resolution of DBIDs and unresolve them on exiting the context."""
 
-    def resolve(self: DBID, id: Union[int, None, DBID], is_new: bool = True) -> DBID:
-        dbids.append((self, getattr(self, "_id", None), getattr(self, "is_new", None)))
+    def resolve(self: DBID, id: Union[int, DBID], is_new: bool = True) -> DBID:
+        dbids.append(
+            (
+                self,
+                self._id,
+                self._frozen,
+                self.is_new,
+            )
+        )
         return old_resolve(self, id, is_new)
 
-    dbids: List[Tuple[DBID, Union[int, None, DBID], bool]] = []
-    old_resolve: Callable[[DBID, Union[int, None, DBID], bool], DBID] = DBID.resolve
-    DBID.resolve = resolve  # pyre-ignore[8] Pyre doesn't like patching methods
+    dbids: List[Tuple[DBID, Union[int, None, DBID], bool, bool]] = []
+    old_resolve: Callable[[DBID, Union[int, DBID], bool], DBID] = (
+        DBID.resolve_provisional
+    )
+    DBID.resolve_provisional = (  # pyre-ignore[8] Pyre doesn't like patching methods
+        resolve
+    )
     yield
-    DBID.resolve = old_resolve
-    for dbid, id, is_new in reversed(dbids):
-        dbid.resolve(id, is_new)
+    DBID.resolve_provisional = old_resolve
+    for dbid, _id, _frozen, is_new in reversed(dbids):
+        dbid._id = _id
+        dbid._frozen = _frozen
+        dbid.is_new = is_new
 
 
 class PrepareMixin:
@@ -196,9 +261,21 @@ class PrepareMixin:
         """
         for item in cls.merge(database, items):
             if hasattr(item, "id"):
-                # pyre-fixme[16]: `PrepareMixin` has no attribute `id` (we checked)
-                item.id.resolve(id=pkgen.get(cls), is_new=True)
+                if cls.has_potential_for_key_races():
+                    # ID may not be final and will be frozen later
+                    # pyre-fixme[16]: `PrepareMixin` has no attribute `id` (we checked)
+                    item.id.resolve_provisional(id=pkgen.get(cls), is_new=True)
+                else:
+                    # ID is final
+                    item.id.resolve(id=pkgen.get(cls), is_new=True)
             yield item
+
+    @staticmethod
+    def has_potential_for_key_races() -> bool:
+        """Should be overridden to return True if there is a possibility of two runs
+        racing to create a record with the same merge key.
+        """
+        return False
 
     @classmethod
     def merge(
