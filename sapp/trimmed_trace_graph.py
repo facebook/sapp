@@ -673,6 +673,12 @@ class TrimmedTraceGraph(TraceGraph):
             result.append(successor)
         return (result, succ_kinds)
 
+    def _is_root_port(self, port: str) -> bool:
+        return port == "root" or port.startswith("root:")
+
+    def _is_subtrace_root_port(self, port: str) -> bool:
+        return port == "subtrace_root" or port.startswith("subtrace_root:")
+
     def _populate_issues_from_affected_conditions(
         self,
         initial_conditions: List[TraceFrame],
@@ -735,11 +741,33 @@ class TrimmedTraceGraph(TraceGraph):
 
             # Conditions that call this may have originated from other issues,
             # keep searching for parent conditions leading to this one.
-            for next_frame, frame_leaves in self._get_predecessor_frames(
-                graph, leaves, condition
-            ):
-                if len(frame_leaves) > 0:
-                    stack.append((next_frame, frame_leaves))
+            if self._is_subtrace_root_port(condition.caller_port):
+                # Handle subtrace roots - continue onto the annotated frame
+                annotations = graph._trace_frame_trace_frame_annotation_assoc.get(
+                    cond_id, set()
+                )
+                for annotation_id in annotations:
+                    annotation = graph.get_trace_annotation(annotation_id)
+                    parent_frame = graph.get_trace_frame_from_id(
+                        annotation.trace_frame_id.local_id
+                    )
+                    # Continue to the main trace with all of the parent frame
+                    stack.append(
+                        (
+                            parent_frame,
+                            {
+                                leaf_map.caller_leaf
+                                for leaf_map in parent_frame.leaf_mapping
+                            },
+                        )
+                    )
+            else:
+                # Otherwise follow predecessor frames
+                for next_frame, frame_leaves in self._get_predecessor_frames(
+                    graph, leaves, condition
+                ):
+                    if len(frame_leaves) > 0:
+                        stack.append((next_frame, frame_leaves))
 
         # Add traces leading out from initial_conditions, and all visited
         # conditions leading back towards the issues.
