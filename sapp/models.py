@@ -1556,6 +1556,7 @@ class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
                 IssueInstanceFixInfo,
                 SharedText,
                 Run,
+                RunOrigin,
                 TraceFrame,
                 TraceFrameAnnotation,
                 ClassTypeInterval,
