@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..db import DB
 from ..metrics_logger import ScopedMetricsLogger
-from ..models import MetaRunIssueInstanceIndex
+from ..models import IssueInstance, MetaRunIssueInstanceIndex, Run, RunStatus
 from . import Any, Dict, IssuesAndFrames, ParseIssueTuple, PipelineStep, Summary, Union
 
 LOG: logging.Logger = logging.getLogger("sapp")
@@ -80,10 +80,18 @@ class MetaRunIssueDuplicateFilter(PipelineStep[IssuesAndFrames, IssuesAndFrames]
         issue_instance_hash = compute_issue_instance_hash(issue)
         found = (
             session.query(MetaRunIssueInstanceIndex.issue_instance_id)
+            .join(
+                IssueInstance,
+                IssueInstance.id == MetaRunIssueInstanceIndex.issue_instance_id,
+            )
+            .join(Run, Run.id == IssueInstance.run_id)
             .filter(MetaRunIssueInstanceIndex.meta_run_id == self.meta_run_identifier)
             .filter(
                 MetaRunIssueInstanceIndex.issue_instance_hash == issue_instance_hash
             )
+            # Only consider issues from finished runs, otherwise the run that inserted it
+            # might fail to fully upload, and we would skip the issue for the current run.
+            .filter(Run.status == RunStatus.finished)
             .first()
         )
         return found is None
