@@ -2849,6 +2849,72 @@ class TestParser(unittest.TestCase):
             ],
         )
 
+    def testSyntheticPath(self) -> None:
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_sink:(LData;LData;)V",
+              "sinks": [
+                {
+                  "port": "Argument(2)",
+                  "taint": [
+                    {
+                      "call_info": {
+                        "call_kind": "CallSite",
+                        "resolves_to": "Lcom/facebook/Sink$4;.sink:(LData;)V",
+                        "port": "Argument(1)",
+                        "position": {
+                          "path": "__SYNTHETIC:some/synthetic/path.java",
+                          "line": 2,
+                          "start": 3,
+                          "end": 4
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 1,
+                          "kind": "TestSink",
+                          "origins": [
+                            {
+                              "method": "Lcom/facebook/Sink$4;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "__SYNTHETIC:Class.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.PRECONDITION,
+                    caller="LClass;.indirect_sink:(LData;LData;)V",
+                    callee="Lcom/facebook/Sink$4;.sink:(LData;)V",
+                    callee_location=SourceLocation(
+                        line_no=2,
+                        begin_column=4,
+                        end_column=5,
+                    ),
+                    filename="__SYNTHETIC",
+                    titos=[],
+                    leaves=[("TestSink", 1)],
+                    caller_port="argument(2)",
+                    callee_port="argument(1)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
     def testTransformKind(self) -> None:
         # Only local kinds
         self.assertParsed(

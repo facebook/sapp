@@ -145,6 +145,10 @@ class Position(NamedTuple):
             path = method.name.split(";")[0]
             path = path.split("$")[0]
             path = path[1:]
+        elif path.startswith("__SYNTHETIC:"):
+            # paths associated with synthetic methods are of the form
+            # '__SYNTHETIC:<path>', but we only need the prefix for UI
+            path = "__SYNTHETIC"
         return Position(path, line, start, end)
 
     def to_sapp(self) -> sapp.SourceLocation:
