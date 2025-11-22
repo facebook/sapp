@@ -692,8 +692,7 @@ json CALLABLE        show the original json output for the matching callable
             if kind is not None:
                 if kind not in {TraceKind.precondition, TraceKind.postcondition}:
                     raise UserError(
-                        "Try 'frames kind=postcondition'"
-                        " or 'frames kind=precondition'."
+                        "Try 'frames kind=postcondition' or 'frames kind=precondition'."
                     )
                 query = query.filter(TraceFrame.kind == kind)
 
@@ -1133,7 +1132,7 @@ json CALLABLE        show the original json output for the matching callable
             raise UserError("'limit' should be an int or None.")
         if kind not in {TraceKind.precondition, TraceKind.postcondition, None}:
             raise UserError(
-                "Try 'details kind=postcondition'" " or 'details kind=precondition'."
+                "Try 'details kind=postcondition' or 'details kind=precondition'."
             )
 
         current_trace_tuple = self.trace_tuples[self.current_trace_frame_index]
@@ -1270,7 +1269,7 @@ json CALLABLE        show the original json output for the matching callable
             # pyre-fixme[6]: Expected `str` for 1st param but got `T`.
             return query.filter(or_(*[column.like(item) for item in filter]))
         raise UserError(
-            f"'{argument_name}' should be {element_type} or " f"list of {element_type}."
+            f"'{argument_name}' should be {element_type} or list of {element_type}."
         )
 
     def _add_max_int_filter_to_query(
@@ -1420,8 +1419,7 @@ json CALLABLE        show the original json output for the matching callable
 
             callable, callable_port = self._get_callable_from_trace_tuple(trace_tuple)
             branches_string = (
-                f"{expand}"
-                f"{str(trace_tuple.branches):{max_length_split - len(expand)}}"
+                f"{expand}{str(trace_tuple.branches):{max_length_split - len(expand)}}"
                 if trace_tuple.branches > 1
                 else " " * max_length_split
             )
@@ -1477,15 +1475,12 @@ json CALLABLE        show the original json output for the matching callable
                     f"         Sources: "
                     f"{sources_output if sources_output else 'No sources'}"
                 ),
-                (
-                    f"           Sinks: "
-                    f"{sinks_output if sinks_output else 'No sinks'}"
-                ),
+                (f"           Sinks: {sinks_output if sinks_output else 'No sinks'}"),
                 (
                     f"        Features: "
                     f"{features_output if features_output else 'No features'}"
                 ),
-                (f"        Location: " f"{issue.filename}" f":{issue.location}"),
+                (f"        Location: {issue.filename}:{issue.location}"),
                 (
                     f"Min Trace Length: "
                     f"Source ({issue.min_trace_length_to_sources}) | "
@@ -1512,10 +1507,7 @@ json CALLABLE        show the original json output for the matching callable
                 f"     Callee: {trace_frame.callee} : {trace_frame.callee_port}",
                 f"       Kind: {trace_frame.kind}",
                 f"{leaves_label:>{11}}: {leaves_output}",
-                (
-                    f"   Location: {trace_frame.filename}"
-                    f":{trace_frame.callee_location}"
-                ),
+                (f"   Location: {trace_frame.filename}:{trace_frame.callee_location}"),
             ]
         )
 

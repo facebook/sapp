@@ -588,9 +588,9 @@ class PrimaryKeyGeneratorBase:
         assert next_id <= max_id, (
             "%s reserved primary key range exhausted" % cls.__name__
         )
-        assert (
-            next_id in self.allowed_id_range
-        ), f"{cls.__name__} primary key was outside the allowed {self.allowed_id_range}"
+        assert next_id in self.allowed_id_range, (
+            f"{cls.__name__} primary key was outside the allowed {self.allowed_id_range}"
+        )
 
         self.pks[cls.__name__] = (next_id + 1, max_id)
         return next_id
