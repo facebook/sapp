@@ -13,10 +13,10 @@ import logging
 import sys
 from collections import defaultdict
 from typing import (
+    IO,
     Any,
     Dict,
     FrozenSet,
-    IO,
     Iterable,
     List,
     Literal,
@@ -28,9 +28,8 @@ from typing import (
 )
 
 from .. import errors
-from ..analysis_output import AnalysisOutput, Metadata
+from ..analysis_output import AnalysisOutput
 from . import (
-    flatten_features_to_parse_trace_feature,
     ParseConditionTuple,
     ParseError,
     ParseIssueConditionTuple,
@@ -41,6 +40,7 @@ from . import (
     ParseTraceFeature,
     ParseTypeInterval,
     SourceLocation,
+    flatten_features_to_parse_trace_feature,
 )
 from .base_parser import BaseParser, EntryPosition, ParseType
 
