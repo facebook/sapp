@@ -319,8 +319,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
     issue_instance = relationship(
         "IssueInstance",
         primaryjoin=(
-            "IssueInstanceSharedTextAssoc.issue_instance_id =="
-            "foreign(IssueInstance.id)"
+            "IssueInstanceSharedTextAssoc.issue_instance_id ==foreign(IssueInstance.id)"
         ),
         uselist=False,
         viewonly=True,
