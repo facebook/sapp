@@ -489,7 +489,7 @@ class IssueCallee(NamedTuple):
         for pattern in EXTERNAL_SYNTHETIC_LAMBDA_PATTERNS:
             if remaining.startswith(pattern):
                 # Found lambda pattern. Strip it from remaining
-                remaining = remaining.lstrip(pattern)
+                remaining = remaining[len(pattern) :]
                 break
 
         # Remove digits after lambda patterns

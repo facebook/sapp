@@ -890,6 +890,21 @@ class TestParser(unittest.TestCase):
             "LClass;.flow:()V:LSink$Inner;.sink$default:(LData;)V:0:1:62c60c27a623a6f2",
         )
 
+        # Regression test: don't incorrect strip double $'s if they are present
+        self.assertEqual(
+            Parser.get_master_handle(
+                callable="LClass;.flow:()V",
+                issue_callee=IssueCallee(
+                    "Lcom/facebook/stories/features/replies/StoryViewerReplyDialog$special$$inlined$addTextChangedListener$default$2;.afterTextChanged:(Landroid/text/Editable;)V"
+                ),
+                sink_index=0,
+                code=1,
+                callable_line=2,
+                issue_line=10,
+            ),
+            "LClass;.flow:()V:Lcom/facebook/stories/features/replies/StoryViewerReplyDialog$special$$inlined$addTextChangedListener$default$#8;.afterTextChanged:(Landroid/text/Editable;)V:0:1:b9753b6018e9b2c5",
+        )
+
         # If the callable has an unknown line then default to replacement with -1
         self.assertEqual(
             Parser.get_master_handle(
