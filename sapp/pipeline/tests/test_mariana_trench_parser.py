@@ -3315,3 +3315,173 @@ class TestParser(unittest.TestCase):
                 )
             ],
         )
+
+    def testExpoitabilityOriginAsObject(self) -> None:
+        # Ensure we handle the case where "exploitability_origin" has
+        # "parameter_overrides" and is not just a string
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.flow:()V",
+              "issues": [
+                {
+                  "rule": 1,
+                  "always_features": [
+                    "exploitability-root-callable"
+                  ],
+                  "exploitability_origin": {
+                    "callee": "LSink;.sink:(LData;)V",
+                    "exploitability_root": {
+                      "name": "LSink;.sink:(LData;)V",
+                      "parameter_type_overrides": [
+                        {
+                          "parameter": 4,
+                          "type": "LParameterTypeOverride"
+                        }
+                      ]
+                    },
+                    "position": {
+                      "line": 10,
+                      "path": "Flow.java"
+                    }
+                  },
+                  "sink_index": 0,
+                  "position": {
+                    "line": 50,
+                    "path": "Flow.java"
+                  },
+                  "sinks": [
+                    {
+                      "call_info": {
+                        "call_kind": "CallSite",
+                        "resolves_to": "LSink;.sink:(LData;)V",
+                        "port": "Argument(1)",
+                        "position": {
+                          "path": "Flow.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 2,
+                          "always_features": ["via-parameter-field"],
+                          "kind": "TestSink",
+                          "origins": [
+                            {
+                              "method": "LSink;.sink:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
+                        }
+                      ],
+                      "local_positions": [{"line": 13, "start": 14, "end": 15}],
+                      "local_features": { "always_features": ["via-parameter-field"] }
+                    }
+                  ],
+                  "sources": [
+                    {
+                      "call_info": {
+                        "call_kind": "CallSite",
+                        "resolves_to": "LSource;.source:()LData;",
+                        "port": "Return",
+                        "position": {
+                          "path": "Flow.java",
+                          "line": 20,
+                          "start": 21,
+                          "end": 22
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "CallSite",
+                          "distance": 3,
+                          "may_features": ["via-obscure"],
+                          "kind": "TestSource",
+                          "origins": [
+                            {
+                              "method": "LSource;.source:(LData;)V",
+                              "port": "Argument(1)"
+                            }
+                          ]
+                        }
+                      ],
+                      "local_positions": [
+                        {"line": 23, "start": 24, "end": 25},
+                        {"line": 26, "start": 27, "end": 28}
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 2,
+                "path": "Flow.java"
+              }
+            }
+            """,
+            [
+                ParseIssueTuple(
+                    code=1,
+                    message="TestRule: Test Rule Description",
+                    callable="LClass;.flow:()V",
+                    handle="LSink;.sink:(LData;)V[4: LParameterTypeOverride]:LSink;.sink:(LData;)V:0:1:24e90f4aea117982",
+                    filename="Flow.java",
+                    line=50,
+                    start=1,
+                    end=1,
+                    preconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSink;.sink:(LData;)V",
+                            port="argument(1)",
+                            location=SourceLocation(
+                                line_no=10, begin_column=12, end_column=13
+                            ),
+                            leaves=[("TestSink", 2)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=13, begin_column=15, end_column=16
+                                )
+                            ],
+                            features=[
+                                ParseTraceFeature(
+                                    name="always-via-parameter-field", locations=[]
+                                )
+                            ],
+                            type_interval=None,
+                            annotations=[],
+                            root_port=None,
+                        )
+                    ],
+                    postconditions=[
+                        ParseIssueConditionTuple(
+                            callee="LSource;.source:()LData;",
+                            port="result",
+                            location=SourceLocation(
+                                line_no=20, begin_column=22, end_column=23
+                            ),
+                            leaves=[("TestSource", 3)],
+                            titos=[
+                                SourceLocation(
+                                    line_no=23, begin_column=25, end_column=26
+                                ),
+                                SourceLocation(
+                                    line_no=26, begin_column=28, end_column=29
+                                ),
+                            ],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                            root_port=None,
+                        )
+                    ],
+                    initial_sources={("LSource;.source:(LData;)V", "TestSource", 3)},
+                    final_sinks={("LSink;.sink:(LData;)V", "TestSink", 2)},
+                    features=["always-exploitability-root-callable"],
+                    callable_line=2,
+                    fix_info=None,
+                )
+            ],
+        )

@@ -171,7 +171,7 @@ class ExploitabilityOrigin(NamedTuple):
         {"exploitability_root": ..., "callee": ..., "position": ...}
         """
         return ExploitabilityOrigin(
-            exploitability_root=leaf_json["exploitability_root"],
+            exploitability_root=Method.from_json(leaf_json["exploitability_root"]).name,
             callee=leaf_json["callee"],
             position=Position.from_json(leaf_json["position"], None),
         )
