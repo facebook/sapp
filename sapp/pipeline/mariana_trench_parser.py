@@ -162,7 +162,7 @@ class Issue(NamedTuple):
     message: str
     callable: mariana_trench.Method
     callee: mariana_trench.IssueCallee
-    sink_index: int
+    sink_index: str
     callable_position: mariana_trench.Position
     issue_position: mariana_trench.Position
     preconditions: List[IssueCondition]
@@ -212,7 +212,7 @@ class Parser(BaseParser):
     def get_master_handle(
         callable: str,
         issue_callee: mariana_trench.IssueCallee,
-        sink_index: int,
+        sink_index: str,
         code: int,
         callable_line: int,
         issue_line: int,

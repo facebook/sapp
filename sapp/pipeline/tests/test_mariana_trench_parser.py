@@ -89,7 +89,7 @@ class TestParser(unittest.TestCase):
                     "end": 12
                   },
                   "callee": "LSink;.sink:(LData;)V",
-                  "sink_index": 0,
+                  "sink_index": "0",
                   "sinks": [
                     {
                       "call_info": {
@@ -244,7 +244,7 @@ class TestParser(unittest.TestCase):
                     "end": 12
                   },
                   "callee": "LSink;.sink:(LData;)V",
-                  "sink_index": 1,
+                  "sink_index": "1",
                   "sinks": [
                     {
                       "call_info": {
@@ -430,7 +430,7 @@ class TestParser(unittest.TestCase):
                     "end": 12
                   },
                   "callee": "LSink;.sink:(LData;)V",
-                  "sink_index": 2,
+                  "sink_index": "2",
                   "sinks": [
                     {
                       "call_info": {
@@ -565,7 +565,7 @@ class TestParser(unittest.TestCase):
                     "end": 12
                   },
                   "callee": "LSink;.sink:(LData;)V",
-                  "sink_index": 3,
+                  "sink_index": "3",
                   "sinks": [
                     {
                       "call_info": {
@@ -814,7 +814,7 @@ class TestParser(unittest.TestCase):
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
                 issue_callee=IssueCallee("LSink;.sink:(LData;)V"),
-                sink_index=1,
+                sink_index="1",
                 code=4,
                 callable_line=2,
                 issue_line=10,
@@ -828,7 +828,7 @@ class TestParser(unittest.TestCase):
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
                 issue_callee=IssueCallee("LSink$2$10;.sink:(LData;)V"),
-                sink_index=2,
+                sink_index="2",
                 code=1,
                 callable_line=2,
                 issue_line=10,
@@ -843,7 +843,7 @@ class TestParser(unittest.TestCase):
                 issue_callee=IssueCallee(
                     "LSink$$ExternalSyntheticLambda10;.sink:(LData;)V"
                 ),
-                sink_index=2,
+                sink_index="2",
                 code=1,
                 callable_line=2,
                 issue_line=10,
@@ -856,7 +856,7 @@ class TestParser(unittest.TestCase):
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
                 issue_callee=IssueCallee("LSink$$Lambda$42;.sink:(LData;)V"),
-                sink_index=2,
+                sink_index="2",
                 code=1,
                 callable_line=2,
                 issue_line=10,
@@ -869,7 +869,7 @@ class TestParser(unittest.TestCase):
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
                 issue_callee=IssueCallee("LSink$10$$Lambda$42;.sink:(LData;)V"),
-                sink_index=2,
+                sink_index="2",
                 code=1,
                 callable_line=2,
                 issue_line=10,
@@ -882,7 +882,7 @@ class TestParser(unittest.TestCase):
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
                 issue_callee=IssueCallee("LSink$Inner;.sink$default:(LData;)V"),
-                sink_index=0,
+                sink_index="0",
                 code=1,
                 callable_line=2,
                 issue_line=10,
@@ -897,7 +897,7 @@ class TestParser(unittest.TestCase):
                 issue_callee=IssueCallee(
                     "Lcom/facebook/stories/features/replies/StoryViewerReplyDialog$special$$inlined$addTextChangedListener$default$2;.afterTextChanged:(Landroid/text/Editable;)V"
                 ),
-                sink_index=0,
+                sink_index="0",
                 code=1,
                 callable_line=2,
                 issue_line=10,
@@ -910,7 +910,7 @@ class TestParser(unittest.TestCase):
             Parser.get_master_handle(
                 callable="LClass;.flow:()V",
                 issue_callee=IssueCallee("LSink$1;.sink:(LData;)V"),
-                sink_index=1,
+                sink_index="1",
                 code=5,
                 callable_line=-1,
                 issue_line=-1,
@@ -2740,7 +2740,7 @@ class TestParser(unittest.TestCase):
                     "end": 12
                   },
                   "callee": "LSink;.sink:(LData;)V",
-                  "sink_index": 0,
+                  "sink_index": "0",
                   "sinks": [
                     {
                       "call_info": {
@@ -3345,7 +3345,7 @@ class TestParser(unittest.TestCase):
                       "path": "Flow.java"
                     }
                   },
-                  "sink_index": 0,
+                  "sink_index": "0",
                   "position": {
                     "line": 50,
                     "path": "Flow.java"
