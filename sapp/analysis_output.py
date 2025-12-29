@@ -86,6 +86,14 @@ class ContextPropagation:
 
 
 @dataclass
+class Rule:
+    """Information about an issue code, used by Mariana Trench"""
+
+    name: str
+    description: str
+
+
+@dataclass
 class Metadata:
     # Used to relativize paths in the results
     repo_roots: Set[str] = dataclasses.field(default_factory=set)
@@ -96,8 +104,7 @@ class Metadata:
     job_instance: Optional[int] = None
     project: Optional[str] = None
     # Mapping from code to rule metadata.
-    # pyre-ignore: we don't have a shape for rules yet.
-    rules: Dict[int, Any] = dataclasses.field(default_factory=dict)
+    rules: Dict[int, Rule] = dataclasses.field(default_factory=dict)
     class_type_intervals_filenames: List[str] = dataclasses.field(default_factory=list)
     category_coverage: Dict[str, Any] = dataclasses.field(default_factory=dict)
     partial_flows_to_mark: List[PartialFlowToMark] = dataclasses.field(
@@ -220,7 +227,10 @@ class AnalysisOutput:
             repo_root = metadata.get("repo_root")
             repo_roots = {repo_root if repo_root is not None else metadata["root"]}
 
-            rules = {rule["code"]: rule for rule in metadata.get("rules", [])}
+            rules = {
+                rule["code"]: Rule(name=rule["name"], description=rule["description"])
+                for rule in metadata.get("rules", [])
+            }
             class_type_intervals_filenames = _get_remapped_filename(
                 metadata, "class_type_intervals_filename", directory
             )
@@ -282,7 +292,10 @@ class AnalysisOutput:
         repo_root = metadata.get("repo_root")
         repo_roots = {repo_root if repo_root is not None else metadata["root"]}
 
-        rules = {rule["code"]: rule for rule in metadata.get("rules", [])}
+        rules = {
+            rule["code"]: Rule(name=rule["name"], description=rule["description"])
+            for rule in metadata.get("rules", [])
+        }
         class_type_intervals_filenames = _get_remapped_filename(
             metadata, "class_type_intervals_filename", directory
         )

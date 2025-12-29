@@ -26,7 +26,7 @@ from typing import (
 from ordered_set import OrderedSet
 
 from .. import pipeline as sapp
-from ..analysis_output import AnalysisOutput, Metadata
+from ..analysis_output import AnalysisOutput, Metadata, Rule
 from . import mariana_trench_parser_objects as mariana_trench
 from .base_parser import BaseParser
 
@@ -205,8 +205,7 @@ class Issue(NamedTuple):
 class Parser(BaseParser):
     def __init__(self, repo_dirs: Optional[Set[str]] = None) -> None:
         super().__init__(repo_dirs)
-        # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
-        self._rules: Dict[int, Any] = {}
+        self._rules: Dict[int, Rule] = {}
         self._initialized: bool = False
 
     @staticmethod
@@ -288,7 +287,7 @@ class Parser(BaseParser):
 
             yield Issue(
                 code=code,
-                message=f"{rule['name']}: {rule['description']}",
+                message=f"{rule.name}: {rule.description}",
                 callable=callable,
                 callee=mariana_trench.IssueCallee.from_json(issue),
                 sink_index=issue["sink_index"],

@@ -10,7 +10,7 @@ import sys
 import unittest
 from typing import Iterable, Union
 
-from ...analysis_output import AnalysisOutput, Metadata
+from ...analysis_output import AnalysisOutput, Metadata, Rule
 from .. import (
     ParseConditionTuple,
     ParseIssueConditionTuple,
@@ -41,7 +41,7 @@ class TestParser(unittest.TestCase):
             file_handle=io.StringIO(input),
             metadata=Metadata(
                 repo_roots={"/analysis/root"},
-                rules={1: {"name": "TestRule", "description": "Test Rule Description"}},
+                rules={1: Rule(name="TestRule", description="Test Rule Description")},
             ),
         )
 
