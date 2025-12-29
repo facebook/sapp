@@ -296,14 +296,15 @@ class LocalPositions(NamedTuple):
 
 
 class Features(NamedTuple):
+    # Features are ultimately sorted, so the instability of `Set` is acceptable
     features: Set[str]
 
     @staticmethod
     def from_json(features: Dict[str, Any]) -> "Features":
         may_features = set(features.get("may_features", []))
-        always_features = {
+        always_features = set(
             f"always-{feature}" for feature in features.get("always_features", [])
-        }
+        )
         return Features(may_features | always_features)
 
     @staticmethod
@@ -314,7 +315,7 @@ class Features(NamedTuple):
         # on the UI.
         user_features = Features.from_json(taint.get("local_user_features", {}))
         local_features = Features.from_json(taint.get("local_features", {}))
-        return Features(user_features.features | local_features.features)
+        return Features(user_features.features.union(local_features.features))
 
     def to_sapp(self) -> List[str]:
         return sorted(self.features)

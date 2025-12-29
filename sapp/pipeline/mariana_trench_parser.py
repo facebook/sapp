@@ -23,6 +23,8 @@ from typing import (
     Union,
 )
 
+from ordered_set import OrderedSet
+
 from .. import pipeline as sapp
 from ..analysis_output import AnalysisOutput, Metadata
 from . import mariana_trench_parser_objects as mariana_trench
@@ -81,7 +83,7 @@ class Condition(NamedTuple):
     leaves: List[ConditionLeaf]
     local_positions: mariana_trench.LocalPositions
     features: mariana_trench.Features
-    extra_traces: Set[mariana_trench.ExtraTrace]
+    extra_traces: OrderedSet[mariana_trench.ExtraTrace]
     type_interval: Optional[mariana_trench.TypeInterval]
 
     def convert_to_sapp(
@@ -128,7 +130,7 @@ class IssueCondition(NamedTuple):
     leaves: List[ConditionLeaf]
     local_positions: mariana_trench.LocalPositions
     features: mariana_trench.Features
-    extra_traces: Set[mariana_trench.ExtraTrace]
+    extra_traces: OrderedSet[mariana_trench.ExtraTrace]
     type_interval: Optional[mariana_trench.TypeInterval]
 
     def to_sapp(self) -> sapp.ParseIssueConditionTuple:
@@ -165,8 +167,8 @@ class Issue(NamedTuple):
     issue_position: mariana_trench.Position
     preconditions: List[IssueCondition]
     postconditions: List[IssueCondition]
-    initial_sources: Set[Leaf]
-    final_sinks: Set[Leaf]
+    initial_sources: OrderedSet[Leaf]
+    final_sinks: OrderedSet[Leaf]
     features: mariana_trench.Features
 
     def to_sapp(self, parser: "Parser") -> sapp.ParseIssueTuple:
@@ -193,8 +195,8 @@ class Issue(NamedTuple):
             postconditions=[
                 postcondition.to_sapp() for postcondition in self.postconditions
             ],
-            initial_sources={leaf.to_sapp() for leaf in self.initial_sources},
-            final_sinks={leaf.to_sapp() for leaf in self.final_sinks},
+            initial_sources=OrderedSet(leaf.to_sapp() for leaf in self.initial_sources),
+            final_sinks=OrderedSet(leaf.to_sapp() for leaf in self.final_sinks),
             features=self.features.to_sapp(),
             fix_info=None,
         )
@@ -305,11 +307,11 @@ class Parser(BaseParser):
         callable: mariana_trench.Method,
         callable_position: mariana_trench.Position,
         leaf_kind: str,
-    ) -> Tuple[List[IssueCondition], Set[Leaf]]:
+    ) -> Tuple[List[IssueCondition], OrderedSet[Leaf]]:
         condition_taints = issue[f"{leaf_kind}s"]
 
         conditions = []
-        issue_leaves = set()
+        issue_leaves = OrderedSet()
 
         for condition_taint in condition_taints:
             local_positions = mariana_trench.LocalPositions.from_taint_json(
@@ -329,18 +331,16 @@ class Parser(BaseParser):
                 ]
             )
 
-            issue_leaves.update(
-                {
-                    Leaf(
-                        method=origin.callee_name,
-                        kind=kind.name,
-                        distance=kind.distance,
-                    )
-                    for _, kinds in kinds_by_interval.items()
-                    for kind in kinds
-                    for origin in kind.origins
-                }
-            )
+            for _, kinds in kinds_by_interval.items():
+                for kind in kinds:
+                    for origin in kind.origins:
+                        issue_leaves.add(
+                            Leaf(
+                                method=origin.callee_name,
+                                kind=kind.name,
+                                distance=kind.distance,
+                            )
+                        )
 
             if call_info.is_declaration():
                 raise sapp.ParseError(
@@ -358,14 +358,14 @@ class Parser(BaseParser):
                                     leaves=condition_leaves,
                                     local_positions=local_positions,
                                     features=features,
-                                    extra_traces=set(kind.extra_traces),
+                                    extra_traces=OrderedSet(kind.extra_traces),
                                     type_interval=interval,
                                 )
                             )
             else:
                 for interval, kinds in kinds_by_interval.items():
                     condition_leaves = []
-                    extra_traces = set()
+                    extra_traces = OrderedSet()
                     for kind in kinds:
                         condition_leaves.append(ConditionLeaf.from_kind(kind))
                         extra_traces.update(kind.extra_traces)
@@ -486,7 +486,7 @@ class Parser(BaseParser):
                                         leaves=[],
                                         local_positions=local_positions,
                                         features=local_features,
-                                        extra_traces=set(),
+                                        extra_traces=OrderedSet(),
                                         type_interval=interval,
                                     ),
                                 )
@@ -497,7 +497,7 @@ class Parser(BaseParser):
                             yield condition
                 else:
                     for interval, kinds in kinds_by_interval.items():
-                        extra_traces = set()
+                        extra_traces = OrderedSet()
                         for kind in kinds:
                             extra_traces.update(kind.extra_traces)
                         yield condition_class(
