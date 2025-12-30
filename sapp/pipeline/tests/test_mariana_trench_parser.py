@@ -25,6 +25,11 @@ from ..mariana_trench_parser_objects import IssueCallee
 
 
 class TestParser(unittest.TestCase):
+    class ParseError(Exception):
+        """Exception thrown by assertParsed when parsing fails. Used to assert errors"""
+
+        pass
+
     def assertParsed(
         self,
         output: str,
@@ -49,7 +54,10 @@ class TestParser(unittest.TestCase):
             else:
                 return e.callable
 
-        issues_and_frames = parser.parse_analysis_output(analysis_output)
+        try:
+            issues_and_frames = parser.parse_analysis_output(analysis_output)
+        except Exception as e:
+            raise TestParser.ParseError() from e
         entries = (
             issues_and_frames.issues
             + list(issues_and_frames.preconditions.all_frames())
@@ -73,6 +81,64 @@ class TestParser(unittest.TestCase):
             """,
             [],
         )
+        self.assertParsed(
+            """
+            {
+              "fields": "LClass;.field",
+              "sources": "some field model sources",
+              "sinks": "some field model sinks"
+            }
+            """,
+            [],
+        )
+
+    def testParseErrors(self) -> None:
+        with self.assertRaises(TestParser.ParseError):
+            # Many fields missing from "issue", like "position"
+            self.assertParsed(
+                """
+                {
+                  "method": "LClass;.method:()V",
+                  "position": {
+                    "line": 1,
+                    "path": "Class.java"
+                  },
+                  "issues": [
+                    {
+                      "rule": 1
+                    }
+                  ]
+                }
+                """,
+                [],
+            )
+
+        with self.assertRaises(TestParser.ParseError):
+            # Invalid json (note missing closing brackets)
+            self.assertParsed(
+                """
+                {
+                  "method": {"name": "LClass;.method:()V"},
+                  "position": {
+                    "line": 1,
+                    "path": "Class.java"
+                  }
+                """,
+                [],
+            )
+
+        with self.assertRaises(TestParser.ParseError):
+            # Invalid json on field model (note trailing comma)
+            self.assertParsed(
+                """
+                {
+                  "fields": "LClass;.field",
+                  "sources": "some field model sources",
+                  "sinks": "some field model sinks",
+                }
+                """,
+                [],
+            )
 
     def testModelWithIssue(self) -> None:
         self.assertParsed(
