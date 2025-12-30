@@ -17,7 +17,7 @@ UNKNOWN_LINE: int = -1
 
 
 def _parse_partial_kind_name(kind: Dict[str, Any]) -> str:
-    partial_label = kind.get("partial_label")
+    partial_label = kind["partial_label"]
     name = kind.get("name")
     if name is None:
         raise AssertionError(f"PartialKind must have a name. Kind: {kind}")
@@ -132,10 +132,6 @@ class Position(NamedTuple):
     end: int
 
     @staticmethod
-    def default() -> "Position":
-        return Position(UNKNOWN_PATH, UNKNOWN_LINE, 0, 0)
-
-    @staticmethod
     def from_json(position: Dict[str, Any], method: Optional[Method]) -> "Position":
         path = position.get("path", UNKNOWN_PATH)
         line = position.get("line", UNKNOWN_LINE)
@@ -162,7 +158,6 @@ class Position(NamedTuple):
 class ExploitabilityOrigin(NamedTuple):
     exploitability_root: str
     callee: str
-    position: Position
 
     @staticmethod
     def from_json(leaf_json: Dict[str, Any]) -> "ExploitabilityOrigin":
@@ -173,7 +168,6 @@ class ExploitabilityOrigin(NamedTuple):
         return ExploitabilityOrigin(
             exploitability_root=Method.from_json(leaf_json["exploitability_root"]).name,
             callee=leaf_json["callee"],
-            position=Position.from_json(leaf_json["position"], None),
         )
 
 
@@ -385,7 +379,7 @@ class TypeInterval(NamedTuple):
     preserves_type_context: bool
 
     @staticmethod
-    def from_json(kind: Dict[str, Any], frame_type: str) -> Optional["TypeInterval"]:
+    def from_json(kind: Dict[str, Any]) -> Optional["TypeInterval"]:
         """Parses class interval information from the kind JSON"""
         interval = kind.get("callee_interval")
         if interval is None:
@@ -430,7 +424,7 @@ class Kind(NamedTuple):
             distance=kind.get("distance", 0),
             origins=origins,
             extra_traces=extra_traces,
-            type_interval=TypeInterval.from_json(kind, frame_type),
+            type_interval=TypeInterval.from_json(kind),
         )
 
     @staticmethod
