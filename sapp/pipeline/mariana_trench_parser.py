@@ -305,9 +305,9 @@ class Parser(BaseParser):
         issue: Dict[str, Any],
         callable: mariana_trench.Method,
         callable_position: mariana_trench.Position,
-        leaf_kind: str,
+        frame_type: str,
     ) -> Tuple[List[IssueCondition], OrderedSet[Leaf]]:
-        condition_taints = issue[f"{leaf_kind}s"]
+        condition_taints = issue[f"{frame_type}s"]
 
         conditions = []
         issue_leaves = OrderedSet()
@@ -318,13 +318,13 @@ class Parser(BaseParser):
             )
             features = mariana_trench.Features.from_taint_json(condition_taint)
             call_info = mariana_trench.CallInfo.from_json(
-                condition_taint["call_info"], leaf_kind, callable_position
+                condition_taint["call_info"], frame_type, callable_position
             )
 
             kinds_by_interval = mariana_trench.Kind.partition_by_interval(
                 [
                     mariana_trench.Kind.from_json(
-                        kind_json, leaf_kind, callable_position
+                        kind_json, frame_type, callable_position
                     )
                     for kind_json in condition_taint["kinds"]
                 ]
@@ -343,7 +343,7 @@ class Parser(BaseParser):
 
             if call_info.is_declaration():
                 raise sapp.ParseError(
-                    f"Unexpected declaration frame at issue {leaf_kind}: {issue}"
+                    f"Unexpected declaration frame at issue {frame_type}: {issue}"
                 )
 
             if call_info.is_origin():
@@ -387,7 +387,7 @@ class Parser(BaseParser):
             condition_model_key="sinks",
             port_key="port",
             leaf_model_key="taint",
-            leaf_kind="sink",
+            frame_type="sink",
             condition_class=Precondition,
         )
 
@@ -399,7 +399,7 @@ class Parser(BaseParser):
             condition_model_key="effect_sinks",
             port_key="port",
             leaf_model_key="taint",
-            leaf_kind="sink",
+            frame_type="sink",
             condition_class=Precondition,
         )
 
@@ -409,7 +409,7 @@ class Parser(BaseParser):
             condition_model_key="generations",
             port_key="port",
             leaf_model_key="taint",
-            leaf_kind="source",
+            frame_type="source",
             condition_class=Postcondition,
         )
 
@@ -419,7 +419,7 @@ class Parser(BaseParser):
             condition_model_key="propagation",
             port_key="input",
             leaf_model_key="output",
-            leaf_kind="sink",
+            frame_type="sink",
             condition_class=Propagation,
         )
 
@@ -429,7 +429,7 @@ class Parser(BaseParser):
         condition_model_key: str,
         port_key: str,
         leaf_model_key: str,
-        leaf_kind: str,
+        frame_type: str,
         condition_class: Type[ConditionType],
     ) -> Iterable[ConditionType]:
         caller_method = mariana_trench.Method.from_json(model["method"])
@@ -446,7 +446,7 @@ class Parser(BaseParser):
             for leaf_taint in leaf_model[leaf_model_key]:
                 call_info_json = leaf_taint["call_info"]
                 call_info = mariana_trench.CallInfo.from_json(
-                    call_info_json, leaf_kind, caller_position
+                    call_info_json, frame_type, caller_position
                 )
                 if (
                     call_info.is_declaration()
@@ -465,7 +465,7 @@ class Parser(BaseParser):
                 kinds_by_interval = mariana_trench.Kind.partition_by_interval(
                     [
                         mariana_trench.Kind.from_json(
-                            kind_json, leaf_kind, caller_position
+                            kind_json, frame_type, caller_position
                         )
                         for kind_json in kinds_json
                     ]

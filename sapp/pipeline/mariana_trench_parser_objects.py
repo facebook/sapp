@@ -182,7 +182,7 @@ class Origin(NamedTuple):
     callee_port: Port
 
     @staticmethod
-    def from_json(leaf_json: Dict[str, Any], leaf_kind: str) -> "Origin":
+    def from_json(leaf_json: Dict[str, Any], frame_type: str) -> "Origin":
         """
         Depending on the origin kind, the json keys will vary:
 
@@ -201,7 +201,7 @@ class Origin(NamedTuple):
         # The origin represents a call to a leaf/terminal trace. Its port should
         # indicate that, so that downstream trace reachability computation knows
         # when it has reached the end. See trace_graph.is_leaf_port(). Non-CRTEX
-        # ports should always be <leaf_kind>[:<actual port>].
+        # ports should always be <frame_type>[:<actual port>].
         if "canonical_name" in leaf_json:
             # All CRTEX ports are considered leaf ports.
             callee_port = Port.from_json(leaf_json["port"])
@@ -210,9 +210,9 @@ class Origin(NamedTuple):
             if actual_callee_port is not None:
                 # Normalize the actual callee port as well.
                 actual_callee_port = Port.from_json(actual_callee_port).value
-                callee_port = Port.from_json(f"{leaf_kind}:{actual_callee_port}")
+                callee_port = Port.from_json(f"{frame_type}:{actual_callee_port}")
             else:
-                callee_port = Port.from_json(leaf_kind)
+                callee_port = Port.from_json(frame_type)
 
         if not callee_port.is_leaf():
             raise sapp.ParseError(f"Encountered non-leaf port in origin {leaf_json}")
@@ -230,13 +230,13 @@ class CallInfo(NamedTuple):
 
     @staticmethod
     def from_json(
-        taint_json: Dict[str, Any], leaf_kind: str, caller_position: Position
+        taint_json: Dict[str, Any], frame_type: str, caller_position: Position
     ) -> "CallInfo":
         call_kind = taint_json["call_kind"]
 
         callee = taint_json.get("resolves_to")
         method = Method.from_json(callee) if callee else None
-        port = Port.from_json(taint_json.get("port", leaf_kind))
+        port = Port.from_json(taint_json.get("port", frame_type))
 
         position_json = taint_json.get("position")
         position = (
@@ -385,7 +385,7 @@ class TypeInterval(NamedTuple):
     preserves_type_context: bool
 
     @staticmethod
-    def from_json(kind: Dict[str, Any], leaf_kind: str) -> Optional["TypeInterval"]:
+    def from_json(kind: Dict[str, Any], frame_type: str) -> Optional["TypeInterval"]:
         """Parses class interval information from the kind JSON"""
         interval = kind.get("callee_interval")
         if interval is None:
@@ -414,14 +414,14 @@ class Kind(NamedTuple):
 
     @staticmethod
     def from_json(
-        kind: Dict[str, Any], leaf_kind: str, caller_position: Position
+        kind: Dict[str, Any], frame_type: str, caller_position: Position
     ) -> "Kind":
         origins = []
         for origin in kind.get("origins", []):
             # exploitability_root is only used internally and not required for SAPP.
             if "exploitability_root" in origin:
                 continue
-            origins.append(Origin.from_json(origin, leaf_kind))
+            origins.append(Origin.from_json(origin, frame_type))
         extra_traces = []
         for extra_trace in kind.get("extra_traces", []):
             extra_traces.append(ExtraTrace.from_json(extra_trace, caller_position))
@@ -430,7 +430,7 @@ class Kind(NamedTuple):
             distance=kind.get("distance", 0),
             origins=origins,
             extra_traces=extra_traces,
-            type_interval=TypeInterval.from_json(kind, leaf_kind),
+            type_interval=TypeInterval.from_json(kind, frame_type),
         )
 
     @staticmethod
