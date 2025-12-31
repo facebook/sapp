@@ -28,7 +28,7 @@ from typing import (
 )
 
 from .. import errors
-from ..analysis_output import AnalysisOutput, Metadata
+from ..analysis_output import AnalysisOutput
 from . import (
     flatten_features_to_parse_trace_feature,
     ParseConditionTuple,
