@@ -139,9 +139,9 @@ class TraceGraph:
         return len(self._issues)
 
     def add_issue_instance(self, instance: IssueInstance) -> None:
-        assert (
-            instance.id.local_id not in self._issue_instances
-        ), "Instance already exists"
+        assert instance.id.local_id not in self._issue_instances, (
+            "Instance already exists"
+        )
         self._issue_instances[instance.id.local_id] = instance
 
     def get_issue_instances(self) -> Iterable[IssueInstance]:
@@ -150,24 +150,24 @@ class TraceGraph:
     def add_issue_instance_fix_info(
         self, instance: IssueInstance, fix_info: IssueInstanceFixInfo
     ) -> None:
-        assert (
-            instance.id.local_id not in self._issue_instance_fix_info
-        ), "Instance fix info already exists"
+        assert instance.id.local_id not in self._issue_instance_fix_info, (
+            "Instance fix info already exists"
+        )
         self._issue_instance_fix_info[instance.id.local_id] = fix_info
 
     def add_class_type_interval(self, interval: ClassTypeInterval) -> None:
-        assert (
-            interval.class_name not in self._class_type_intervals
-        ), "Class name already exists"
+        assert interval.class_name not in self._class_type_intervals, (
+            "Class name already exists"
+        )
         self._class_type_intervals[interval.class_name] = interval
 
     def add_meta_run_issue_instance(
         self, meta_run_issue_instance: MetaRunIssueInstanceIndex
     ) -> None:
         local_id = meta_run_issue_instance.issue_instance_id.local_id
-        assert (
-            local_id not in self._meta_run_issue_instances
-        ), "Meta run issue instance already exists"
+        assert local_id not in self._meta_run_issue_instances, (
+            "Meta run issue instance already exists"
+        )
         self._meta_run_issue_instances[local_id] = meta_run_issue_instance
 
     def get_text(self, shared_text_id: DBID) -> str:
@@ -285,9 +285,9 @@ class TraceGraph:
         return self._trace_frames[id]
 
     def add_shared_text(self, shared_text: SharedText) -> None:
-        assert (
-            shared_text.id.local_id not in self._shared_texts
-        ), "Shared text already exists"
+        assert shared_text.id.local_id not in self._shared_texts, (
+            "Shared text already exists"
+        )
         assert (
             shared_text.kind not in self._shared_text_lookup
             or shared_text.contents not in self._shared_text_lookup[shared_text.kind]
