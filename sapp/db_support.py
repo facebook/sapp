@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import random
+import time
 from collections import namedtuple
 from typing import (
     Callable,
@@ -544,7 +546,22 @@ class PrimaryKeyGeneratorBase:
         )
 
         cls_pk.current_id = max_id
-        session.commit()
+
+        # This commit may fail if there is too much write pressure on the DB.
+        # Wrap the commit in a retry with a randomized exponential backoff to
+        # avoid failing the entire run.
+        retries = 0
+        while True:
+            try:
+                session.commit()
+                break
+            except exc.OperationalError:
+                retries += 1
+                if retries > 5:
+                    raise
+                else:
+                    time.sleep(2**retries + random.random())
+
         self.pks[cls.__name__] = (next_id, max_id)
 
     def _get_initial_current_id(
