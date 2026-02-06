@@ -27,7 +27,6 @@ class QueryTest(TestCase):
         create_models(self.db)
         self.fakes = FakeObjectGenerator()
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _basic_trace_frames(self) -> List[Any]:
         return [
             self.fakes.precondition(

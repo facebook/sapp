@@ -103,7 +103,7 @@ class TraceFrameQueryResult(NamedTuple):
 
     @staticmethod
     def from_record(
-        record: Any,  # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        record: Any,
         shared_texts: Optional[List[SharedText]] = None,
     ) -> "TraceFrameQueryResult":
         return TraceFrameQueryResult(

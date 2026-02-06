@@ -46,7 +46,6 @@ class IssueQueryResult(NamedTuple):
     similar_issues: Set[SimilarIssue]
 
     @staticmethod
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def from_record(record: Any) -> "IssueQueryResult":
         return IssueQueryResult(
             issue_id=record.issue_id,

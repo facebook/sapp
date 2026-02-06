@@ -32,6 +32,9 @@
       "site-package": "munch"
     },
     {
+      "site-package": "ordered_set"
+    },
+    {
       "site-package": "pygments"
     },
     {

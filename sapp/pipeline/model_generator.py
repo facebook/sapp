@@ -54,7 +54,6 @@ from . import (
 log: logging.Logger = logging.getLogger("sapp")
 
 
-# pyre-fixme[2]: Really need Any here
 def bound_int(i: Any, upper_limit: int) -> Optional[int]:
     if isinstance(i, int):
         if i < 0:
@@ -69,7 +68,6 @@ def bound_int(i: Any, upper_limit: int) -> Optional[int]:
 MAX_TRACE_LENGTH: int = 1000
 
 
-# pyre-fixme[2]: Really need Any here
 def bound_trace_length(depth: Any) -> Optional[int]:
     # avoid writing bad trace_length to DB
     return bound_int(depth, MAX_TRACE_LENGTH)
@@ -78,7 +76,6 @@ def bound_trace_length(depth: Any) -> Optional[int]:
 MAX_TYPE_INTERVAL: int = (2**31) - 1
 
 
-# pyre-fixme[2]: Really need Any here
 def bound_type_interval_limit(i: Any) -> Optional[int]:
     # avoid writing bad interval numbers
     return bound_int(i, MAX_TYPE_INTERVAL)
