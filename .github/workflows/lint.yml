@@ -44,9 +44,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install packages and run ESLint
         run: |
           cd sapp/ui/frontend
           npm install
-          npm install -g eslint
-          BABEL_ENV=development npm run lint
+          npm run lint

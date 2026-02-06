@@ -13,6 +13,7 @@
     "antd": "^5.11.1",
     "babel-jest": "^24.9.0",
     "codemirror": "^5.57.0",
+    "eslint": "^9.26.0",
     "flow-bin": "^0.133.0",
     "graphql": "^15.3.0",
     "jest": "^24.9.0",
@@ -28,12 +29,12 @@
     "webpack-dev-server": "5.1.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "DISABLE_ESLINT_PLUGIN=true react-scripts start",
+    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "ui-test": "node node_modules/jest/bin/jest.js",
-    "lint": "npx eslint . --max-warnings=0",
+    "lint": "BABEL_ENV=development npx eslint . --max-warnings=0",
     "flow": "flow"
   },
   "eslintConfig": {
@@ -106,5 +107,13 @@
     "presets": [
       "react-app"
     ]
+  },
+  "overrides": {
+    "eslint": "^9.26.0"
+  },
+  "devDependencies": {
+    "@babel/preset-flow": "^7.27.1",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^17.3.0"
   }
 }
