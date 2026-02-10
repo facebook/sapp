@@ -871,6 +871,17 @@ class TrimmedTraceGraph(TraceGraph):
                 self.add_shared_text(leaf)
             self.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
 
+        # Also copy normalized leaves from leaf_mapping. This is needed when
+        # re-computing minimum trace lengths later.
+        if trace_frame.leaf_mapping:
+            for leaf_map in trace_frame.leaf_mapping:
+                for leaf_id in [leaf_map.caller_leaf, leaf_map.callee_leaf]:
+                    if (
+                        leaf_id not in self._shared_texts
+                        and leaf_id in graph._shared_texts
+                    ):
+                        self.add_shared_text(graph._shared_texts[leaf_id])
+
     @staticmethod
     def _is_filename_prefixed_with(filename: str, prefixes: Iterable[str]) -> bool:
         return any(filename.startswith(p) for p in prefixes)
