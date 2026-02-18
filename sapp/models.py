@@ -54,7 +54,14 @@ from .source_location import SourceLocation
 log: logging.Logger = logging.getLogger("sapp")
 
 
-Base = declarative_base()
+class _BackwardsCompatBase:
+    # Required for SQLAlchemy 2.0 compatibility with legacy type annotations
+    # that don't use Mapped[]. Without this, SQLAlchemy raises MappedAnnotationError.
+    # See: https://sqlalche.me/e/20/zlpr
+    __allow_unmapped__ = True
+
+
+Base = declarative_base(cls=_BackwardsCompatBase)
 INNODB_MAX_INDEX_LENGTH = 767
 HANDLE_LENGTH = 255
 MESSAGE_LENGTH = 4096

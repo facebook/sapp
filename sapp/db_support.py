@@ -409,6 +409,10 @@ class MutableRecordMixin:
 class PrimaryKeyBase(PrepareMixin, RecordMixin):  # noqa
     """Subclass this and include your declarative_base mixin"""
 
+    # Required for SQLAlchemy 2.0 compatibility with legacy type annotations
+    # that don't use Mapped[]. See: https://sqlalche.me/e/20/zlpr
+    __allow_unmapped__ = True
+
     __tablename__ = "primary_keys"
     __table_args__: Tuple[Dict[str, str]] = BASE_TABLE_ARGS
 
