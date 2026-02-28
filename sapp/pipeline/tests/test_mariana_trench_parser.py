@@ -3382,6 +3382,74 @@ class TestParser(unittest.TestCase):
             ],
         )
 
+    def testSubkind(self) -> None:
+        # Subkind postcondition (Origin case)
+        self.assertParsed(
+            """
+            {
+              "method": "LClass;.indirect_source:()V",
+              "generations": [
+                {
+                  "port": "Return",
+                  "taint": [
+                    {
+                      "call_info": {
+                        "call_kind": "Origin",
+                        "position": {
+                          "path": "Class.java",
+                          "line": 10,
+                          "start": 11,
+                          "end": 12
+                        }
+                      },
+                      "kinds": [
+                        {
+                          "call_kind": "Origin",
+                          "distance": 0,
+                          "kind": {
+                            "name": "Sink",
+                            "subkind": "A"
+                          },
+                          "origins": [
+                            {
+                              "method": "LSource;.source:()V",
+                              "port": "Argument(1)"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "position": {
+                "line": 1,
+                "path": "Class.java"
+              }
+            }
+            """,
+            [
+                ParseConditionTuple(
+                    type=ParseType.POSTCONDITION,
+                    caller="LClass;.indirect_source:()V",
+                    callee="LSource;.source:()V",
+                    callee_location=SourceLocation(
+                        line_no=10,
+                        begin_column=12,
+                        end_column=13,
+                    ),
+                    filename="Class.java",
+                    titos=[],
+                    leaves=[("Sink(A)", 0)],
+                    caller_port="result",
+                    callee_port="source:argument(1)",
+                    type_interval=None,
+                    features=[],
+                    annotations=[],
+                )
+            ],
+        )
+
     def testExpoitabilityOriginAsObject(self) -> None:
         # Ensure we handle the case where "exploitability_origin" has
         # "parameter_overrides" and is not just a string

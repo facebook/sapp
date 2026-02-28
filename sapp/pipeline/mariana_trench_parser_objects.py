@@ -24,6 +24,14 @@ def _parse_partial_kind_name(kind: Dict[str, Any]) -> str:
     return f"Partial:{name}:{partial_label}"
 
 
+def _parse_subkind_name(kind: Dict[str, Any]) -> str:
+    subkind = kind["subkind"]
+    name = kind.get("name")
+    if name is None:
+        raise AssertionError(f"NamedKind with subkind must have a name. Kind: {kind}")
+    return f"{name}({subkind})"
+
+
 def _parse_transform_kind_name(kind: Dict[str, Any]) -> str:
     name = ""
     if local_transform := kind.get("local"):
@@ -54,10 +62,12 @@ def _parse_kind_name(kind: Union[str, Dict[str, Any]]) -> str:
         # traces to connect correctly, the string representation of both kinds
         # must be the same.
         return _parse_partial_kind_name(kind)
+    elif "subkind" in kind:
+        return _parse_subkind_name(kind)
 
     raise AssertionError(
-        "Unable to parse kind object. Must have either 'base' or "
-        f"'partial_label' key. Kind: {kind}"
+        "Unable to parse kind object. Must have 'base', 'partial_label', or "
+        f"'subkind' key. Kind: {kind}"
     )
 
 
