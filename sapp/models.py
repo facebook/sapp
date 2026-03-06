@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
-from typing import Any, Dict, List, NamedTuple, Optional, Set
+from typing import Any, Dict, List, NamedTuple, Optional, Set, TYPE_CHECKING
 
 from graphene_sqlalchemy.converter import (
     convert_column_to_int_or_id,
@@ -34,8 +34,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.exc import NoSuchTableError, ProgrammingError
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, Session
+from sqlalchemy.orm import declarative_base, relationship, Session
 
 from .db import DB
 from .db_support import (
@@ -61,7 +60,19 @@ class _BackwardsCompatBase:
     __allow_unmapped__ = True
 
 
-Base = declarative_base(cls=_BackwardsCompatBase)
+if TYPE_CHECKING:
+
+    class Base(_BackwardsCompatBase):
+        metadata: Any = ...
+        __tablename__: str = ...
+        __table__: Any = ...
+        __table_args__: Any = ...
+
+        def __init__(self, **kwargs: Any) -> None: ...
+        def __init_subclass__(cls, **kwargs: Any) -> None: ...
+
+else:
+    Base = declarative_base(cls=_BackwardsCompatBase)
 INNODB_MAX_INDEX_LENGTH = 767
 HANDLE_LENGTH = 255
 MESSAGE_LENGTH = 4096

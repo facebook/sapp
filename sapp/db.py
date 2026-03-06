@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from typing import Any, Iterator, Optional, Type
 
 import sqlalchemy
+from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import scoped_session, Session, sessionmaker
@@ -56,13 +57,13 @@ class DB:
 
         if dbtype == DBType.MEMORY:
             self.engine = sqlalchemy.create_engine(
-                sqlalchemy.engine.url.URL("sqlite", database=":memory:"),
+                sqlalchemy.engine.url.URL.create("sqlite", database=":memory:"),
                 echo=debug,
                 poolclass=self.poolclass,
             )
         elif dbtype == DBType.SQLITE:
             self.engine = sqlalchemy.create_engine(
-                sqlalchemy.engine.url.URL("sqlite", database=self.dbname),
+                sqlalchemy.engine.url.URL.create("sqlite", database=self.dbname),
                 echo=debug,
                 poolclass=self.poolclass,
             )
@@ -94,7 +95,7 @@ class DB:
         if self.dbtype == DBType.XDB:
             # Make sure SQL doesn't quit on us after 10s. Sometimes merging data takes
             # longer.
-            session.execute("SET SESSION wait_timeout = %d" % 60)
+            session.execute(text("SET SESSION wait_timeout = %d" % 60))
 
         return session
 
@@ -104,4 +105,4 @@ class DB:
 
 
 def ping_db(session: Session) -> None:
-    session.execute("SELECT 1")
+    session.execute(text("SELECT 1"))
