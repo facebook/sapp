@@ -102,6 +102,12 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
         )
         self.skip_traces: bool = skip_traces
         self.trace_entries: Dict[TraceKind, Frames] = {}
+        self.generated_annotation_traces: Set[Tuple[str, str, TraceKind]] = set()
+        # Active _generate_transitive_trace_frames queue, if any.
+        # pyre-fixme[6]: TraceFrame.kind is str at runtime, not TraceKind.
+        self._transitive_queue: Optional[
+            List[Tuple[Union[str, TraceKind], TraceFrame, Set[int]]]
+        ] = None
 
     def run(
         self,
@@ -404,42 +410,51 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
             return returned_frames
 
         kind = start_frame.kind
-        queue = [(start_frame, outgoing_leaf_ids)]
-        while len(queue) > 0:
-            frame, outgoing_leaves = queue.pop()
-            if len(outgoing_leaves) == 0:
-                continue
-
-            returned_frames.append(frame)
-
-            frame_id = frame.id.local_id
-            if frame_id in self.visited_frames:
-                outgoing_leaves = outgoing_leaves - self.visited_frames[frame_id]
+        # pyre-fixme[6]: TraceFrame.kind is str at runtime, not TraceKind.
+        queue: List[Tuple[Union[str, TraceKind], TraceFrame, Set[int]]] = [
+            (kind, start_frame, outgoing_leaf_ids)
+        ]
+        prev_queue = self._transitive_queue
+        self._transitive_queue = queue
+        try:
+            while len(queue) > 0:
+                item_kind, frame, outgoing_leaves = queue.pop()
                 if len(outgoing_leaves) == 0:
                     continue
-                else:
-                    self.visited_frames[frame_id].update(outgoing_leaves)
-            else:
-                self.visited_frames[frame_id] = outgoing_leaves
 
-            next_frames = self._get_or_populate_trace_frames(
-                # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-                kind,
-                run,
-                frame.callee_id,
-                caller_port=frame.callee_port,
-            )
-            queue.extend(
-                [
-                    (
-                        frame,
-                        self.graph.compute_next_leaf_kinds(
-                            outgoing_leaves, frame.leaf_mapping
-                        ),
-                    )
-                    for frame in next_frames
-                ]
-            )
+                returned_frames.append(frame)
+
+                frame_id = frame.id.local_id
+                if frame_id in self.visited_frames:
+                    outgoing_leaves = outgoing_leaves - self.visited_frames[frame_id]
+                    if len(outgoing_leaves) == 0:
+                        continue
+                    else:
+                        self.visited_frames[frame_id].update(outgoing_leaves)
+                else:
+                    self.visited_frames[frame_id] = outgoing_leaves
+
+                next_frames = self._get_or_populate_trace_frames(
+                    # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
+                    item_kind,
+                    run,
+                    frame.callee_id,
+                    caller_port=frame.callee_port,
+                )
+                queue.extend(
+                    [
+                        (
+                            item_kind,
+                            frame,
+                            self.graph.compute_next_leaf_kinds(
+                                outgoing_leaves, frame.leaf_mapping
+                            ),
+                        )
+                        for frame in next_frames
+                    ]
+                )
+        finally:
+            self._transitive_queue = prev_queue
         return returned_frames
 
     def _get_or_populate_trace_frames(
@@ -681,6 +696,12 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
         features = trace.features
         nested_annotations = trace.annotations
         position = trace.position
+
+        cache_key = (callee, callee_port, trace_kind)
+        is_new = cache_key not in self.generated_annotation_traces
+        if is_new:
+            self.generated_annotation_traces.add(cache_key)
+
         titos = self._generate_tito(parent_filename, annotation, parent_caller)
         call_tf = self._generate_raw_trace_frame(
             trace_kind,
@@ -694,12 +715,15 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
             titos,
             [(annotation.leaf_kind or "", annotation.leaf_depth)],
             annotation.type_interval,
-            nested_annotations,
+            nested_annotations if is_new else [],
             features,
         )
-        self._generate_transitive_trace_frames(
-            run, call_tf, {leaf_map.callee_leaf for leaf_map in call_tf.leaf_mapping}
-        )
+        if is_new:
+            leaf_ids = {leaf_map.callee_leaf for leaf_map in call_tf.leaf_mapping}
+            if self._transitive_queue is not None:
+                self._transitive_queue.append((trace_kind, call_tf, leaf_ids))
+            else:
+                self._generate_transitive_trace_frames(run, call_tf, leaf_ids)
         return call_tf
 
     def _get_shared_text(self, kind: SharedTextKind, name: str) -> SharedText:
