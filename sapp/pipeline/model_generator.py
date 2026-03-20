@@ -104,7 +104,6 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
         self.trace_entries: Dict[TraceKind, Frames] = {}
         self.generated_annotation_traces: Set[Tuple[str, str, TraceKind]] = set()
         # Active _generate_transitive_trace_frames queue, if any.
-        # pyre-fixme[6]: TraceFrame.kind is str at runtime, not TraceKind.
         self._transitive_queue: Optional[
             List[Tuple[Union[str, TraceKind], TraceFrame, Set[int]]]
         ] = None
@@ -410,7 +409,6 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
             return returned_frames
 
         kind = start_frame.kind
-        # pyre-fixme[6]: TraceFrame.kind is str at runtime, not TraceKind.
         queue: List[Tuple[Union[str, TraceKind], TraceFrame, Set[int]]] = [
             (kind, start_frame, outgoing_leaf_ids)
         ]

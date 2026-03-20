@@ -1713,7 +1713,6 @@ class InteractiveTest(TestCase):
         self.assertIn("        [1 hops: source1]", output)
 
     def testCurrentBranchIndex(self) -> None:
-        # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
         trace_frames = [TraceFrame(id=1), TraceFrame(id=2), TraceFrame(id=3)]
 
         self.interactive.current_trace_frame_index = 0
@@ -1815,13 +1814,9 @@ class InteractiveTest(TestCase):
 
     def testAddListOrStringFilterToQuery(self) -> None:
         shared_texts = [
-            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=1, contents="prefix"),
-            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=2, contents="suffix"),
-            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=3, contents="prefix_suffix"),
-            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
             SharedText(id=4, contents="fix"),
         ]
 
