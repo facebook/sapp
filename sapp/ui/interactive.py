@@ -39,6 +39,7 @@ from prompt_toolkit.history import FileHistory, History
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import get_lexer_for_filename
+from sqlalchemy import select
 from sqlalchemy.orm import aliased, Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.query import Query as RawQuery
@@ -245,7 +246,9 @@ json CALLABLE        show the original json output for the matching callable
         pager = self._resolve_pager(use_pager)
 
         with self.db.make_session() as session:
-            runs = session.query(Run).filter(Run.status == RunStatus.finished)
+            runs = session.execute(
+                select(Run).filter(Run.status == RunStatus.finished)
+            ).scalars()
 
             run_strings = [
                 "\n".join([f"Run {run.id}", f"Date: {run.date}", "-" * 80])
@@ -259,11 +262,10 @@ json CALLABLE        show the original json output for the matching callable
     @catch_keyboard_interrupt()
     def run(self, run_id: DBID) -> None:
         with self.db.make_session() as session:
-            selected_run = (
-                session.query(Run)
-                .filter(Run.status == RunStatus.finished)
-                .filter(Run.id == run_id)
-                .scalar()
+            selected_run = session.scalar(
+                select(Run)
+                .where(Run.status == RunStatus.finished)
+                .where(Run.id == run_id)
             )
 
         if selected_run is None:
@@ -352,11 +354,10 @@ json CALLABLE        show the original json output for the matching callable
             raise UserError("Please provide a non-empty string for 'run_kind'.")
 
         with self.db.make_session() as session:
-            selected_run_id = (
-                session.query(func.max(Run.id))
-                .filter(Run.kind == run_kind)
-                .filter(Run.status == RunStatus.finished)
-                .scalar()
+            selected_run_id = session.scalar(
+                select(func.max(Run.id))
+                .where(Run.kind == run_kind)
+                .where(Run.status == RunStatus.finished)
             )
 
         if selected_run_id.resolved() is None:
@@ -376,10 +377,8 @@ json CALLABLE        show the original json output for the matching callable
         issue.
         """
         with self.db.make_session() as session:
-            selected_issue = (
-                session.query(IssueInstance)
-                .filter(IssueInstance.id == issue_instance_id)
-                .scalar()
+            selected_issue = session.scalar(
+                select(IssueInstance).where(IssueInstance.id == issue_instance_id)
             )
 
             if selected_issue is None:
@@ -666,8 +665,8 @@ json CALLABLE        show the original json output for the matching callable
             _ matches 1 character (like . in regex)
         """
         with self.db.make_session() as session:
-            query = (
-                session.query(
+            stmt = (
+                select(
                     TraceFrame.id,
                     CallerText.contents.label("caller"),
                     TraceFrame.caller_port,
@@ -680,13 +679,21 @@ json CALLABLE        show the original json output for the matching callable
             )
 
             if callers is not None:
-                query = self._add_list_or_string_filter_to_query(
-                    callers, query, CallerText.contents, "callers"
+                stmt = self._add_list_or_string_filter_to_query(
+                    callers,
+                    # pyre-fixme[6]: Expected `Query[Variable[T]]` but got `Join`.
+                    stmt,
+                    CallerText.contents,
+                    "callers",
                 )
 
             if callees is not None:
-                query = self._add_list_or_string_filter_to_query(
-                    callees, query, CalleeText.contents, "callees"
+                stmt = self._add_list_or_string_filter_to_query(
+                    callees,
+                    # pyre-fixme[6]: Expected `Query[Variable[T]]` but got `Join`.
+                    stmt,
+                    CalleeText.contents,
+                    "callees",
                 )
 
             if kind is not None:
@@ -694,17 +701,21 @@ json CALLABLE        show the original json output for the matching callable
                     raise UserError(
                         "Try 'frames kind=postcondition' or 'frames kind=precondition'."
                     )
-                query = query.filter(TraceFrame.kind == kind)
+                stmt = stmt.filter(TraceFrame.kind == kind)
 
             if limit is not None and not isinstance(limit, int):
                 raise UserError("'limit' should be an int or None.")
 
-            trace_frames = query.group_by(TraceFrame.id).order_by(
+            stmt = stmt.group_by(TraceFrame.id).order_by(
                 CallerText.contents, CalleeText.contents
             )
 
-            total_trace_frames = trace_frames.count()
+            total_trace_frames = session.scalar(
+                select(func.count()).select_from(stmt.subquery())
+            )
             limit = limit or total_trace_frames
+
+            trace_frames = session.execute(stmt).all()
 
             self._output_trace_frames(
                 self._group_trace_frames(trace_frames, limit), limit, total_trace_frames
@@ -713,11 +724,11 @@ json CALLABLE        show the original json output for the matching callable
     @catch_keyboard_interrupt()
     def frame(self, frame_id: int) -> None:
         with self.db.make_session() as session:
-            selected_frame = (
-                session.query(TraceFrame.id, TraceFrame.kind, TraceFrame.run_id)
-                .filter(TraceFrame.id == frame_id)
-                .first()
-            )
+            selected_frame = session.execute(
+                select(TraceFrame.id, TraceFrame.kind, TraceFrame.run_id).filter(
+                    TraceFrame.id == frame_id
+                )
+            ).first()
 
             if selected_frame is None:
                 self.warning(
@@ -895,8 +906,8 @@ json CALLABLE        show the original json output for the matching callable
 
     def _generate_trace_from_frame(self) -> None:
         with self.db.make_session() as session:
-            trace_frame = (
-                session.query(
+            trace_frame = session.execute(
+                select(
                     TraceFrame.id,
                     TraceFrame.caller_id,
                     CallerText.contents.label("caller"),
@@ -915,8 +926,7 @@ json CALLABLE        show the original json output for the matching callable
                 .join(CallerText, CallerText.id == TraceFrame.caller_id)
                 .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
                 .join(FilenameText, FilenameText.id == TraceFrame.filename_id)
-                .one()
-            )
+            ).one()
             leaf_kinds = (
                 self.sources
                 if trace_frame.kind == TraceKind.postcondition
@@ -1571,8 +1581,8 @@ json CALLABLE        show the original json output for the matching callable
         return page.page if use_pager else page.display_page
 
     def _get_current_issue(self, session: Session) -> IssueQueryResult:
-        return (
-            session.query(
+        return session.execute(
+            select(
                 IssueInstance.id.label("issue_instance_id"),
                 FilenameText.contents.label("filename"),
                 IssueInstance.location,
@@ -1587,22 +1597,25 @@ json CALLABLE        show the original json output for the matching callable
             .join(FilenameText, FilenameText.id == IssueInstance.filename_id)
             .join(CallableText, CallableText.id == IssueInstance.callable_id)
             .join(MessageText, MessageText.id == IssueInstance.message_id)
-            .first()
-        )
+        ).first()
 
     def _get_leaves_issue_instance(
         self, session: Session, issue_instance_id: DBID, kind: SharedTextKind
     ) -> Set[str]:
         ids = [
             int(id)
-            for (id,) in session.query(SharedText.id)
-            .distinct(SharedText.id)
-            .join(
-                IssueInstanceSharedTextAssoc,
-                SharedText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+            for (id,) in session.execute(
+                select(SharedText.id)
+                .distinct()
+                .join(
+                    IssueInstanceSharedTextAssoc,
+                    SharedText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+                )
+                .filter(
+                    IssueInstanceSharedTextAssoc.issue_instance_id == issue_instance_id
+                )
+                .filter(SharedText.kind == kind)
             )
-            .filter(IssueInstanceSharedTextAssoc.issue_instance_id == issue_instance_id)
-            .filter(SharedText.kind == kind)
         ]
         return self._leaf_lookup.resolve(ids, kind)
 
@@ -1618,8 +1631,8 @@ json CALLABLE        show the original json output for the matching callable
 
     def _show_current_trace_frame(self) -> None:
         with self.db.make_session() as session:
-            trace_frame = (
-                session.query(
+            trace_frame = session.execute(
+                select(
                     TraceFrame.id,
                     CallerText.contents.label("caller"),
                     TraceFrame.caller_port,
@@ -1633,8 +1646,7 @@ json CALLABLE        show the original json output for the matching callable
                 .join(CallerText, CallerText.id == TraceFrame.caller_id)
                 .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
                 .join(FilenameText, FilenameText.id == TraceFrame.filename_id)
-                .one()
-            )
+            ).one()
 
         page.display_page(self._create_trace_frame_output_string(trace_frame))
 
@@ -1667,11 +1679,10 @@ json CALLABLE        show the original json output for the matching callable
 
     def _num_issues_with_callable(self, callable: str) -> int:
         with self.db.make_session() as session:
-            return (
-                session.query(func.count(IssueInstance.id))
+            return session.scalar(
+                select(func.count(IssueInstance.id))
                 .join(CallableText, CallableText.id == IssueInstance.callable_id)
                 .filter(CallableText.contents == callable)
-                .scalar()
             )
 
     def _get_callable_from_trace_tuple(

@@ -28,6 +28,7 @@ from sqlalchemy import (
     func,
     Index,
     Integer,
+    select,
     String,
     types,
 )
@@ -898,25 +899,29 @@ class Run(Base):
         )
 
     def _get_num_new_issue_instances(self, session) -> int:
-        return (
-            session.query(IssueInstance)
+        return session.scalar(
+            select(func.count())
+            .select_from(IssueInstance)
             .filter(IssueInstance.run_id == self.id)
             .filter(IssueInstance.is_new_issue.is_(True))
-            .count()
         )
 
     def _get_num_total_issues(self, session) -> int:
-        return (
-            session.query(IssueInstance).filter(IssueInstance.run_id == self.id).count()
+        return session.scalar(
+            select(func.count())
+            .select_from(IssueInstance)
+            .filter(IssueInstance.run_id == self.id)
         )
 
     def _get_alarm_counts(self, session) -> Dict[int, int]:
         return dict(
-            session.query(Issue.code, func.count(Issue.code))
-            .filter(IssueInstance.run_id == self.id)
-            .outerjoin(IssueInstance.issue)
-            .group_by(Issue.code)
-            .all()
+            session.execute(
+                select(Issue.code, func.count(Issue.code))
+                .select_from(IssueInstance)
+                .outerjoin(IssueInstance.issue)
+                .filter(IssueInstance.run_id == self.id)
+                .group_by(Issue.code)
+            ).all()
         )
 
 

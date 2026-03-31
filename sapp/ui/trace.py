@@ -22,6 +22,7 @@ import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-l
 
 # @manual=fbsource//third-party/pypi/graphql-core-legacy:graphql-core-legacy
 from graphql.execution.base import ResolveInfo
+from sqlalchemy import select
 from sqlalchemy.orm import aliased, Session
 from sqlalchemy.orm.util import AliasedClass
 
@@ -180,21 +181,27 @@ class LeafLookup:
         return LeafLookup(
             {
                 int(id): contents
-                for id, contents in session.query(
-                    SharedText.id, SharedText.contents
-                ).filter(SharedText.kind == SharedTextKind.source)
+                for id, contents in session.execute(
+                    select(SharedText.id, SharedText.contents).filter(
+                        SharedText.kind == SharedTextKind.source
+                    )
+                )
             },
             {
                 int(id): contents
-                for id, contents in session.query(
-                    SharedText.id, SharedText.contents
-                ).filter(SharedText.kind == SharedTextKind.sink)
+                for id, contents in session.execute(
+                    select(SharedText.id, SharedText.contents).filter(
+                        SharedText.kind == SharedTextKind.sink
+                    )
+                )
             },
             {
                 int(id): contents
-                for id, contents in session.query(
-                    SharedText.id, SharedText.contents
-                ).filter(SharedText.kind == SharedTextKind.feature)
+                for id, contents in session.execute(
+                    select(SharedText.id, SharedText.contents).filter(
+                        SharedText.kind == SharedTextKind.feature
+                    )
+                )
             },
         )
 
@@ -216,44 +223,54 @@ def initial_frames(
     kind: TraceKind,
 ) -> List[TraceFrameQueryResult]:
     records = list(
-        session.query(
-            TraceFrame.id,
-            TraceFrame.caller_id,
-            CallerText.contents.label("caller"),
-            TraceFrame.caller_port,
-            TraceFrame.callee_id,
-            CalleeText.contents.label("callee"),
-            TraceFrame.callee_port,
-            TraceFrame.callee_location,
-            TraceFrame.kind,
-            TraceFrame.type_interval_lower,
-            TraceFrame.type_interval_upper,
-            TraceFrame.preserves_type_context,
-            FilenameText.contents.label("filename"),
-            TraceFrameLeafAssoc.trace_length,
-            TraceFrame.titos,
-        )
-        .filter(TraceFrame.kind == kind)
-        .join(
-            IssueInstanceTraceFrameAssoc,
-            IssueInstanceTraceFrameAssoc.trace_frame_id == TraceFrame.id,
-        )
-        .filter(IssueInstanceTraceFrameAssoc.issue_instance_id == issue_id)
-        .join(CallerText, CallerText.id == TraceFrame.caller_id)
-        .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
-        .join(FilenameText, FilenameText.id == TraceFrame.filename_id)
-        .join(TraceFrameLeafAssoc, TraceFrameLeafAssoc.trace_frame_id == TraceFrame.id)
-        .group_by(TraceFrame.id)
-        .order_by(TraceFrameLeafAssoc.trace_length, TraceFrame.callee_location)
-        .all()
+        session.execute(
+            select(
+                TraceFrame.id,
+                TraceFrame.caller_id,
+                CallerText.contents.label("caller"),
+                TraceFrame.caller_port,
+                TraceFrame.callee_id,
+                CalleeText.contents.label("callee"),
+                TraceFrame.callee_port,
+                TraceFrame.callee_location,
+                TraceFrame.kind,
+                TraceFrame.type_interval_lower,
+                TraceFrame.type_interval_upper,
+                TraceFrame.preserves_type_context,
+                FilenameText.contents.label("filename"),
+                TraceFrameLeafAssoc.trace_length,
+                TraceFrame.titos,
+            )
+            .filter(TraceFrame.kind == kind)
+            .join(
+                IssueInstanceTraceFrameAssoc,
+                IssueInstanceTraceFrameAssoc.trace_frame_id == TraceFrame.id,
+            )
+            .filter(IssueInstanceTraceFrameAssoc.issue_instance_id == issue_id)
+            .join(CallerText, CallerText.id == TraceFrame.caller_id)
+            .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
+            .join(FilenameText, FilenameText.id == TraceFrame.filename_id)
+            .join(
+                TraceFrameLeafAssoc,
+                TraceFrameLeafAssoc.trace_frame_id == TraceFrame.id,
+            )
+            .group_by(TraceFrame.id)
+            .order_by(TraceFrameLeafAssoc.trace_length, TraceFrame.callee_location)
+        ).all()
     )
 
     frames = []
     for record in records:
         shared_texts = list(
-            session.query(SharedText)
-            .join(TraceFrameLeafAssoc, SharedText.id == TraceFrameLeafAssoc.leaf_id)
-            .filter(TraceFrameLeafAssoc.trace_frame_id == record.id)
+            session.execute(
+                select(SharedText)
+                .join(
+                    TraceFrameLeafAssoc,
+                    SharedText.id == TraceFrameLeafAssoc.leaf_id,
+                )
+                .filter(TraceFrameLeafAssoc.trace_frame_id == record.id)
+            )
+            .scalars()
             .all()
         )
         frames.append(TraceFrameQueryResult.from_record(record, shared_texts))
@@ -336,8 +353,8 @@ def next_frames(
     When backwards=True, the result will include the parameter trace_frame,
     since we are filtering on the parameter's callee.
     """
-    query = (
-        session.query(
+    stmt = (
+        select(
             TraceFrame.id,
             TraceFrame.caller_id,
             CallerText.contents.label("caller"),
@@ -362,16 +379,16 @@ def next_frames(
         .filter(TraceFrame.id != pre_frame.id)  # skip trivial loops
     )
     if backwards:
-        query = query.filter(TraceFrame.callee_id == pre_frame.caller_id).filter(
+        stmt = stmt.filter(TraceFrame.callee_id == pre_frame.caller_id).filter(
             TraceFrame.callee_port == pre_frame.caller_port
         )
     else:
-        query = query.filter(TraceFrame.caller_id == pre_frame.callee_id).filter(
+        stmt = stmt.filter(TraceFrame.caller_id == pre_frame.callee_id).filter(
             TraceFrame.caller_port == pre_frame.callee_port
         )
 
-    results = (
-        query.join(
+    results = session.execute(
+        stmt.join(
             TraceFrameLeafAssoc, TraceFrameLeafAssoc.trace_frame_id == TraceFrame.id
         )
         .group_by(TraceFrame.id)
@@ -411,9 +428,15 @@ def next_frames(
             continue
 
         shared_texts = list(
-            session.query(SharedText)
-            .join(TraceFrameLeafAssoc, SharedText.id == TraceFrameLeafAssoc.leaf_id)
-            .filter(TraceFrameLeafAssoc.trace_frame_id == frame.id)
+            session.execute(
+                select(SharedText)
+                .join(
+                    TraceFrameLeafAssoc,
+                    SharedText.id == TraceFrameLeafAssoc.leaf_id,
+                )
+                .filter(TraceFrameLeafAssoc.trace_frame_id == frame.id)
+            )
+            .scalars()
             .all()
         )
 
@@ -442,11 +465,13 @@ def get_leaves_trace_frame(
 ) -> Set[str]:
     ids = [
         int(id)
-        for (id,) in session.query(SharedText.id)
-        .distinct(SharedText.id)
-        .join(TraceFrameLeafAssoc, SharedText.id == TraceFrameLeafAssoc.leaf_id)
-        .filter(TraceFrameLeafAssoc.trace_frame_id == trace_frame_id)
-        .filter(SharedText.kind == kind)
+        for (id,) in session.execute(
+            select(SharedText.id)
+            .distinct()
+            .join(TraceFrameLeafAssoc, SharedText.id == TraceFrameLeafAssoc.leaf_id)
+            .filter(TraceFrameLeafAssoc.trace_frame_id == trace_frame_id)
+            .filter(SharedText.kind == kind)
+        )
     ]
     return _leaf_lookup(session, leaf_lookup).resolve(ids, kind)
 

@@ -300,7 +300,7 @@ class Query(graphene.ObjectType):
             else issues.sinks(session, DBID(issue_instance_id))
         )
 
-        trace_frame = session.query(TraceFrame).get(frame_id)
+        trace_frame = session.get(TraceFrame, frame_id)
         if trace_frame is None:
             raise ValueError(f"`{frame_id}` is not a valid trace frame id")
 

@@ -27,7 +27,7 @@ from typing import (
 )
 
 from munch import Munch
-from sqlalchemy import Column, exc, inspect, String, tuple_, types
+from sqlalchemy import Column, exc, inspect, select, String, tuple_, types
 from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.engine import Dialect
@@ -321,12 +321,12 @@ class PrepareMixin:
         cls_attrs = [getattr(cls, attr.key) for attr in key_attributes]
         for fetch_keys in split_every(BATCH_SIZE, keys):
             with database.make_session() as session:
-                existing_items = (
+                existing_items = session.execute(
                     # pyre-fixme[16]: `PrepareMixin` has no attribute `id`.
-                    session.query(cls.id, *cls_attrs)
-                    .filter(tuple_(*cls_attrs).in_(fetch_keys))
-                    .all()
-                )
+                    select(cls.id, *cls_attrs).filter(
+                        tuple_(*cls_attrs).in_(fetch_keys)
+                    )
+                ).all()
             for existing_item in existing_items:
                 existing_ids[key_for_item(existing_item)] = existing_item.id
 
@@ -493,9 +493,12 @@ class PrimaryKeyGeneratorBase:
         while retries > 0:
             try:
                 cls_pk = (
-                    session.query(self.primary_key)
-                    .filter(self.primary_key.table_name == cls.__name__)
-                    .with_for_update()
+                    session.execute(
+                        select(self.primary_key)
+                        .filter(self.primary_key.table_name == cls.__name__)
+                        .with_for_update()
+                    )
+                    .scalars()
                     .first()
                 )
                 # if we're here, the record has been locked, or there is no record
@@ -591,11 +594,13 @@ class PrimaryKeyGeneratorBase:
         session: Session,
         cls: Type[object],
     ) -> Optional[int]:
-        # pyre-fixme[16]: `object` has no attribute `id`
-        row_with_highest_id = session.query(cls.id).order_by(cls.id.desc()).first()
-        if row_with_highest_id is None:
+        highest_id = (
+            # pyre-fixme[16]: `object` has no attribute `id`.
+            session.execute(select(cls.id).order_by(cls.id.desc())).scalars().first()
+        )
+        if highest_id is None:
             return None
-        return row_with_highest_id.id.resolved()
+        return highest_id.resolved()
 
     def get(self, cls: Type[object]) -> int:
         assert cls in self.query_classes, (

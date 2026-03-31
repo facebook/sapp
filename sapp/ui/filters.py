@@ -14,6 +14,7 @@ from typing import List, Optional, Tuple
 import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
 import sqlalchemy
 from flask.views import View
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from .. import models
@@ -40,12 +41,17 @@ class Filter(graphene.ObjectType):
 
 
 def all_filters(session: Session) -> List[Filter]:
-    return [Filter.from_record(record) for record in session.query(FilterRecord).all()]
+    return [
+        Filter.from_record(record)
+        for record in session.execute(select(FilterRecord)).scalars().all()
+    ]
 
 
 def save_filter(session: Session, filter: Filter) -> None:
     existing = (
-        session.query(FilterRecord).filter(FilterRecord.name == filter.name).first()
+        session.execute(select(FilterRecord).where(FilterRecord.name == filter.name))
+        .scalars()
+        .first()
     )
 
     # pyre-ignore[6]: graphene too dynamic.
@@ -78,10 +84,8 @@ class EmptyDeletionError(Exception):
 
 
 def delete_filter(session: Session, name: str) -> None:
-    deleted_rows = (
-        session.query(FilterRecord).filter(FilterRecord.name == name).delete()
-    )
-    if deleted_rows == 0:
+    result = session.execute(delete(FilterRecord).where(FilterRecord.name == name))
+    if result.rowcount == 0:
         raise EmptyDeletionError(f'No filter with `name` "{name}" exists.')
     LOG.info(f"Deleting {name}")
     session.commit()
@@ -146,8 +150,10 @@ def export_filter(
     with database.make_session() as session:
         try:
             record = (
-                session.query(FilterRecord)
-                .filter(FilterRecord.name == filter_name)
+                session.execute(
+                    select(FilterRecord).where(FilterRecord.name == filter_name)
+                )
+                .scalars()
                 .one_or_none()
             )
             if not record:
@@ -178,8 +184,10 @@ class ServeExportFilter(View):
     def dispatch_request(self, filter_name: str) -> str:
         try:
             record = (
-                self.session.query(FilterRecord)
-                .filter(FilterRecord.name == filter_name)
+                self.session.execute(
+                    select(FilterRecord).filter(FilterRecord.name == filter_name)
+                )
+                .scalars()
                 .one_or_none()
             )
             if not record:
@@ -206,11 +214,10 @@ def filter_run(
     output_format: str,
 ) -> None:
     with context.database.make_session() as session:
-        run_id: Run = (
-            session.query(Run)
-            .filter(Run.status == RunStatus.finished)
-            .filter(Run.id == run_id_input)
-            .scalar()
+        run_id: Run = session.scalar(
+            select(Run)
+            .where(Run.status == RunStatus.finished)
+            .where(Run.id == run_id_input)
         )
         if run_id is None:
             raise InvalidRunException(

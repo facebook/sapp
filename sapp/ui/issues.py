@@ -13,7 +13,7 @@ import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-l
 
 # @manual=fbsource//third-party/pypi/graphql-core-legacy:graphql-core-legacy
 from graphql.execution.base import ResolveInfo
-from sqlalchemy import func
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import aliased, Session
 
 from ..filter import Filter
@@ -147,7 +147,7 @@ class Instance:
 
     def get(self) -> List[IssueQueryResult]:
         features = (
-            self._session.query(
+            select(
                 IssueInstance.id.label("id"),
                 func.group_concat(FeatureText.contents.distinct()).label(
                     "concatenated_features"
@@ -168,7 +168,7 @@ class Instance:
             .subquery()
         )
         source_names = (
-            self._session.query(
+            select(
                 IssueInstance.id.label("id"),
                 func.group_concat(SourceNameText.contents.distinct()).label(
                     "concatenated_source_names"
@@ -187,7 +187,7 @@ class Instance:
             .subquery()
         )
         source_kinds = (
-            self._session.query(
+            select(
                 IssueInstance.id.label("id"),
                 func.group_concat(SourceKindText.contents.distinct()).label(
                     "concatenated_source_kinds"
@@ -206,7 +206,7 @@ class Instance:
             .subquery()
         )
         sink_names = (
-            self._session.query(
+            select(
                 IssueInstance.id.label("id"),
                 func.group_concat(SinkNameText.contents.distinct()).label(
                     "concatenated_sink_names"
@@ -225,7 +225,7 @@ class Instance:
             .subquery()
         )
         sink_kinds = (
-            self._session.query(
+            select(
                 IssueInstance.id.label("id"),
                 func.group_concat(SinkKindText.contents.distinct()).label(
                     "concatenated_sink_kinds"
@@ -244,8 +244,8 @@ class Instance:
             .subquery()
         )
 
-        query = (
-            self._session.query(
+        stmt = (
+            select(
                 IssueInstance.id.label("issue_instance_id"),
                 FilenameText.contents.label("filename"),
                 IssueInstance.location,
@@ -277,12 +277,15 @@ class Instance:
 
         for predicate in self._predicates:
             if isinstance(predicate, filter_predicates.QueryPredicate):
-                query = predicate.apply(query)
+                # pyre-fixme[6]: Expected `Query[Variable[_Q]]` but got `Union[Query, Join]`.
+                stmt = predicate.apply(stmt)
 
         issues = [
             IssueQueryResult.from_record(record)
-            for record in query.join(Issue, IssueInstance.issue_id == Issue.id).join(
-                MessageText, MessageText.id == IssueInstance.message_id
+            for record in self._session.execute(
+                stmt.join(Issue, IssueInstance.issue_id == Issue.id).join(
+                    MessageText, MessageText.id == IssueInstance.message_id
+                )
             )
         ]
 
@@ -557,20 +560,22 @@ def _get_leaves(
 ) -> Set[str]:
     message_ids = [
         int(id)
-        for (id,) in session.query(SharedText.id)
-        .distinct(SharedText.id)
-        .join(
-            IssueInstanceSharedTextAssoc,
-            SharedText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+        for (id,) in session.execute(
+            select(SharedText.id)
+            .distinct()
+            .join(
+                IssueInstanceSharedTextAssoc,
+                SharedText.id == IssueInstanceSharedTextAssoc.shared_text_id,
+            )
+            .filter(IssueInstanceSharedTextAssoc.issue_instance_id == issue_instance_id)
+            .filter(SharedText.kind == kind)
         )
-        .filter(IssueInstanceSharedTextAssoc.issue_instance_id == issue_instance_id)
-        .filter(SharedText.kind == kind)
     ]
 
     leaf_lookup = {
         int(id): contents
-        for id, contents in session.query(SharedText.id, SharedText.contents).filter(
-            SharedText.kind == kind
+        for id, contents in session.execute(
+            select(SharedText.id, SharedText.contents).filter(SharedText.kind == kind)
         )
     }
     return {leaf_lookup[id] for id in message_ids if id in leaf_lookup}
@@ -584,5 +589,7 @@ def update_status(session: Session, id: str, status: str) -> None:
         "do_not_care": IssueStatus.do_not_care,
         "uncategorized": IssueStatus.uncategorized,
     }
-    session.query(Issue).filter(Issue.id == id).update({"status": status_enums[status]})
+    session.execute(
+        update(Issue).where(Issue.id == id).values(status=status_enums[status])
+    )
     session.commit()

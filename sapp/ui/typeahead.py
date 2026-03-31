@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import List
 
 import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import Issue, IssueInstance, SharedText, SharedTextKind
@@ -20,7 +21,7 @@ class Code(graphene.ObjectType):
 
 
 def all_codes(session: Session) -> List[Code]:
-    return session.query(Issue.code.distinct().label("code")).all()
+    return session.execute(select(Issue.code.distinct().label("code"))).scalars().all()
 
 
 class Path(graphene.ObjectType):
@@ -28,12 +29,11 @@ class Path(graphene.ObjectType):
 
 
 def all_paths(session: Session) -> List[Path]:
-    return (
-        session.query(IssueInstance, SharedText.contents.label("path"))
+    return session.execute(
+        select(IssueInstance, SharedText.contents.label("path"))
         .join(SharedText, SharedText.id == IssueInstance.filename_id)
         .group_by(SharedText)
-        .all()
-    )
+    ).all()
 
 
 class SourceName(graphene.ObjectType):
@@ -41,12 +41,11 @@ class SourceName(graphene.ObjectType):
 
 
 def all_source_names(session: Session) -> List[SourceName]:
-    return (
-        session.query(IssueInstance, SharedText.contents.label("source_name"))
+    return session.execute(
+        select(IssueInstance, SharedText.contents.label("source_name"))
         .join(SharedText, SharedText.kind == SharedTextKind.source_detail)
         .group_by(SharedText)
-        .all()
-    )
+    ).all()
 
 
 class SourceKind(graphene.ObjectType):
@@ -54,12 +53,11 @@ class SourceKind(graphene.ObjectType):
 
 
 def all_source_kinds(session: Session) -> List[SourceName]:
-    return (
-        session.query(IssueInstance, SharedText.contents.label("source_kind"))
+    return session.execute(
+        select(IssueInstance, SharedText.contents.label("source_kind"))
         .join(SharedText, SharedText.kind == SharedTextKind.source)
         .group_by(SharedText)
-        .all()
-    )
+    ).all()
 
 
 class SinkName(graphene.ObjectType):
@@ -67,12 +65,11 @@ class SinkName(graphene.ObjectType):
 
 
 def all_sink_names(session: Session) -> List[SourceName]:
-    return (
-        session.query(IssueInstance, SharedText.contents.label("sink_name"))
+    return session.execute(
+        select(IssueInstance, SharedText.contents.label("sink_name"))
         .join(SharedText, SharedText.kind == SharedTextKind.sink_detail)
         .group_by(SharedText)
-        .all()
-    )
+    ).all()
 
 
 class SinkKind(graphene.ObjectType):
@@ -80,12 +77,11 @@ class SinkKind(graphene.ObjectType):
 
 
 def all_sink_kinds(session: Session) -> List[SourceName]:
-    return (
-        session.query(IssueInstance, SharedText.contents.label("sink_kind"))
+    return session.execute(
+        select(IssueInstance, SharedText.contents.label("sink_kind"))
         .join(SharedText, SharedText.kind == SharedTextKind.sink)
         .group_by(SharedText)
-        .all()
-    )
+    ).all()
 
 
 class Status(graphene.ObjectType):
@@ -93,7 +89,9 @@ class Status(graphene.ObjectType):
 
 
 def all_statuses(session: Session) -> List[Status]:
-    return session.query(Issue.status.distinct().label("status")).all()
+    return (
+        session.execute(select(Issue.status.distinct().label("status"))).scalars().all()
+    )
 
 
 class Callable(graphene.ObjectType):
@@ -101,12 +99,11 @@ class Callable(graphene.ObjectType):
 
 
 def all_callables(session: Session) -> List[Callable]:
-    return (
-        session.query(IssueInstance, SharedText.contents.label("callable"))
+    return session.execute(
+        select(IssueInstance, SharedText.contents.label("callable"))
         .join(SharedText, SharedText.id == IssueInstance.callable_id)
         .group_by(SharedText)
-        .all()
-    )
+    ).all()
 
 
 class Feature(graphene.ObjectType):
@@ -114,8 +111,8 @@ class Feature(graphene.ObjectType):
 
 
 def all_features(session: Session) -> List[Feature]:
-    return (
-        session.query(SharedText, SharedText.contents.label("feature"))
-        .filter(SharedText.kind == SharedTextKind.feature)
-        .all()
-    )
+    return session.execute(
+        select(SharedText, SharedText.contents.label("feature")).filter(
+            SharedText.kind == SharedTextKind.feature
+        )
+    ).all()

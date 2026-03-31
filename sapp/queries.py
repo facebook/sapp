@@ -5,9 +5,10 @@
 # LICENSE file in the root directory of this source tree.
 
 # pyre-strict
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from sqlalchemy.orm import Query, Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
 from .decorators import UserError
@@ -27,9 +28,12 @@ def get_warning_message_range(
     session: Session, startingCode: int, endingCode: int
 ) -> List[WarningMessage]:
     return (
-        session.query(WarningMessage)
-        .filter(WarningMessage.code >= startingCode)
-        .filter(WarningMessage.code < endingCode)
+        session.execute(
+            select(WarningMessage)
+            .where(WarningMessage.code >= startingCode)
+            .where(WarningMessage.code < endingCode)
+        )
+        .scalars()
         .all()
     )
 
@@ -39,17 +43,17 @@ def get_warning_message(
     code: int,
 ) -> Optional[WarningMessage]:
     return (
-        session.query(WarningMessage).filter(WarningMessage.code == code).one_or_none()
+        session.execute(select(WarningMessage).where(WarningMessage.code == code))
+        .scalars()
+        .one_or_none()
     )
 
 
 def latest_run_id(
     session: Session,
 ) -> DBID:
-    return (
-        session.query(func.max(Run.id))
-        .filter(Run.status == RunStatus.finished)
-        .scalar()
+    return session.scalar(
+        select(func.max(Run.id)).where(Run.status == RunStatus.finished)
     )
 
 
@@ -72,10 +76,10 @@ def leaves(
     session: Session,
     kind: str,
     run_id: DBID,
-) -> Query:
+) -> List[Any]:
     text_kind = _leaf_detail_kind(kind)
-    return (
-        session.query(IssueInstanceSharedTextAssoc.shared_text_id, SharedText.contents)
+    return session.execute(
+        select(IssueInstanceSharedTextAssoc.shared_text_id, SharedText.contents)
         .join(
             SharedText,
             IssueInstanceSharedTextAssoc.shared_text_id == SharedText.id,
@@ -86,4 +90,4 @@ def leaves(
         )
         .filter(IssueInstance.run_id == run_id)
         .filter(SharedText.kind == text_kind)
-    )
+    ).all()

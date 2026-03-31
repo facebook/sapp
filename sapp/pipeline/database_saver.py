@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import cast, ClassVar, Generic, List, Optional, Tuple, Type, TypeVar
 
 from pyre_extensions import none_throws
+from sqlalchemy import select
 
 from ..bulk_saver import BulkSaver
 from ..db import DB
@@ -173,7 +174,11 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
             # Now that the run is finished, fetch it from the DB again and set its
             # status to FINISHED.
             with self.database.make_session() as session:
-                run = session.query(self.run_model).filter_by(id=run_id).one()
+                run = (
+                    session.execute(select(self.run_model).filter_by(id=run_id))
+                    .scalars()
+                    .one()
+                )
                 run.status = RunStatus.finished
                 run.finished_time = int(datetime.now().timestamp())
                 session.add(run)

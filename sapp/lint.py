@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import List
 
 import click
+from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.util import AliasedClass
 
@@ -42,8 +43,8 @@ def lint(click_ctx: click.Context, run_id: int, filenames: List[str]) -> None:
     relative = [str(Path(f).relative_to(root)) for f in paths]
 
     with ctx.database.make_session() as session:
-        instances = (
-            session.query(
+        instances = session.execute(
+            select(
                 IssueInstance.location,
                 FilenameText.contents.label("filename"),
                 MessageText.contents.label("message"),
@@ -54,12 +55,11 @@ def lint(click_ctx: click.Context, run_id: int, filenames: List[str]) -> None:
             .join(FilenameText, FilenameText.id == IssueInstance.filename_id)
             .filter(FilenameText.contents.in_(relative))
             .join(MessageText, MessageText.id == IssueInstance.message_id)
-            .all()
-        )
+        ).all()
 
     with ctx.database.make_session() as session:
-        frames = (
-            session.query(
+        frames = session.execute(
+            select(
                 TraceFrame.callee_location,
                 TraceFrame.kind,
                 TraceFrame.callee_port,
@@ -73,8 +73,7 @@ def lint(click_ctx: click.Context, run_id: int, filenames: List[str]) -> None:
             .filter(FilenameText.contents.in_(relative))
             .join(CallerText, CallerText.id == TraceFrame.caller_id)
             .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
-            .all()
-        )
+        ).all()
 
     # pyre-fixme[53]: Captured variable `root` is not annotated.
     # pyre-fixme[3]: Return type must be annotated.

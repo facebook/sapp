@@ -14,6 +14,7 @@ from typing import cast, List, Union
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...db import DB, DBType
@@ -79,20 +80,14 @@ class InteractiveTest(TestCase):
     def _frame_to_query_result(
         self, session: Session, trace_frame: TraceFrame
     ) -> TraceFrameQueryResult:
-        caller = (
-            session.query(SharedText.contents)
-            .filter(SharedText.id == trace_frame.caller_id)
-            .scalar()
+        caller = session.scalar(
+            select(SharedText.contents).filter(SharedText.id == trace_frame.caller_id)
         )
-        callee = (
-            session.query(SharedText.contents)
-            .filter(SharedText.id == trace_frame.callee_id)
-            .scalar()
+        callee = session.scalar(
+            select(SharedText.contents).filter(SharedText.id == trace_frame.callee_id)
         )
-        filename = (
-            session.query(SharedText.contents)
-            .filter(SharedText.id == trace_frame.filename_id)
-            .scalar()
+        filename = session.scalar(
+            select(SharedText.contents).filter(SharedText.id == trace_frame.filename_id)
         )
         return TraceFrameQueryResult(
             id=trace_frame.id,
@@ -1824,37 +1819,46 @@ class InteractiveTest(TestCase):
             self._add_to_session(session, shared_texts)
             session.commit()
 
-            query = session.query(SharedText.contents)
+            stmt = select(SharedText.contents)
             self.assertEqual(
-                self.interactive._add_list_or_string_filter_to_query(
-                    ["prefix", "suffix"],
-                    query,
-                    # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
-                    #  but got `str`.
-                    SharedText.contents,
-                    "contents",
+                session.execute(
+                    self.interactive._add_list_or_string_filter_to_query(
+                        ["prefix", "suffix"],
+                        # pyre-fixme[6]: Expected `Query[Variable[T]]` but got `Select`.
+                        stmt,
+                        # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
+                        #  but got `str`.
+                        SharedText.contents,
+                        "contents",
+                    )
                 ).all(),
                 [("prefix",), ("suffix",)],
             )
             self.assertEqual(
-                self.interactive._add_list_or_string_filter_to_query(
-                    ["%prefix%"],
-                    query,
-                    # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
-                    #  but got `str`.
-                    SharedText.contents,
-                    "contents",
+                session.execute(
+                    self.interactive._add_list_or_string_filter_to_query(
+                        ["%prefix%"],
+                        # pyre-fixme[6]: Expected `Query[Variable[T]]` but got `Select`.
+                        stmt,
+                        # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
+                        #  but got `str`.
+                        SharedText.contents,
+                        "contents",
+                    )
                 ).all(),
                 [("prefix",), ("prefix_suffix",)],
             )
             self.assertEqual(
-                self.interactive._add_list_or_string_filter_to_query(
-                    ["%fix%"],
-                    query,
-                    # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
-                    #  but got `str`.
-                    SharedText.contents,
-                    "contents",
+                session.execute(
+                    self.interactive._add_list_or_string_filter_to_query(
+                        ["%fix%"],
+                        # pyre-fixme[6]: Expected `Query[Variable[T]]` but got `Select`.
+                        stmt,
+                        # pyre-fixme[6]: For 3rd param expected `InstrumentedAttribute`
+                        #  but got `str`.
+                        SharedText.contents,
+                        "contents",
+                    )
                 ).all(),
                 [("prefix",), ("suffix",), ("prefix_suffix",), ("fix",)],
             )

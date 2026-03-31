@@ -8,6 +8,7 @@
 from typing import List
 
 import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import distinct, func
 
@@ -26,10 +27,8 @@ from ..models import (
 
 def latest(session: Session) -> DBID:
     return DBID(
-        (
-            session.query(func.max(RunColumn.id))
-            .filter(RunColumn.status == RunStatus.finished)
-            .scalar()
+        session.scalar(
+            select(func.max(RunColumn.id)).where(RunColumn.status == RunStatus.finished)
         )
     )
 
@@ -44,7 +43,7 @@ class Run(graphene.ObjectType):
 
 def runs(session: Session) -> List[Run]:
     triaged_issues = (
-        session.query(
+        select(
             RunColumn.id.label("run_id"),
             func.count(distinct(IssueInstance.id)).label("count"),
         )
@@ -54,8 +53,8 @@ def runs(session: Session) -> List[Run]:
         .filter(Issue.status != IssueStatus.uncategorized)
         .subquery()
     )
-    return (
-        session.query(
+    return session.execute(
+        select(
             RunColumn.id.label("run_id"),
             RunColumn.date,
             RunColumn.commit_hash,
@@ -67,8 +66,7 @@ def runs(session: Session) -> List[Run]:
         .join(triaged_issues, triaged_issues.c.run_id == RunColumn.id, isouter=True)
         .filter(RunColumn.status == "finished")
         .order_by(RunColumn.id.desc())
-        .all()
-    )
+    ).all()
 
 
 class EmptyDeletionError(Exception):
@@ -76,11 +74,11 @@ class EmptyDeletionError(Exception):
 
 
 def delete_run(session: Session, id: str) -> None:
-    deleted_run_rows = session.query(RunColumn).filter(RunColumn.id == id).delete()
-    if deleted_run_rows == 0:
+    result = session.execute(delete(RunColumn).where(RunColumn.id == id))
+    if result.rowcount == 0:
         raise EmptyDeletionError(f'No run with `id` "{id}" exists.')
-    session.query(IssueInstance).filter(IssueInstance.run_id == id).delete()
-    session.query(TraceFrame).filter(TraceFrame.run_id == id).delete()
-    session.query(RunOrigin).filter(RunOrigin.run_id == id).delete()
-    session.query(MetaRunToRunAssoc).filter(MetaRunToRunAssoc.run_id == id).delete()
+    session.execute(delete(IssueInstance).where(IssueInstance.run_id == id))
+    session.execute(delete(TraceFrame).where(TraceFrame.run_id == id))
+    session.execute(delete(RunOrigin).where(RunOrigin.run_id == id))
+    session.execute(delete(MetaRunToRunAssoc).where(MetaRunToRunAssoc.run_id == id))
     session.commit()

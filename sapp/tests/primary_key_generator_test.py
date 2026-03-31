@@ -7,6 +7,8 @@
 
 from unittest import TestCase
 
+from sqlalchemy import func, select
+
 from ..db import DB, DBType
 from ..models import (
     create as create_tables,
@@ -32,7 +34,7 @@ class PrimaryKeyGeneratorTest(TestCase):
             generator = PrimaryKeyGenerator()
             generator.reserve(session, [Issue], {Issue.__name__: 10})
 
-            key_row = session.query(PrimaryKey).one()
+            key_row = session.execute(select(PrimaryKey)).scalars().one()
 
             # We should have reserved ids [1, 10] and written 10 as the last used id
             self.assertEqual(key_row.current_id, 10)
@@ -61,12 +63,14 @@ class PrimaryKeyGeneratorTest(TestCase):
                 )
             )
             session.commit()
-            self.assertEqual(session.query(PrimaryKey).count(), 0)
+            self.assertEqual(
+                session.scalar(select(func.count()).select_from(PrimaryKey)), 0
+            )
 
             generator = PrimaryKeyGenerator()
             generator.reserve(session, [Issue], {Issue.__name__: 3})
 
-            key_row = session.query(PrimaryKey).one()
+            key_row = session.execute(select(PrimaryKey)).scalars().one()
             # We should have seen the highest pre-existing Issue id of 7,
             # reserved [8, 10] and written 10 as the last used id
             self.assertEqual(key_row.current_id, 10)
@@ -96,13 +100,13 @@ class PrimaryKeyGeneratorTest(TestCase):
             generator1 = PrimaryKeyGenerator()
             generator1.reserve(session, [Issue], {Issue.__name__: 2})
 
-            key_row = session.query(PrimaryKey).one()
+            key_row = session.execute(select(PrimaryKey)).scalars().one()
             self.assertEqual(key_row.current_id, 2)
 
             generator2 = PrimaryKeyGenerator()
             generator2.reserve(session, [Issue], {Issue.__name__: 2})
 
-            key_row = session.query(PrimaryKey).one()
+            key_row = session.execute(select(PrimaryKey)).scalars().one()
             self.assertEqual(key_row.current_id, 4)
 
         # It doesn't matter which order get is called in, each generator
@@ -121,7 +125,7 @@ class PrimaryKeyGeneratorTest(TestCase):
             generator = PrimaryKeyGenerator(allowed_id_range=range(150, 200))
             generator.reserve(session, [Issue], {Issue.__name__: 10})
 
-            key_row = session.query(PrimaryKey).one()
+            key_row = session.execute(select(PrimaryKey)).scalars().one()
 
             # We should have reserved ids [150, 159] and written 159 as the last used id
             self.assertEqual(key_row.current_id, 159)
@@ -132,13 +136,13 @@ class PrimaryKeyGeneratorTest(TestCase):
             generator1 = PrimaryKeyGenerator(allowed_id_range=range(150, 200))
             generator1.reserve(session, [Issue], {Issue.__name__: 2})
 
-            key_row = session.query(PrimaryKey).one()
+            key_row = session.execute(select(PrimaryKey)).scalars().one()
             self.assertEqual(key_row.current_id, 151)
 
             generator2 = PrimaryKeyGenerator(allowed_id_range=range(150, 200))
             generator2.reserve(session, [Issue], {Issue.__name__: 2})
 
-            key_row = session.query(PrimaryKey).one()
+            key_row = session.execute(select(PrimaryKey)).scalars().one()
             self.assertEqual(key_row.current_id, 153)
 
         # It doesn't matter which order get is called in, each generator
@@ -185,7 +189,9 @@ class PrimaryKeyGeneratorTest(TestCase):
                 )
             )
             session.commit()
-            self.assertEqual(session.query(PrimaryKey).count(), 0)
+            self.assertEqual(
+                session.scalar(select(func.count()).select_from(PrimaryKey)), 0
+            )
 
             generator = PrimaryKeyGenerator(allowed_id_range=range(150, 200))
 

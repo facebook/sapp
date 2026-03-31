@@ -9,6 +9,7 @@ import logging
 from typing import Tuple
 
 import xxhash
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import DB
@@ -78,8 +79,8 @@ class MetaRunIssueDuplicateFilter(PipelineStep[IssuesAndFrames, IssuesAndFrames]
 
     def _should_keep_issue(self, session: Session, issue: ParseIssueTuple) -> bool:
         issue_instance_hash = compute_issue_instance_hash(issue)
-        found = (
-            session.query(MetaRunIssueInstanceIndex.issue_instance_id)
+        found = session.execute(
+            select(MetaRunIssueInstanceIndex.issue_instance_id)
             .join(
                 IssueInstance,
                 IssueInstance.id == MetaRunIssueInstanceIndex.issue_instance_id,
@@ -92,8 +93,7 @@ class MetaRunIssueDuplicateFilter(PipelineStep[IssuesAndFrames, IssuesAndFrames]
             # Only consider issues from finished runs, otherwise the run that inserted it
             # might fail to fully upload, and we would skip the issue for the current run.
             .filter(Run.status == RunStatus.finished)
-            .first()
-        )
+        ).first()
         return found is None
 
     def run(

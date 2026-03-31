@@ -8,6 +8,7 @@
 from unittest import TestCase
 
 from pyre_extensions import none_throws
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
 from ..db import DB, DBType
@@ -35,8 +36,11 @@ class BulkSaverTest(TestCase):
             with self.db.make_session() as session:
                 nonlocal speedy_penguin_id
                 speedy_penguin_id = (
-                    session.query(Issue).filter(Issue.handle == "penguin").one()
-                ).id.resolved()
+                    session.execute(select(Issue).where(Issue.handle == "penguin"))
+                    .scalars()
+                    .one()
+                    .id.resolved()
+                )
 
         slow_penguin = self.fakes.issue(handle="penguin")
         self.fakes.instance(issue_id=slow_penguin.id, message="Penguin Instance")
@@ -56,22 +60,28 @@ class BulkSaverTest(TestCase):
         with self.db.make_session() as session:
             # Our penguin instance will be created with the correct issue id
             penguin_instance = (
-                session.query(IssueInstance)
-                .filter(IssueInstance.issue_id == speedy_penguin_id)
+                session.execute(
+                    select(IssueInstance).where(
+                        IssueInstance.issue_id == speedy_penguin_id
+                    )
+                )
+                .scalars()
                 .one()
             )
             self.assertEqual(penguin_instance.message.contents, "Penguin Instance")
 
         with self.db.make_session() as session:
             # Expect 10 total issues and instances (9 normal + 1 penguin)
-            all_issues = session.query(Issue).all()
+            all_issues = session.execute(select(Issue)).scalars().all()
             self.assertEqual(len(all_issues), 10)
 
             # We must have exactly one instance for each issue
             for issue in all_issues:
-                session.query(IssueInstance).filter(
-                    IssueInstance.issue_id == issue.id.resolved()
-                ).one()
+                session.execute(
+                    select(IssueInstance).where(
+                        IssueInstance.issue_id == issue.id.resolved()
+                    )
+                ).scalars().one()
 
     def test_duplicate_class_type_interval_key(self) -> None:
         # The `_save_batch` retry logic should fail here since ClassTypeInterval.merge
@@ -90,7 +100,7 @@ class BulkSaverTest(TestCase):
         self.fakes.save_all(self.db)
 
         with self.db.make_session() as session:
-            session.query(PrimaryKey).delete()
+            session.execute(delete(PrimaryKey))
             session.commit()
 
         issue2 = self.fakes.issue()
