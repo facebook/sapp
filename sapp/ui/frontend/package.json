@@ -12,6 +12,7 @@
     "@testing-library/user-event": "^7.2.1",
     "antd": "^5.11.1",
     "babel-jest": "^24.9.0",
+    "babel-preset-react-app": "^10.1.0",
     "codemirror": "^5.57.0",
     "eslint": "^9.26.0",
     "flow-bin": "^0.133.0",
@@ -21,6 +22,7 @@
     "jest-environment-jsdom-fourteen": "^1.0.1",
     "jest-watch-typeahead": "^0.4.2",
     "react": "^16.13.1",
+    "react-app-polyfill": "^3.0.0",
     "react-codemirror2": "^7.2.1",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
@@ -110,6 +112,7 @@
   },
   "overrides": {
     "eslint": "^9.26.0",
+    "follow-redirects": "^1.16.0",
     "qs": "^6.14.1"
   },
   "devDependencies": {
