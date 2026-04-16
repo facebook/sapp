@@ -28,7 +28,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "5.0.1",
     "react-test-renderer": "^16.14.0",
-    "webpack-dev-server": "5.1.0"
+    "webpack-dev-server": "5.2.1"
   },
   "scripts": {
     "start": "DISABLE_ESLINT_PLUGIN=true react-scripts start",
