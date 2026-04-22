@@ -416,14 +416,16 @@ class PrimaryKeyBase(PrepareMixin, RecordMixin):  # noqa
     __tablename__ = "primary_keys"
     __table_args__: Tuple[Dict[str, str]] = BASE_TABLE_ARGS
 
-    table_name: Column[str] = Column(
+    # pyre-fixme[4]: Attribute must be annotated.
+    table_name = Column(
         String(length=100),
         doc="Name of the table that this row stores the next available primary key for",
         nullable=False,
         primary_key=True,
     )
 
-    current_id: Column[int] = Column(
+    # pyre-fixme[4]: Attribute must be annotated.
+    current_id = Column(
         BIGINT(unsigned=True).with_variant(BIGINT, "sqlite"),
         doc="The current/latest id used in the table.",
         nullable=False,
