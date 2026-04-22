@@ -9,8 +9,8 @@
 
 from typing import List, Optional, Tuple
 
-from IPython.core.interactiveshell import InteractiveShell
 from IPython.core.magic import Magics
+from IPython.terminal.interactiveshell import TerminalInteractiveShell
 from IPython.terminal.prompts import Prompts, Token
 from prompt_toolkit import Application as CommandLineInterface
 from pygments.token import _TokenType
@@ -51,6 +51,5 @@ class CustomPrompt(Prompts, Magics):
         return tokens
 
 
-def load_ipython_extension(ipython: InteractiveShell) -> None:
-    # pyre-fixme[16]: `InteractiveShell` has no attribute `prompts`.
+def load_ipython_extension(ipython: TerminalInteractiveShell) -> None:
     ipython.prompts = CustomPrompt(ipython)
