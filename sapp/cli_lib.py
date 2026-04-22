@@ -9,7 +9,7 @@ import logging
 import os
 import pathlib
 from functools import wraps
-from typing import Callable, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import click
 import click_log
@@ -37,7 +37,6 @@ from .warning_messages import update_warning_messages
 
 MARKER_DIRECTORIES = [".pyre", ".hg", ".git", ".svn"]
 
-# pyre-fixme[5]: Global expression must be annotated.
 logger = logging.getLogger("sapp")
 
 
@@ -211,7 +210,6 @@ def analyze(
 @option(
     "--static-resources", default=None, help="Directory to serve static resources from"
 )
-# pyre-fixme[56]: Pyre was not able to infer the type of argument `os.getcwd()` to
 #  decorator factory `click.option`.
 @option(
     "--source-directory", default=os.getcwd(), help="Directory to look for source code"
@@ -330,7 +328,7 @@ def update_warning_codes(
     update_warning_messages(ctx.database, pathlib.Path(input_metadata_file))
 
 
-commands: List[Callable[[], None]] = [
+commands: List[click.Command] = [
     analyze,
     explore,
     server,

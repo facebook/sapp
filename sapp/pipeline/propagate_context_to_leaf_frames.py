@@ -38,9 +38,7 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
         context_propagation: ContextPropagation,
     ) -> None:
         super().__init__()
-        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
-        # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
         self.feature_pattern: str = context_propagation.pattern
         self.issue_code: int = context_propagation.code
@@ -49,7 +47,6 @@ class PropagateContextToLeafFrames(PipelineStep[TraceGraph, TraceGraph]):
             if context_propagation.frame_type == "precondition"
             else TraceKind.postcondition
         )
-        # pyre-fixme[8]: Expected `Dict[FrameID, TaintKindToState]` for param 1
         self.visited: Dict[FrameID, TaintKindToState] = defaultdict(
             lambda: defaultdict(lambda: PerTaintKindState())
         )

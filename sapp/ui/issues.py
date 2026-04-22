@@ -30,25 +30,15 @@ from ..queries import get_warning_message
 from . import filter_predicates, run
 from .query_result import IssueQueryResult, SimilarIssue
 
-# pyre-fixme[5]: Global expression must be annotated.
 FilenameText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 CallableText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 CallerText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 CalleeText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 MessageText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 FeatureText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 SourceNameText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 SourceKindText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 SinkNameText = aliased(SharedText)
-# pyre-fixme[5]: Global expression must be annotated.
 SinkKindText = aliased(SharedText)
 
 
@@ -58,7 +48,6 @@ class SimilarIssueResultType(graphene.ObjectType):
 
 
 class IssueQueryResultType(graphene.ObjectType):
-    # pyre-fixme[13]: Attribute `concatenated_features` is never initialized.
     concatenated_features: str
 
     class Meta:

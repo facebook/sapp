@@ -1,4 +1,4 @@
-name: pyre
+name: pyrefly
 
 on:
   push:
@@ -9,16 +9,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  pyre:
+  pyrefly:
     runs-on: ubuntu-24.04
     strategy:
         matrix:
           python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -28,9 +28,7 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install cython
           python -m pip install graphql-core typing_inspect
-          VERSION=$(grep "version" .pyre_configuration | sed -n -e 's/.*\(0\.0\.[0-9]*\).*/\1/p')
-          python -m pip install pyre-check-nightly==$VERSION
 
-      - name: Run Pyre
-        run: |
-          pyre -n check
+      - uses: facebook/pyrefly@main
+        with:
+          python-version: ${{ matrix.python-version }}

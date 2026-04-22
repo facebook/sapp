@@ -25,7 +25,6 @@ class ShardedFileComponents:
 
     # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, filepattern) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
         self.directory, root = os.path.split(filepattern)
         m = re.match(r"([^@]+)@([^.@]+)(\.[^.@]*)?$", root)
         if not m:

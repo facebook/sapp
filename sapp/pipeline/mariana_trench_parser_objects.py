@@ -55,14 +55,17 @@ def _parse_kind_name(kind: Union[str, Dict[str, Any]]) -> str:
         return kind
 
     if "base" in kind:
+        # pyrefly: ignore [bad-argument-type]
         return _parse_transform_kind_name(kind)
     elif "partial_label" in kind:
         # This applies to both PartialKind and TriggeredPartialKind. The latter
         # has an additional "triggered_rule" key but can be ignored here. For
         # traces to connect correctly, the string representation of both kinds
         # must be the same.
+        # pyrefly: ignore [bad-argument-type]
         return _parse_partial_kind_name(kind)
     elif "subkind" in kind:
+        # pyrefly: ignore [bad-argument-type]
         return _parse_subkind_name(kind)
 
     raise AssertionError(

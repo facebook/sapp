@@ -63,11 +63,11 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         )
         self.extra_saving_classes = extra_saving_classes
         self.dry_run = dry_run
-        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
         self.info_path = info_path
 
-    @log_time  # pyre-ignore[56]: Pyre can't support this yet.
+    @log_time
+    # pyrefly: ignore [bad-override]
     def run(
         self,
         input: List[TraceGraph],
@@ -208,6 +208,7 @@ class DatabaseSaver(PipelineStep[List[TraceGraph], RunSummary], Generic[TRun]):
         def message_id(graph: TraceGraph, id: DBID) -> int:
             local_id = id.local_id
             if local_id not in messages:
+                # pyrefly: ignore [unsupported-operation]
                 messages[local_id] = {"id": local_id, "text": graph.get_text(id)}
             return local_id
 

@@ -43,11 +43,8 @@ class PropagateExtraFeaturesToInstances(PipelineStep[TraceGraph, TraceGraph]):
         self,
     ) -> None:
         super().__init__()
-        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
-        # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
-        # pyre-fixme[8]: Expected `Dict[FrameID, TaintKindToState]` for param 1
         self.visited: Dict[FrameID, TaintKindToState] = defaultdict(
             lambda: defaultdict(lambda: PerTaintKindState())
         )

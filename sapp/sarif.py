@@ -28,6 +28,7 @@ from .ui import trace
 from .ui.issues import IssueQueryResult
 from .ui.trace import TraceFrameQueryResult, TraceKind
 
+# pyrefly: ignore [not-a-type]
 SARIFOutput: TypeAlias = Dict[
     str,
     Union[
@@ -77,7 +78,9 @@ class SARIF:
         rules_json = []
         for rule in tool_warning_messages:
             rules_json.append({"id": str(rule.code), "name": rule.message})
+        # pyrefly: ignore [unsupported-operation]
         driver_json["rules"] = rules_json
+        # pyrefly: ignore [bad-assignment]
         self.driver: Dict[str, Union[str, List[Dict[str, str]]]] = driver_json
         self.results: List[SARIFResult] = [
             self.issue_to_sarif(session, issue) for issue in filtered_issues

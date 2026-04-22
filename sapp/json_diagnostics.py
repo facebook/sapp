@@ -52,9 +52,7 @@ class JSONDiagnosticsException(Exception):
     __slots__ = ["file", "description"]
 
     def __init__(self, file: str, description: str) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
         self.file = file
-        # pyre-fixme[4]: Attribute must be annotated.
         self.description = description
 
 
@@ -162,6 +160,7 @@ class JSONDiagnostics:
 
         # Check cache validity.
         indexed_files = set(table.file_index.values())
+        # pyrefly: ignore
         filenames = set(map(os.path.abspath, self.analysis_output.file_names()))
         if not filenames.issubset(indexed_files):
             logger.info("Lookup table is invalidated, ignoring it.")
@@ -179,6 +178,7 @@ class JSONDiagnostics:
 
     def _generate_lookup_table(self) -> LookupTable:
         logger.info("Generating lookup table")
+        # pyrefly: ignore
         filenames = list(map(os.path.abspath, self.analysis_output.file_names()))
 
         table = LookupTable()

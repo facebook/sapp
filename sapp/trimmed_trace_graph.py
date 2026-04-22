@@ -467,6 +467,7 @@ class TrimmedTraceGraph(TraceGraph):
                             continue
                         leaf_id = self.get_transform_normalized_caller_kind_id(leaf)
                         actual_leaves[leaf_id] = trace_length
+                    # pyrefly: ignore [no-matching-overload]
                     visited[frame_id][todo.interval].update(actual_leaves)
                     # log.info(
                     #     "    leaf result %s",

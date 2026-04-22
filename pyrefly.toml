@@ -1,0 +1,17 @@
+project-excludes = [
+    "setup.py",
+    "stubs/**",
+]
+
+search-path = [
+    "stubs",
+]
+
+# Collapse sapp's legacy SQLAlchemy ORM usage to `Any`.
+replace-imports-with-any = [
+    "sqlalchemy.*",
+    "ordered_set.*",
+]
+
+# Honor legacy `# pyre-fixme` / `# pyre-ignore` directives.
+permissive-ignores = true

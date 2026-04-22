@@ -1,6 +1,6 @@
 ![lint](https://github.com/facebook/sapp/workflows/lint/badge.svg)
 ![tests](https://github.com/facebook/sapp/workflows/tests/badge.svg)
-![pyre](https://github.com/facebook/sapp/workflows/pyre/badge.svg)
+![pyrefly](https://github.com/facebook/sapp/workflows/pyrefly/badge.svg)
 
 # SAPP
 

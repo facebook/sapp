@@ -13,6 +13,7 @@ import random
 import time
 from collections import namedtuple
 from typing import (
+    Any,
     Callable,
     Dict,
     Generator,
@@ -239,10 +240,9 @@ def dbid_resolution_context() -> Generator[None, None, None]:
     old_resolve: Callable[[DBID, Union[int, DBID], bool], DBID] = (
         DBID.resolve_provisional
     )
-    DBID.resolve_provisional = (  # pyre-ignore[8] Pyre doesn't like patching methods
-        resolve
-    )
+    DBID.resolve_provisional = resolve
     yield
+    # pyrefly: ignore [bad-assignment]
     DBID.resolve_provisional = old_resolve
     for dbid, _id, _frozen, is_new in reversed(dbids):
         dbid._id = _id
@@ -265,7 +265,6 @@ class PrepareMixin:
             if hasattr(item, "id"):
                 if cls.has_potential_for_key_races():
                     # ID may not be final and will be frozen later
-                    # pyre-fixme[16]: `PrepareMixin` has no attribute `id` (we checked)
                     item.id.resolve_provisional(id=pkgen.get(cls), is_new=True)
                 else:
                     # ID is final
@@ -336,9 +335,11 @@ class PrepareMixin:
             key = key_for_item(i)
             if key in existing_ids:
                 # The key is already in the DB
+                # pyrefly: ignore [missing-attribute]
                 i.id.resolve(existing_ids[key], is_new=False)
             elif key in new_items:
                 # The key is already in the list of new items
+                # pyrefly: ignore [missing-attribute]
                 i.id.resolve(new_items[key].id, is_new=False)
             else:
                 # The key is new
@@ -373,10 +374,9 @@ class RecordMixin:
     _record = None
 
     @classmethod
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def Record(cls, extra_fields=None, **kwargs):
+    def Record(cls, extra_fields=None, **kwargs) -> Any:
         if not cls._record:
             if not extra_fields:
                 extra_fields = []
@@ -384,6 +384,7 @@ class RecordMixin:
             keys = [c.key for c in mapper.column_attrs] + ["model"] + extra_fields
             cls._record = namedtuple(cls.__name__ + "Record", keys)
 
+        # pyrefly: ignore [unexpected-keyword]
         return cls._record(model=cls, **kwargs)
 
     @classmethod
@@ -511,6 +512,7 @@ class PrimaryKeyGeneratorBase:
                 # Re-raise the exception if our retries are exhausted
                 if retries == 0:
                     raise ex
+        # pyrefly: ignore [bad-return]
         return cls_pk
 
     def _reserve_id_range(

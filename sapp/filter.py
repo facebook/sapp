@@ -36,11 +36,14 @@ MatchesIsAlias = Union[NewMatchesIsAlias, List[str]]
 class FilterRecord(Base):
     __tablename__ = "filters"
 
+    # pyrefly: ignore [no-matching-overload]
     name: Column[str] = Column(
         String(length=255), nullable=False, unique=True, primary_key=True
     )
+    # pyrefly: ignore [no-matching-overload]
     description: Column[Optional[str]] = Column(String(length=1024), nullable=True)
 
+    # pyrefly: ignore [no-matching-overload]
     json: Column[str] = Column(
         String(length=1024), nullable=False, doc="JSON representation of the filter"
     )
@@ -99,6 +102,7 @@ class Filter:
         if self.features is not None:
             for feature in self.features:
                 formatted_features.append((feature["mode"], feature["features"]))
+        # pyrefly: ignore [bad-return]
         return formatted_features
 
 

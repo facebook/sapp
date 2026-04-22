@@ -102,12 +102,17 @@ class IssueQueryResult(NamedTuple):
             "message": self.message,
             "callable": self.callable,
             "status": self.status,
+            # pyrefly: ignore [no-matching-overload]
             "source_names": list(self.source_names),
+            # pyrefly: ignore [no-matching-overload]
             "source_kinds": list(self.source_kinds),
+            # pyrefly: ignore [no-matching-overload]
             "sink_names": list(self.sink_names),
+            # pyrefly: ignore [no-matching-overload]
             "sink_kinds": list(self.sink_kinds),
             "min_trace_length_to_sources": self.min_trace_length_to_sources,
             "min_trace_length_to_sinks": self.min_trace_length_to_sinks,
+            # pyrefly: ignore [no-matching-overload]
             "features": list(self.features),
             "is_new_issue": self.is_new_issue,
             "detected_time": self.detected_time.isoformat(),

@@ -38,7 +38,6 @@ else:
     from typing_extensions import Literal
 
 
-# pyre-fixme[5]: Global expression must be annotated.
 log = logging.getLogger("sapp")
 
 T = TypeVar("T")
@@ -279,6 +278,7 @@ class ParseIssueTuple(NamedTuple):
             ),
             initial_sources=self.initial_sources,
             final_sinks=self.final_sinks,
+            # pyrefly: ignore
             features=list(map(sys.intern, self.features)),
             fix_info=self.fix_info,
         )

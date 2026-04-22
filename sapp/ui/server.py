@@ -72,7 +72,6 @@ def start_server(
         sessionmaker(bind=engine),
         scopefunc=get_ident,
     )
-    # pyre-fixme[16]: `Type` has no attribute `query`.
     models.Base.query = session.query_property()
     # We have additional tables for the UI that need to be created.
     models.create(database)
