@@ -26,16 +26,19 @@ from .trace import TraceFrameQueryResult, TraceFrameQueryResultType
 
 
 class RunConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = run.Run
 
 
 class IssueConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = IssueQueryResultType
 
 
 class TraceFrameConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = TraceFrameQueryResultType
 
@@ -50,56 +53,67 @@ class File(graphene.ObjectType):
 
 
 class FileConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = File
 
 
 class CodeConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.Code
 
 
 class PathConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.Path
 
 
 class CallableConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.Callable
 
 
 class SourceNameConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.SourceName
 
 
 class SourceKindConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.SourceKind
 
 
 class SinkNameConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.SinkName
 
 
 class SinkKindConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.SinkKind
 
 
 class StatusConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.Status
 
 
 class FeatureConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = typeahead.Feature
 
 
 class FilterConnection(relay.Connection):
+    # pyrefly: ignore [bad-override]
     class Meta:
         node = filters_module.Filter
 
@@ -134,7 +148,9 @@ def create_filter_from_query(
     for filtering_condition in features or []:
         feature_entry = {}
         feature_entry["mode"] = filtering_condition.mode
+        # pyrefly: ignore
         feature_entry["features"] = list(filtering_condition.features)
+        # pyrefly: ignore [bad-argument-type]
         restructured_features.append(feature_entry)
 
     traceLengthFromSources: Optional[List[int]] = None
@@ -171,7 +187,6 @@ def create_filter_from_query(
 
 
 class Query(graphene.ObjectType):
-    # pyre-fixme[4]: Attribute must be annotated.
     node = relay.Node.Field()
 
     runs = relay.ConnectionField(
@@ -370,6 +385,7 @@ class Query(graphene.ObjectType):
 class SaveFilterMutation(relay.ClientIDMutation):
     node = graphene.Field(filters_module.Filter)
 
+    # pyrefly: ignore [bad-override]
     class Input:
         name = graphene.String(required=True)
         description = graphene.String()
@@ -385,6 +401,7 @@ class SaveFilterMutation(relay.ClientIDMutation):
 
 
 class DeleteFilterMutation(relay.ClientIDMutation):
+    # pyrefly: ignore [bad-override]
     class Input:
         name = graphene.String(required=True)
 
@@ -397,6 +414,7 @@ class DeleteFilterMutation(relay.ClientIDMutation):
 
 
 class DeleteRunMutation(relay.ClientIDMutation):
+    # pyrefly: ignore [bad-override]
     class Input:
         id = graphene.ID(required=True)
 
@@ -409,6 +427,7 @@ class DeleteRunMutation(relay.ClientIDMutation):
 
 
 class UpdateStatusMutation(relay.ClientIDMutation):
+    # pyrefly: ignore [bad-override]
     class Input:
         id = graphene.ID(required=True)
         status = graphene.String(required=True)
@@ -422,9 +441,7 @@ class UpdateStatusMutation(relay.ClientIDMutation):
 
 
 class Mutation(graphene.ObjectType):
-    # pyre-fixme[4]: Attribute must be annotated.
     save_filter = SaveFilterMutation.Field()
-    # pyre-fixme[4]: Attribute must be annotated.
     delete_filter = DeleteFilterMutation.Field()
     delete_run: DeleteRunMutation = DeleteRunMutation.Field()
     update_status: UpdateStatusMutation = UpdateStatusMutation.Field()

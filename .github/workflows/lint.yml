@@ -13,11 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Install ufmt
-        run: pip install ufmt==2.8.0 black==24.4.2 ruff-api==0.1.0
+        run: pip install 'ufmt>=2.9.0' 'black==25.11.0' 'ruff-api>=0.1.0'
 
       - name: Add configuration for ufmt
         run: echo -e '[tool.ufmt]\nformatter = "ruff-api"\nsorter = "ruff-api"' > pyproject.toml
@@ -29,8 +31,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Install flake8
         run: pip install flake8==6.1.0
@@ -42,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

@@ -154,6 +154,7 @@ class BaseParser(PipelineStep[AnalysisOutput, IssuesAndFrames]):
                 elif e.type == ParseType.POSTCONDITION:
                     postconditions[key].append(e)
                 else:
+                    # pyrefly: ignore [missing-attribute]
                     raise TypeError(f"Unexpected frame type: {type(e.kind)}")
             else:
                 raise TypeError(f"Unexpected parsed entry type: {type(e)}")
@@ -210,6 +211,7 @@ class BaseParser(PipelineStep[AnalysisOutput, IssuesAndFrames]):
                 parsed_issue_count += 1
                 # We are only interested in issues that weren't in the previous
                 # analysis.
+                # pyrefly: ignore [bad-argument-type]
                 if not self._is_existing_issue(linemap, previous_handles, issue):
                     issues.append(issue.interned())
             except StopIteration as e:

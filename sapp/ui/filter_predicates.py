@@ -41,7 +41,9 @@ class InRange(Generic[_T], QueryPredicate):
         upper: Optional[_T] = None,
     ) -> None:
         self._column = column
+        # pyrefly: ignore [unsupported-operation]
         self._lower: Final[Optional[_T]] = lower
+        # pyrefly: ignore [unsupported-operation]
         self._upper: Final[Optional[_T]] = upper
 
     def apply(self, query: Query[_Q]) -> Query[_Q]:
@@ -55,6 +57,7 @@ class InRange(Generic[_T], QueryPredicate):
 class Equals(Generic[_T], QueryPredicate):
     def __init__(self, column: Union[Column[_T], DBID], to: _T) -> None:
         self._column = column
+        # pyrefly: ignore [unsupported-operation]
         self._to: Final[Optional[_T]] = to
 
     def apply(self, query: Query[_Q]) -> Query[_Q]:

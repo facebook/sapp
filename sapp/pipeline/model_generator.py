@@ -90,9 +90,7 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
         skip_traces: bool = False,
     ) -> None:
         super().__init__()
-        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
-        # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
         self.visited_frames: Dict[int, Set[int]] = {}  # frame id -> leaf ids
         self.record_meta_run_issue_instances: bool = record_meta_run_issue_instances

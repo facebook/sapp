@@ -65,6 +65,7 @@ if TYPE_CHECKING:
 
     class Base(_BackwardsCompatBase):
         metadata: Any = ...
+        # pyrefly: ignore [bad-assignment]
         __tablename__: str = ...
         __table__: Any = ...
         __table_args__: Any = ...
@@ -146,6 +147,7 @@ class SourceLocationsType(types.TypeDecorator):
             return None
         return ",".join([SourceLocation.to_string(location) for location in value])
 
+    # pyrefly: ignore [bad-override]
     def process_result_value(self, value: str, dialect):
         if value is None or value == "":
             return []
@@ -179,14 +181,17 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_trace_frame_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance_id = Column(
         "issue_instance_id", BIGDBIDType, primary_key=True, nullable=False
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_id = Column(
         "trace_frame_id", BIGDBIDType, primary_key=True, nullable=False, index=True
     )
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance = relationship(
         "IssueInstance",
         primaryjoin=(
@@ -197,6 +202,7 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame = relationship(
         "TraceFrame",
         primaryjoin=(
@@ -207,6 +213,7 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
     )
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, items):
         return cls._merge_assocs(
             session, items, cls.issue_instance_id, cls.trace_frame_id
@@ -258,8 +265,10 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         ),
     ) + BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     contents: Column[str] = Column(
         String(length=SHARED_TEXT_LENGTH),
         nullable=False,
@@ -272,6 +281,7 @@ class SharedText(Base, PrepareMixin, RecordMixin):
 
     issue_instances = association_proxy("shared_text_issue_instance", "issue_instance")
 
+    # pyrefly: ignore [no-matching-overload]
     shared_text_issue_instance = relationship(
         "IssueInstanceSharedTextAssoc",
         primaryjoin=(
@@ -282,6 +292,7 @@ class SharedText(Base, PrepareMixin, RecordMixin):
 
     trace_frames = association_proxy("shared_text_trace_frame", "trace_frames")
 
+    # pyrefly: ignore [no-matching-overload]
     shared_text_trace_frame = relationship(
         "TraceFrameLeafAssoc",
         primaryjoin=("SharedText.id == foreign(TraceFrameLeafAssoc.leaf_id)"),
@@ -327,14 +338,17 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_feature_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance_id: Column[DBID] = Column(
         "issue_instance_id", BIGDBIDType, primary_key=True, nullable=False
     )
 
+    # pyrefly: ignore [no-matching-overload]
     shared_text_id: Column[DBID] = Column(
         "feature_id", BIGDBIDType, primary_key=True, nullable=False
     )
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance = relationship(
         "IssueInstance",
         primaryjoin=(
@@ -344,6 +358,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     shared_text = relationship(
         "SharedText",
         primaryjoin=(
@@ -354,6 +369,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
     )
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, items):
         return cls._merge_assocs(
             session, items, cls.issue_instance_id, cls.shared_text_id
@@ -401,18 +417,22 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         Index("ix_issue_instances_run_id_purge_status", "run_id", "purge_status"),
     ) + BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     location: Column[SourceLocation] = Column(
         SourceLocationType,
         nullable=False,
         doc="Location (possibly a range) of the issue",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     filename_id: Column[DBID] = Column(
         BIGDBIDType, nullable=False, server_default="0", default=0
     )
 
+    # pyrefly: ignore [no-matching-overload]
     filename = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == IssueInstance.filename_id",
@@ -420,10 +440,12 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callable_id: Column[DBID] = Column(
         BIGDBIDType, nullable=False, server_default="0", default=0
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callable = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == IssueInstance.callable_id",
@@ -431,6 +453,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     is_new_issue: Column[Optional[bool]] = Column(
         Boolean,
         index=True,
@@ -438,10 +461,13 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         doc="True if the issue did not exist before this instance",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=False)
 
+    # pyrefly: ignore [no-matching-overload]
     issue_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=True)
 
+    # pyrefly: ignore [no-matching-overload]
     issue = relationship(
         "Issue",
         primaryjoin="foreign(Issue.id) == IssueInstance.issue_id",
@@ -449,8 +475,10 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     fix_info_id: Column[Optional[DBID]] = Column(BIGDBIDType, nullable=True)
 
+    # pyrefly: ignore [no-matching-overload]
     fix_info = relationship(
         "IssueInstanceFixInfo",
         primaryjoin=("foreign(IssueInstanceFixInfo.id) == IssueInstance.fix_info_id"),
@@ -458,8 +486,10 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     message_id: Column[Optional[DBID]] = Column(BIGDBIDType, nullable=True)
 
+    # pyrefly: ignore [no-matching-overload]
     message = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == IssueInstance.message_id",
@@ -469,6 +499,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
 
     trace_frames = association_proxy("issue_instance_trace_frame", "trace_frame")
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance_trace_frame = relationship(
         "IssueInstanceTraceFrameAssoc",
         primaryjoin=(
@@ -480,6 +511,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
 
     shared_texts = association_proxy("issue_instance_shared_text", "shared_text")
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance_shared_text = relationship(
         "IssueInstanceSharedTextAssoc",
         primaryjoin=(
@@ -489,30 +521,36 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     min_trace_length_to_sources: Column[Optional[int]] = Column(
         Integer, nullable=True, doc="The minimum trace length to sources"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     min_trace_length_to_sinks: Column[Optional[int]] = Column(
         Integer, nullable=True, doc="The minimum trace length to sinks"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     rank: Column[Optional[int]] = Column(
         Integer,
         server_default="0",
         doc="The higher the rank, the higher the priority for this issue",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callable_count: Column[Optional[int]] = Column(
         Integer,
         server_default="0",
         doc="Number of issues in this callable for this run",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     min_trace_length_to_entrypoints: Column[Optional[int]] = Column(
         Integer, nullable=True, doc="The minimum trace length to entrypoints"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     purge_status: Column[str] = Column(
         Enum(PurgeStatusForInstance),
         server_default="none",
@@ -532,6 +570,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         return [frame for frame in self.trace_frames if frame.kind == kind]
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, items):
         for i in items:
             # If the issue is new, then the instance has to be new. But note
@@ -601,8 +640,10 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         Index("ix_issues_status_severity", "status", "severity"),
     ) + BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[IssueDBID] = Column(IssueBIGDBIDType, primary_key=True, nullable=False)
 
+    # pyrefly: ignore [no-matching-overload]
     handle: Column[str] = Column(
         String(length=HANDLE_LENGTH),
         nullable=False,
@@ -611,10 +652,12 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         + "different code revisions",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callable_id: Column[DBID] = Column(
         BIGDBIDType, nullable=False, index=True, server_default="0", default=0
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callable = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == Issue.callable_id",
@@ -622,16 +665,19 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     code: Column[int] = Column(
         Integer, doc="Code identifiying the issue type", nullable=False, index=True
     )
 
+    # pyrefly: ignore [no-matching-overload]
     instances = relationship(
         "IssueInstance",
         primaryjoin="Issue.id == foreign(IssueInstance.issue_id)",
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     status: Column[str] = Column(
         Enum(IssueStatus),
         doc="Shows the issue status from the latest run",
@@ -639,6 +685,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         nullable=False,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     severity: Column[Optional[str]] = Column(
         Enum(Severity),
         doc="Severity of a Valid issue",
@@ -646,14 +693,17 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         nullable=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     task_number: Column[Optional[int]] = Column(
         Integer, doc="Task number (not fbid) that is tracking this issue"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     feedback_fbid: Column[Optional[int]] = Column(
         BIGINT(unsigned=True), nullable=True, doc="FBID for EntZoncolanFeedback"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     detected_time: Column[int] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp of first detection",
@@ -662,18 +712,21 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         server_default="0",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     triage_time: Column[Optional[int]] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp of triage (typically first triage from history)",
         nullable=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     start_triage_time: Column[Optional[int]] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp of examination leading to triage",
         nullable=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     triage_duration: Column[int] = Column(
         BIGINT(20, unsigned=True),
         doc="duration in seconds spent triaging",
@@ -681,20 +734,24 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         server_default="0",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     triaged_by_fbid: Column[Optional[int]] = Column(
         BIGINT(unsigned=True),
         nullable=True,
         doc="FBID for EntInternUser (typically actor of first triage from history)",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     first_instance_id: Column[Optional[DBID]] = Column(
         BIGDBIDType, nullable=True, index=False
     )
 
+    # pyrefly: ignore [no-matching-overload]
     triaged_instance_id: Column[Optional[DBID]] = Column(
         BIGDBIDType, nullable=True, index=False
     )
 
+    # pyrefly: ignore [no-matching-overload]
     update_time: Column[int] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp of last update. Not set during initial construction",
@@ -703,6 +760,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         server_default="0",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     issue_group_id: Column[Optional[int]] = Column(
         BIGINT(20, unsigned=True),
         doc="issue group id when issue is grouped with others",
@@ -710,6 +768,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         server_default=None,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     oncall_shortname: Column[Optional[str]] = Column(
         String(length=100), doc="responsible for code where issue found", nullable=True
     )
@@ -726,6 +785,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
         return True
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, issues):
         return cls._merge_by_keys(session, issues, cls.handle)
 
@@ -786,10 +846,13 @@ class Run(Base):
         Index("ix_runs_purge_status_run_status_date", "purge_status", "status", "date"),
     ) + BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     job_id: Column[Optional[str]] = Column(String(length=255), index=True)
 
+    # pyrefly: ignore [no-matching-overload]
     date: Column[datetime] = Column(
         DateTime,
         doc="The date/time the analysis was run",
@@ -797,6 +860,7 @@ class Run(Base):
         index=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     commit_hash: Column[Optional[str]] = Column(
         String(length=255),
         doc="The commit hash of the codebase",
@@ -804,10 +868,12 @@ class Run(Base):
         index=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     revision_id: Column[Optional[int]] = Column(
         Integer, doc="Phabricator Diff number (DXXXXXX)", nullable=True, index=True
     )
 
+    # pyrefly: ignore [no-matching-overload]
     differential_id: Column[Optional[int]] = Column(
         Integer,
         doc="Phabricator Version number",
@@ -815,10 +881,12 @@ class Run(Base):
         index=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     hh_version: Column[Optional[str]] = Column(
         String(length=255), doc="The output of hh_server --version"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     branch: Column[Optional[str]] = Column(
         String(length=255),
         doc="Branch the commit is based on",
@@ -826,6 +894,7 @@ class Run(Base):
         index=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instances = relationship(
         "IssueInstance",
         primaryjoin="Run.id == foreign(IssueInstance.run_id)",
@@ -838,10 +907,12 @@ class Run(Base):
         Enum(RunStatus), server_default="finished", nullable=False, index=True
     )
 
+    # pyrefly: ignore [no-matching-overload]
     status_description: Column[Optional[str]] = Column(
         String(length=255), doc="The reason why a run didn't finish", nullable=True
     )
 
+    # pyrefly: ignore [no-matching-overload]
     kind: Column[Optional[str]] = Column(
         String(length=255),
         doc=(
@@ -852,12 +923,14 @@ class Run(Base):
         index=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     repository: Column[Optional[str]] = Column(
         String(length=255),
         doc=("The repository that static analysis was run on."),
         nullable=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     db_version: Column[int] = Column(
         Integer,
         doc="Tracks under which DB version this was written (for migrations)",
@@ -879,6 +952,7 @@ class Run(Base):
         index=False,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     finished_time: Column[Optional[int]] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp that the job was marked as finished or NULL",
@@ -935,12 +1009,15 @@ class MetaRun(Base):
     __tablename__ = "metaruns"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, primary_key=True, autoincrement=False)
 
     # This is the moral equivalent of job_id, but named in a more intuitive manner.
     # Allows determining the latest meta run for each custom run separately.
+    # pyrefly: ignore [no-matching-overload]
     custom_run_name: Column[Optional[str]] = Column(String(length=255), nullable=True)
 
+    # pyrefly: ignore [no-matching-overload]
     date: Column[datetime] = Column(
         DateTime, doc="The date/time the meta-run was generated", nullable=False
     )
@@ -948,8 +1025,10 @@ class MetaRun(Base):
     # We want to be able to filter meta-runs by completion. Towards that end, we plan on
     # using the information of number of total runs vs. the number of runs written in
     # the database.
+    # pyrefly: ignore [no-matching-overload]
     expected_run_count: Column[Optional[int]] = Column(Integer, nullable=True)
 
+    # pyrefly: ignore [no-matching-overload]
     kind: Column[Optional[str]] = Column(
         String(length=255),
         doc=(
@@ -960,6 +1039,7 @@ class MetaRun(Base):
         index=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     db_version: Column[int] = Column(
         Integer,
         doc="Tracks under which DB version this was written (for migrations)",
@@ -1012,14 +1092,18 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "metarun_run_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     meta_run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
+    # pyrefly: ignore [no-matching-overload]
     run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
+    # pyrefly: ignore [no-matching-overload]
     meta_run = relationship(
         "MetaRun",
         primaryjoin=("MetaRunToRunAssoc.meta_run_id == foreign(MetaRun.id)"),
         uselist=False,
         viewonly=True,
     )
+    # pyrefly: ignore [no-matching-overload]
     run = relationship(
         "Run",
         primaryjoin=("MetaRunToRunAssoc.run_id == foreign(Run.id)"),
@@ -1027,6 +1111,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     run_label: Column[Optional[str]] = Column(
         String(length=1024),
         nullable=True,
@@ -1034,6 +1119,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
     )
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, items):
         return cls._merge_assocs(session, items, cls.meta_run_id, cls.run_id)
 
@@ -1042,8 +1128,10 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "trace_frame_message_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     leaf_id: Column[DBID] = Column(
         "message_id", BIGDBIDType, nullable=False, primary_key=True
     )
@@ -1051,10 +1139,12 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
     # The minimum trace length unfortunately can be off and actually lead to
     # loops. This is a known problem and any code generating traces should
     # additionally have cycle detection.
+    # pyrefly: ignore [no-matching-overload]
     trace_length: Column[Optional[int]] = Column(
         Integer, doc="minimum trace length to the given leaf", nullable=True
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame = relationship(
         "TraceFrame",
         primaryjoin=("TraceFrameLeafAssoc.trace_frame_id == foreign(TraceFrame.id)"),
@@ -1062,6 +1152,7 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     leaves = relationship(
         "SharedText",
         primaryjoin="TraceFrameLeafAssoc.leaf_id == foreign(SharedText.id)",
@@ -1070,6 +1161,7 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
     )
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, items):
         return cls._merge_assocs(session, items, cls.trace_frame_id, cls.leaf_id)
 
@@ -1078,12 +1170,15 @@ class IssueInstanceFixInfo(Base, PrepareMixin, RecordMixin):
     __tablename__ = "issue_instance_fix_info"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     fix_info: Column[str] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH), nullable=False
     )
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance = relationship(
         "IssueInstance",
         primaryjoin=("foreign(IssueInstance.fix_info_id) == IssueInstanceFixInfo.id"),
@@ -1099,12 +1194,16 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         Index("ix_traceframe_run_callee_port", "run_id", "callee_id", "callee_port"),
     ) + BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     kind: Column[str] = Column(Enum(TraceKind), nullable=False, index=False)
 
+    # pyrefly: ignore [no-matching-overload]
     caller_id = Column(BIGDBIDType, nullable=False, server_default="0", default=0)
 
+    # pyrefly: ignore [no-matching-overload]
     caller = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == TraceFrame.caller_id",
@@ -1112,6 +1211,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     caller_port: Column[str] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH),
         nullable=False,
@@ -1119,10 +1219,12 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         doc="The caller port of this call edge",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callee_id: Column[DBID] = Column(
         BIGDBIDType, nullable=False, server_default="0", default=0
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callee = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == TraceFrame.callee_id",
@@ -1130,12 +1232,14 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callee_location: Column[SourceLocation] = Column(
         SourceLocationType,
         nullable=False,
         doc="The location of the callee in the source code (line|start|end)",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     callee_port: Column[str] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH),
         nullable=False,
@@ -1143,20 +1247,25 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         doc="The callee port of this call edge'",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     filename_id: Column[DBID] = Column(
         BIGDBIDType, nullable=False, server_default="0", default=0
     )
 
+    # pyrefly: ignore [no-matching-overload]
     run_id: Column[DBID] = Column("run_id", BIGDBIDType, nullable=False, index=False)
 
+    # pyrefly: ignore [no-matching-overload]
     type_interval_lower: Column[Optional[int]] = Column(
         Integer, nullable=True, doc="Class interval lower-bound (inclusive)"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     type_interval_upper: Column[Optional[int]] = Column(
         Integer, nullable=True, doc="Class interval upper-bound (inclusive)"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     preserves_type_context: Column[bool] = Column(
         Boolean,
         default=False,
@@ -1165,6 +1274,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         doc="Whether the call preserves the calling type context",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     titos: Column[SourceLocation] = Column(
         SourceLocationsType,
         doc="Locations of TITOs aka abductions for the trace frame",
@@ -1181,6 +1291,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         + "Is set by internal jobs and should NOT be set to anything but the default in SAPP code.",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     annotations = relationship(
         "TraceFrameAnnotation",
         primaryjoin=("TraceFrame.id == foreign(TraceFrameAnnotation.trace_frame_id)"),
@@ -1191,6 +1302,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
     leaves = association_proxy("leaf_assoc", "leaves")
     lengths = association_proxy("leaf_assoc", "trace_length")
 
+    # pyrefly: ignore [no-matching-overload]
     leaf_assoc = relationship(
         "TraceFrameLeafAssoc",
         primaryjoin=("TraceFrame.id == foreign(TraceFrameLeafAssoc.trace_frame_id)"),
@@ -1200,6 +1312,7 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
 
     issue_instances = association_proxy("trace_frame_issue_instance", "issue_instance")
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_issue_instance = relationship(
         "IssueInstanceTraceFrameAssoc",
         primaryjoin=(
@@ -1265,21 +1378,27 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
     __tablename__ = "trace_frame_annotations"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     location: Column[SourceLocation] = Column(
         SourceLocationType, nullable=False, doc="The location for the message"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     kind: Column[Optional[str]] = Column(String(length=255), nullable=True, index=True)
 
+    # pyrefly: ignore [no-matching-overload]
     message: Column[str] = Column(
         String(length=4096),
         doc="Message describing info about the trace",
         nullable=False,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     leaf_id: Column[DBID] = Column(BIGDBIDType, nullable=True)
+    # pyrefly: ignore [no-matching-overload]
     leaf = relationship(
         "SharedText",
         primaryjoin="foreign(SharedText.id) == TraceFrameAnnotation.leaf_id",
@@ -1287,19 +1406,23 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     link: Column[Optional[str]] = Column(
         String(length=4096),
         doc="An optional URL linking the message to more info (Quandary)",
         nullable=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_key: Column[Optional[str]] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH),
         nullable=True,
         doc="Link to possible pre/post traces (caller_condition).",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=True)
+    # pyrefly: ignore [no-matching-overload]
     trace_frame = relationship(
         "TraceFrame",
         primaryjoin=("TraceFrame.id == foreign(TraceFrameAnnotation.trace_frame_id)"),
@@ -1310,6 +1433,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
     child_trace_frames = association_proxy(
         "trace_frame_annotation_trace_frame", "trace_frame"
     )
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_annotation_trace_frame = relationship(
         "TraceFrameAnnotationTraceFrameAssoc",
         primaryjoin=(
@@ -1329,14 +1453,17 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
     __tablename__ = "trace_frame_annotation_trace_frame_assoc"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_annotation_id: Column[DBID] = Column(
         "trace_frame_annotation_id", BIGDBIDType, primary_key=True, nullable=False
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_id: Column[DBID] = Column(
         "trace_frame_id", BIGDBIDType, primary_key=True, nullable=False, index=True
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame_annotation = relationship(
         "TraceFrameAnnotation",
         primaryjoin=(
@@ -1347,6 +1474,7 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
+    # pyrefly: ignore [no-matching-overload]
     trace_frame = relationship(
         "TraceFrame",
         primaryjoin=(
@@ -1358,6 +1486,7 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
     )
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, items):
         return cls._merge_assocs(
             session, items, cls.trace_frame_annotation_id, cls.trace_frame_id
@@ -1368,8 +1497,10 @@ class WarningMessage(Base):
     __tablename__ = "warning_messages"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     code: Column[int] = Column(Integer, autoincrement=False, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     message: Column[str] = Column(String(length=4096), nullable=False)
 
 
@@ -1388,6 +1519,7 @@ class WarningCodeProperties(Base):
     __tablename__ = "warning_code_properties"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     code: Column[int] = Column(
         Integer,
         autoincrement=False,
@@ -1396,6 +1528,7 @@ class WarningCodeProperties(Base):
         doc="Code identifiying the issue type",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     category: Column[Optional[str]] = Column(
         Enum(WarningCodeCategory),
         nullable=True,
@@ -1407,6 +1540,7 @@ class WarningCodeProperties(Base):
         ),
     )
 
+    # pyrefly: ignore [no-matching-overload]
     new_issue_rate: Column[Optional[Decimal]] = Column(
         Float,
         nullable=True,
@@ -1414,6 +1548,7 @@ class WarningCodeProperties(Base):
         doc="Average number of new issues per day (computed column)",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     bug_count: Column[Optional[int]] = Column(
         Integer,
         nullable=True,
@@ -1421,10 +1556,12 @@ class WarningCodeProperties(Base):
         doc="Number of issues in this category (computed column)",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     avg_trace_len: Column[Optional[Decimal]] = Column(
         Float, nullable=True, index=False, doc="Deprecated. See avg_fwd/bwd_trace_len"
     )
 
+    # pyrefly: ignore [no-matching-overload]
     avg_fwd_trace_len: Column[Optional[Decimal]] = Column(
         Float,
         nullable=True,
@@ -1436,6 +1573,7 @@ class WarningCodeProperties(Base):
         ),
     )
 
+    # pyrefly: ignore [no-matching-overload]
     avg_bwd_trace_len: Column[Optional[Decimal]] = Column(
         Float,
         nullable=True,
@@ -1447,6 +1585,7 @@ class WarningCodeProperties(Base):
         ),
     )
 
+    # pyrefly: ignore [no-matching-overload]
     snr: Column[Optional[Decimal]] = Column(
         Float,
         nullable=True,
@@ -1457,6 +1596,7 @@ class WarningCodeProperties(Base):
         ),
     )
 
+    # pyrefly: ignore [no-matching-overload]
     is_snr_significant: Column[Optional[bool]] = Column(
         Boolean,
         nullable=True,
@@ -1467,6 +1607,7 @@ class WarningCodeProperties(Base):
         ),
     )
 
+    # pyrefly: ignore [no-matching-overload]
     discoverable: Column[Optional[bool]] = Column(
         Boolean,
         nullable=True,
@@ -1474,6 +1615,7 @@ class WarningCodeProperties(Base):
         doc="True if an attacker can discover the issue",
     )
 
+    # pyrefly: ignore [no-matching-overload]
     health_score: Column[Optional[Decimal]] = Column(
         Float,
         nullable=True,
@@ -1484,6 +1626,7 @@ class WarningCodeProperties(Base):
         ),
     )
 
+    # pyrefly: ignore [no-matching-overload]
     notes: Column[Optional[str]] = Column(
         String(length=4096),
         nullable=True,
@@ -1499,10 +1642,14 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
     __tablename__ = "run_origins"
     __table_args__ = BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column(BIGDBIDType, nullable=False, primary_key=True)
+    # pyrefly: ignore [no-matching-overload]
     run_id: Column[DBID] = Column(BIGDBIDType, nullable=False, index=True)
+    # pyrefly: ignore [no-matching-overload]
     origin: Column[str] = Column(String(length=255), nullable=False)
 
+    # pyrefly: ignore [no-matching-overload]
     run = relationship(
         "Run",
         primaryjoin=("RunOrigin.run_id == foreign(Run.id)"),
@@ -1511,6 +1658,7 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
     )
 
     @classmethod
+    # pyrefly: ignore [bad-param-name-override]
     def merge(cls, session, items):
         return cls._merge_by_keys(session, items, cls.run_id)
 
@@ -1531,13 +1679,18 @@ class ClassTypeInterval(Base, PrepareMixin, RecordMixin):
 
     # Synthetic primary key allows easier pagination when compared to
     # using (run_id, class_name) as a composite primary key
+    # pyrefly: ignore [no-matching-overload]
     id: Column[DBID] = Column("id", BIGDBIDType, nullable=False, primary_key=True)
 
+    # pyrefly: ignore [no-matching-overload]
     run_id: Column[DBID] = Column(BIGDBIDType, nullable=False)
+    # pyrefly: ignore [no-matching-overload]
     class_name: Column[str] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH), nullable=False
     )
+    # pyrefly: ignore [no-matching-overload]
     lower_bound: Column[int] = Column(Integer, nullable=False)
+    # pyrefly: ignore [no-matching-overload]
     upper_bound: Column[int] = Column(Integer, nullable=False)
 
 
@@ -1550,10 +1703,13 @@ class MetaRunIssueInstanceIndex(Base, PrepareMixin, RecordMixin):
         Index("ix_metarun_issue_instance_index", "meta_run_id", "issue_instance_hash"),
     ) + BASE_TABLE_ARGS
 
+    # pyrefly: ignore [no-matching-overload]
     issue_instance_id: Column[DBID] = Column(
         BIGDBIDType, nullable=False, primary_key=True
     )
+    # pyrefly: ignore [no-matching-overload]
     meta_run_id: Column[DBID] = Column(BIGDBIDType, nullable=False)
+    # pyrefly: ignore [no-matching-overload]
     issue_instance_hash: Column[str] = Column(
         String(length=META_RUN_ISSUE_INSTANCE_HASH_LENGTH),
         nullable=False,

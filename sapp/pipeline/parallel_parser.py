@@ -51,6 +51,7 @@ class ParallelParser(BaseParser):
         log.info(f"RSS before parsing: {initial_rss:.2f} GB")
 
         with multiprocessing.get_context("spawn").Pool(processes=None) as pool:
+            # pyrefly: ignore [bad-argument-type]
             for idx, f in enumerate(pool.imap_unordered(parse, args)):
                 if idx % 10 == 0:
                     cur = idx + 1

@@ -442,6 +442,7 @@ def next_frames(
 
         filtered_results.append((frame, frame_leaf_kinds, shared_texts))
 
+    # pyrefly: ignore [bad-return]
     return [
         (TraceFrameQueryResult.from_record(frame, shared_texts), leaf_kinds)
         for frame, leaf_kinds, shared_texts in filtered_results

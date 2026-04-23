@@ -84,6 +84,7 @@ class ListFilterException(Exception):
 
 
 class LeafOrderBy(str, enum.Enum):
+    # pyrefly: ignore
     name = "name"
     number_issues = "number_issues"
 
@@ -279,6 +280,7 @@ json CALLABLE        show the original json output for the matching callable
         print(f"Set run to {run_id}.")
 
     def _get_profile_basedir(self) -> str:
+        # pyrefly: ignore
         profile_name = IPython.get_ipython().profile
         return paths.locate_profile(profile=profile_name)
 

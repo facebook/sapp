@@ -34,13 +34,10 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
 
     def __init__(self, propagate_sources: bool, propagate_features: bool) -> None:
         super().__init__()
-        # pyre-fixme[13]: Attribute `summary` is never initialized.
         self.summary: Summary
-        # pyre-fixme[13]: Attribute `graph` is never initialized.
         self.graph: TraceGraph
         self.propagate_sources = propagate_sources
         self.propagate_features = propagate_features
-        # pyre-fixme[8]
         self.visited: Dict[FrameID, SinkToState] = defaultdict(
             lambda: defaultdict(lambda: PerSinkState())
         )
@@ -121,7 +118,10 @@ class PropagateToCRTEXAnchors(PipelineStep[TraceGraph, TraceGraph]):
             return
         initial_trace_length = instance.min_trace_length_to_sources or 0
         self._propagate_kinds_along_traces(
-            initial_sink_frames, shared_text_kinds, initial_trace_length
+            # pyrefly: ignore [bad-argument-type]
+            initial_sink_frames,
+            shared_text_kinds,
+            initial_trace_length,
         )
 
     def _propagate_kinds_along_traces(

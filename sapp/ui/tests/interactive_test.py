@@ -2652,7 +2652,6 @@ else:
         self.assertIn("sink_detail_2", output)
 
     def mock_pager(self, output_string: str) -> None:
-        # pyre-fixme[16]: `InteractiveTest` has no attribute `pager_calls`.
         self.pager_calls += 1
 
     def testPager(self) -> None:

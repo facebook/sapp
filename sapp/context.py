@@ -21,5 +21,4 @@ class Context(NamedTuple):
     tool: str = ""
 
 
-# pyre-fixme[5]: Global expression must be annotated.
 pass_context = click.make_pass_decorator(Context, ensure=True)

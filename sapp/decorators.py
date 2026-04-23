@@ -40,6 +40,7 @@ class retryable:
                     if try_num > self.num_tries:
                         raise
 
+        # pyrefly: ignore [missing-attribute]
         new_func.__wrapped__ = func
         return new_func
 
