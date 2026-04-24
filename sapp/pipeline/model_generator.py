@@ -100,7 +100,9 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
         )
         self.skip_traces: bool = skip_traces
         self.trace_entries: Dict[TraceKind, Frames] = {}
-        self.generated_annotation_traces: Set[Tuple[str, str, TraceKind]] = set()
+        self.generated_annotation_traces: Set[
+            Tuple[str, str, TraceKind, Optional[str], DBID]
+        ] = set()
         # Active _generate_transitive_trace_frames queue, if any.
         self._transitive_queue: Optional[
             List[Tuple[Union[str, TraceKind], TraceFrame, Set[int]]]
@@ -693,7 +695,7 @@ class ModelGenerator(PipelineStep[IssuesAndFrames, TraceGraph]):
         nested_annotations = trace.annotations
         position = trace.position
 
-        cache_key = (callee, callee_port, trace_kind)
+        cache_key = (callee, callee_port, trace_kind, annotation.leaf_kind, run.id)
         is_new = cache_key not in self.generated_annotation_traces
         if is_new:
             self.generated_annotation_traces.add(cache_key)
