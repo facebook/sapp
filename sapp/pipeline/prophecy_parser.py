@@ -34,7 +34,6 @@ from . import (
 )
 from .base_parser import BaseParser
 
-
 log: logging.Logger = logging.getLogger("sapp")
 
 
