@@ -6,7 +6,9 @@
 
 # pyre-strict
 
-from typing import Generator
+from __future__ import annotations
+
+from collections.abc import Generator
 from unittest import mock, TestCase
 
 from ..decorators import (
@@ -31,8 +33,7 @@ class RetryableTest(TestCase):
             return True
 
     @retryable(num_tries=5, retryable_exs=[ImportError])
-    # pyre-fixme[3]: Return type must be annotated.
-    def raiseRetryableException(self):
+    def raiseRetryableException(self) -> None:
         self.times_through += 1
         if self.times_through < 3:
             raise ImportError
@@ -70,8 +71,7 @@ class LogTimeTest(TestCase):
     def takes_some_time(self) -> None:
         pass
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def testBasic(self, mocked_time_generator) -> None:
+    def testBasic(self, mocked_time_generator: mock.MagicMock) -> None:
         with self.assertLogs("sapp") as context_manager:
             self.takes_some_time()
         self.assertEqual(
@@ -85,8 +85,7 @@ class LogTimeTest(TestCase):
 
 class CatchUserErrorTest(TestCase):
     @catch_user_error()
-    # pyre-fixme[3]: Return type must be annotated.
-    def throwsUserError(self):
+    def throwsUserError(self) -> None:
         raise UserError
 
     def testCatchesUserError(self) -> None:
@@ -96,8 +95,7 @@ class CatchUserErrorTest(TestCase):
             self.fail("Unexpected UserError")
 
     @catch_user_error()
-    # pyre-fixme[3]: Return type must be annotated.
-    def throwsException(self):
+    def throwsException(self) -> None:
         raise ValueError
 
     def testDoesNotCatchOtherExceptions(self) -> None:
@@ -107,8 +105,7 @@ class CatchUserErrorTest(TestCase):
 
 class CatchKeyboardInterruptTest(TestCase):
     @catch_keyboard_interrupt()
-    # pyre-fixme[3]: Return type must be annotated.
-    def throwsKeyboardInterrupt(self):
+    def throwsKeyboardInterrupt(self) -> None:
         raise KeyboardInterrupt
 
     def testCatchesKeyboardInterrupt(self) -> None:
@@ -118,8 +115,7 @@ class CatchKeyboardInterruptTest(TestCase):
             self.fail("Unexpected KeyboardInterrupt")
 
     @catch_keyboard_interrupt()
-    # pyre-fixme[3]: Return type must be annotated.
-    def throwsException(self):
+    def throwsException(self) -> None:
         raise ValueError
 
     def testDoesNotCatchOtherExceptions(self) -> None:
