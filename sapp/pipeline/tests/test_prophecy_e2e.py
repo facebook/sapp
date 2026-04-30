@@ -42,7 +42,6 @@ from ..model_generator import ModelGenerator
 from ..prophecy_parser import Parser
 from ..trim_trace_graph import TrimTraceGraph
 
-
 # -- Test fixture data --------------------------------------------------------
 
 METADATA = Metadata(
