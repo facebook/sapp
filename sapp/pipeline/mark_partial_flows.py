@@ -8,7 +8,7 @@
 import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from typing import Iterable
+from typing import cast, Iterable
 
 from ..analysis_output import PartialFlowToMark
 from ..metrics_logger import ScopedMetricsLogger
@@ -146,8 +146,7 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                 # after all children are done.
                 stack.append((frame, True))
                 next_frames = graph.get_trace_frames_from_caller(
-                    # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-                    frame.kind,
+                    cast(TraceKind, frame.kind),
                     frame.callee_id,
                     frame.callee_port,
                 )
@@ -165,8 +164,7 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
                     self.partial_flow_frames += 1
                     added_breadcrumb = True
                 next_frames = graph.get_trace_frames_from_caller(
-                    # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-                    frame.kind,
+                    cast(TraceKind, frame.kind),
                     frame.callee_id,
                     frame.callee_port,
                 )
@@ -259,8 +257,7 @@ class MarkPartialFlows(PipelineStep[TraceGraph, TraceGraph]):
             visited.add(frame_id)
             # Queue next frames.
             next_frames = graph.get_trace_frames_from_caller(
-                # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-                frame.kind,
+                cast(TraceKind, frame.kind),
                 frame.callee_id,
                 frame.callee_port,
             )

@@ -235,13 +235,12 @@ class Parser(BaseParser):
 
         self._initialized = True
 
-    # pyre-fixme[14]: `parse` overrides method defined in `BaseParser` inconsistently.
     def parse(
-        self, output: AnalysisOutput
+        self, input: AnalysisOutput
     ) -> Iterable[Union[sapp.ParseConditionTuple, sapp.ParseIssueTuple]]:
-        self.initialize(output.metadata)
+        self.initialize(input.metadata)
 
-        for handle in output.file_handles():
+        for handle in input.file_handles():
             yield from self.parse_handle(handle)
 
     def parse_handle(
