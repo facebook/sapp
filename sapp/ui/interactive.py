@@ -13,6 +13,7 @@ import itertools
 import os
 import sys
 from collections import defaultdict
+from collections.abc import Callable
 from typing import (
     Any,
     DefaultDict,
@@ -1577,8 +1578,7 @@ json CALLABLE        show the original json output for the matching callable
         )
         self.current_trace_frame_index = 0
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _resolve_pager(self, use_pager: bool):
+    def _resolve_pager(self, use_pager: bool) -> Callable[[str], None]:
         use_pager = sys.stdin.isatty() if use_pager is None else use_pager
         return page.page if use_pager else page.display_page
 
