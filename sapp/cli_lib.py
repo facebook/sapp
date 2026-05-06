@@ -9,7 +9,7 @@ import logging
 import os
 import pathlib
 from functools import wraps
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import click
 import click_log
@@ -62,9 +62,7 @@ def require_option(current_ctx: click.Context, param_name: str) -> None:
     raise click.MissingParameter(ctx=current_ctx, param=param_definition)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def common_options(func):
+def common_options(func: Callable[..., object]) -> click.Group:
     @click.group(context_settings={"help_option_names": ["--help", "-h"]})
     @click_log.simple_verbosity_option(logger)
     @option(
@@ -81,11 +79,7 @@ def common_options(func):
         type=Path(dir_okay=False),
     )
     @wraps(func)
-    # pyre-fixme[53]: Captured variable `func` is not annotated.
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: object, **kwargs: object) -> object:
         return func(*args, **kwargs)
 
     return wrapper
@@ -107,8 +101,7 @@ def default_database(
 )
 @pass_context
 @click.argument("ipython_args", nargs=-1, type=click.UNPROCESSED)
-# pyre-fixme[2]: Parameter must be annotated.
-def explore(ctx: Context, ipython_args) -> None:
+def explore(ctx: Context, ipython_args: Tuple[str, ...]) -> None:
     scope_vars = Interactive(
         database=ctx.database,
         repository_directory=ctx.repository,
