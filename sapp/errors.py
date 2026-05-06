@@ -5,6 +5,8 @@
 
 # pyre-strict
 
+from __future__ import annotations
+
 TYPECHECK_ERROR = 102
 
 
@@ -17,9 +19,7 @@ class AIRecoverableException(AIException):
 
 
 class AIProcessException(AIRecoverableException):
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, message, error_code) -> None:
+    def __init__(self, message: str, error_code: int) -> None:
         super().__init__(message)
         self.error_code = error_code
 
