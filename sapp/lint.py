@@ -5,10 +5,11 @@
 
 # pyre-strict
 
+from __future__ import annotations
+
 import json
 from operator import itemgetter
 from pathlib import Path
-from typing import List
 
 import click
 from sqlalchemy import select
@@ -17,6 +18,7 @@ from sqlalchemy.orm.util import AliasedClass
 
 from .cli_lib import require_option
 from .models import Issue, IssueInstance, SharedText, TraceFrame
+from .source_location import SourceLocation
 
 MessageText: AliasedClass = aliased(SharedText)
 FilenameText: AliasedClass = aliased(SharedText)
@@ -33,13 +35,13 @@ CalleeText: AliasedClass = aliased(SharedText)
     nargs=-1,
     required=True,
 )
-def lint(click_ctx: click.Context, run_id: int, filenames: List[str]) -> None:
+def lint(click_ctx: click.Context, run_id: int, filenames: list[str]) -> None:
     """Output DB models in a lint-friendly format"""
     ctx = click_ctx.obj
     require_option(click_ctx, "repository")
 
     paths = [Path(p).resolve() for p in filenames]
-    root = Path(ctx.repository).resolve()
+    root: Path = Path(ctx.repository).resolve()
     relative = [str(Path(f).relative_to(root)) for f in paths]
 
     with ctx.database.make_session() as session:
@@ -75,13 +77,9 @@ def lint(click_ctx: click.Context, run_id: int, filenames: List[str]) -> None:
             .join(CalleeText, CalleeText.id == TraceFrame.callee_id)
         ).all()
 
-    # pyre-fixme[53]: Captured variable `root` is not annotated.
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def entry(filename, code, message, location):
+    def entry(
+        filename: str, code: str, message: str, location: SourceLocation
+    ) -> dict[str, str | int]:
         return {
             "filename": str(root / filename),
             "code": code,
