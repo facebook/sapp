@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import enum
 import logging
+from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
@@ -33,6 +34,7 @@ from sqlalchemy import (
     types,
 )
 from sqlalchemy.dialects.mysql import BIGINT
+from sqlalchemy.engine import Dialect
 from sqlalchemy.exc import NoSuchTableError, ProgrammingError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import declarative_base, relationship, Session
@@ -110,7 +112,9 @@ class SourceLocationType(types.TypeDecorator):
     def __init__(self) -> None:
         super(SourceLocationType, self).__init__(length=255)
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(
+        self, value: SourceLocation | None, dialect: Dialect
+    ) -> str | None:
         """
         SQLAlchemy uses this to convert a SourceLocation object into a string.
         """
@@ -118,7 +122,9 @@ class SourceLocationType(types.TypeDecorator):
             return None
         return SourceLocation.to_string(value)
 
-    def process_result_value(self, value, dialect) -> Optional[SourceLocation]:
+    def process_result_value(
+        self, value: str | None, dialect: Dialect
+    ) -> SourceLocation | None:
         """
         SQLAlchemy uses this to convert a string into a SourceLocation object.
         We separate the fields by a |
@@ -142,13 +148,17 @@ class SourceLocationsType(types.TypeDecorator):
     def __init__(self) -> None:
         super(SourceLocationsType, self).__init__(length=4096)
 
-    def process_bind_param(self, value, dialect) -> Optional[str]:
+    def process_bind_param(
+        self, value: list[SourceLocation] | None, dialect: Dialect
+    ) -> str | None:
         if value is None:
             return None
         return ",".join([SourceLocation.to_string(location) for location in value])
 
     # pyrefly: ignore [bad-override]
-    def process_result_value(self, value: str, dialect):
+    def process_result_value(
+        self, value: str, dialect: Dialect
+    ) -> list[SourceLocation]:
         if value is None or value == "":
             return []
         assert isinstance(value, str), "Invalid SourceLocationsType %s" % str(value)
@@ -162,18 +172,18 @@ class SourceLocationsType(types.TypeDecorator):
 class IssueDBID(DBID):
     __slots__ = ["replace_assocs"]
 
-    def __init__(self, id=None) -> None:
+    def __init__(self, id: int | None | DBID = None) -> None:
         super().__init__(id)
         self.replace_assocs = False
 
 
 class IssueDBIDType(DBIDType):
-    def process_result_value(self, value, dialect) -> IssueDBID:
+    def process_result_value(self, value: int | None, dialect: Dialect) -> IssueDBID:
         return IssueDBID(value)
 
 
 class IssueBIGDBIDType(BIGDBIDType):
-    def process_result_value(self, value, dialect) -> IssueDBID:
+    def process_result_value(self, value: int | None, dialect: Dialect) -> IssueDBID:
         return IssueDBID(value)
 
 
@@ -214,7 +224,7 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session, items):
+    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
         return cls._merge_assocs(
             session, items, cls.issue_instance_id, cls.trace_frame_id
         )
@@ -307,7 +317,7 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         cls.perform_merging = merge
 
     @classmethod
-    def merge(cls, database, items):
+    def merge(cls, database: DB, items: Iterable[PrepareMixin]):
         if cls.perform_merging:
             return cls._merge_by_keys(
                 database,
@@ -370,7 +380,7 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session, items):
+    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
         return cls._merge_assocs(
             session, items, cls.issue_instance_id, cls.shared_text_id
         )
@@ -566,7 +576,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     def get_shared_texts_by_kind(self, kind: SharedTextKind) -> List[SharedText]:
         return [text for text in self.shared_texts if text.kind == kind]
 
-    def get_trace_frames_by_kind(self, kind: TraceKind):
+    def get_trace_frames_by_kind(self, kind: TraceKind) -> list[TraceFrame]:
         return [frame for frame in self.trace_frames if frame.kind == kind]
 
     @classmethod
@@ -774,7 +784,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     @classmethod
-    def _take(cls, n, iterable):
+    def _take(cls, n: int, iterable: Iterable[PrepareMixin]):
         "Return first n items of the iterable as a list"
         return list(islice(iterable, n))
 
@@ -786,7 +796,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session, issues):
+    def merge(cls, session: DB, issues: Iterable[PrepareMixin]):
         return cls._merge_by_keys(session, issues, cls.handle)
 
 
@@ -959,7 +969,9 @@ class Run(Base):
         nullable=True,
     )
 
-    def get_summary(self, session: Optional[Session] = None, **kwargs) -> RunSummary:
+    def get_summary(
+        self, session: Session | None = None, **kwargs: object
+    ) -> RunSummary:
         session = session or Session.object_session(self)
 
         return RunSummary(
@@ -972,7 +984,7 @@ class Run(Base):
             alarm_counts=self._get_alarm_counts(session),
         )
 
-    def _get_num_new_issue_instances(self, session) -> int:
+    def _get_num_new_issue_instances(self, session: Session) -> int:
         return session.scalar(
             select(func.count())
             .select_from(IssueInstance)
@@ -980,14 +992,14 @@ class Run(Base):
             .filter(IssueInstance.is_new_issue.is_(True))
         )
 
-    def _get_num_total_issues(self, session) -> int:
+    def _get_num_total_issues(self, session: Session) -> int:
         return session.scalar(
             select(func.count())
             .select_from(IssueInstance)
             .filter(IssueInstance.run_id == self.id)
         )
 
-    def _get_alarm_counts(self, session) -> Dict[int, int]:
+    def _get_alarm_counts(self, session: Session) -> dict[int, int]:
         return dict(
             session.execute(
                 select(Issue.code, func.count(Issue.code))
@@ -1120,7 +1132,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session, items):
+    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
         return cls._merge_assocs(session, items, cls.meta_run_id, cls.run_id)
 
 
@@ -1162,7 +1174,7 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session, items):
+    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
         return cls._merge_assocs(session, items, cls.trace_frame_id, cls.leaf_id)
 
 
@@ -1487,7 +1499,7 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session, items):
+    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
         return cls._merge_assocs(
             session, items, cls.trace_frame_annotation_id, cls.trace_frame_id
         )
@@ -1659,7 +1671,7 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session, items):
+    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
         return cls._merge_by_keys(session, items, cls.run_id)
 
 
