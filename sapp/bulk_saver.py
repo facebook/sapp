@@ -7,8 +7,10 @@
 
 """Bulk saving objects for performance"""
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional, Type
+from typing import Any
 
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -59,16 +61,16 @@ class BulkSaver:
 
     def __init__(
         self,
-        primary_key_generator: Optional[PrimaryKeyGenerator] = None,
-        extra_saving_classes: Optional[List[Type[object]]] = None,
+        primary_key_generator: PrimaryKeyGenerator | None = None,
+        extra_saving_classes: list[type[object]] | None = None,
     ) -> None:
         self.primary_key_generator: PrimaryKeyGenerator = (
             primary_key_generator or PrimaryKeyGenerator()
         )
-        self.saving_classes_order: List[Type[object]] = (
+        self.saving_classes_order: list[type[object]] = (
             extra_saving_classes or []
         ) + self.DEFAULT_SAVING_CLASSES_ORDER
-        self.saving: Dict[str, Any] = {}
+        self.saving: dict[str, Any] = {}
         for cls in self.saving_classes_order:
             self.saving[cls.__name__] = []
         self.prepare_all_done = False
@@ -259,9 +261,9 @@ class BulkSaver:
 
     def _render_nulls(
         self,
-        cls: Type[Base],
-        records: List[Dict[str, Any]],
-    ) -> List[Dict[str, Any]]:
+        cls: type[Base],
+        records: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         column_keys = cls.__table__.columns.keys()
         for record in records:
             for key in column_keys:
@@ -284,7 +286,7 @@ class BulkSaver:
             session.commit()
 
     def add_trace_frame_leaf_assoc(
-        self, message: SharedText, trace_frame: TraceFrame, depth: Optional[int]
+        self, message: SharedText, trace_frame: TraceFrame, depth: int | None
     ) -> None:
         self.add(
             TraceFrameLeafAssoc.Record(
