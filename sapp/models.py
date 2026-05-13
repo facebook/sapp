@@ -648,6 +648,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     __tablename__ = "issues"
     __table_args__ = (
         Index("ix_issues_status_severity", "status", "severity"),
+        Index("ix_issues_ai_triage_decision", "ai_triage_decision"),
     ) + BASE_TABLE_ARGS
 
     # pyrefly: ignore [no-matching-overload]
@@ -699,6 +700,17 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     severity: Column[Optional[str]] = Column(
         Enum(Severity),
         doc="Severity of a Valid issue",
+        server_default=None,
+        nullable=True,
+    )
+
+    # pyrefly: ignore [no-matching-overload]
+    ai_triage_decision: Column[Optional[str]] = Column(
+        String(length=255),
+        doc=(
+            "AI triage decision from SecBot production triage run. If there "
+            "are multiple runs, only the latest one is stored."
+        ),
         server_default=None,
         nullable=True,
     )
