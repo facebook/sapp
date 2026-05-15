@@ -1420,7 +1420,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
         nullable=False,
     )
 
-    # pyrefly: ignore [no-matching-overload]
+    # pyrefly: ignore [bad-assignment, no-matching-overload]
     leaf_id: Column[DBID] = Column(BIGDBIDType, nullable=True)
     # pyrefly: ignore [no-matching-overload]
     leaf = relationship(

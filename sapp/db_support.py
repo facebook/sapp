@@ -464,6 +464,7 @@ class PrimaryKeyGeneratorBase:
         #  `typing.Type` to avoid runtime subscripting errors.
         saving_classes: List[Type],
         item_counts: Optional[Dict[str, int]] = None,
+        # pyrefly: ignore [not-a-type]
     ) -> Self:
         """
         session - Session for DB operations.

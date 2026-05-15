@@ -162,6 +162,7 @@ class JSONDiagnostics:
         indexed_files = set(table.file_index.values())
         # pyrefly: ignore
         filenames = set(map(os.path.abspath, self.analysis_output.file_names()))
+        # pyrefly: ignore [bad-specialization]
         if not filenames.issubset(indexed_files):
             logger.info("Lookup table is invalidated, ignoring it.")
             return None
