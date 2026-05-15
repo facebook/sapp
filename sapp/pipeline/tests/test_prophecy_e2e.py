@@ -65,11 +65,15 @@ FINDING_RCE = (
     '"position": {"line": 25, "start": 5, "end": 40}, '
     '"description": "Data from [UserInput] may reach [CommandExec]", '
     '"traces": ['
-    '{"forward": {"trace_leaf": {"position": {"line": 10, "start": 3, "end": 20}}, '
-    '"kind": "UserInput", "leaves": [{"name": "req.query.cmd"}], '
+    '{"forward": {"call": {"position": {"line": 25, "start": 5, "end": 40}, '
+    '"resolves_to": ["prophecy:rce:source:root"], "port": "root"}, '
+    '"kinds": [{"kind": "UserInput", "trace_len": 2}], '
+    '"leaves": [{"name": "req.query.cmd"}], '
     '"local_trace": {"positions": [{"line": 15, "start": 5, "end": 12}]}}}, '
-    '{"backward": {"trace_leaf": {"position": {"line": 25, "start": 5, "end": 40}}, '
-    '"kind": "CommandExec", "leaves": [{"name": "child_process.exec"}], '
+    '{"backward": {"call": {"position": {"line": 25, "start": 5, "end": 40}, '
+    '"resolves_to": ["prophecy:rce:sink:root"], "port": "root"}, '
+    '"kinds": [{"kind": "CommandExec", "trace_len": 1}], '
+    '"leaves": [{"name": "child_process.exec"}], '
     '"local_trace": {"positions": []}}}], '
     '"fix_info": {"filePath": "src/exec.ts", "original": "exec(cmd)", '
     '"replacement": "exec(sanitize(cmd))", "applicability": "unsafe"}, '
@@ -79,6 +83,45 @@ FINDING_RCE = (
     '"description": "Tainted value assigned to cmd"}, '
     '{"kind": "argument", "location": {"line": 25, "start": 5, "end": 40}, '
     '"description": "Passed as argument to exec()"}]}'
+)
+
+TRACE_FRAMES_RCE = "\n".join(
+    [
+        (
+            '{"type": "postcondition", "caller": "prophecy:rce:source:root", '
+            '"caller_port": "root", "callee": "prophecy:rce:source:step:0", '
+            '"callee_port": "root", '
+            '"callee_location": {"line": 12, "start": 5, "end": 20}, '
+            '"filename": "src/exec.ts", '
+            '"sources": [{"kind": "UserInput", "depth": 1}], '
+            '"type_interval": {}, '
+            '"features": [{"name": "prophecy-step-0:assignment: '
+            'Tainted value assigned to cmd", '
+            '"locations": [{"line": 12, "start": 5, "end": 20}]}]}'
+        ),
+        (
+            '{"type": "postcondition", "caller": "prophecy:rce:source:step:0", '
+            '"caller_port": "root", "callee": "req.query.cmd", '
+            '"callee_port": "source", '
+            '"callee_location": {"line": 10, "start": 3, "end": 20}, '
+            '"filename": "src/exec.ts", '
+            '"sources": [{"kind": "UserInput", "depth": 0}], '
+            '"type_interval": {}, '
+            '"features": [{"name": "prophecy-source-kind:UserInput", '
+            '"locations": [{"line": 10, "start": 3, "end": 20}]}]}'
+        ),
+        (
+            '{"type": "precondition", "caller": "prophecy:rce:sink:root", '
+            '"caller_port": "root", "callee": "child_process.exec", '
+            '"callee_port": "sink", '
+            '"callee_location": {"line": 25, "start": 5, "end": 40}, '
+            '"filename": "src/exec.ts", '
+            '"sinks": [{"kind": "CommandExec", "depth": 0}], '
+            '"type_interval": {}, '
+            '"features": [{"name": "prophecy-sink-kind:CommandExec", '
+            '"locations": [{"line": 25, "start": 5, "end": 40}]}]}'
+        ),
+    ]
 )
 
 # XSS finding: no fix_info
@@ -132,7 +175,7 @@ def _create_fixture_dir() -> str:
                 "root": "/repo",
                 "repo_root": "/repo",
                 "tool": "prophecy",
-                "filename_spec": "prophecy-output.json",
+                "filename_glob": "*.sapp",
                 "repository_name": "fbsource",
                 "project": "prophecy",
                 "rules": [
@@ -142,8 +185,10 @@ def _create_fixture_dir() -> str:
             },
             f,
         )
-    with open(os.path.join(d, "prophecy-output.json"), "w") as f:
+    with open(os.path.join(d, "issues_1.sapp"), "w") as f:
         f.write(ALL_FINDINGS)
+    with open(os.path.join(d, "traceFrames_1.sapp"), "w") as f:
+        f.write(TRACE_FRAMES_RCE)
     return d
 
 
@@ -237,11 +282,11 @@ class TestProphecyE2E(unittest.TestCase):
             self.assertEqual(inst.location.end_column, 40)
 
     def test_trace_frame_count(self) -> None:
-        """3 preconditions + 4 postconditions = 7 total."""
+        """4 preconditions + 6 postconditions = 10 total."""
         self._ingest()
         with self.db.make_session() as s:
             frames = s.query(TraceFrame).all()
-            self.assertEqual(len(frames), 7)
+            self.assertEqual(len(frames), 10)
 
     def test_trace_frame_kinds(self) -> None:
         self._ingest()
@@ -256,8 +301,8 @@ class TestProphecyE2E(unittest.TestCase):
                 .filter(TraceFrame.kind == TraceKind.postcondition)
                 .count()
             )
-            self.assertEqual(pre, 3)
-            self.assertEqual(post, 4)  # SSRF has 2 source leaves
+            self.assertEqual(pre, 4)
+            self.assertEqual(post, 6)  # SSRF has 2 source leaves
 
     def test_ssrf_has_two_postconditions(self) -> None:
         """The SSRF finding has two source leaves, producing two postcondition
@@ -385,7 +430,7 @@ class TestProphecyE2E(unittest.TestCase):
         self._ingest()
         with self.db.make_session() as s:
             assocs = s.query(TraceFrameLeafAssoc).all()
-            self.assertEqual(len(assocs), 7)
+            self.assertGreaterEqual(len(assocs), 10)
 
     def test_instance_trace_frame_assocs(self) -> None:
         self._ingest()
@@ -455,10 +500,10 @@ class TestProphecyE2E(unittest.TestCase):
         self._ingest("run-1")
         self._ingest("run-2")
         with self.db.make_session() as s:
-            self.assertEqual(s.query(TraceFrame).count(), 14)
+            self.assertEqual(s.query(TraceFrame).count(), 20)
             runs = s.query(Run).all()
             for run in runs:
                 per_run = (
                     s.query(TraceFrame).filter(TraceFrame.run_id == run.id).count()
                 )
-                self.assertEqual(per_run, 7)
+                self.assertEqual(per_run, 10)

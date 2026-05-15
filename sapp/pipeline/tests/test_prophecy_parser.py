@@ -329,6 +329,74 @@ class TestProphecyParser(unittest.TestCase):
         codes = {issue.code for issue in issues}
         self.assertEqual(codes, {9001, 9003})
 
+    def testIssueCallTraceAndStandaloneFrames(self) -> None:
+        issues, pre, post = self._parse(
+            '{"kind": "issue", "code": 9001, "callable": "src/exec.ts::run", '
+            '"filename": "src/exec.ts", '
+            '"position": {"line": 20, "start": 3, "end": 40}, '
+            '"description": "RCE", "traces": [{"forward": {"call": {"position": '
+            '{"line": 20, "start": 3, "end": 40}, '
+            '"resolves_to": ["prophecy:t:source:root"], '
+            '"port": "root"}, "kinds": [{"kind": "UserInput", "trace_len": 2}], '
+            '"leaves": [{"name": "req.query.cmd"}], '
+            '"local_trace": {"positions": []}}}, '
+            '{"backward": {"call": {"position": '
+            '{"line": 20, "start": 3, "end": 40}, '
+            '"resolves_to": ["prophecy:t:sink:root"], "port": "root"}, '
+            '"kinds": [{"kind": "CommandExec", "trace_len": 1}], '
+            '"leaves": [{"name": "child_process.exec"}], '
+            '"local_trace": {"positions": []}}}], '
+            '"features": []}\n'
+            '{"type": "postcondition", "caller": "prophecy:t:source:root", '
+            '"caller_port": "root", "callee": "req.query.cmd", '
+            '"callee_port": "source", '
+            '"callee_location": {"line": 10, "start": 1, "end": 15}, '
+            '"filename": "src/exec.ts", '
+            '"sources": [{"kind": "UserInput", "depth": 0}], '
+            '"type_interval": {}, '
+            '"features": [{"name": "prophecy-source-kind:UserInput", '
+            '"locations": [{"line": 10, "start": 1, "end": 15}]}]}\n'
+            '{"type": "precondition", "caller": "prophecy:t:sink:root", '
+            '"caller_port": "root", "callee": "child_process.exec", '
+            '"callee_port": "sink", '
+            '"callee_location": {"line": 20, "start": 3, "end": 40}, '
+            '"filename": "src/exec.ts", '
+            '"sinks": [{"kind": "CommandExec", "depth": 0}], '
+            '"type_interval": {}, "features": []}\n',
+            flatten=False,
+        )
+
+        self.assertEqual(len(issues), 1)
+        issue = issues[0]
+        issue_postconditions = list(issue.postconditions)
+        issue_preconditions = list(issue.preconditions)
+        self.assertEqual(issue_postconditions[0].callee, "prophecy:t:source:root")
+        self.assertEqual(issue_postconditions[0].port, "root")
+        self.assertEqual(issue_postconditions[0].leaves, [("UserInput", 2)])
+        self.assertIn(("req.query.cmd", "UserInput", 2), set(issue.initial_sources))
+        self.assertEqual(issue_preconditions[0].callee, "prophecy:t:sink:root")
+        self.assertEqual(issue_preconditions[0].port, "root")
+        self.assertEqual(issue_preconditions[0].leaves, [("CommandExec", 1)])
+        self.assertIn(
+            ("child_process.exec", "CommandExec", 1),
+            set(issue.final_sinks),
+        )
+
+        self.assertEqual(len(post), 1)
+        self.assertEqual(post[0].caller, "prophecy:t:source:root")
+        self.assertEqual(post[0].caller_port, "root")
+        self.assertEqual(post[0].callee, "req.query.cmd")
+        self.assertEqual(post[0].callee_port, "source")
+        self.assertEqual(post[0].leaves, [("UserInput", 0)])
+        self.assertEqual(post[0].features[0].name, "prophecy-source-kind:UserInput")
+
+        self.assertEqual(len(pre), 1)
+        self.assertEqual(pre[0].caller, "prophecy:t:sink:root")
+        self.assertEqual(pre[0].caller_port, "root")
+        self.assertEqual(pre[0].callee, "child_process.exec")
+        self.assertEqual(pre[0].callee_port, "sink")
+        self.assertEqual(pre[0].leaves, [("CommandExec", 0)])
+
     def testAbsolutePathRelativization(self) -> None:
         parser = Parser(repo_dirs={"/repo"})
         analysis_output = AnalysisOutput(

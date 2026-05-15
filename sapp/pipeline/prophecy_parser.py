@@ -10,14 +10,11 @@
 Prophecy is a taint analysis tool for TypeScript/JavaScript. It is planned for
 open-source release.
 
-Prophecy produces findings in NDJSON format.
-Each line is a JSON object with kind="issue". The parser converts these into
-SAPP's ParseIssueTuple/ParseConditionTuple types for ingestion into the
-SAPP database.
-
-Trace strategy (v1): Single-hop traces. Each issue gets one postcondition
-(source leaf) and one precondition (sink leaf). Propagation chain details
-are stored as features. This follows the Fontainebleau parser pattern.
+Prophecy produces findings and trace frames in NDJSON format. Issue files
+contain objects with kind="issue"; trace frame files contain objects with
+type="precondition" or type="postcondition". The parser converts these into
+SAPP's ParseIssueTuple/ParseConditionTuple types for ingestion into the SAPP
+database.
 """
 
 import json
@@ -26,10 +23,13 @@ from typing import Any, Dict, IO, Iterable, Optional, Set, Union
 
 from ..analysis_output import AnalysisOutput, Metadata
 from . import (
+    parse_trace_feature,
     ParseConditionTuple,
     ParseIssueConditionTuple,
     ParseIssueLeaf,
     ParseIssueTuple,
+    ParseType,
+    ParseTypeInterval,
     SourceLocation,
 )
 from .base_parser import BaseParser
@@ -73,10 +73,11 @@ class Parser(BaseParser):
     def _parse_by_type(
         self, entry: Dict[str, Any]
     ) -> Iterable[Union[ParseConditionTuple, ParseIssueTuple]]:
-        kind = entry.get("kind")
-        if kind == "issue":
+        entry_type = entry.get("type") or entry.get("kind")
+        if entry_type == "issue":
             yield from self._parse_issue(entry)
-        # No "model" entries in v1 — single-hop traces only.
+        elif entry_type in ("precondition", "postcondition"):
+            yield self._parse_condition(entry, entry_type)
 
     def _parse_issue(self, json: Dict[str, Any]) -> Iterable[ParseIssueTuple]:
         code = json["code"]
@@ -199,6 +200,7 @@ class Parser(BaseParser):
                     trace_length = flow_details.get("trace_len", 0)
                     kind = flow_details["kind"]
                     parse_leaves = [(kind, trace_length)]
+                    leaf_names = [leaf["name"] for leaf in trace_data.get("leaves", [])]
 
                     for resolved_name in call.get("resolves_to", []):
                         conditions.append(
@@ -213,9 +215,69 @@ class Parser(BaseParser):
                                 annotations=[],
                             )
                         )
-                        leaves.add((None, kind, trace_length))
+                        if leaf_names:
+                            for leaf_name in leaf_names:
+                                leaves.add((leaf_name, kind, trace_length))
+                        else:
+                            leaves.add((None, kind, trace_length))
 
         return conditions, leaves
+
+    def _parse_condition(
+        self,
+        json: Dict[str, Any],
+        entry_type: str,
+    ) -> ParseConditionTuple:
+        parse_type = (
+            ParseType.PRECONDITION
+            if entry_type == "precondition"
+            else ParseType.POSTCONDITION
+        )
+        leaf_key = "sinks" if parse_type == ParseType.PRECONDITION else "sources"
+
+        return ParseConditionTuple(
+            type=parse_type,
+            caller=json["caller"],
+            caller_port=json["caller_port"],
+            filename=self._extract_filename(json["filename"]),
+            callee=json["callee"],
+            callee_port=json["callee_port"],
+            callee_location=self._get_location(json.get("callee_location")),
+            leaves=self._parse_trace_frame_leaves(json.get(leaf_key, [])),
+            type_interval=self._parse_type_interval(json.get("type_interval")),
+            features=[
+                parse_trace_feature(feature) for feature in json.get("features", [])
+            ],
+            titos=[self._get_location(position) for position in json.get("titos", [])],
+            annotations=[],
+        )
+
+    def _parse_trace_frame_leaves(
+        self, leaves: list[Dict[str, Any]]
+    ) -> list[tuple[str, int]]:
+        return [
+            (
+                leaf["kind"],
+                leaf.get("depth", 0),
+            )
+            for leaf in leaves
+        ]
+
+    def _parse_type_interval(
+        self,
+        type_interval: Optional[Dict[str, Any]],
+    ) -> Optional[ParseTypeInterval]:
+        if not type_interval:
+            return None
+
+        return ParseTypeInterval(
+            start=type_interval.get("start", 0),
+            finish=type_interval.get("finish", 0),
+            preserves_type_context=type_interval.get(
+                "preserves_type_context",
+                False,
+            ),
+        )
 
     def _get_location(self, entry: Optional[Dict[str, Any]]) -> SourceLocation:
         if entry is None:
