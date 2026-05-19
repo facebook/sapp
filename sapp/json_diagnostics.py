@@ -113,7 +113,7 @@ class JSONDiagnostics:
         assert lookup_table, "Call load() first"
         return lookup_table.entries.keys()
 
-    def entries(self, search: str, pretty_print: bool = False) -> List[Dict[str, Any]]:
+    def entries(self, search: str, pretty_print: bool = False) -> List[Any]:
         lookup_table = self.lookup_table
         assert lookup_table, "Call load() first"
 
@@ -123,7 +123,7 @@ class JSONDiagnostics:
             c: lookup_table.entries.get(c, []) for c in self.callables() if search in c
         }
 
-        entries = []
+        entries: List[Any] = []
         for callable_name, entry_location in entry_locations.items():
             for file_id, offset in entry_location:
                 path = lookup_table.file_index[file_id]

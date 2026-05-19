@@ -1317,7 +1317,7 @@ json CALLABLE        show the original json output for the matching callable
             lines_to_show = highlight(
                 "".join(lines_to_show),
                 # startinline is to skip the <? check for php lexer
-                get_lexer_for_filename(trace_frame.filename, startinline=True),
+                get_lexer_for_filename(trace_frame.filename or "", startinline=True),
                 TerminalFormatter(),
             ).split("\n")
         else:
