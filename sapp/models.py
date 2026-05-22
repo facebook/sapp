@@ -13,7 +13,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
-from typing import Any, Dict, List, NamedTuple, Optional, Set, TYPE_CHECKING
+from typing import Any, NamedTuple, TYPE_CHECKING
 
 from graphene_sqlalchemy.converter import (
     convert_column_to_int_or_id,
@@ -224,7 +224,9 @@ class IssueInstanceTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
+    def merge(
+        cls, session: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         return cls._merge_assocs(
             session, items, cls.issue_instance_id, cls.trace_frame_id
         )
@@ -245,12 +247,12 @@ class SharedTextKind(enum.Enum):
     sink_detail = enum.auto()
 
     @classmethod
-    def from_string(cls, string: str) -> Optional[SharedTextKind]:
+    def from_string(cls, string: str) -> SharedTextKind | None:
         return cls.__members__.get(string)
 
     @classmethod
     def from_string_with_exception(cls, string: str) -> SharedTextKind:
-        result: Optional[SharedTextKind] = None
+        result: SharedTextKind | None = None
         if isinstance(string, SharedTextKind):
             result = string
         elif isinstance(string, str):
@@ -317,7 +319,9 @@ class SharedText(Base, PrepareMixin, RecordMixin):
         cls.perform_merging = merge
 
     @classmethod
-    def merge(cls, database: DB, items: Iterable[PrepareMixin]):
+    def merge(
+        cls, database: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         if cls.perform_merging:
             return cls._merge_by_keys(
                 database,
@@ -380,7 +384,9 @@ class IssueInstanceSharedTextAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
+    def merge(
+        cls, session: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         return cls._merge_assocs(
             session, items, cls.issue_instance_id, cls.shared_text_id
         )
@@ -464,7 +470,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    is_new_issue: Column[Optional[bool]] = Column(
+    is_new_issue: Column[bool | None] = Column(
         Boolean,
         index=True,
         default=False,
@@ -486,7 +492,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    fix_info_id: Column[Optional[DBID]] = Column(BIGDBIDType, nullable=True)
+    fix_info_id: Column[DBID | None] = Column(BIGDBIDType, nullable=True)
 
     # pyrefly: ignore [no-matching-overload]
     fix_info = relationship(
@@ -497,7 +503,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    message_id: Column[Optional[DBID]] = Column(BIGDBIDType, nullable=True)
+    message_id: Column[DBID | None] = Column(BIGDBIDType, nullable=True)
 
     # pyrefly: ignore [no-matching-overload]
     message = relationship(
@@ -532,31 +538,31 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    min_trace_length_to_sources: Column[Optional[int]] = Column(
+    min_trace_length_to_sources: Column[int | None] = Column(
         Integer, nullable=True, doc="The minimum trace length to sources"
     )
 
     # pyrefly: ignore [no-matching-overload]
-    min_trace_length_to_sinks: Column[Optional[int]] = Column(
+    min_trace_length_to_sinks: Column[int | None] = Column(
         Integer, nullable=True, doc="The minimum trace length to sinks"
     )
 
     # pyrefly: ignore [no-matching-overload]
-    rank: Column[Optional[int]] = Column(
+    rank: Column[int | None] = Column(
         Integer,
         server_default="0",
         doc="The higher the rank, the higher the priority for this issue",
     )
 
     # pyrefly: ignore [no-matching-overload]
-    callable_count: Column[Optional[int]] = Column(
+    callable_count: Column[int | None] = Column(
         Integer,
         server_default="0",
         doc="Number of issues in this callable for this run",
     )
 
     # pyrefly: ignore [no-matching-overload]
-    min_trace_length_to_entrypoints: Column[Optional[int]] = Column(
+    min_trace_length_to_entrypoints: Column[int | None] = Column(
         Integer, nullable=True, doc="The minimum trace length to entrypoints"
     )
 
@@ -573,7 +579,7 @@ class IssueInstance(Base, PrepareMixin, MutableRecordMixin):
         index=False,
     )
 
-    def get_shared_texts_by_kind(self, kind: SharedTextKind) -> List[SharedText]:
+    def get_shared_texts_by_kind(self, kind: SharedTextKind) -> list[SharedText]:
         return [text for text in self.shared_texts if text.kind == kind]
 
     def get_trace_frames_by_kind(self, kind: TraceKind) -> list[TraceFrame]:
@@ -697,7 +703,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    severity: Column[Optional[str]] = Column(
+    severity: Column[str | None] = Column(
         Enum(Severity),
         doc="Severity of a Valid issue",
         server_default=None,
@@ -705,7 +711,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    ai_triage_decision: Column[Optional[str]] = Column(
+    ai_triage_decision: Column[str | None] = Column(
         String(length=255),
         doc=(
             "AI triage decision from SecBot production triage run. If there "
@@ -716,12 +722,12 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    task_number: Column[Optional[int]] = Column(
+    task_number: Column[int | None] = Column(
         Integer, doc="Task number (not fbid) that is tracking this issue"
     )
 
     # pyrefly: ignore [no-matching-overload]
-    feedback_fbid: Column[Optional[int]] = Column(
+    feedback_fbid: Column[int | None] = Column(
         BIGINT(unsigned=True), nullable=True, doc="FBID for EntZoncolanFeedback"
     )
 
@@ -735,14 +741,14 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    triage_time: Column[Optional[int]] = Column(
+    triage_time: Column[int | None] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp of triage (typically first triage from history)",
         nullable=True,
     )
 
     # pyrefly: ignore [no-matching-overload]
-    start_triage_time: Column[Optional[int]] = Column(
+    start_triage_time: Column[int | None] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp of examination leading to triage",
         nullable=True,
@@ -757,19 +763,19 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    triaged_by_fbid: Column[Optional[int]] = Column(
+    triaged_by_fbid: Column[int | None] = Column(
         BIGINT(unsigned=True),
         nullable=True,
         doc="FBID for EntInternUser (typically actor of first triage from history)",
     )
 
     # pyrefly: ignore [no-matching-overload]
-    first_instance_id: Column[Optional[DBID]] = Column(
+    first_instance_id: Column[DBID | None] = Column(
         BIGDBIDType, nullable=True, index=False
     )
 
     # pyrefly: ignore [no-matching-overload]
-    triaged_instance_id: Column[Optional[DBID]] = Column(
+    triaged_instance_id: Column[DBID | None] = Column(
         BIGDBIDType, nullable=True, index=False
     )
 
@@ -783,7 +789,7 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    issue_group_id: Column[Optional[int]] = Column(
+    issue_group_id: Column[int | None] = Column(
         BIGINT(20, unsigned=True),
         doc="issue group id when issue is grouped with others",
         nullable=True,
@@ -791,12 +797,12 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    oncall_shortname: Column[Optional[str]] = Column(
+    oncall_shortname: Column[str | None] = Column(
         String(length=100), doc="responsible for code where issue found", nullable=True
     )
 
     @classmethod
-    def _take(cls, n: int, iterable: Iterable[PrepareMixin]):
+    def _take(cls, n: int, iterable: Iterable[PrepareMixin]) -> list[PrepareMixin]:
         "Return first n items of the iterable as a list"
         return list(islice(iterable, n))
 
@@ -808,7 +814,9 @@ class Issue(Base, PrepareMixin, MutableRecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session: DB, issues: Iterable[PrepareMixin]):
+    def merge(
+        cls, session: DB, issues: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         return cls._merge_by_keys(session, issues, cls.handle)
 
 
@@ -872,7 +880,7 @@ class Run(Base):
     id: Column[DBID] = Column(BIGDBIDType, primary_key=True)
 
     # pyrefly: ignore [no-matching-overload]
-    job_id: Column[Optional[str]] = Column(String(length=255), index=True)
+    job_id: Column[str | None] = Column(String(length=255), index=True)
 
     # pyrefly: ignore [no-matching-overload]
     date: Column[datetime] = Column(
@@ -883,7 +891,7 @@ class Run(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    commit_hash: Column[Optional[str]] = Column(
+    commit_hash: Column[str | None] = Column(
         String(length=255),
         doc="The commit hash of the codebase",
         nullable=True,
@@ -891,12 +899,12 @@ class Run(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    revision_id: Column[Optional[int]] = Column(
+    revision_id: Column[int | None] = Column(
         Integer, doc="Phabricator Diff number (DXXXXXX)", nullable=True, index=True
     )
 
     # pyrefly: ignore [no-matching-overload]
-    differential_id: Column[Optional[int]] = Column(
+    differential_id: Column[int | None] = Column(
         Integer,
         doc="Phabricator Version number",
         nullable=True,
@@ -904,12 +912,12 @@ class Run(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    hh_version: Column[Optional[str]] = Column(
+    hh_version: Column[str | None] = Column(
         String(length=255), doc="The output of hh_server --version"
     )
 
     # pyrefly: ignore [no-matching-overload]
-    branch: Column[Optional[str]] = Column(
+    branch: Column[str | None] = Column(
         String(length=255),
         doc="Branch the commit is based on",
         nullable=True,
@@ -930,12 +938,12 @@ class Run(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    status_description: Column[Optional[str]] = Column(
+    status_description: Column[str | None] = Column(
         String(length=255), doc="The reason why a run didn't finish", nullable=True
     )
 
     # pyrefly: ignore [no-matching-overload]
-    kind: Column[Optional[str]] = Column(
+    kind: Column[str | None] = Column(
         String(length=255),
         doc=(
             "Specify different kinds of runs, e.g. MASTER vs. TEST., GKFORXXX, etc. "
@@ -946,7 +954,7 @@ class Run(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    repository: Column[Optional[str]] = Column(
+    repository: Column[str | None] = Column(
         String(length=255),
         doc=("The repository that static analysis was run on."),
         nullable=True,
@@ -975,7 +983,7 @@ class Run(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    finished_time: Column[Optional[int]] = Column(
+    finished_time: Column[int | None] = Column(
         BIGINT(20, unsigned=True),
         doc="unix timestamp that the job was marked as finished or NULL",
         nullable=True,
@@ -1039,7 +1047,7 @@ class MetaRun(Base):
     # This is the moral equivalent of job_id, but named in a more intuitive manner.
     # Allows determining the latest meta run for each custom run separately.
     # pyrefly: ignore [no-matching-overload]
-    custom_run_name: Column[Optional[str]] = Column(String(length=255), nullable=True)
+    custom_run_name: Column[str | None] = Column(String(length=255), nullable=True)
 
     # pyrefly: ignore [no-matching-overload]
     date: Column[datetime] = Column(
@@ -1050,10 +1058,10 @@ class MetaRun(Base):
     # using the information of number of total runs vs. the number of runs written in
     # the database.
     # pyrefly: ignore [no-matching-overload]
-    expected_run_count: Column[Optional[int]] = Column(Integer, nullable=True)
+    expected_run_count: Column[int | None] = Column(Integer, nullable=True)
 
     # pyrefly: ignore [no-matching-overload]
-    kind: Column[Optional[str]] = Column(
+    kind: Column[str | None] = Column(
         String(length=255),
         doc=(
             "Specify different kinds of runs, e.g. MASTER vs. TEST., GKFORXXX, etc. "
@@ -1080,15 +1088,15 @@ class MetaRun(Base):
 class RunSummary:
     def __init__(
         self,
-        commit_hash: Optional[str],
-        differential_id: Optional[int],
-        id: Optional[int],
-        job_id: Optional[str],
+        commit_hash: str | None,
+        differential_id: int | None,
+        id: int | None,
+        job_id: str | None,
         num_new_issues: int,
         num_total_issues: int,
-        num_missing_preconditions: Optional[int] = None,
-        num_missing_postconditions: Optional[int] = None,
-        alarm_counts: Optional[Dict[int, int]] = None,
+        num_missing_preconditions: int | None = None,
+        num_missing_postconditions: int | None = None,
+        alarm_counts: dict[int, int] | None = None,
     ) -> None:
         self.commit_hash = commit_hash
         self.differential_id = differential_id
@@ -1098,9 +1106,9 @@ class RunSummary:
         self.num_total_issues = num_total_issues
         self.num_missing_preconditions = num_missing_preconditions
         self.num_missing_postconditions = num_missing_postconditions
-        self.alarm_counts: Dict[int, int] = alarm_counts or {}
+        self.alarm_counts: dict[int, int] = alarm_counts or {}
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return self.__dict__
 
     @classmethod
@@ -1136,7 +1144,7 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    run_label: Column[Optional[str]] = Column(
+    run_label: Column[str | None] = Column(
         String(length=1024),
         nullable=True,
         doc="Optional label associated with a child run (eg. Buck target)",
@@ -1144,7 +1152,9 @@ class MetaRunToRunAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
+    def merge(
+        cls, session: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         return cls._merge_assocs(session, items, cls.meta_run_id, cls.run_id)
 
 
@@ -1164,7 +1174,7 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
     # loops. This is a known problem and any code generating traces should
     # additionally have cycle detection.
     # pyrefly: ignore [no-matching-overload]
-    trace_length: Column[Optional[int]] = Column(
+    trace_length: Column[int | None] = Column(
         Integer, doc="minimum trace length to the given leaf", nullable=True
     )
 
@@ -1186,7 +1196,9 @@ class TraceFrameLeafAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
+    def merge(
+        cls, session: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         return cls._merge_assocs(session, items, cls.trace_frame_id, cls.leaf_id)
 
 
@@ -1280,12 +1292,12 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
     run_id: Column[DBID] = Column("run_id", BIGDBIDType, nullable=False, index=False)
 
     # pyrefly: ignore [no-matching-overload]
-    type_interval_lower: Column[Optional[int]] = Column(
+    type_interval_lower: Column[int | None] = Column(
         Integer, nullable=True, doc="Class interval lower-bound (inclusive)"
     )
 
     # pyrefly: ignore [no-matching-overload]
-    type_interval_upper: Column[Optional[int]] = Column(
+    type_interval_upper: Column[int | None] = Column(
         Integer, nullable=True, doc="Class interval upper-bound (inclusive)"
     )
 
@@ -1345,16 +1357,16 @@ class TraceFrame(Base, PrepareMixin, RecordMixin):
         viewonly=True,
     )
 
-    leaf_mapping: Set[LeafMapping] = set()
+    leaf_mapping: set[LeafMapping] = set()
 
     @staticmethod
     def type_intervals_match_or_ignored(
-        caller_start: Optional[int],
-        caller_end: Optional[int],
-        caller_preserves: Optional[bool],
-        callee_start: Optional[int],
-        callee_end: Optional[int],
-        callee_preserves: Optional[bool],
+        caller_start: int | None,
+        caller_end: int | None,
+        caller_preserves: bool | None,
+        callee_start: int | None,
+        callee_end: int | None,
+        callee_preserves: bool | None,
     ) -> bool:
         """
         returns whether or not to filter based on comparing the type intervals between
@@ -1411,7 +1423,7 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    kind: Column[Optional[str]] = Column(String(length=255), nullable=True, index=True)
+    kind: Column[str | None] = Column(String(length=255), nullable=True, index=True)
 
     # pyrefly: ignore [no-matching-overload]
     message: Column[str] = Column(
@@ -1431,14 +1443,14 @@ class TraceFrameAnnotation(Base, PrepareMixin, RecordMixin):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    link: Column[Optional[str]] = Column(
+    link: Column[str | None] = Column(
         String(length=4096),
         doc="An optional URL linking the message to more info (Quandary)",
         nullable=True,
     )
 
     # pyrefly: ignore [no-matching-overload]
-    trace_key: Column[Optional[str]] = Column(
+    trace_key: Column[str | None] = Column(
         String(length=INNODB_MAX_INDEX_LENGTH),
         nullable=True,
         doc="Link to possible pre/post traces (caller_condition).",
@@ -1511,7 +1523,9 @@ class TraceFrameAnnotationTraceFrameAssoc(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
+    def merge(
+        cls, session: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         return cls._merge_assocs(
             session, items, cls.trace_frame_annotation_id, cls.trace_frame_id
         )
@@ -1553,7 +1567,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    category: Column[Optional[str]] = Column(
+    category: Column[str | None] = Column(
         Enum(WarningCodeCategory),
         nullable=True,
         index=False,
@@ -1565,7 +1579,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    new_issue_rate: Column[Optional[Decimal]] = Column(
+    new_issue_rate: Column[Decimal | None] = Column(
         Float,
         nullable=True,
         index=False,
@@ -1573,7 +1587,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    bug_count: Column[Optional[int]] = Column(
+    bug_count: Column[int | None] = Column(
         Integer,
         nullable=True,
         index=False,
@@ -1581,12 +1595,12 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    avg_trace_len: Column[Optional[Decimal]] = Column(
+    avg_trace_len: Column[Decimal | None] = Column(
         Float, nullable=True, index=False, doc="Deprecated. See avg_fwd/bwd_trace_len"
     )
 
     # pyrefly: ignore [no-matching-overload]
-    avg_fwd_trace_len: Column[Optional[Decimal]] = Column(
+    avg_fwd_trace_len: Column[Decimal | None] = Column(
         Float,
         nullable=True,
         index=False,
@@ -1598,7 +1612,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    avg_bwd_trace_len: Column[Optional[Decimal]] = Column(
+    avg_bwd_trace_len: Column[Decimal | None] = Column(
         Float,
         nullable=True,
         index=False,
@@ -1610,7 +1624,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    snr: Column[Optional[Decimal]] = Column(
+    snr: Column[Decimal | None] = Column(
         Float,
         nullable=True,
         index=False,
@@ -1621,7 +1635,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    is_snr_significant: Column[Optional[bool]] = Column(
+    is_snr_significant: Column[bool | None] = Column(
         Boolean,
         nullable=True,
         index=False,
@@ -1632,7 +1646,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    discoverable: Column[Optional[bool]] = Column(
+    discoverable: Column[bool | None] = Column(
         Boolean,
         nullable=True,
         index=False,
@@ -1640,7 +1654,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    health_score: Column[Optional[Decimal]] = Column(
+    health_score: Column[Decimal | None] = Column(
         Float,
         nullable=True,
         index=False,
@@ -1651,7 +1665,7 @@ class WarningCodeProperties(Base):
     )
 
     # pyrefly: ignore [no-matching-overload]
-    notes: Column[Optional[str]] = Column(
+    notes: Column[str | None] = Column(
         String(length=4096),
         nullable=True,
         index=False,
@@ -1683,7 +1697,9 @@ class RunOrigin(Base, PrepareMixin, RecordMixin):
 
     @classmethod
     # pyrefly: ignore [bad-param-name-override]
-    def merge(cls, session: DB, items: Iterable[PrepareMixin]):
+    def merge(
+        cls, session: DB, items: Iterable[PrepareMixin]
+    ) -> Iterable[PrepareMixin]:
         return cls._merge_by_keys(session, items, cls.run_id)
 
 
@@ -1749,7 +1765,7 @@ class PrimaryKey(Base, PrimaryKeyBase):
 
 
 class PrimaryKeyGenerator(PrimaryKeyGeneratorBase):
-    def __init__(self, allowed_id_range: Optional[range] = None) -> None:
+    def __init__(self, allowed_id_range: range | None = None) -> None:
         super().__init__(
             primary_key=PrimaryKey,
             query_classes={
