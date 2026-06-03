@@ -7,6 +7,8 @@
 
 """Abstract Parser for Zoncolan like output"""
 
+from __future__ import annotations
+
 import json
 import logging
 import pprint
@@ -142,8 +144,12 @@ class BaseParser(PipelineStep[AnalysisOutput, IssuesAndFrames]):
         Can be overridden instead of `parse` to provide more efficent
         `Frames` implementations
         """
-        preconditions = defaultdict(list)
-        postconditions = defaultdict(list)
+        preconditions: defaultdict[tuple[str, str], list[ParseConditionTuple]] = (
+            defaultdict(list)
+        )
+        postconditions: defaultdict[tuple[str, str], list[ParseConditionTuple]] = (
+            defaultdict(list)
+        )
         for e in self.parse(input):
             if isinstance(e, ParseIssueTuple):
                 yield e
