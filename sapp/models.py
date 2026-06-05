@@ -1571,10 +1571,9 @@ class WarningCodeProperties(Base):
         Enum(WarningCodeCategory),
         nullable=True,
         index=False,
-        # pyre-fixme[6]: Expected `str` for 4th param but got `Tuple[str]`.
         doc=(
             "The category of problems that issues in with this warning code "
-            "can result in ",
+            "can result in "
         ),
     )
 
@@ -1604,10 +1603,9 @@ class WarningCodeProperties(Base):
         Float,
         nullable=True,
         index=False,
-        # pyre-fixme[6]: Expected `str` for 4th param but got `Tuple[str]`.
         doc=(
             "Average (min) length of forward traces for the given warning code "
-            "(computed column)",
+            "(computed column)"
         ),
     )
 
@@ -1616,10 +1614,9 @@ class WarningCodeProperties(Base):
         Float,
         nullable=True,
         index=False,
-        # pyre-fixme[6]: Expected `str` for 4th param but got `Tuple[str]`.
         doc=(
             "Average (min) length of backward traces for the given warning "
-            "code (computed column)",
+            "code (computed column)"
         ),
     )
 
