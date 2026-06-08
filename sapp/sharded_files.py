@@ -30,16 +30,13 @@ class ShardedFileComponents:
         if not m:
             raise ValueError("Not a sharded file: {}".format(filepattern))
 
-        # pyre-fixme[58]: `>=` is not supported for operand types `Optional[int]`
-        #  and `int`.
-        self.extension: str = m.group(3) if m.lastindex >= 3 else ""
-        # pyre-fixme[58]: `>=` is not supported for operand types `Optional[int]`
-        #  and `int`.
-        self.stem: str = m.group(1) if m.lastindex >= 1 else ""
+        last_index = m.lastindex
+        assert last_index is not None
 
-        # pyre-fixme[58]: `>=` is not supported for operand types `Optional[int]`
-        #  and `int`.
-        shards = m.group(2) if m.lastindex >= 2 else ""
+        self.extension: str = m.group(3) if last_index >= 3 else ""
+        self.stem: str = m.group(1) if last_index >= 1 else ""
+
+        shards = m.group(2) if last_index >= 2 else ""
         if shards == "*":
             self.shard_index: int = -1
             self.shard_total: int = -1
