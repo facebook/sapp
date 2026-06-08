@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -36,6 +36,8 @@ from .models import (
 )
 
 log: logging.Logger = logging.getLogger("sapp")
+
+T = TypeVar("T")
 
 
 class BulkSaver:
@@ -90,9 +92,7 @@ class BulkSaver:
             )
             self.saving[items[0].model.__name__].extend(items)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def get_items_to_add(self, cls):
+    def get_items_to_add(self, cls: type[T]) -> list[T]:
         return self.saving[cls.__name__]
 
     def get_total_item_count(self) -> int:
