@@ -95,7 +95,7 @@ class FakeObjectGenerator:
         callee_port: str = "at the beginning of time",
         filename: str = "lib/server/posts/request.py",
         location: Tuple[int, ...] = (4, 5, 6),
-        leaves: Optional[List[Tuple[SharedText, object]]] = None,
+        leaves: Optional[List[Tuple[SharedText, Optional[int]]]] = None,
         reachability: FrameReachability = FrameReachability.unreachable,
         preserves_type_context: bool = False,
         type_interval_lower: int = 5,
@@ -130,12 +130,11 @@ class FakeObjectGenerator:
             preserves_type_context=preserves_type_context,
             reachability=reachability,
         )
-        if self.graph:
-            self.graph.add_trace_frame(trace_frame)
+        graph = self.graph
+        if graph is not None:
+            graph.add_trace_frame(trace_frame)
             for leaf, depth in leaves:
-                # pyre-fixme[16]: `Optional` has no attribute
-                #  `add_trace_frame_leaf_assoc`.
-                self.graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
+                graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
         else:
             self.saver.add(trace_frame)
         return trace_frame
@@ -148,7 +147,7 @@ class FakeObjectGenerator:
         callee_port: str = "callee_meh",
         filename: str = "lib/server/posts/response.py",
         location: Tuple[int, ...] = (4, 5, 6),
-        leaves: Optional[List[Tuple[SharedText, object]]] = None,
+        leaves: Optional[List[Tuple[SharedText, Optional[int]]]] = None,
         preserves_type_context: bool = False,
         type_interval_lower: int = 5,
         type_interval_upper: int = 7,
@@ -182,12 +181,11 @@ class FakeObjectGenerator:
             preserves_type_context=preserves_type_context,
             reachability=FrameReachability.unreachable,
         )
-        if self.graph:
-            self.graph.add_trace_frame(trace_frame)
+        graph = self.graph
+        if graph is not None:
+            graph.add_trace_frame(trace_frame)
             for leaf, depth in leaves:
-                # pyre-fixme[16]: `Optional` has no attribute
-                #  `add_trace_frame_leaf_assoc`.
-                self.graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
+                graph.add_trace_frame_leaf_assoc(trace_frame, leaf, depth)
         else:
             self.saver.add(trace_frame)
         return trace_frame
