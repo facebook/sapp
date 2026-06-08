@@ -235,14 +235,12 @@ class TraceGraph:
 
     def add_trace_frame(self, trace_frame: TraceFrame) -> None:
         rev_key = (trace_frame.callee_id.local_id, trace_frame.callee_port)
-        # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-        self._trace_frames_map[trace_frame.kind][trace_frame.caller_id.local_id][
+        kind = trace_frame.kind
+        assert isinstance(kind, TraceKind)
+        self._trace_frames_map[kind][trace_frame.caller_id.local_id][
             trace_frame.caller_port
         ].add(trace_frame.id.local_id)
-        # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-        self._trace_frames_rev_map[trace_frame.kind][rev_key].add(
-            trace_frame.id.local_id
-        )
+        self._trace_frames_rev_map[kind][rev_key].add(trace_frame.id.local_id)
         self._trace_frames[trace_frame.id.local_id] = trace_frame
 
     def get_trace_frames_from_caller(
@@ -373,9 +371,10 @@ class TraceGraph:
             return []
 
     def get_next_trace_frames(self, trace_frame: TraceFrame) -> Iterable[TraceFrame]:
+        kind = trace_frame.kind
+        assert isinstance(kind, TraceKind)
         return self.get_trace_frames_from_caller(
-            # pyre-fixme[6]: Expected `TraceKind` for 1st param but got `str`.
-            trace_frame.kind,
+            kind,
             trace_frame.callee_id,
             trace_frame.callee_port,
         )
