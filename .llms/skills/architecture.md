@@ -4,7 +4,7 @@ Deep reference for AI agents working in the SAPP codebase. Read CLAUDE.md first 
 
 ## System Overview
 
-SAPP is a **post-processor** for static taint analysis tools (Pysa, Zoncolan, Angliru, Fontainebleau, Mariana Trench). It transforms raw JSON output into a queryable database with web UI and CLI.
+SAPP is a **post-processor** for static taint analysis tools (Pysa, Zoncolan, Angliru, Fontainebleau, Mariana Trench, Prophecy). It transforms raw JSON output into a queryable database with web UI and CLI.
 
 Four layers: **Rust Parsers** (JSON → parse types, 64-thread PyO3 bridge) → **Python Pipeline** (chain of `PipelineStep[T_in, T_out]`) → **SQLAlchemy ORM** (Issue, Run, TraceFrame, SharedText) → **UI** (OSS: Flask+GraphQL+React; Internal: Hack/React).
 
