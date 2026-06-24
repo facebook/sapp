@@ -45,10 +45,10 @@ def compute_issue_instance_hash(json: ParseIssueTuple) -> str:
             ),
             "|".join(sorted({str(callable) for callable, _, _ in json.final_sinks})),
             str(
-                min(distance for _, _, distance in json.initial_sources)
+                min((distance for _, _, distance in json.initial_sources), default=-1)
             ),  # minimum source distance
             str(
-                min(distance for _, _, distance in json.final_sinks)
+                min((distance for _, _, distance in json.final_sinks), default=-1)
             ),  # minimum sink distance
             "|".join(sorted({feature_to_string(feature) for feature in json.features})),
         ]
