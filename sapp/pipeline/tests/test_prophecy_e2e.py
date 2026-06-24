@@ -16,6 +16,7 @@ import json
 import os
 import tempfile
 import unittest
+from typing import cast
 
 from ...analysis_output import AnalysisOutput, Metadata, Rule
 from ...db import DB, DBType
@@ -254,7 +255,11 @@ class TestProphecyE2E(unittest.TestCase):
     def test_issue_handles_unique(self) -> None:
         self._ingest()
         with self.db.make_session() as s:
-            handles = [i.handle for i in s.query(Issue).all()]
+            # sapp models use the legacy `Column[...]` style (not `Mapped[...]`), so under
+            # SQLAlchemy 2.0 inline types instance attribute access is typed as the descriptor
+            # `Column[str]` rather than `str`. Cast to the runtime value type. TODO: migrate the
+            # sapp models to `Mapped[...]` annotations and drop these casts.
+            handles = [cast(str, i.handle) for i in s.query(Issue).all()]
             self.assertEqual(len(handles), len(set(handles)))
             for h in handles:
                 self.assertTrue(len(h) > 0)
@@ -420,7 +425,8 @@ class TestProphecyE2E(unittest.TestCase):
         with self.db.make_session() as s:
             fix_infos = s.query(IssueInstanceFixInfo).all()
             self.assertEqual(len(fix_infos), 1)
-            fi = json.loads(fix_infos[0].fix_info)
+            # fix_info is a legacy `Column[str]` attribute (see note above); cast to str.
+            fi = json.loads(cast(str, fix_infos[0].fix_info))
             self.assertEqual(fi["filePath"], "src/exec.ts")
             self.assertEqual(fi["original"], "exec(cmd)")
             self.assertEqual(fi["replacement"], "exec(sanitize(cmd))")

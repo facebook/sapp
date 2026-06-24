@@ -64,7 +64,7 @@ def start_server(
     editor_schema: Optional[str],
 ) -> None:
     engine = sqlalchemy.create_engine(
-        sqlalchemy.engine.url.URL("sqlite", database=database.dbname),
+        sqlalchemy.engine.url.URL.create("sqlite", database=database.dbname),
         echo=False,
         poolclass=None,
     )
