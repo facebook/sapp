@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import graphene  # @manual=fbsource//third-party/pypi/graphene-legacy:graphene-legacy
 import sqlalchemy
@@ -84,10 +84,7 @@ class EmptyDeletionError(Exception):
 
 
 def delete_filter(session: Session, name: str) -> None:
-    # `Session.execute()` is typed as base `Result` under SQLAlchemy 2.0, whose
-    # stubs lack `.rowcount` (it's on the runtime `CursorResult`, not in the 1.4
-    # legacy stubs). `Any` keeps `.rowcount` valid under both type sources.
-    result: Any = session.execute(delete(FilterRecord).where(FilterRecord.name == name))
+    result = session.execute(delete(FilterRecord).where(FilterRecord.name == name))
     if result.rowcount == 0:
         raise EmptyDeletionError(f'No filter with `name` "{name}" exists.')
     LOG.info(f"Deleting {name}")
@@ -217,7 +214,7 @@ def filter_run(
     output_format: str,
 ) -> None:
     with context.database.make_session() as session:
-        run_id: Optional[Run] = session.scalar(
+        run_id: Run = session.scalar(
             select(Run)
             .where(Run.status == RunStatus.finished)
             .where(Run.id == run_id_input)

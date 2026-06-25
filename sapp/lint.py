@@ -14,15 +14,16 @@ from pathlib import Path
 import click
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
+from sqlalchemy.orm.util import AliasedClass
 
 from .cli_lib import require_option
 from .models import Issue, IssueInstance, SharedText, TraceFrame
 from .source_location import SourceLocation
 
-MessageText = aliased(SharedText)
-FilenameText = aliased(SharedText)
-CallerText = aliased(SharedText)
-CalleeText = aliased(SharedText)
+MessageText: AliasedClass = aliased(SharedText)
+FilenameText: AliasedClass = aliased(SharedText)
+CallerText: AliasedClass = aliased(SharedText)
+CalleeText: AliasedClass = aliased(SharedText)
 
 
 @click.command()
