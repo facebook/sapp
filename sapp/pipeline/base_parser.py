@@ -13,6 +13,7 @@ import json
 import logging
 import pprint
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
@@ -25,6 +26,7 @@ from typing import (
     Set,
     TextIO,
     Tuple,
+    TypeVar,
     Union,
 )
 
@@ -49,6 +51,8 @@ from . import (
 
 log: logging.Logger = logging.getLogger("sapp")
 
+T = TypeVar("T")
+
 
 # The callable's json output can be found at the given sharded file and offset.
 # Used for debugging.
@@ -58,13 +62,12 @@ class EntryPosition(NamedTuple):
     offset: int
 
 
-# pyre-ignore[2]
-# pyre-ignore[3]
-def log_trace_keyerror(func):
-    # pyre-ignore[2]
-    # pyre-ignore[3]
-    # pyre-ignore[53]
-    def wrapper(self, json, *args):
+def log_trace_keyerror(
+    func: Callable[..., T],
+) -> Callable[..., T | tuple[list[object], dict[object, object]]]:
+    def wrapper(
+        self: object, json: object, *args: object
+    ) -> T | tuple[list[object], dict[object, object]]:
         try:
             return func(self, json, *args)
         except KeyError:
@@ -79,13 +82,10 @@ def log_trace_keyerror(func):
     return wrapper
 
 
-# pyre-ignore[2]
-# pyre-ignore[3]
-def log_trace_keyerror_in_generator(func):
-    # pyre-ignore[2]
-    # pyre-ignore[3]
-    # pyre-ignore[53]
-    def wrapper(self, json, *args):
+def log_trace_keyerror_in_generator(
+    func: Callable[..., Generator[T, None, None]],
+) -> Callable[..., Generator[T, None, None]]:
+    def wrapper(self: object, json: object, *args: object) -> Generator[T, None, None]:
         try:
             yield from func(self, json, *args)
         except KeyError:
