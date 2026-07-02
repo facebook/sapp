@@ -10,7 +10,7 @@ import os
 import sys
 from datetime import datetime
 from io import StringIO
-from typing import cast, List, Union
+from typing import cast, List, Set, Union
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
@@ -1897,34 +1897,24 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
-        sources = []
-        sinks = ["sink1", "sink2"]
-        features = []
+        sources: Set[str] = set()
+        sinks = {"sink1", "sink2"}
+        features: Set[str] = set()
         result = self.interactive._create_issue_output_string(
             issue,
-            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
-            #  `List[typing.Any]`.
             sources,
-            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
             sinks,
-            # pyre-fixme[6]: For 4th param expected `Set[str]` but got
-            #  `List[typing.Any]`.
             features,
         )
         self.assertIn("Sources: No sources", result)
         self.assertIn("Sinks: sink1", result)
 
-        sources = ["source1", "source2"]
-        sinks = []
+        sources = {"source1", "source2"}
+        sinks = set()
         result = self.interactive._create_issue_output_string(
             issue,
-            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got `List[str]`.
             sources,
-            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got
-            #  `List[typing.Any]`.
             sinks,
-            # pyre-fixme[6]: For 4th param expected `Set[str]` but got
-            #  `List[typing.Any]`.
             features,
         )
         self.assertIn("Sources: source1", result)
