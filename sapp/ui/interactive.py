@@ -1475,9 +1475,9 @@ json CALLABLE        show the original json output for the matching callable
         sinks: Set[str],
         features: Set[str],
     ) -> str:
-        sources_output = f"\n{' ' * 18}".join(sources)
-        sinks_output = f"\n{' ' * 18}".join(sinks)
-        features_output = f"\n{' ' * 18}".join(features)
+        sources_output = f"\n{' ' * 18}".join(sorted(sources))
+        sinks_output = f"\n{' ' * 18}".join(sorted(sinks))
+        features_output = f"\n{' ' * 18}".join(sorted(features))
         return "\n".join(
             [
                 f"Issue {issue.issue_instance_id}",
