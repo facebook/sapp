@@ -347,12 +347,13 @@ class PrepareMixin:
                 yield i
 
     @classmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _merge_assocs(cls, database: DB, items, id1, id2):
+    def _merge_assocs(
+        cls,
+        database: DB,
+        items: Iterable[PrepareMixin],
+        id1: Column,
+        id2: Column,
+    ) -> Iterator[PrepareMixin]:
         new_items = {}
         for i in items:
             r1 = getattr(i, id1.key)
@@ -396,8 +397,7 @@ class RecordMixin:
 
 class MutableRecordMixin:
     @classmethod
-    # pyre-fixme[2]: Parameter must be annotated.
-    def Record(cls, **kwargs) -> Munch:
+    def Record(cls, **kwargs: object) -> Munch:
         return Munch(model=cls, **kwargs)
 
     @classmethod
