@@ -59,6 +59,8 @@ def is_leaf_port(port: str) -> bool:
 
 
 class TraceFrameQueryResultType(graphene.ObjectType):
+    id: DBID
+
     class Meta:
         interfaces = (graphene.relay.Node,)
 
@@ -77,7 +79,6 @@ class TraceFrameQueryResultType(graphene.ObjectType):
     titos = graphene.String()
 
     def resolve_frame_id(self, info: ResolveInfo) -> DBID:
-        # pyre-fixme[16]: `TraceFrameQueryResultType` has no attribute `id`.
         return self.id
 
     def resolve_is_leaf(self, info: ResolveInfo) -> bool:
