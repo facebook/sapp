@@ -2004,8 +2004,7 @@ class InteractiveTest(TestCase):
             is_new_issue=False,
             # pyre-fixme[6]: For 12th param expected `FrozenSet[str]` but got `None`.
             source_names=None,
-            # pyre-fixme[6]: For 13th param expected `FrozenSet[str]` but got `None`.
-            source_kinds=None,
+            source_kinds=frozenset(),
             # pyre-fixme[6]: For 14th param expected `FrozenSet[str]` but got `None`.
             sink_names=None,
             # pyre-fixme[6]: For 15th param expected `FrozenSet[str]` but got
