@@ -375,9 +375,7 @@ class RecordMixin:
     _record = None
 
     @classmethod
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def Record(cls, extra_fields=None, **kwargs) -> Any:
+    def Record(cls, extra_fields: Optional[List[str]] = None, **kwargs: object) -> Any:
         if not cls._record:
             if not extra_fields:
                 extra_fields = []
