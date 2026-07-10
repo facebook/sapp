@@ -10,12 +10,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TypeVar
+from typing import Any, Sequence, TypeVar
 
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from .db import DB
+from .db_support import RecordMixin
 from .decorators import log_time
 from .iterutil import split_every
 from .models import (
@@ -277,8 +278,9 @@ class BulkSaver:
     # where we know that races can't occur, because we don't have to read back the
     # inserted records.
     #
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _save_batch(self, database: DB, cls, batch) -> None:
+    def _save_batch(
+        self, database: DB, cls: type[RecordMixin], batch: Sequence[object]
+    ) -> None:
         with database.make_session() as session:
             session.bulk_insert_mappings(
                 cls, (cls.to_dict(r) for r in batch), render_nulls=True
