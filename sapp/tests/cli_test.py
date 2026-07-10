@@ -14,12 +14,13 @@ from functools import partial
 from pathlib import Path
 from typing import Generator
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner, Result
 
 from .. import __name__ as client
 from ..cli import cli
+from ..pipeline import Summary
 
 PIPELINE_RUN = f"{client}.pipeline.Pipeline.run"
 
@@ -39,13 +40,10 @@ class TestSappCli(TestCase):
     def setUp(self) -> None:
         self.runner = CliRunner()
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def verify_input_file(self, inputfile, summary_blob) -> None:
+    def verify_input_file(self, inputfile: object, summary_blob: Summary) -> None:
         self.assertEqual(inputfile, "fake_analysis_output")
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_input_file(self, mock_analysis_output) -> None:
+    def test_input_file(self, mock_analysis_output: MagicMock) -> None:
         with patch(PIPELINE_RUN, self.verify_input_file):
             with isolated_fs() as path:
                 result = self.runner.invoke(
@@ -54,18 +52,21 @@ class TestSappCli(TestCase):
                 print(result.output)
                 assert_successful_exit(result)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def verify_base_summary_blob(self, input_files, summary_blob) -> None:
+    def verify_base_summary_blob(
+        self, input_files: object, summary_blob: Summary
+    ) -> None:
         self.assertEqual(summary_blob.run_kind, "master")
-        self.assertTrue(tempfile.gettempdir() in summary_blob.repository)
+        repository = summary_blob.repository
+        assert repository is not None
+        self.assertIn(tempfile.gettempdir(), repository)
         self.assertEqual(summary_blob.branch, "master")
         self.assertEqual(summary_blob.commit_hash, "abc123")
-        self.assertTrue(tempfile.gettempdir() in summary_blob.old_linemap_file)
+        old_linemap_file = summary_blob.old_linemap_file
+        assert old_linemap_file is not None
+        self.assertIn(tempfile.gettempdir(), old_linemap_file)
         self.assertEqual(summary_blob.store_unused_models, True)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_base_summary_blob(self, mock_analysis_output) -> None:
+    def test_base_summary_blob(self, mock_analysis_output: MagicMock) -> None:
         with patch(PIPELINE_RUN, self.verify_base_summary_blob):
             with isolated_fs() as path:
                 result = self.runner.invoke(
@@ -86,23 +87,20 @@ class TestSappCli(TestCase):
                 )
                 assert_successful_exit(result)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def verify_option_job_id(self, input_files, summary_blob) -> None:
+    def verify_option_job_id(self, input_files: object, summary_blob: Summary) -> None:
         self.assertEqual(summary_blob.job_id, "job-id-1")
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def verify_option_job_id_none(self, input_files, summary_blob) -> None:
+    def verify_option_job_id_none(
+        self, input_files: object, summary_blob: Summary
+    ) -> None:
         self.assertIsNone(summary_blob.job_id)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def verify_option_differential_id(self, input_files, summary_blob) -> None:
+    def verify_option_differential_id(
+        self, input_files: object, summary_blob: Summary
+    ) -> None:
         self.assertEqual(summary_blob.job_id, "user_input_1234567")
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_option_job_id(self, mock_analysis_output) -> None:
+    def test_option_job_id(self, mock_analysis_output: MagicMock) -> None:
         with patch(PIPELINE_RUN, self.verify_option_job_id):
             with isolated_fs() as path:
                 result = self.runner.invoke(
@@ -125,17 +123,13 @@ class TestSappCli(TestCase):
 
     def verify_previous_issue_handles(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        expected_path,
-        # pyre-fixme[2]: Parameter must be annotated.
-        input_files,
-        # pyre-fixme[2]: Parameter must be annotated.
-        summary_blob,
+        expected_path: Path,
+        input_files: object,
+        summary_blob: Summary,
     ) -> None:
         self.assertEqual(summary_blob.previous_issue_handles, expected_path)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_previous_input(self, mock_analysis_output) -> None:
+    def test_previous_input(self, mock_analysis_output: MagicMock) -> None:
         with isolated_fs() as path:
             previous_handles_path = os.path.join(path, "previous_handles")
             os.mknod(previous_handles_path)
