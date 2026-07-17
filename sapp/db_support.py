@@ -371,8 +371,7 @@ class PrepareMixin:
 # we have dynamically created classes with the slots set. But until then,
 # prefer RecordMixin unless you need to change fields after creation.
 class RecordMixin:
-    # pyre-fixme[4]: Attribute must be annotated.
-    _record = None
+    _record: type[tuple] | None = None
 
     @classmethod
     def Record(cls, extra_fields: Optional[List[str]] = None, **kwargs: object) -> Any:
