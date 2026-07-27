@@ -729,8 +729,7 @@ class InteractiveTest(TestCase):
             self.interactive.setup()
             sources = self.interactive._get_leaves_issue_instance(
                 session,
-                # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
-                1,
+                DBID(1),
                 SharedTextKind.source,
             )
 
@@ -760,8 +759,7 @@ class InteractiveTest(TestCase):
             self.interactive.setup()
             sinks = self.interactive._get_leaves_issue_instance(
                 session,
-                # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
-                1,
+                DBID(1),
                 SharedTextKind.sink,
             )
 
@@ -791,8 +789,7 @@ class InteractiveTest(TestCase):
             self.interactive.setup()
             features = self.interactive._get_leaves_issue_instance(
                 session,
-                # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
-                1,
+                DBID(1),
                 SharedTextKind.feature,
             )
 
