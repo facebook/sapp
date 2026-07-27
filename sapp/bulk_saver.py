@@ -85,8 +85,7 @@ class BulkSaver:
         )
         self.saving[item.model.__name__].append(item)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def add_all(self, items) -> None:
+    def add_all(self, items: Sequence[Any]) -> None:
         if items:
             assert items[0].model in self.saving_classes_order, (
                 "%s should be added with session.add_all()" % items[0].model.__name__
