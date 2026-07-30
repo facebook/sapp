@@ -2141,8 +2141,7 @@ else:
 
     def testListSourceCodeFileNotFound(self) -> None:
         self.interactive.setup()
-        # pyre-fixme[8]: Attribute has type `DBID`; used as `int`.
-        self.interactive.current_issue_instance_id = 1
+        self.interactive.current_issue_instance_id = DBID(1)
 
         self.interactive.current_trace_frame_index = 0
         self.interactive.trace_tuples = [
