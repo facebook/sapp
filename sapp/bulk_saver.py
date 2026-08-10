@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Sequence, TypeVar
+from typing import Any, Iterable, Protocol, Sequence, TypeVar
 
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -20,7 +20,6 @@ from .db_support import RecordMixin
 from .decorators import log_time
 from .iterutil import split_every
 from .models import (
-    Base,
     ClassTypeInterval,
     Issue,
     IssueInstance,
@@ -39,6 +38,17 @@ from .models import (
 log: logging.Logger = logging.getLogger("sapp")
 
 T = TypeVar("T")
+
+
+class SavableModel(Protocol):
+    id: Any
+    __table__: Any
+
+    @classmethod
+    def to_dict(cls, obj: object) -> dict[str, Any]: ...
+
+    @classmethod
+    def merge(cls, database: DB, items: Iterable[Any]) -> Iterable[Any]: ...
 
 
 class BulkSaver:
@@ -186,10 +196,8 @@ class BulkSaver:
     def _save_batch_and_handle_key_conflicts(
         self,
         database: DB,
-        # pyre-fixme[2]: Parameter must be annotated.
-        cls,
-        # pyre-fixme[2]: Parameter must be annotated.
-        batch,
+        cls: type[SavableModel],
+        batch: Sequence[Any],
     ) -> None:
         with database.make_session() as session:
             records_to_save = [
@@ -261,7 +269,7 @@ class BulkSaver:
 
     def _render_nulls(
         self,
-        cls: type[Base],
+        cls: type[SavableModel],
         records: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         column_keys = cls.__table__.columns.keys()
