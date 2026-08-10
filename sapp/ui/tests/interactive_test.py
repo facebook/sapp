@@ -2392,12 +2392,26 @@ else:
 
     def testIsBeforeRoot(self) -> None:
         self.interactive.trace_tuples = [
-            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
-            #  `TraceFrame`.
-            TraceTuple(trace_frame=TraceFrame(kind=TraceKind.postcondition)),
-            # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
-            #  `TraceFrame`.
-            TraceTuple(trace_frame=TraceFrame(kind=TraceKind.precondition)),
+            TraceTuple(
+                trace_frame=TraceFrameQueryResult(
+                    id=DBID(1),
+                    caller="",
+                    caller_port="",
+                    callee="",
+                    callee_port="",
+                    kind=TraceKind.postcondition,
+                )
+            ),
+            TraceTuple(
+                trace_frame=TraceFrameQueryResult(
+                    id=DBID(1),
+                    caller="",
+                    caller_port="",
+                    callee="",
+                    callee_port="",
+                    kind=TraceKind.precondition,
+                )
+            ),
         ]
 
         self.interactive.current_trace_frame_index = 0
@@ -2407,14 +2421,26 @@ else:
         self.assertFalse(self.interactive._is_before_root())
 
     def testIsRootTraceTuple(self) -> None:
-        # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
-        #  `TraceFrame`.
-        trace_tuple = TraceTuple(trace_frame=TraceFrame(callee_port="root"))
+        trace_tuple = TraceTuple(
+            trace_frame=TraceFrameQueryResult(
+                id=DBID(1),
+                caller="",
+                caller_port="",
+                callee="",
+                callee_port="root",
+            )
+        )
         self.assertTrue(self.interactive._is_root_trace_tuple(trace_tuple))
 
-        # pyre-fixme[6]: For 1st param expected `TraceFrameQueryResult` but got
-        #  `TraceFrame`.
-        trace_tuple = TraceTuple(trace_frame=TraceFrame(callee_port="not_root"))
+        trace_tuple = TraceTuple(
+            trace_frame=TraceFrameQueryResult(
+                id=DBID(1),
+                caller="",
+                caller_port="",
+                callee="",
+                callee_port="not_root",
+            )
+        )
         self.assertFalse(self.interactive._is_root_trace_tuple(trace_tuple))
 
     def testParents(self) -> None:
