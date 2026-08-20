@@ -99,7 +99,7 @@ Cross-language tests (`test_*_rust_parser.py`) verify Rust output matches Python
 
 Separate Rust system for **intra-procedural** data flow queries (within a single function).
 
-Key modules: `types` (FlowNode with 7 variants, Direction), `loader` (LoadGraph + SqliteLoader), `closure` (parallel transitive closure via rayon), `search` (query execution), `query_parser` (1,290-line recursive descent parser for `.lf` DSL), `cache` (LRU), `gerth_automaton` (LTL model checking).
+Key modules: `types` (FlowNode with 7 variants, Direction), `loader` (LoadGraph + SqliteLoader), `closure` (parallel transitive closure via rayon), `search` (query execution), `query_parser` (recursive descent parser for `.lf` DSL), `cache` (LRU), `gerth_automaton` (LTL model checking).
 
 The `.lf` files in `local_flow_explorer/scripts/` are executable query examples. No formal grammar spec — read the parser.
 
