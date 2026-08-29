@@ -13,7 +13,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
 from itertools import islice
-from typing import Any, NamedTuple, TYPE_CHECKING
+from typing import Any, cast, NamedTuple, TYPE_CHECKING
 
 from graphene_sqlalchemy.converter import (
     convert_column_to_int_or_id,
@@ -969,17 +969,20 @@ class Run(Base):
         server_default="0",
     )
 
-    # pyre-fixme[8]: Attribute has type `Column[str]`; used as `Column[PurgeStatus]`.
-    purge_status: Column[PurgeStatus] = Column(
-        Enum(PurgeStatus),
-        server_default="unpurged",
-        nullable=False,
-        doc=(
-            "Tracks whether Internal deletion jobs have purged "
-            "unnecessary issue instances and trace frames from this run. "
-            "Should NOT be set to anything but the default in SAPP code."
+    purge_status: Column[PurgeStatus] = cast(
+        Column[PurgeStatus],
+        # pyrefly: ignore [no-matching-overload]
+        Column(
+            Enum(PurgeStatus),
+            server_default="unpurged",
+            nullable=False,
+            doc=(
+                "Tracks whether Internal deletion jobs have purged "
+                "unnecessary issue instances and trace frames from this run. "
+                "Should NOT be set to anything but the default in SAPP code."
+            ),
+            index=False,
         ),
-        index=False,
     )
 
     # pyrefly: ignore [no-matching-overload]
