@@ -42,6 +42,7 @@ from ..interactive import (
     TraceFrameQueryResult,
     TraceTuple,
 )
+from ..query_result import SimilarIssue
 
 
 class InteractiveTest(TestCase):
@@ -2009,9 +2010,7 @@ class InteractiveTest(TestCase):
             sink_kinds=["sink1", "sink2"],
             status=cast(str, IssueStatus.uncategorized),
             detected_time=datetime.today(),
-            # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
-            #  `Set[Tuple[int, str]]`.
-            similar_issues={(2, "0.24")},
+            similar_issues={SimilarIssue(issue_id=DBID(2), score=0.24)},
             # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
