@@ -113,13 +113,7 @@ class Parser(BaseParser):
             start=position["start"],
             end=position["end"],
             callable=callable_name,
-            handle=self.compute_master_handle(
-                callable=callable_name,
-                line=position["line"],
-                start=position["start"],
-                end=position["end"],
-                code=code,
-            ),
+            handle=self._issue_handle(json, callable_name, code),
             message=json["description"],
             filename=filename,
             preconditions=preconditions,
@@ -128,6 +122,20 @@ class Parser(BaseParser):
             initial_sources=initial_sources,
             fix_info=fix_info,
             features=features,
+        )
+
+    def _issue_handle(self, json: Dict[str, Any], callable_name: str, code: int) -> str:
+        # Prophecy emits a location-free handle so issues keep their identity
+        # (and triage) when code above the sink moves. Older output has none.
+        if handle := json.get("handle"):
+            return handle
+        position = json["position"]
+        return self.compute_master_handle(
+            callable=callable_name,
+            line=position["line"],
+            start=position["start"],
+            end=position["end"],
+            code=code,
         )
 
     def _parse_issue_traces(

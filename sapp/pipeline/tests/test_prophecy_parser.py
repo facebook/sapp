@@ -539,6 +539,21 @@ class TestProphecyParser(unittest.TestCase):
         issues2, _, _ = self._parse(issue_json, flatten=False)
         self.assertEqual(issues1[0].handle, issues2[0].handle)
 
+    def testEmittedHandleIsUsedAndIgnoresPosition(self) -> None:
+        def issue_at(line: int) -> str:
+            return (
+                '{"kind": "issue", "code": 9001, "callable": "x.ts::f", '
+                '"handle": "x.ts::f:9001:exec:0123456789abcdef", '
+                f'"filename": "x.ts", "position": {{"line": {line}, "start": 5, '
+                '"end": 20}, "description": "RCE", "traces": [], "features": []}\n'
+            )
+
+        before, _, _ = self._parse(issue_at(10), flatten=False)
+        after, _, _ = self._parse(issue_at(42), flatten=False)
+        self.assertEqual(before[0].handle, "x.ts::f:9001:exec:0123456789abcdef")
+        self.assertEqual(after[0].handle, before[0].handle)
+        self.assertEqual(after[0].line, 42)
+
     def testEmptyTraces(self) -> None:
         """Issue with no traces should still parse."""
         issues, _pre, _post = self._parse(
