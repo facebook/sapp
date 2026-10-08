@@ -142,18 +142,6 @@ def _validate_payload(payload: dict[str, Any]) -> None:
         raise LocalFlowParserError(f"unsupported trace status `{status}`")
 
 
-def decode_and_validate_local_flow_payload(raw_payload: bytes) -> dict[str, Any]:
-    try:
-        payload_json = raw_payload.decode("utf-8")
-    except UnicodeDecodeError as error:
-        raise LocalFlowParserError("canonical trace payload is not UTF-8") from error
-
-    payload = _decode_object(payload_json, "canonical trace payload")
-    _validate_payload(payload)
-
-    return payload
-
-
 def _validate_rule_mapping(
     flows_to_rules: Mapping[str, Iterable[str]],
 ) -> dict[str, list[str]]:
@@ -291,7 +279,10 @@ def _load_flows_to_rules(input: AnalysisOutput) -> dict[str, list[str]]:
         raise LocalFlowParserError(
             f"cannot read flows-to-rules file `{path}`"
         ) from error
+    return _validate_rule_mapping(_decode_flows_to_rules(contents))
 
+
+def _decode_flows_to_rules(contents: str) -> dict[str, list[str]]:
     decoded = _decode_object(contents, "flows-to-rules")
 
     result: dict[str, list[str]] = {}
@@ -304,4 +295,4 @@ def _load_flows_to_rules(input: AnalysisOutput) -> dict[str, list[str]]:
             )
         result[flow_id] = rules
 
-    return _validate_rule_mapping(result)
+    return result

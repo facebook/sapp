@@ -13,11 +13,7 @@ from pathlib import Path
 
 from ...analysis_output import AnalysisOutput
 from .. import ParseError, ParseIssueTuple
-from ..local_flow_parser import (
-    decode_and_validate_local_flow_payload,
-    LocalFlowParser,
-    LocalFlowParserError,
-)
+from ..local_flow_parser import LocalFlowParser, LocalFlowParserError
 
 
 def _canonical_json(value: object) -> str:
@@ -235,10 +231,6 @@ class TestLocalFlowParser(unittest.TestCase):
         row = "\t".join([self.canonical_id, self.identity_json, encoded])
 
         self.assertEqual(json.loads(encoded), payload)
-        self.assertEqual(
-            decode_and_validate_local_flow_payload(encoded.encode()),
-            json.loads(encoded),
-        )
         parser, issues = self._parse(row + "\n", {self.canonical_id: ["rule"]})
         self.assertEqual(
             parser.trace_payloads_by_handle[issues[0].handle], encoded.encode()
@@ -267,9 +259,6 @@ class TestLocalFlowParser(unittest.TestCase):
             payload["producer_metadata"] = {"version": 2}
             with self.subTest(status=payload["trace_status"]):
                 encoded = _canonical_json(payload).encode()
-                self.assertEqual(
-                    decode_and_validate_local_flow_payload(encoded), payload
-                )
                 parser, issues = self._parse(
                     self._row(payload=payload) + "\n",
                     {self.canonical_id: ["rule"]},
@@ -324,9 +313,6 @@ class TestLocalFlowParser(unittest.TestCase):
             payload["semantic_trace"] = semantic_trace
             with self.subTest(semantic_trace=semantic_trace):
                 encoded = _canonical_json(payload).encode()
-                self.assertEqual(
-                    decode_and_validate_local_flow_payload(encoded), payload
-                )
                 parser, issues = self._parse(
                     self._row(payload=payload) + "\n",
                     {self.canonical_id: ["rule"]},
@@ -344,8 +330,9 @@ class TestLocalFlowParser(unittest.TestCase):
                     self.subTest(field=field, value=invalid),
                     self.assertRaises(LocalFlowParserError),
                 ):
-                    decode_and_validate_local_flow_payload(
-                        _canonical_json(payload).encode()
+                    self._parse(
+                        self._row(payload=payload) + "\n",
+                        {self.canonical_id: ["rule"]},
                     )
 
     def test_requires_nonempty_unique_string_rules(self) -> None:
@@ -517,6 +504,17 @@ class TestLocalFlowParser(unittest.TestCase):
 
         self.assertEqual(first[0].handle, repeat[0].handle)
         self.assertNotEqual(first[0].handle, other[0].handle)
+
+    def test_keeps_trace_payload_mapping_reference_stable(self) -> None:
+        parser = LocalFlowParser(repository="fbsource", project="example-app")
+        payloads = parser.trace_payloads_by_handle
+
+        parser.parse_analysis_output(
+            self._input(self._row() + "\n", {self.canonical_id: ["rule"]})
+        )
+
+        self.assertIs(parser.trace_payloads_by_handle, payloads)
+        self.assertEqual(len(payloads), 1)
 
     def test_loads_rule_mapping_with_standard_json_duplicate_keys(self) -> None:
         input = self._input(self._row() + "\n", {self.canonical_id: ["rule"]})
