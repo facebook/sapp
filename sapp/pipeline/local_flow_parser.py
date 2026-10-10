@@ -13,13 +13,21 @@ from pathlib import Path
 from typing import Any, cast, IO
 
 from ..analysis_output import AnalysisOutput
-from . import ParseError, ParseIssueTuple
+from ..models import HANDLE_LENGTH
+from . import (
+    ParseError,
+    ParseIssueConditionTuple,
+    ParseIssueLeaf,
+    ParseIssueTuple,
+    SourceLocation,
+)
 from .base_parser import BaseParser
 
 
-# TODO: Assign distinct SAPP warning codes to individual LFE rules in a follow-up.
-# Until then, specific rule identifiers are retained in issue messages and features.
+# Rules without a code in rule-codes.json import under this generic code.
 TS_LOCAL_FLOW_WARNING_CODE: int = 20002
+# SAPP reads these markers in leaf kinds as taint transforms.
+_KIND_TRANSFORM_MARKERS: tuple[str, ...] = ("->", "@", "!")
 
 
 class LocalFlowParserError(ParseError):
@@ -27,9 +35,23 @@ class LocalFlowParserError(ParseError):
 
 
 @dataclass(frozen=True)
+class _Endpoint:
+    callable: str
+    file: str
+    line: int
+
+
+@dataclass(frozen=True)
+class _IssueFacts:
+    source_kinds: tuple[str, ...] = ()
+    sink_kinds: tuple[str, ...] = ()
+    features: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class _ParsedFlow:
     canonical_id: str
-    issue: ParseIssueTuple
+    issues: list[ParseIssueTuple]
     payload: bytes
 
 
@@ -117,7 +139,8 @@ def _validate_identity(canonical_id: str, identity_json: str) -> dict[str, objec
     return identity
 
 
-def _validate_payload(payload: dict[str, Any]) -> None:
+def _validate_payload(payload: dict[str, Any]) -> bool:
+    """Validates the trace envelope and returns whether the trace is available."""
     status = payload.get("trace_status")
     if status == "available":
         if not isinstance(payload.get("title"), str) or not isinstance(
@@ -128,7 +151,8 @@ def _validate_payload(payload: dict[str, Any]) -> None:
             raise LocalFlowParserError("patrace must be an object")
         if not isinstance(payload.get("semantic_trace"), dict):
             raise LocalFlowParserError("semantic_trace must be an object")
-    elif status == "trace_unavailable":
+        return True
+    if status == "trace_unavailable":
         reason = payload.get("reason")
         if not isinstance(reason, dict):
             raise LocalFlowParserError("trace-unavailable reason must be an object")
@@ -138,8 +162,48 @@ def _validate_payload(payload: dict[str, Any]) -> None:
             raise LocalFlowParserError(
                 "trace-unavailable reason and limit must be strings"
             )
-    else:
-        raise LocalFlowParserError(f"unsupported trace status `{status}`")
+        return False
+    raise LocalFlowParserError(f"unsupported trace status `{status}`")
+
+
+def _parse_strings(value: object, context: str) -> tuple[str, ...]:
+    if not isinstance(value, list) or any(
+        not isinstance(item, str) or not item for item in value
+    ):
+        raise LocalFlowParserError(f"{context} must be nonempty strings")
+    return tuple(cast(list[str], value))
+
+
+def _parse_kinds(value: object, context: str) -> tuple[str, ...]:
+    kinds = _parse_strings(value, context)
+    if any(marker in kind for kind in kinds for marker in _KIND_TRANSFORM_MARKERS):
+        raise LocalFlowParserError(f"{context} must not use SAPP transform syntax")
+    return kinds
+
+
+def _parse_issue_facts(payload: dict[str, Any]) -> _IssueFacts:
+    # Payloads from LFE versions without issue facts carry none, and fields that
+    # later LFE versions add are ignored.
+    facts = payload.get("issue_facts", {})
+    if not isinstance(facts, dict):
+        raise LocalFlowParserError("issue_facts must be an object")
+    return _IssueFacts(
+        source_kinds=_parse_kinds(
+            facts.get("source_kinds", []), "issue_facts.source_kinds"
+        ),
+        sink_kinds=_parse_kinds(facts.get("sink_kinds", []), "issue_facts.sink_kinds"),
+        features=_parse_strings(facts.get("features", []), "issue_facts.features"),
+    )
+
+
+def _endpoint(identity: dict[str, object], name: str) -> _Endpoint:
+    endpoint = cast(dict[str, object], identity[name])
+    endpoint_id = cast(dict[str, object], endpoint["id"])
+    return _Endpoint(
+        callable=cast(str, endpoint["callable"]),
+        file=cast(str, endpoint_id["file"]),
+        line=cast(int, endpoint_id["line"]),
+    )
 
 
 def _validate_rule_mapping(
@@ -177,11 +241,14 @@ class LocalFlowParser(BaseParser):
         self.repository = repository
         self.project = project
         self.flows_to_rules: dict[str, list[str]] = {}
+        self.rule_codes: dict[str, int] = {}
         self.trace_payloads_by_handle: dict[str, bytes] = {}
 
     def parse(self, input: AnalysisOutput) -> Iterable[ParseIssueTuple]:
         self.trace_payloads_by_handle.clear()
-        self.flows_to_rules = _load_flows_to_rules(input)
+        directory = _results_directory(input)
+        self.flows_to_rules = _load_flows_to_rules(directory)
+        self.rule_codes = _load_rule_codes(directory)
         yield from self._parse_handles(input.file_handles())
 
     def _parse_handles(self, handles: Iterable[IO[str]]) -> Iterable[ParseIssueTuple]:
@@ -196,8 +263,9 @@ class LocalFlowParser(BaseParser):
                         f"duplicate canonical ID `{flow.canonical_id}`"
                     )
                 seen.add(flow.canonical_id)
-                payloads[flow.issue.handle] = flow.payload
-                yield flow.issue
+                for issue in flow.issues:
+                    payloads[issue.handle] = flow.payload
+                    yield issue
 
         if seen != set(self.flows_to_rules):
             raise LocalFlowParserError(
@@ -220,15 +288,8 @@ class LocalFlowParser(BaseParser):
         canonical_id, identity_json, payload_json = fields
         identity = _validate_identity(canonical_id, identity_json)
         payload = _decode_object(payload_json, "canonical trace payload")
-        _validate_payload(payload)
-
-        target = cast(dict[str, object], identity["target"])
-        source = cast(dict[str, object], identity["source"])
-        target_id = cast(dict[str, object], target["id"])
-        target_callable = cast(str, target["callable"])
-        source_callable = cast(str, source["callable"])
-        target_file = cast(str, target_id["file"])
-        target_line = cast(int, target_id["line"])
+        trace_available = _validate_payload(payload)
+        facts = _parse_issue_facts(payload)
         rules = self.flows_to_rules.get(canonical_id)
 
         if rules is None:
@@ -236,43 +297,102 @@ class LocalFlowParser(BaseParser):
                 "canonical rows and flows-to-rules do not exactly match"
             )
 
-        issue_handle = self._issue_handle(canonical_id)
+        rules_by_code: dict[int, list[str]] = {}
+        for rule in rules:
+            code = self.rule_codes.get(rule, TS_LOCAL_FLOW_WARNING_CODE)
+            rules_by_code.setdefault(code, []).append(rule)
+        shared_features = [
+            *facts.features,
+            "local-flow-trace:available"
+            if trace_available
+            else "local-flow-trace:unavailable",
+        ]
+        source = _endpoint(identity, "source")
+        target = _endpoint(identity, "target")
+        # Canonical endpoints contain a line number, but no columns.
+        location = SourceLocation(line_no=target.line, begin_column=1, end_column=1)
+        preconditions = _leaf_frames(
+            target.callable, "sink", facts.sink_kinds, location
+        )
+        postconditions = _leaf_frames(
+            source.callable, "source", facts.source_kinds, location
+        )
+        initial_sources = _issue_leaves(source.callable, facts.source_kinds)
+        final_sinks = _issue_leaves(target.callable, facts.sink_kinds)
 
         return _ParsedFlow(
             canonical_id=canonical_id,
             payload=payload_json.encode(),
-            issue=ParseIssueTuple(
-                code=TS_LOCAL_FLOW_WARNING_CODE,
-                message=(
-                    f"Local flow from {source_callable} to {target_callable} "
-                    f"({', '.join(rules)})"
-                ),
-                callable=target_callable,
-                handle=issue_handle,
-                filename=target_file,
-                line=target_line,
-                # Canonical endpoints contain a line number, but no columns.
-                start=1,
-                end=1,
-                preconditions=[],
-                postconditions=[],
-                initial_sources=[],
-                final_sinks=[],
-                features=[f"local-flow-canonical-id:{canonical_id}"]
-                + [f"local-flow-rule:{rule}" for rule in rules],
-                callable_line=target_line,
-                fix_info=None,
-            ),
+            issues=[
+                ParseIssueTuple(
+                    code=code,
+                    message=f"Local flow from {source.callable} to {target.callable}",
+                    callable=target.callable,
+                    handle=self._issue_handle(code, canonical_id),
+                    filename=target.file,
+                    line=target.line,
+                    start=location.begin_column,
+                    end=location.end_column,
+                    preconditions=preconditions,
+                    postconditions=postconditions,
+                    initial_sources=initial_sources,
+                    final_sinks=final_sinks,
+                    features=[f"local-flow-rule:{rule}" for rule in code_rules]
+                    + shared_features,
+                    callable_line=target.line,
+                    fix_info=None,
+                )
+                for code, code_rules in sorted(rules_by_code.items())
+            ],
         )
 
-    def _issue_handle(self, canonical_id: str) -> str:
-        return f"ts-local-flow:{self.repository}:{self.project}:v1:{canonical_id}"
+    def _issue_handle(self, code: int, canonical_id: str) -> str:
+        handle = (
+            f"ts-local-flow:{self.repository}:{self.project}:v2:{code}:{canonical_id}"
+        )
+        if len(handle) > HANDLE_LENGTH:
+            raise LocalFlowParserError(
+                f"issue handle `{handle}` exceeds {HANDLE_LENGTH} characters"
+            )
+        return handle
 
 
-def _load_flows_to_rules(input: AnalysisOutput) -> dict[str, list[str]]:
+def _leaf_frames(
+    callee: str, port: str, kinds: tuple[str, ...], location: SourceLocation
+) -> list[ParseIssueConditionTuple]:
+    # SAPP derives an issue's Source and Sink kinds only from the leaves of its
+    # trace frames, so each classified endpoint becomes one leaf frame. The
+    # canonical identity has no call site, so the frame uses the issue location.
+    if not kinds:
+        return []
+    return [
+        ParseIssueConditionTuple(
+            callee=callee,
+            port=port,
+            location=location,
+            leaves=[(kind, 0) for kind in kinds],
+            titos=[],
+            features=[],
+            type_interval=None,
+            annotations=[],
+        )
+    ]
+
+
+def _issue_leaves(endpoint: str, kinds: tuple[str, ...]) -> list[ParseIssueLeaf]:
+    # SAPP shows these callables as the issue's source and sink names, so an
+    # endpoint without kinds still contributes its name.
+    return [(endpoint, kind, 0) for kind in kinds or ("",)]
+
+
+def _results_directory(input: AnalysisOutput) -> Path:
     if input.directory is None:
         raise LocalFlowParserError("TS Local Flow import requires a results directory")
-    path = Path(input.directory) / "flows-to-rules.json"
+    return Path(input.directory)
+
+
+def _load_flows_to_rules(directory: Path) -> dict[str, list[str]]:
+    path = directory / "flows-to-rules.json"
     try:
         contents = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as error:
@@ -280,6 +400,23 @@ def _load_flows_to_rules(input: AnalysisOutput) -> dict[str, list[str]]:
             f"cannot read flows-to-rules file `{path}`"
         ) from error
     return _validate_rule_mapping(_decode_flows_to_rules(contents))
+
+
+def _load_rule_codes(directory: Path) -> dict[str, int]:
+    path = directory / "rule-codes.json"
+    try:
+        contents = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        # Bundles written before rules declared codes have no rule-codes file.
+        return {}
+    except (OSError, UnicodeError) as error:
+        raise LocalFlowParserError(f"cannot read rule-codes file `{path}`") from error
+
+    rule_codes = _decode_object(contents, "rule-codes")
+    for rule, code in rule_codes.items():
+        if not isinstance(code, int) or isinstance(code, bool):
+            raise LocalFlowParserError(f"rule `{rule}` must map to an integer code")
+    return cast(dict[str, int], rule_codes)
 
 
 def _decode_flows_to_rules(contents: str) -> dict[str, list[str]]:

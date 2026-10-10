@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 
 from ...analysis_output import AnalysisOutput
-from .. import ParseError, ParseIssueTuple
+from .. import ParseError, ParseIssueConditionTuple, ParseIssueTuple, SourceLocation
 from ..local_flow_parser import LocalFlowParser, LocalFlowParserError
 
 
@@ -94,11 +94,18 @@ class TestLocalFlowParser(unittest.TestCase):
             ]
         )
 
-    def _input(self, contents: str, rules: object) -> AnalysisOutput:
+    def _input(
+        self, contents: str, rules: object, rule_codes: object | None = None
+    ) -> AnalysisOutput:
         (self.directory / "canonical.tsv").write_text(contents, encoding="utf-8")
         (self.directory / "flows-to-rules.json").write_text(
             _canonical_json(rules), encoding="utf-8"
         )
+        rule_codes_path = self.directory / "rule-codes.json"
+        if rule_codes is None:
+            rule_codes_path.unlink(missing_ok=True)
+        else:
+            rule_codes_path.write_text(_canonical_json(rule_codes), encoding="utf-8")
         (self.directory / "metadata.json").write_text(
             _canonical_json(
                 {
@@ -118,9 +125,10 @@ class TestLocalFlowParser(unittest.TestCase):
         rules: object,
         *,
         project: str = "example-app",
+        rule_codes: object | None = None,
     ) -> tuple[LocalFlowParser, list[ParseIssueTuple]]:
         parser = LocalFlowParser(repository="fbsource", project=project)
-        result = parser.parse_analysis_output(self._input(contents, rules))
+        result = parser.parse_analysis_output(self._input(contents, rules, rule_codes))
         self.assertEqual(result.preconditions.frame_count(), 0)
         self.assertEqual(result.postconditions.frame_count(), 0)
         return parser, list(result.issues)
@@ -134,26 +142,224 @@ class TestLocalFlowParser(unittest.TestCase):
 
         self.assertEqual(len(issues), 1)
         issue = issues[0]
+        self.assertEqual(issue.code, 20002)
         self.assertEqual(
-            issue.handle, f"ts-local-flow:fbsource:example-app:v1:{self.canonical_id}"
+            issue.handle,
+            f"ts-local-flow:fbsource:example-app:v2:20002:{self.canonical_id}",
         )
+        self.assertEqual(issue.message, "Local flow from source to sink")
         self.assertEqual(issue.callable, "sink")
         self.assertEqual(issue.filename, "src/sink.ts")
         self.assertEqual(issue.line, 29)
         self.assertEqual(
             issue.features,
             [
-                f"local-flow-canonical-id:{self.canonical_id}",
                 "local-flow-rule:a-rule",
                 "local-flow-rule:z-rule",
+                "local-flow-trace:available",
             ],
         )
         self.assertEqual(list(issue.preconditions), [])
         self.assertEqual(list(issue.postconditions), [])
+        self.assertEqual(list(issue.initial_sources), [("source", "", 0)])
+        self.assertEqual(list(issue.final_sinks), [("sink", "", 0)])
         self.assertEqual(
             parser.trace_payloads_by_handle[issue.handle],
             _canonical_json(payload).encode(),
         )
+
+    def test_imports_issue_facts_as_kinds_and_features(self) -> None:
+        for payload, trace_feature in (
+            (self._available_payload(), "local-flow-trace:available"),
+            (dict(self.unavailable_payload), "local-flow-trace:unavailable"),
+        ):
+            payload["issue_facts"] = {
+                "source_kinds": ["http-request", "request-input"],
+                "sink_kinds": ["code-execution"],
+                "features": ["via-callback:modeled-invocation"],
+            }
+            with self.subTest(trace_status=payload["trace_status"]):
+                _parser, issues = self._parse(
+                    self._row(payload=payload) + "\n", {self.canonical_id: ["rule"]}
+                )
+
+                issue = issues[0]
+                location = SourceLocation(line_no=29, begin_column=1, end_column=1)
+                self.assertEqual(
+                    list(issue.postconditions),
+                    [
+                        ParseIssueConditionTuple(
+                            callee="source",
+                            port="source",
+                            location=location,
+                            leaves=[("http-request", 0), ("request-input", 0)],
+                            titos=[],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        )
+                    ],
+                )
+                self.assertEqual(
+                    list(issue.preconditions),
+                    [
+                        ParseIssueConditionTuple(
+                            callee="sink",
+                            port="sink",
+                            location=location,
+                            leaves=[("code-execution", 0)],
+                            titos=[],
+                            features=[],
+                            type_interval=None,
+                            annotations=[],
+                        )
+                    ],
+                )
+                self.assertEqual(
+                    list(issue.initial_sources),
+                    [("source", "http-request", 0), ("source", "request-input", 0)],
+                )
+                self.assertEqual(
+                    list(issue.final_sinks), [("sink", "code-execution", 0)]
+                )
+                self.assertEqual(
+                    issue.features,
+                    [
+                        "local-flow-rule:rule",
+                        "via-callback:modeled-invocation",
+                        trace_feature,
+                    ],
+                )
+
+    def test_unclassified_endpoints_keep_names_without_leaf_frames(self) -> None:
+        payload = dict(self.unavailable_payload)
+        payload["issue_facts"] = {
+            "source_kinds": [],
+            "sink_kinds": ["code-execution"],
+            "features": [],
+        }
+        _parser, issues = self._parse(
+            self._row(payload=payload) + "\n", {self.canonical_id: ["rule"]}
+        )
+
+        self.assertEqual(list(issues[0].postconditions), [])
+        self.assertEqual(list(issues[0].initial_sources), [("source", "", 0)])
+        self.assertEqual(len(list(issues[0].preconditions)), 1)
+
+    def test_ignores_unknown_and_missing_issue_facts_fields(self) -> None:
+        payload = dict(self.unavailable_payload)
+        payload["issue_facts"] = {
+            "sink_kinds": ["code-execution"],
+            "added_by_a_later_lfe": True,
+        }
+        _parser, issues = self._parse(
+            self._row(payload=payload) + "\n", {self.canonical_id: ["rule"]}
+        )
+
+        self.assertEqual(list(issues[0].initial_sources), [("source", "", 0)])
+        self.assertEqual(list(issues[0].final_sinks), [("sink", "code-execution", 0)])
+        self.assertEqual(issues[0].features[-1:], ["local-flow-trace:unavailable"])
+
+    def test_rejects_malformed_issue_facts(self) -> None:
+        for facts in (
+            None,
+            [],
+            {"source_kinds": "http-request"},
+            {"sink_kinds": [""]},
+            {"sink_kinds": [1]},
+            {"source_kinds": ["UserControlled@Transform"]},
+            {"sink_kinds": ["Transform->Sink"]},
+            {"sink_kinds": ["!Partial"]},
+            {"features": [None]},
+        ):
+            payload = dict(self.unavailable_payload)
+            payload["issue_facts"] = facts
+            with (
+                self.subTest(facts=facts),
+                self.assertRaisesRegex(LocalFlowParserError, "issue_facts"),
+            ):
+                self._parse(
+                    self._row(payload=payload) + "\n", {self.canonical_id: ["rule"]}
+                )
+
+    def test_splits_rules_into_one_issue_per_warning_code(self) -> None:
+        parser, issues = self._parse(
+            self._row() + "\n",
+            {self.canonical_id: ["sql-rule", "exec-rule", "other-exec-rule"]},
+            rule_codes={
+                "exec-rule": 6019,
+                "other-exec-rule": 6019,
+                "sql-rule": 6026,
+                "rule-without-flows": 20101,
+            },
+        )
+
+        self.assertEqual([issue.code for issue in issues], [6019, 6026])
+        self.assertEqual(
+            [issue.handle for issue in issues],
+            [
+                f"ts-local-flow:fbsource:example-app:v2:6019:{self.canonical_id}",
+                f"ts-local-flow:fbsource:example-app:v2:6026:{self.canonical_id}",
+            ],
+        )
+        self.assertEqual(
+            [issue.features for issue in issues],
+            [
+                [
+                    "local-flow-rule:exec-rule",
+                    "local-flow-rule:other-exec-rule",
+                    "local-flow-trace:unavailable",
+                ],
+                ["local-flow-rule:sql-rule", "local-flow-trace:unavailable"],
+            ],
+        )
+        self.assertEqual(
+            parser.trace_payloads_by_handle,
+            {
+                issue.handle: _canonical_json(self.unavailable_payload).encode()
+                for issue in issues
+            },
+        )
+
+    def test_rules_without_a_code_use_the_generic_code(self) -> None:
+        _parser, issues = self._parse(
+            self._row() + "\n",
+            {self.canonical_id: ["rule", "other-rule"]},
+            rule_codes={"rule": 6019},
+        )
+
+        self.assertEqual([issue.code for issue in issues], [6019, 20002])
+
+    def test_rejects_non_integer_rule_codes(self) -> None:
+        for code in (True, "6019", 60.19, None):
+            with (
+                self.subTest(code=code),
+                self.assertRaisesRegex(LocalFlowParserError, "integer code"),
+            ):
+                self._parse(
+                    self._row() + "\n",
+                    {self.canonical_id: ["rule"]},
+                    rule_codes={"rule": code},
+                )
+
+    def test_rejects_malformed_rule_codes_file(self) -> None:
+        for contents, message in (
+            (b"[]", "rule-codes must be a JSON object"),
+            (b"not JSON", "invalid rule-codes"),
+            (b"\xff", "cannot read rule-codes file"),
+        ):
+            with self.subTest(contents=contents):
+                input = self._input(self._row() + "\n", {self.canonical_id: ["rule"]})
+                (self.directory / "rule-codes.json").write_bytes(contents)
+                parser = LocalFlowParser(repository="fbsource", project="example-app")
+                with self.assertRaisesRegex(LocalFlowParserError, message):
+                    parser.parse_analysis_output(input)
+
+    def test_rejects_handles_longer_than_sapp_allows(self) -> None:
+        with self.assertRaisesRegex(LocalFlowParserError, "exceeds 255 characters"):
+            self._parse(
+                self._row() + "\n", {self.canonical_id: ["rule"]}, project="p" * 200
+            )
 
     def test_retains_typed_unavailable_trace(self) -> None:
         parser, issues = self._parse(self._row() + "\n", {self.canonical_id: ["rule"]})
@@ -346,7 +552,7 @@ class TestLocalFlowParser(unittest.TestCase):
         )
         self.assertEqual(parser.flows_to_rules[self.canonical_id], ["a-rule", "z-rule"])
         self.assertEqual(
-            issues[0].features[1:], ["local-flow-rule:a-rule", "local-flow-rule:z-rule"]
+            issues[0].features[:2], ["local-flow-rule:a-rule", "local-flow-rule:z-rule"]
         )
 
     def test_requires_exact_rule_membership(self) -> None:
@@ -394,8 +600,11 @@ class TestLocalFlowParser(unittest.TestCase):
             {self.canonical_id: ["rule"], other_id: ["other-rule"]},
         )
         self.assertEqual(
-            [issue.features[0] for issue in issues],
-            [f"local-flow-canonical-id:{flow_id}" for flow_id, _row in rows],
+            [issue.handle for issue in issues],
+            [
+                f"ts-local-flow:fbsource:example-app:v2:20002:{flow_id}"
+                for flow_id, _row in rows
+            ],
         )
         self.assertEqual(len(parser.trace_payloads_by_handle), 2)
 
