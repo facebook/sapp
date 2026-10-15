@@ -348,6 +348,36 @@ class TestLocalFlowParser(unittest.TestCase):
             },
         )
 
+    def test_rule_features_name_the_rule_file_not_its_path_or_output(self) -> None:
+        packed = "common/rule-ssrf.lf|rule-ssrf--ssrf.canonical"
+        same_file = "common/rule-ssrf.lf|rule-ssrf--fetch.canonical"
+        stem = "rule-fs-write|rule-fs-write--fs-mkdir-p0.canonical"
+        other_code = "rule-fs-write|rule-fs-write--fs-writefile-p1.canonical"
+        _parser, issues = self._parse(
+            self._row() + "\n",
+            {self.canonical_id: [packed, same_file, stem, other_code]},
+            rule_codes={packed: 6018, same_file: 6018, stem: 6018, other_code: 8503},
+        )
+
+        self.assertEqual(
+            [(issue.code, issue.features) for issue in issues],
+            [
+                (
+                    6018,
+                    [
+                        "local-flow-rule:rule-fs-write",
+                        "local-flow-rule:rule-ssrf",
+                        "local-flow-trace:unavailable",
+                    ],
+                ),
+                (
+                    8503,
+                    ["local-flow-rule:rule-fs-write", "local-flow-trace:unavailable"],
+                ),
+            ],
+            "outputs of one rule file collapse to its name; codes still split issues",
+        )
+
     def test_rules_without_a_code_use_the_generic_code(self) -> None:
         _parser, issues = self._parse(
             self._row() + "\n",

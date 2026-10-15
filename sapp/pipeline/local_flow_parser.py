@@ -185,6 +185,18 @@ def _parse_kinds(value: object, context: str) -> tuple[str, ...]:
     return kinds
 
 
+def _rule_name(rule: str) -> str:
+    # Bundle rules are `<query identifier>|<output>`; the identifier is a stem
+    # for app runners and a path for runners with a query root.
+    query_identifier = rule.split("|", 1)[0]
+    name = query_identifier.rsplit("/", 1)[-1].removesuffix(".lf")
+    return name or rule
+
+
+def _rule_names(rules: Iterable[str]) -> list[str]:
+    return sorted({_rule_name(rule) for rule in rules})
+
+
 def _parse_count(value: object, context: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise LocalFlowParserError(f"{context} must be a positive integer")
@@ -367,7 +379,9 @@ class LocalFlowParser(BaseParser):
                     postconditions=postconditions,
                     initial_sources=initial_sources,
                     final_sinks=final_sinks,
-                    features=[f"local-flow-rule:{rule}" for rule in code_rules]
+                    features=[
+                        f"local-flow-rule:{name}" for name in _rule_names(code_rules)
+                    ]
                     + shared_features,
                     callable_line=target.line,
                     fix_info=None,
