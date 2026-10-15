@@ -46,6 +46,10 @@ class _IssueFacts:
     source_kinds: tuple[str, ...] = ()
     sink_kinds: tuple[str, ...] = ()
     features: tuple[str, ...] = ()
+    # Call chains that reach the same target through the same path share a
+    # canonical flow.
+    call_chains: int = 1
+    sink_call_sites: int = 1
 
 
 @dataclass(frozen=True)
@@ -181,6 +185,23 @@ def _parse_kinds(value: object, context: str) -> tuple[str, ...]:
     return kinds
 
 
+def _parse_count(value: object, context: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+        raise LocalFlowParserError(f"{context} must be a positive integer")
+    return value
+
+
+def _merge_suffix(facts: _IssueFacts) -> str:
+    if facts.call_chains == 1:
+        return ""
+    sites = facts.sink_call_sites
+    chains = facts.call_chains
+    return (
+        f" ({sites} call site{'s' if sites != 1 else ''}, "
+        f"{chains} call chain{'s' if chains != 1 else ''})"
+    )
+
+
 def _parse_issue_facts(payload: dict[str, Any]) -> _IssueFacts:
     # Payloads from LFE versions without issue facts carry none, and fields that
     # later LFE versions add are ignored.
@@ -193,6 +214,12 @@ def _parse_issue_facts(payload: dict[str, Any]) -> _IssueFacts:
         ),
         sink_kinds=_parse_kinds(facts.get("sink_kinds", []), "issue_facts.sink_kinds"),
         features=_parse_strings(facts.get("features", []), "issue_facts.features"),
+        call_chains=_parse_count(
+            facts.get("call_chains", 1), "issue_facts.call_chains"
+        ),
+        sink_call_sites=_parse_count(
+            facts.get("sink_call_sites", 1), "issue_facts.sink_call_sites"
+        ),
     )
 
 
@@ -326,7 +353,10 @@ class LocalFlowParser(BaseParser):
             issues=[
                 ParseIssueTuple(
                     code=code,
-                    message=f"Local flow from {source.callable} to {target.callable}",
+                    message=(
+                        f"Local flow from {source.callable} to {target.callable}"
+                        f"{_merge_suffix(facts)}"
+                    ),
                     callable=target.callable,
                     handle=self._issue_handle(code, canonical_id),
                     filename=target.file,

@@ -260,6 +260,30 @@ class TestLocalFlowParser(unittest.TestCase):
         self.assertEqual(list(issues[0].final_sinks), [("sink", "code-execution", 0)])
         self.assertEqual(issues[0].features[-1:], ["local-flow-trace:unavailable"])
 
+    def test_message_reports_how_many_call_chains_a_flow_merged(self) -> None:
+        for merge, expected in (
+            ({}, "Local flow from source to sink"),
+            (
+                {"call_chains": 1, "sink_call_sites": 1},
+                "Local flow from source to sink",
+            ),
+            (
+                {"call_chains": 2, "sink_call_sites": 1},
+                "Local flow from source to sink (1 call site, 2 call chains)",
+            ),
+            (
+                {"call_chains": 5, "sink_call_sites": 2},
+                "Local flow from source to sink (2 call sites, 5 call chains)",
+            ),
+        ):
+            payload = dict(self.unavailable_payload)
+            payload["issue_facts"] = merge
+            with self.subTest(merge=merge):
+                _parser, issues = self._parse(
+                    self._row(payload=payload) + "\n", {self.canonical_id: ["rule"]}
+                )
+                self.assertEqual(issues[0].message, expected)
+
     def test_rejects_malformed_issue_facts(self) -> None:
         for facts in (
             None,
@@ -271,6 +295,9 @@ class TestLocalFlowParser(unittest.TestCase):
             {"sink_kinds": ["Transform->Sink"]},
             {"sink_kinds": ["!Partial"]},
             {"features": [None]},
+            {"call_chains": 0},
+            {"call_chains": True},
+            {"sink_call_sites": "2"},
         ):
             payload = dict(self.unavailable_payload)
             payload["issue_facts"] = facts
