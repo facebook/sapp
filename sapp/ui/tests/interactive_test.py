@@ -1949,8 +1949,7 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 18th param expected `Set[SimilarIssue]` but got
             #  `Set[Tuple[int, str]]`.
             similar_issues={(2, "0.24")},
-            # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
-            run_id=1,
+            run_id=DBID(1),
         )
         sources = []
         sinks = ["sink1"]
