@@ -568,6 +568,35 @@ class TestLocalFlowParser(unittest.TestCase):
                     _canonical_json(payload).encode(),
                 )
 
+    def test_capture_budget_unavailability_preserves_finding_identity(self) -> None:
+        for limit in (
+            "capture_events",
+            "capture_derivations",
+            "capture_logical_retained_bytes",
+            "capture_duration",
+        ):
+            payload = {
+                "trace_status": "trace_unavailable",
+                "reason": {"reason": "budget_exceeded", "limit": limit},
+            }
+            with self.subTest(limit=limit):
+                parser, issues = self._parse(
+                    self._row(payload=payload) + "\n",
+                    {self.canonical_id: ["rule"]},
+                )
+                self.assertEqual(len(issues), 1)
+                issue = issues[0]
+                self.assertEqual(
+                    issue.handle,
+                    f"ts-local-flow:fbsource:example-app:v2:20002:{self.canonical_id}",
+                )
+                self.assertEqual(issue.filename, "src/sink.ts")
+                self.assertEqual(issue.line, 29)
+                self.assertEqual(
+                    parser.trace_payloads_by_handle[issue.handle],
+                    _canonical_json(payload).encode(),
+                )
+
     def test_accepts_opaque_semantic_trace_contents(self) -> None:
         for semantic_trace in (
             {},
