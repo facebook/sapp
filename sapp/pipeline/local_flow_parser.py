@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Set as AbstractSet
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast, IO
@@ -281,7 +281,11 @@ class LocalFlowParser(BaseParser):
         self.project = project
         self.flows_to_rules: dict[str, list[str]] = {}
         self.rule_codes: dict[str, int] = {}
+        self.handles_to_keep: set[str] | None = None
         self.trace_payloads_by_handle: dict[str, bytes] = {}
+
+    def set_handles_to_keep(self, handles_to_keep: AbstractSet[str]) -> None:
+        self.handles_to_keep = set(handles_to_keep)
 
     def parse(self, input: AnalysisOutput) -> Iterable[ParseIssueTuple]:
         self.trace_payloads_by_handle.clear()
@@ -303,6 +307,11 @@ class LocalFlowParser(BaseParser):
                     )
                 seen.add(flow.canonical_id)
                 for issue in flow.issues:
+                    if (
+                        self.handles_to_keep is not None
+                        and issue.handle not in self.handles_to_keep
+                    ):
+                        continue
                     payloads[issue.handle] = flow.payload
                     yield issue
 
@@ -310,6 +319,14 @@ class LocalFlowParser(BaseParser):
             raise LocalFlowParserError(
                 "canonical rows and flows-to-rules do not exactly match"
             )
+
+        if self.handles_to_keep is not None:
+            missing = self.handles_to_keep - set(payloads)
+            if missing:
+                raise LocalFlowParserError(
+                    "requested issue handles are absent from the local-flow result: "
+                    f"{sorted(missing)}"
+                )
 
         self.trace_payloads_by_handle.update(payloads)
 

@@ -126,8 +126,11 @@ class TestLocalFlowParser(unittest.TestCase):
         *,
         project: str = "example-app",
         rule_codes: object | None = None,
+        handles_to_keep: set[str] | None = None,
     ) -> tuple[LocalFlowParser, list[ParseIssueTuple]]:
         parser = LocalFlowParser(repository="fbsource", project=project)
+        if handles_to_keep is not None:
+            parser.set_handles_to_keep(handles_to_keep)
         result = parser.parse_analysis_output(self._input(contents, rules, rule_codes))
         self.assertEqual(result.preconditions.frame_count(), 0)
         self.assertEqual(result.postconditions.frame_count(), 0)
@@ -770,6 +773,62 @@ class TestLocalFlowParser(unittest.TestCase):
 
         self.assertEqual(first[0].handle, repeat[0].handle)
         self.assertNotEqual(first[0].handle, other[0].handle)
+
+    def test_filters_issues_and_trace_payloads_to_requested_handles(self) -> None:
+        other_identity = {
+            "source": {
+                "callable": "other-source",
+                "id": {"file": "src/other-source.ts", "line": 3},
+            },
+            "target": {
+                "callable": "other-sink",
+                "id": {"file": "src/other-sink.ts", "line": 7},
+            },
+            "path": ["other-field"],
+        }
+        other_identity_json = _canonical_json(other_identity)
+        other_id = hashlib.sha256(other_identity_json.encode()).hexdigest()
+        other_payload = {
+            "trace_status": "trace_unavailable",
+            "reason": {"reason": "budget_exceeded", "limit": "raw_bytes"},
+        }
+        keep_handle = f"ts-local-flow:fbsource:example-app:v2:6019:{self.canonical_id}"
+        rows = sorted(
+            [
+                (self.canonical_id, self._row()),
+                (
+                    other_id,
+                    self._row(
+                        canonical_id=other_id,
+                        identity_json=other_identity_json,
+                        payload=other_payload,
+                    ),
+                ),
+            ],
+        )
+
+        parser, issues = self._parse(
+            "\n".join(row for _flow_id, row in rows) + "\n",
+            {self.canonical_id: ["exec-rule", "sql-rule"], other_id: ["other-rule"]},
+            rule_codes={"exec-rule": 6019, "sql-rule": 6026, "other-rule": 6019},
+            handles_to_keep={keep_handle},
+        )
+
+        self.assertEqual([issue.handle for issue in issues], [keep_handle])
+        self.assertEqual(
+            parser.trace_payloads_by_handle,
+            {keep_handle: _canonical_json(self.unavailable_payload).encode()},
+        )
+
+    def test_rejects_requested_handles_absent_from_result(self) -> None:
+        missing_handle = "ts-local-flow:fbsource:example-app:v2:6019:" + "f" * 64
+
+        with self.assertRaisesRegex(LocalFlowParserError, "requested issue handles"):
+            self._parse(
+                self._row() + "\n",
+                {self.canonical_id: ["rule"]},
+                handles_to_keep={missing_handle},
+            )
 
     def test_keeps_trace_payload_mapping_reference_stable(self) -> None:
         parser = LocalFlowParser(repository="fbsource", project="example-app")
