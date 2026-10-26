@@ -2012,14 +2012,13 @@ class InteractiveTest(TestCase):
             run_id=1,
         )
         sources = []
-        sinks = ["sink1", "sink2"]
+        sinks = {"sink1", "sink2"}
         features = []
         result = self.interactive._create_issue_output_string(
             issue1,
             # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
             #  `List[typing.Any]`.
             sources,
-            # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
             sinks,
             # pyre-fixme[6]: For 4th param expected `Set[str]` but got
             #  `List[typing.Any]`.
