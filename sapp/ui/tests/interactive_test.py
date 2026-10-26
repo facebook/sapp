@@ -2058,12 +2058,10 @@ class InteractiveTest(TestCase):
             # pyre-fixme[6]: For 19th param expected `DBID` but got `int`.
             run_id=1,
         )
-        sources = []
+        sources = set()
         sinks = ["sink1", "sink2"]
         result = self.interactive._create_issue_output_string(
             issue2,
-            # pyre-fixme[6]: For 2nd param expected `Set[str]` but got
-            #  `List[typing.Any]`.
             sources,
             # pyre-fixme[6]: For 3rd param expected `Set[str]` but got `List[str]`.
             sinks,
