@@ -1982,8 +1982,7 @@ class InteractiveTest(TestCase):
 
     def testCreateIssueOutputStringTraceLength(self) -> None:
         issue1 = IssueQueryResult(
-            # pyre-fixme[6]: For 1st param expected `DBID` but got `int`.
-            issue_id=1,
+            issue_id=DBID(1),
             # pyre-fixme[6]: For 2nd param expected `DBID` but got `int`.
             issue_instance_id=1,
             filename="module.py",
